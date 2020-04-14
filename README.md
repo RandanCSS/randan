@@ -14,9 +14,9 @@ We recommend using the second way and clone our package every time you're going 
 Once you have the package in the folder, you can import as any python package:
 
 ```python
-#like this
+# like this
 import randan
-#or like this
+# or like this
 from randan.tree import CHAIDRegressor
-#etc.
+# etc.
 ```
