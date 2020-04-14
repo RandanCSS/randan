@@ -1,2 +1,7 @@
 # Randan
-A python module for the analysis of sociological data
+A python package for the analysis of sociological data
+
+#### Installation
+Currently, `randan` is **unavailable** to install by `pip`. However, you can use two options to download our package:
+
+1.
