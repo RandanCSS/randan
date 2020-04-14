@@ -11,7 +11,7 @@ Currently, `randan` is **unavailable** to install by `pip`. However, you can use
 
 We recommend using the second way and clone our package every time you're going to use it as it allows you to have all the updates in time.
 
-Once you have the package in the folder, you can import as any python package:
+Once you have the package in the folder, you can import it as any python package:
 
 ```python
 # like this
