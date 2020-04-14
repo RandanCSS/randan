@@ -16,7 +16,9 @@ Once you have the package in the folder, you can import as any python package:
 ```python
 # like this
 import randan
+
 # or like this
 from randan.tree import CHAIDRegressor
+
 # etc.
 ```
