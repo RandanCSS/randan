@@ -47,7 +47,7 @@ By now, **three** modules have been included in the package. These modules corre
 | tree | CHAIDRegressor, CHAIDClassifier | Analyze -> Classify -> Tree -> CHAID | CHAID decision tree for scale and categorical dependent variables, respectively | 
 
 ### Quick start
-Although `randan` is builded to be similar to SPSS, it reproduces the fit-predict and fit-transform approach, which is now being used in the most popular machine learning python packages. This approach means that you should, firstly, initialize your model and then, secondly, fit it to your data (i.e., use the `fit` function) if necessary. 
+Although `randan` is built to be similar to SPSS, it reproduces the fit-predict and fit-transform approach, which is now being used in the most popular machine learning python packages. This approach means that you should, firstly, initialize your model and then, secondly, fit it to your data (i.e., use the `fit` function) if necessary. 
 > 1. If the method you use belongs to the *unsupervised methods* (i.e., you *do not have* a dependent variable in your data), you can then use `transform` function to get values of the obtained, hidden, dependent variable such as cluster membership, factor scores etc. 
 > 2. If the method you use belongs to the *supervised methods* (i.e., you *have* a dependent variable in your data), you can then use `predict` function to get values of the given dependent variable. 
 > 3. If the method does not assume to estimate new values for your data (such methods are crosstabs, t-tests etc.), then it does not require to use `fit` and `transform` / `predict` functions. 
