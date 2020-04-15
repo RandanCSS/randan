@@ -22,3 +22,13 @@ from randan.tree import CHAIDRegressor
 
 # etc.
 ```
+
+### Structure
+By now, **three** modules have been included in the package. These modules correspond to the SPSS functions as follows:
+
+| Module | Class or function | Corresponding SPSS function | Description |
+|--------|-------------------|-----------------------------|-------------|
+| bivariate_association | Crosstab | Analyze -> Descriptive statistics -> Crosstabs | Analysis of contingency tables |
+| comparison_of_central_tendency | ANOVA | Analyze -> Compare means > One-Way ANOVA | Analysis of variance |
+| tree | CHAIDRegressor, CHAIDClassifier | Analyze -> Classify -> Tree -> CHAID | CHAID decision tree for scale and categorical dependent variables, respectively | 
+|
