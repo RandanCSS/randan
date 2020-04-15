@@ -7,7 +7,7 @@ Randan is a python package that aims to provide most of the functions presented 
 2. it gives you information about statistical significance of the parameters whenever it is possible
 3. it unites all the necessary methods so you do not need to switch between different packages and software anymore
 
-As we emphasize the importance of the way your results look like, we highly suggest to use `randan` in Jupyter Notebook.
+As we emphasize the importance of the way your results look like, we highly suggest to use `randan` in Jupyter Notebook and store your data in `pandas` DataFrames.
 
 > _**N.B.:** You should understand that this project is under development now, which means it is constantly updating. We will have finished the main part of the package by the middle of June, 2020._ 
 
@@ -31,6 +31,12 @@ from randan.tree import CHAIDRegressor
 # etc.
 ```
 
+**Important note**: `randan` depends on the several packages, most of which are considered pre-built packages (this means you likely do not have to install them manually). However, there are two dependencies that are still required to install if you're going to use `randan.tree` module. If so, please install them by running this command in any command-line interface (such as Terminal on MacOS, cmd on Windows, Anaconda Prompt on both etc.):
+
+```
+conda install graphviz pydot
+```
+
 ### Structure
 By now, **three** modules have been included in the package. These modules correspond to the SPSS functions as follows:
 
@@ -41,7 +47,33 @@ By now, **three** modules have been included in the package. These modules corre
 | tree | CHAIDRegressor, CHAIDClassifier | Analyze -> Classify -> Tree -> CHAID | CHAID decision tree for scale and categorical dependent variables, respectively | 
 
 ### Quick start
-Although `randan` is builded to be similar to SPSS, it reproduces the fit-predict and fit-transform approach, which is now being used in the most popular machine learning python packages. This approach means that you should, firstly, initialize your model and then, secondly, fit it to your data (i.e., use the `fit` function). 
+Although `randan` is builded to be similar to SPSS, it reproduces the fit-predict and fit-transform approach, which is now being used in the most popular machine learning python packages. This approach means that you should, firstly, initialize your model and then, secondly, fit it to your data (i.e., use the `fit` function) if necessary. 
 > 1. If the method you use belongs to the *unsupervised methods* (i.e., you *do not have* a dependent variable in your data), you can then use `transform` function to get values of the obtained, hidden, dependent variable such as cluster membership, factor scores etc. 
 > 2. If the method you use belongs to the *supervised methods* (i.e., you *have* a dependent variable in your data), you can then use `predict` function to get values of the given dependent variable. 
-> 3. If the method does not assume to estimate new values for your data (such as crosstabs, t-tests etc.), then it does not require to use `fit` and `transform` / `predict` functions. 
+> 3. If the method does not assume to estimate new values for your data (such methods are crosstabs, t-tests etc.), then it does not require to use `fit` and `transform` / `predict` functions. 
+
+#### Module `bivariate_association`
+This module aggregates methods devoted to searching for statistical relationships between two variables. These methods do not require to use `fit` function, i.e. you only need to call the necessary class:
+```python
+from randan.bivariate_association import Crosstab
+
+# with this code, you will immediately see the results
+ctab = Crosstab(data, row='genre', column='age_ord')
+
+# however, if you want to somehow use separate statistics, you can call them this way
+print(ctab.chi_square, ctab.pvalue, ctab.n_cells)
+```
+
+#### Module `comparison_of_central_tendency`
+This module contains both parametric and non-parametric methods for comparison of central tendency statistics. These methods do not require to use `fit` function, i.e. you only need to call the necessary class:
+```python
+from randan.comparison_of_central_tendency import ANOVA
+
+# with this code, you will immediately see the results
+anv = ANOVA(data, dependent_variable='kinopoisk_rate', independent_variable='genre')
+
+# however, if you want to somehow use separate statistics, you can call them this way
+print(anv.F, anv.pvalue, anv.SSt)
+```
+#### Module `tree`
+This module includes various methods of building decision trees. If you 
