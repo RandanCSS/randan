@@ -3,6 +3,9 @@ _A python package for the analysis of sociological data_
 
 ### Overview
 
+
+> _**N.B.:** You should understand that this project is under development now, which means it is constantly updating. We will have finished the main part of the package by the middle of June._ 
+
 ### Installation
 Currently, `randan` is **unavailable** to install by `pip`. However, you can use two options to download our package:
 
