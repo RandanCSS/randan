@@ -76,4 +76,20 @@ anv = ANOVA(data, dependent_variable='kinopoisk_rate', independent_variable='gen
 print(anv.F, anv.pvalue, anv.SSt)
 ```
 #### Module `tree`
-This module includes various methods of building decision trees. If you 
+This module includes various methods of building decision trees. If you have a categorical dependent variable, please use those methods that contain `Classifier` part in their names. Otherwise, if you have a scale dependent variable, please use the methods that contain `Regressor` part in their names.
+
+This group of methods belongs to supervised learning, which means you should use the `fit` function after calling the appropriate class, and then, if necessary, the `predict` function to acquire predcitions.
+```python
+from randan.tree import CHAIDRegressor
+
+# with this code, you will immediately see the results, including the plot of your tree
+chaid = CHAIDRegressor().fit(
+    data,
+    dependent_variable='kinopoisk_rate',
+    independent_variables=['genre', 'age_ord', 'year', 'time', 'type', 'kinopoisk_rate_count'],
+    scale_variables=['year', 'time', 'kinopoisk_rate_count']
+    )
+
+#this is how you can predict values of the dependent variable and the node membership for the given data 
+predictions = chaid.predict(data, node=True)
+```
