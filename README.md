@@ -84,7 +84,7 @@ print(anv.F, anv.pvalue, anv.SSt)
 #### Module `tree`
 This module includes various methods of building decision trees. If you have a categorical dependent variable, please use those methods that contain `Classifier` part in their names. Otherwise, if you have a scale dependent variable, please use the methods that contain `Regressor` part in their names.
 
-This group of methods belongs to supervised learning, which means you should use the `fit` function after calling the appropriate class, and then, if necessary, the `predict` function to acquire predcitions.
+This group of methods belongs to supervised learning, which means you should use the `fit` function after calling the appropriate class, and then, if necessary, the `predict` function to acquire predictions.
 ```python
 from randan.tree import CHAIDRegressor
 
