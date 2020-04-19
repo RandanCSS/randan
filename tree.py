@@ -126,7 +126,9 @@ class CHAIDClassifier:
         #display(pd.DataFrame(tree_nodes))
         self.nodes = pd.DataFrame(tree_nodes)
         terminal_nodes_idx = self.nodes.apply(lambda x: self._check_if_terminal_node(x), axis=1)
-        self.terminal_nodes = self.nodes[terminal_nodes_idx]      
+        self.terminal_nodes = self.nodes[terminal_nodes_idx]
+        
+        self._node_interactions = self.get_interactions() 
         self.significant_variables = self.get_significant_variables()
         
         self.classification_table = self.get_classification_table()
@@ -393,6 +395,7 @@ class CHAIDClassifier:
                 data,
                 dependent_variable=True,
                 node=False,
+                interaction=False,
                 add_to_data=False):
         """
         Predict a value of the dependent variable and/or a node for the given data.
@@ -402,46 +405,35 @@ class CHAIDClassifier:
         data (DataFrame): data for which values or nodes should be predicted
         dependent_variable (bool): whether to predict the value of the dependent variable
         node (bool): whether to predict the node
+        interaction (bool): whether to predict interaction corresponded to the node
         add_to_data (bool): whether to merge predictions with the given data
         """
 
-
         if data[self._independent_variables + [self._dependent_variable]]\
         .equals(self._initial_data[self._independent_variables + [self._dependent_variable]]):
-            if dependent_variable and node:
-                result = self._data[[f'{self._dependent_variable} (predicted)', 'Node']]
-            elif dependent_variable:
-                result = self._data[f'{self._dependent_variable} (predicted)']
-            elif node:
-                result = self._data['Node']
+            result = self._data[[f'{self._dependent_variable} (predicted)', 'Node']].copy()
         
         else:
         
             data_for_prediction = data[self.significant_variables].copy()
+            result = data_for_prediction.apply(lambda x: CHAIDClassifier._predict_one_observation(
+                x, 
+                self.nodes, 
+                self._scale_variables
+            ), axis=1, result_type='expand')
+            result.columns = [f'{self._dependent_variable} (predicted)', 'Node']
+                                 
+        result['Interaction'] = result['Node'].map(self._node_interactions)
 
-            if dependent_variable and node:
-                result = data_for_prediction.apply(lambda x: CHAIDClassifier._predict_one_observation(
-                    x, 
-                    self.nodes, 
-                    self._scale_variables
-                ), axis=1, result_type='expand')
-                result.columns = [f'{self._dependent_variable} (predicted)', 'Node']
+        columns_to_show = []                     
+        if dependent_variable:
+            columns_to_show.append(f'{self._dependent_variable} (predicted)')
+        if node:
+            columns_to_show.append('Node')
+        if interaction:
+            columns_to_show.append('Interaction')
 
-            elif dependent_variable:
-                result = data_for_prediction.apply(lambda x: CHAIDClassifier._predict_one_observation(
-                    x, 
-                    self.nodes, 
-                    self._scale_variables
-                )[0], axis=1)
-                result.name = f'{self._dependent_variable} (predicted)'
-
-            elif node:
-                result = data_for_prediction.apply(lambda x: CHAIDClassifier._predict_one_observation(
-                    x, 
-                    self.nodes, 
-                    self._scale_variables
-                )[1], axis=1)
-                result.name = 'Node'
+        result = result[columns_to_show].copy()
             
         if add_to_data:
             return pd.concat([data, result], axis=1)
@@ -762,6 +754,32 @@ class CHAIDClassifier:
             else:
                 break
         return depth
+            
+    @staticmethod
+    def _get_one_node_interaction(node, nodes):
+        interaction = []
+        if node['Node'] == 'Node 0':
+            return np.nan
+        while True:
+            if node['Node'] == 'Node 0':
+                break
+            interaction.append(f'{node["Variable"]} = {node["Category"]}')
+            node = nodes[nodes['Node']==node['Parent node']].iloc[0]
+        return ' * '.join(interaction)
+                               
+    def get_interactions(self, result='dict'):
+        """
+        Returns a dictionary or a DataFrame with nodes and interactions corresponded to them.
+        """
+                               
+        results = self.nodes.apply(lambda x: CHAIDClassifier._get_one_node_interaction(x, self.nodes), axis=1)
+        results.index = self.nodes['Node']
+        if result.lower() == 'dict':
+            return dict(results)
+        elif result.lower() == 'dataframe':
+            return pd.DataFrame(results, columns=['Interaction'])
+        else:
+            raise ValueError("Unknown result type. Possible values: 'dict' and 'DataFrame'.")
 
 
 class CHAIDRegressor:
@@ -871,17 +889,14 @@ class CHAIDRegressor:
         depths = [CHAIDRegressor._get_node_depth(node, tree_nodes)\
                             for node in tree_nodes if node['Node']!='Node 0']
         self.depth = max(depths)
-        #display(pd.DataFrame(tree_nodes))
         self.nodes = pd.DataFrame(tree_nodes)
         terminal_nodes_idx = self.nodes.apply(lambda x: self._check_if_terminal_node(x), axis=1)
         self.terminal_nodes = self.nodes[terminal_nodes_idx]
-        #move to method       
+        self._node_interactions = self.get_interactions()      
         self.significant_variables = self.get_significant_variables()
         
         self.r2 = r2(self._data[dependent_variable],
                     self._data[f'{self._dependent_variable} (predicted)'])
-#         self.classification_table = self.get_classification_table()
-#         self.precision_and_recall = self.get_precision_and_recall()
         
         if show_results:
             self.show_results(tree_in_table_format=tree_in_table_format, 
@@ -900,7 +915,7 @@ class CHAIDRegressor:
     def get_significant_variables(self):
         """
         Identify which variables remained in the tree,
-        i.e. should be considered as significant ones.
+        i.e. should be considered significant ones.
         """
         significant_variables = get_categories(self.nodes['Variable'])
         significant_variables.remove(self._dependent_variable)  
@@ -928,10 +943,6 @@ class CHAIDRegressor:
         node_labels = {}
 
         dep_var = self._dependent_variable
-#         categories = list(self.nodes.loc[0, 'Dependent variable'].keys())
-#         colors = dict(zip(categories, available_colors[:len(categories)]))
-
-        #chi2s = []
 
         for idx, node in self.nodes.iterrows():
 
@@ -1053,11 +1064,7 @@ class CHAIDRegressor:
                     .format(None, na_rep="")\
                     .set_caption(f'Dependent variable: {self._dependent_variable}, independent variables: {", ".join(self._independent_variables)}')\
                     .set_precision(n_decimals))
-#         print('------------------\n')
-#         print('Prediction quality metrics')
-#         #print(f'R2 = {self.r2}\n')
-#         display(pd.DataFrame([self.r2], index=['R2'], columns=['']))
-    #move this method to the base chaid tree class    
+                                 
     def _check_if_terminal_node(self, node):
         if node['Node'] in self.nodes['Parent node'].tolist() or pd.isna(node['Parent node']):
             return False
@@ -1094,6 +1101,7 @@ class CHAIDRegressor:
                 data,
                 dependent_variable=True,
                 node=False,
+                interaction=False,
                 add_to_data=False):
         """
         Predict a value of the dependent variable and/or a node for the given data.
@@ -1103,45 +1111,35 @@ class CHAIDRegressor:
         data (DataFrame): data for which values or nodes should be predicted
         dependent_variable (bool): whether to predict the value of the dependent variable
         node (bool): whether to predict the node
+        interaction (bool): whether to predict interaction corresponded to the node
         add_to_data (bool): whether to merge predictions with the given data
         """
         
         if data[self._independent_variables + [self._dependent_variable]]\
         .equals(self._initial_data[self._independent_variables + [self._dependent_variable]]):
-            if dependent_variable and node:
-                result = self._data[[f'{self._dependent_variable} (predicted)', 'Node']]
-            elif dependent_variable:
-                result = self._data[f'{self._dependent_variable} (predicted)']
-            elif node:
-                result = self._data['Node']
+            result = self._data[[f'{self._dependent_variable} (predicted)', 'Node']].copy()
         
         else:
         
             data_for_prediction = data[self.significant_variables].copy()
+            result = data_for_prediction.apply(lambda x: CHAIDRegressor._predict_one_observation(
+                x, 
+                self.nodes, 
+                self._scale_variables
+            ), axis=1, result_type='expand')
+            result.columns = [f'{self._dependent_variable} (predicted)', 'Node']
+                                 
+        result['Interaction'] = result['Node'].map(self._node_interactions)
 
-            if dependent_variable and node:
-                result = data_for_prediction.apply(lambda x: CHAIDRegressor._predict_one_observation(
-                    x, 
-                    self.nodes, 
-                    self._scale_variables
-                ), axis=1, result_type='expand')
-                result.columns = [f'{self._dependent_variable} (predicted)', 'Node']
+        columns_to_show = []                     
+        if dependent_variable:
+            columns_to_show.append(f'{self._dependent_variable} (predicted)')
+        if node:
+            columns_to_show.append('Node')
+        if interaction:
+            columns_to_show.append('Interaction')
 
-            elif dependent_variable:
-                result = data_for_prediction.apply(lambda x: CHAIDRegressor._predict_one_observation(
-                    x, 
-                    self.nodes, 
-                    self._scale_variables
-                )[0], axis=1)
-                result.name = f'{self._dependent_variable} (predicted)'
-
-            elif node:
-                result = data_for_prediction.apply(lambda x: CHAIDRegressor._predict_one_observation(
-                    x, 
-                    self.nodes, 
-                    self._scale_variables
-                )[1], axis=1)
-                result.name = 'Node'
+        result = result[columns_to_show].copy()
             
         if add_to_data:
             return pd.concat([data, result], axis=1)
@@ -1440,3 +1438,29 @@ class CHAIDRegressor:
             else:
                 break
         return depth
+    
+    @staticmethod
+    def _get_one_node_interaction(node, nodes):
+        interaction = []
+        if node['Node'] == 'Node 0':
+            return np.nan
+        while True:
+            if node['Node'] == 'Node 0':
+                break
+            interaction.append(f'{node["Variable"]} = {node["Category"]}')
+            node = nodes[nodes['Node']==node['Parent node']].iloc[0]
+        return ' * '.join(interaction)
+                               
+    def get_interactions(self, result='dict'):
+        """
+        Returns a dictionary or a DataFrame with nodes and interactions corresponded to them.
+        """
+                               
+        results = self.nodes.apply(lambda x: CHAIDRegressor._get_one_node_interaction(x, self.nodes), axis=1)
+        results.index = self.nodes['Node']
+        if result.lower() == 'dict':
+            return dict(results)
+        elif result.lower() == 'dataframe':
+            return pd.DataFrame(results, columns=['Interaction'])
+        else:
+            raise ValueError("Unknown result type. Possible values: 'dict' and 'DataFrame'.")
