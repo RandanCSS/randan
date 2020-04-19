@@ -96,6 +96,7 @@ chaid = CHAIDRegressor().fit(
     scale_variables=['year', 'time', 'kinopoisk_rate_count']
     )
 
-#this is how you can predict values of the dependent variable, the node membership, and the description of the node in terms of interactions for the given data 
+# this is how you can predict values of the dependent variable, the node membership, 
+# and the description of the node in terms of interactions for the given data 
 predictions = chaid.predict(data, node=True, interaction=True)
 ```
