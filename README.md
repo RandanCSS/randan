@@ -93,7 +93,8 @@ chaid = CHAIDRegressor().fit(
     data,
     dependent_variable='kinopoisk_rate',
     independent_variables=['genre', 'age_ord', 'year', 'time', 'type', 'kinopoisk_rate_count'],
-    scale_variables=['year', 'time', 'kinopoisk_rate_count']
+    scale_variables=['year', 'time', 'kinopoisk_rate_count'],
+    ordinal_variables=['age_ord']
     )
 
 # this is how you can predict values of the dependent variable, the node membership, 
