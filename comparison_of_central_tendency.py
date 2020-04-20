@@ -12,7 +12,7 @@ class ANOVA:
     ----------
     data (DataFrame): data used to perform the analysis
     dependent_variable (str): name of a scale dependent variable
-    independent_variable (str): name of a independent (factor, grouping) variable
+    independent_variable (str): name of an independent (factor, grouping) variable
     show_results (bool): whether to show results of analysis
     n_decimals (int): number of digits to round results when showing them
     """
