@@ -120,13 +120,13 @@ class CHAIDClassifier:
                                        independent_variables,
                                        tree_nodes)
                                      
-        depths = [CHAIDClassifier._get_node_depth(node, tree_nodes)\
-                            for node in tree_nodes if node['Node']!='Node 0']
-        self.depth = max(depths)
-        #display(pd.DataFrame(tree_nodes))
         self.nodes = pd.DataFrame(tree_nodes)
         terminal_nodes_idx = self.nodes.apply(lambda x: self._check_if_terminal_node(x), axis=1)
         self.terminal_nodes = self.nodes[terminal_nodes_idx]
+        terminal_nodes_lst = [tree_nodes[i] for i in self.terminal_nodes.index]
+        depths = [CHAIDClassifier._get_node_depth(node, tree_nodes)\
+                            for node in terminal_nodes_lst]
+        self.depth = max(depths)
         
         self._node_interactions = self.get_interactions() 
         self.significant_variables = self.get_significant_variables()
@@ -886,12 +886,15 @@ class CHAIDRegressor:
                                        independent_variables,
                                        tree_nodes)
                                      
-        depths = [CHAIDRegressor._get_node_depth(node, tree_nodes)\
-                            for node in tree_nodes if node['Node']!='Node 0']
-        self.depth = max(depths)
+
         self.nodes = pd.DataFrame(tree_nodes)
         terminal_nodes_idx = self.nodes.apply(lambda x: self._check_if_terminal_node(x), axis=1)
         self.terminal_nodes = self.nodes[terminal_nodes_idx]
+        terminal_nodes_lst = [tree_nodes[i] for i in self.terminal_nodes.index]
+        depths = [CHAIDRegressor._get_node_depth(node, tree_nodes)\
+                            for node in terminal_nodes_lst]
+        self.depth = max(depths)
+
         self._node_interactions = self.get_interactions()      
         self.significant_variables = self.get_significant_variables()
         
