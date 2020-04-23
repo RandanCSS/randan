@@ -4,4 +4,8 @@ __all__ = [
     'tree'
     ]
 
-from randan import bivariate_association, tree, comparison_of_central_tendency
+from . import (
+    bivariate_association, 
+    tree, 
+    comparison_of_central_tendency
+)
