@@ -19,8 +19,8 @@ class CHAIDClassifier:
     method (str): which Chi-square metric to use, 'pearson' or 'likelihood'
     !CURRENTLY ONLY 'PEARSON' IS AVAILABLE!
     max_depth (int): maximum possible depth of tree
-    min_child_node (int): minimum possible number of observation in a child node
-    min_parent_node (int): minimum possible numb of observation in a parent node
+    min_child_node (int): minimum possible number of observations in a child node
+    min_parent_node (int): minimum possible number of observations in a parent node
     sig_level_split (float): significance level to split a node
     sig_level_merge (float): significance level to merge categories
     bonferroni (bool): !CURRENTLY UNAVAILIABLE! whether to use a Bonferroni's adjustment for p-values
@@ -789,8 +789,8 @@ class CHAIDRegressor:
     Parameters:
     ----------
     max_depth (int): maximum possible depth of tree
-    min_child_node (int): minimum possible number of observation in a child node
-    min_parent_node (int): minimum possible numb of observation in a parent node
+    min_child_node (int): minimum possible number of observations in a child node
+    min_parent_node (int): minimum possible number of observations in a parent node
     sig_level_split (float): significance level to split a node
     sig_level_merge (float): significance level to merge categories
     bonferroni (bool): !CURRENTLY UNAVAILIABLE! whether to use a Bonferroni's adjustment for p-values
