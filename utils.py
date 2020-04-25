@@ -18,7 +18,7 @@ def binning(series, n_intervals):
     return series
 
 def merge_two_cats(series, cat1, cat2):
-    joint_cat = cat1 + ' / ' + cat2
+    joint_cat = str(cat1) + ' / ' + str(cat2)
     return series.apply(lambda x: joint_cat if x in (cat1, cat2) else x)
 
 def merge_two_intervals(series, cat1, cat2):
