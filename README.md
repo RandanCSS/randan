@@ -45,7 +45,8 @@ By now, **three** modules have been included in the package. These modules corre
 | Module | Class or function | Corresponding SPSS function | Description |
 |--------|-------------------|-----------------------------|-------------|
 | bivariate_association | Crosstab | Analyze -> Descriptive statistics -> Crosstabs | Analysis of contingency tables |
-| comparison_of_central_tendency | ANOVA | Analyze -> Compare means > One-Way ANOVA | Analysis of variance |
+| comparison_of_central_tendency | ANOVA | Analyze -> Compare means -> One-Way ANOVA | Analysis of variance |
+| regression | LinearRegression | Analyze -> Regrssion -> Linear | OLS regression |
 | tree | CHAIDRegressor, CHAIDClassifier | Analyze -> Classify -> Tree -> CHAID | CHAID decision tree for scale and categorical dependent variables, respectively | 
 
 ### Quick start
@@ -82,6 +83,31 @@ anv = ANOVA(data, dependent_variable='kinopoisk_rate', independent_variable='gen
 
 # however, if you want to somehow use separate statistics, you can call them this way
 print(anv.F, anv.pvalue, anv.SSt)
+```
+#### Module `regression`
+This module consists of two classical regression models: linear regression and binary logistic regression. This group of methods belongs to supervised learning, which means you should use the `fit` function after calling the appropriate class, and then, if necessary, the `predict` function to acquire predictions.
+```python
+from randan.regression import LinearRegression
+
+# with this code, you will immediately see the results
+formula = 'kinopoisk_rate = time + year + genre + genre*type'
+
+regr = LinearRegression().fit(
+    data, 
+    formula=formula,
+    categorical_variables=['genre', 'type'],
+    collinearity_statistics=True
+)
+
+# this is how you can predict values of the dependent variable for the given data... 
+predictions = regr.predict()
+
+# ... save various types of residuals ...
+residuals = regr.save_residuals(unstardandized=False, studentized=True)
+
+# ... and even save values of independent variables 
+# if you didn't create them manually (e.g. dummies and interactions) ...
+indep_vars = regr.save_independent_variables()
 ```
 #### Module `tree`
 This module includes various methods of building decision trees. If you have a categorical dependent variable, please use those methods that contain `Classifier` part in their names. Otherwise, if you have a scale dependent variable, please use the methods that contain `Regressor` part in their names.
