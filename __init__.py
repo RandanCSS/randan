@@ -1,5 +1,6 @@
 from . import (
     bivariate_association, 
     tree, 
-    comparison_of_central_tendency
+    comparison_of_central_tendency,
+    regression
 )
