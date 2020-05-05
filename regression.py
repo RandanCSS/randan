@@ -558,6 +558,7 @@ class BinaryLogisticRegression:
     ----------
     method (str: 'enter', 'backward'): method for predictors selection 
     include_constant (bool): !CURRENTLY UNAVAILIABLE! whether to include constant in the model
+    classification_cutoff (float): minimum probability to assign a prediction value 1
     sig_level_entry (float): !CURRENTLY UNAVAILIABLE! max significance level to include predictor in the model 
     sig_level_removal (float): min significance level to exclude predictor from the model
     """
@@ -588,6 +589,31 @@ class BinaryLogisticRegression:
         use_patsy_notation=False,
         n_decimals=3
     ):
+        """
+        Fit model to the given data using formula.
+
+        Parameters:
+        ----------
+        data (DataFrame): data to fit the model  
+        formula (str): formula of a model specification, e.g. 'y ~ x1 + x2'; 
+        should be passed either in Patsy (statsmodels) notation
+        or using the following rules: 
+        '*' for interaction of the variables,
+        ':' for interaction & main effects, 
+        i.e., 'y ~ x:z' equals to 'y ~ x + z + x*z' (unlike the Patsy notation).
+        If you use Patsy notation, please specify the parameter use_patsy_notation=True.
+        categorical_variables (list): list of names of the variables that should be considered categorical.
+        These variables would be automatically converted into sets of dummy variables.
+        If you want to use this option, please make sure that you don't have nested names of variables
+        (e.g. 'imdb' and 'imdb_rate' at the same time), otherwise this option results in an incorrect procedure.
+        max_iterations (int): maximum iterations for convergence
+        show_results (bool): whether to show results of analysis
+        confidence_intervals (bool): whether to include coefficients' confidence intervals in the summary table
+        collinearity_statistics (bool): whether to include coefficients' tolerance and VIF in the summary table
+        use_patsy_notation (bool): turn this on if you use strictly Patsy's rules to define a formula.
+        See more: https://patsy.readthedocs.io/en/latest/quickstart.html
+        n_decimals (int): number of digits to round results when showing them
+        """
         
         self._data = data.copy()
         
@@ -970,6 +996,10 @@ class BinaryLogisticRegression:
         ----------
         data (DataFrame): data for prediction; 
         may be not specified if you want to predict values for the same data that were used to fit a model
+        group_membership (bool): whether to predict observation's membership 
+        to categories of a dependent variable
+        probability (bool): whether to predict exact probability
+        logit (bool): whether to predict a logit value 
         add_to_data (bool): whether to merge predictions with the given data.
         Currently, this option returns data with a sorted index
         """
@@ -1091,8 +1121,8 @@ class BinaryLogisticRegression:
         ----------
         unstandardized (bool): whether to save unstandardized (raw) residuals
         standardized (bool): whether to save standardized (z-scores) residuals
-        logit (bool): whether to save studentized residuals
-        deviance (bool): whether to save deleted residuals
+        logit (bool): whether to save logit residuals
+        deviance (bool): whether to save deviance residuals
         add_to_data (bool): whether to merge new values with data.
         Currently, this option returns data with a sorted index
         """
