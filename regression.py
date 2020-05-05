@@ -3,12 +3,16 @@
 import pandas as pd
 import numpy as np
 import scipy as sp
-from statsmodels.formula.api import ols
+from statsmodels.formula.api import ols, logit
 from statsmodels.tools.tools import add_constant
-from statsmodels.api import OLS
+from statsmodels.api import OLS, Logit
 from statsmodels.stats.outliers_influence import OLSInfluence
 
 from IPython.display import display
+
+from pandas.api.types import is_numeric_dtype
+from .utils import get_categories
+
 
 class LinearRegression:
     
@@ -17,7 +21,7 @@ class LinearRegression:
     
     Parameters:
     ----------
-    method (str: 'enter', 'backward'):  
+    method (str: 'enter', 'backward'):  method for predictors selection
     include_constant (bool): !CURRENTLY UNAVAILIABLE! whether to include constant in the model
     sig_level_entry (float): !CURRENTLY UNAVAILIABLE! max significance level to include predictor in the model 
     sig_level_removal (float): min significance level to exclude predictor from the model
@@ -543,4 +547,587 @@ class LinearRegression:
             mark = ''
                            
         result = f'{coef}{mark} \n ({sterr})'
+        return result
+
+class BinaryLogisticRegression:
+    
+    """
+    Class for binary logistic regression models based on the excellent statsmodels package.
+    
+    Parameters:
+    ----------
+    method (str: 'enter', 'backward'): method for predictors selection 
+    include_constant (bool): !CURRENTLY UNAVAILIABLE! whether to include constant in the model
+    sig_level_entry (float): !CURRENTLY UNAVAILIABLE! max significance level to include predictor in the model 
+    sig_level_removal (float): min significance level to exclude predictor from the model
+    """
+    
+    def __init__(
+        self, 
+        method='enter',
+        include_constant=True,
+        classification_cutoff=0.5,
+        sig_level_entry=0.05,
+        sig_level_removal=0.05,
+    ):
+        self.method = method.lower().strip()
+        self.include_constant = include_constant
+        self.classification_cutoff = classification_cutoff
+        self.sig_level_entry = sig_level_entry
+        self.sig_level_removal = sig_level_removal
+    
+    
+    def fit(
+        self,
+        data,
+        formula,
+        categorical_variables=None,
+        max_iterations=100,
+        show_results=True,
+        confidence_intervals=True,
+        use_patsy_notation=False,
+        n_decimals=3
+    ):
+        
+        self._data = data.copy()
+        
+        self.categorical_variables = categorical_variables
+        self._show_ci = confidence_intervals
+        self.max_iterations = max_iterations
+        
+        if '=' in formula:
+            formula = formula.replace('=', '~')
+        
+        if not use_patsy_notation:
+            formula = formula.replace('*', '^').replace(':', '*').replace('^', ':')
+            
+        self.formula = formula
+        
+        self.dependent_variable = self.formula.split('~')[0].strip()
+        
+        dep_cats = get_categories(self._data[self.dependent_variable])
+        self._dep_cats = dep_cats
+        
+        if len(dep_cats) != 2:
+            raise ValueError(f"""A dependent variable should have exactly 2 unique categories.
+            The provided variable has {len(dep_cats)}.""")
+            
+        self._mapper = {dep_cats[0]: 0, dep_cats[1]: 1}
+        self._inv_mapper = {0: dep_cats[0], 1: dep_cats[1]}
+        
+        if not is_numeric_dtype(self._data[self.dependent_variable]):
+            self._data[self.dependent_variable] = self._data[self.dependent_variable].map(self._mapper).astype(int) 
+        
+        #won't work correctly if some variables have nested names (e.g. kinopoisk_rate and kinopoisk_rate_count)
+        if categorical_variables is not None:
+            if not isinstance(categorical_variables, list):
+                raise ValueError(f"""Categorical variables should be passed as list.
+                Type {type(categorical_variables)} was passed instead.""")
+            else:
+                for variable in categorical_variables:
+                    formula = formula.replace(variable, f'C({variable})')
+        self._optimizer = 'newton'
+        try:
+            self._model = logit(formula=formula, data=self._data).fit(
+                maxiter=self.max_iterations, 
+                warn_convergence=False,
+                disp=False,
+                method=self._optimizer,
+                full_output=True
+            )
+        except np.linalg.LinAlgError:
+            self._optimizer = 'bfgs'
+            self._model = logit(formula=formula, data=self._data).fit(
+                maxiter=self.max_iterations, 
+                warn_convergence=False,
+                disp=False,
+                method=self._optimizer,
+                full_output=True
+            )
+            
+        self._model_params = {
+            'maxiter': self.max_iterations,
+            'warn_convergence': False,
+            'disp': False,
+            'method': self._optimizer,
+            'full_output': True
+        }
+        
+        self._observations_idx = list(self._model.fittedvalues.index)       
+        self.variables_excluded = self._identify_variables_without_variation()
+        
+        if len(self.variables_excluded) > 0:
+            y = pd.Series(self._model.model.endog.copy(), 
+                          index=self._observations_idx,
+                          name=self.dependent_variable)
+            X = self._remove_variables_without_variation()
+            self._model = Logit(y, X, missing = 'drop').fit(**self._model_params)
+            self.variables_excluded = [BinaryLogisticRegression._translate_from_patsy_notation(x) for x in self.variables_excluded]
+        
+        
+        if self.method == 'backward':
+            self._fit_backward()
+        
+        self._get_statistics_from_model()
+        
+        self.predictions = self.predict()
+        self.classification_table = self.get_classification_table()
+        self.precision_and_recall = self.get_precision_and_recall()
+        
+        if show_results:
+            self.show_results(n_decimals)
+        
+        if len(self.variables_excluded) > 0:
+            print('------------------\n')
+            print(f"Following variables were excluded due to zero variance: {'; '.join(self.variables_excluded)}")
+        
+        return self
+    
+    def _fit_backward(self):
+        
+        y_train = pd.Series(self._model.model.endog.copy(), 
+                            name=self.dependent_variable,
+                           index=self._observations_idx)
+        X_train = pd.DataFrame(self._model.model.exog, columns=self._model.model.exog_names,
+                              index=self._observations_idx)
+
+        model = Logit(y_train, X_train, missing = 'drop')
+        
+        results = model.fit(**self._model_params)
+        
+        max_pvalue = results.pvalues.drop('Intercept').max()
+        
+        while max_pvalue > self.sig_level_removal:
+            x_to_drop = results.pvalues.drop('Intercept').idxmax()
+            X_train = X_train.drop(x_to_drop, axis = 1)
+            model = Logit(y_train, X_train, missing = 'drop')
+            results = model.fit(**self._model_params)
+            max_pvalue = results.pvalues.drop('Intercept').max()
+        
+        self._model = results
+        
+        return
+    
+    def _identify_variables_without_variation(self):
+        if self.include_constant:
+            mask = self._model.model.exog.var(axis=0)[1:] == 0
+        else:
+            mask = self._model.model.exog.var(axis=0) == 0
+            
+        variables_included = [x for x in list(self._model.params.index) if x!='Intercept']
+
+        return list(np.array(variables_included)[mask])
+    
+    def _remove_variables_without_variation(self):
+        X = pd.DataFrame(self._model.model.exog, 
+                         columns=self._model.model.exog_names, 
+                        index=self._observations_idx)
+        X = X.drop(self.variables_excluded, axis = 1)
+        return X
+    
+    @staticmethod
+    def _translate_from_patsy_notation(effect):
+        effect = effect\
+        .replace(':', ' * ')\
+        .replace('C(', '')\
+        .replace('T.', '')\
+        .replace('[', ' = "')\
+        .replace(']', '"')\
+        .replace(')', '')
+        
+        return effect
+                  
+    def _get_statistics_from_model(self):
+        
+        self.N = self._model.nobs
+        self.r2_pseudo_macfadden = self._model.prsquared
+        self.r2_pseudo_cox_snell = 1 - np.exp(-self._model.llr/self.N)
+        self.r2_pseudo_nagelkerke = self.r2_pseudo_cox_snell / (1 - np.exp(-(-2*self._model.llnull)/self.N))
+        self.loglikelihood = -2 * self._model.llf
+        
+        self.coefficients = self._model.params.copy()
+        self.coefficients_sterrors = self._model.bse.copy()
+        self.coefficients_wald_statistics = self._model.tvalues.copy() ** 2
+        self.coefficients_zvalues = self._model.tvalues.copy()
+        self.coefficients_pvalues = self._model.pvalues.copy()
+        self.coefficients_exp = self.coefficients.apply(np.exp)
+        
+        variables_included = [x for x in list(self.coefficients.index) if x!='Intercept']
+        self._variables_included_patsy = variables_included.copy()
+        
+        variables_included = [BinaryLogisticRegression._translate_from_patsy_notation(x) for x in variables_included]        
+        
+        self.variables_included = variables_included
+        
+        if self.include_constant:
+            self._params_idx = ['Constant'] + variables_included
+        else:
+            self._params_idx = variables_included.copy()
+        
+        for stats in [self.coefficients,
+                     self.coefficients_pvalues,
+                     self.coefficients_sterrors,
+                     self.coefficients_zvalues,
+                     self.coefficients_wald_statistics,
+                     self.coefficients_exp]:
+            stats.index = self._params_idx    
+        
+        return
+                  
+    def summary(self):
+        """
+        Summary table with requested information related to regression coefficients.
+        """
+                  
+        statistics = [
+            self.coefficients,
+            self.coefficients_sterrors,
+            self.coefficients_wald_statistics,
+            self.coefficients_pvalues,
+            self.coefficients_exp
+        ]
+        
+        columns = [
+            'B', 
+            'Std. Error',
+            'Wald',
+            'p-value',
+            'Exp(B)'
+        ]
+        
+        if self._show_ci:
+            statistics.append(self.coefficients_confidence_interval)
+            columns.extend(list(self.coefficients_confidence_interval.columns))
+        
+        statistics = pd.concat(statistics, axis=1)
+        
+        statistics.columns = columns
+        
+        statistics.index = self._params_idx
+        
+        return statistics
+                  
+    @property
+    def coefficients_confidence_interval(self):
+        
+        ci = self._model.conf_int()
+        ci.index = self._params_idx
+        
+        ci.columns = [f'LB CI (95%)',
+                     f'UB CI (95%)']
+        return ci
+                  
+    def show_results(self, n_decimals):
+        """
+        Show results of the analysis in a readable form.
+        
+        Parameters:
+        ----------
+        n_decimals (int): number of digits to round results when showing them
+        """
+        phrase = 'method {}'
+        
+        print('\nLOGISTIC REGRESSION SUMMARY\n')
+        if self._model.mle_retvals['converged']==True:
+            print('Estimation was converged successfully.')
+        else:
+            print('Estimation was NOT converged successfully.')
+            print('Please enlarge the number of iterations.')
+        print('------------------\n')
+        print('Dependent variable encoding')
+        display(self.get_dependent_variable_codes().style\
+                    .set_caption(phrase.format('.get_dependent_variable_codes()')))
+        print('------------------\n')
+        print('Model summary')
+        display(self.summary_r2().style\
+                    .set_caption(phrase.format('.summary_r2()'))\
+                    .set_precision(n_decimals))
+        print('------------------\n')
+        print('Classification table')
+        display(self.get_classification_table().style\
+                    .set_caption(phrase.format('.get_classification_table()'))\
+                    .set_precision(n_decimals))
+        print('------------------\n')
+        print('Precision and recall')
+        display(self.get_precision_and_recall().style\
+                    .set_caption(phrase.format('.get_precision_and_recall()'))\
+                    .set_precision(n_decimals))
+        print('------------------\n')
+        print('Coefficients')
+        display(self.summary().style\
+                    .format(None, na_rep="")\
+                    .set_caption(phrase.format('.summary()'))\
+                    .set_precision(n_decimals))
+        
+    def summary_r2(self):
+        """
+        Summary table with information related to pseudo coefficients of determination.
+        """
+        ll = self.loglikelihood
+        mf = self.r2_pseudo_macfadden
+        cs = self.r2_pseudo_cox_snell
+        nk = self.r2_pseudo_nagelkerke
+        
+        statistics = [[ll, mf, cs, nk]]
+        columns = [
+            '-2 Log likelihood',
+            "MacFadden's Pseudo R2",
+            "Cox&Snell's Pseudo R2",
+            "Nagelkerke's Pseudo R2",
+        ]
+        
+        statistics = pd.DataFrame(
+            statistics,
+            columns=columns,
+            index = ['']
+        )
+        
+        return statistics
+    
+    def get_dependent_variable_codes(self):
+        """
+        Get information on how categories of a dependent variable were encoded.
+        """
+        mapper = self._mapper
+        result = pd.DataFrame(
+            [list(mapper.items())[0], list(mapper.items())[1]],
+            columns = ['Original value', 'Model value'],
+            index = ['', ' ']
+        )
+        return result
+    
+    def get_classification_table(self):
+        """
+        Get a classification table.
+        """
+        all_categories = self._dep_cats
+
+        classification = pd.DataFrame(
+            self._model.pred_table(),
+            columns=self._dep_cats,
+            index=self._dep_cats
+        )
+
+        classification.index.name = 'Observed'
+        classification.columns.name = 'Predicted'
+        classification['All'] = classification.sum(axis=1)
+        classification.loc['All'] = classification.sum()
+
+        n = classification.loc['All', 'All']
+        for category in all_categories:
+            classification.loc[category, 'All'] =  classification.loc[category, category] / classification.loc[category, 'All'] * 100
+            classification.loc['All', category] =  classification.loc['All', category] / n * 100
+
+
+        classification.loc['All', 'All'] = np.diagonal(classification.loc[all_categories, all_categories]).sum() / n * 100
+        classification.index = all_categories + ['Percent predicted']
+        classification.index.name = 'Observed'
+        classification.columns = all_categories + ['Percent correct']
+        classification.columns.name = 'Predicted'
+        return classification
+    
+    def get_precision_and_recall(self):
+        """
+        Estimate precision, recall, and F-score for all the categories.
+        """
+
+        preds = self.classification_table.iloc[:-1, :-1]
+        results = []
+        categories = list(preds.index)
+        for current_category in categories:
+            idx = [cat for cat in categories if cat!=current_category]
+            tp = preds.loc[current_category, current_category]
+            fp = preds.loc[idx, current_category].sum()
+            fn = preds.loc[current_category, idx].sum()
+            if fp == 0:
+                precision = 0
+            else:
+                precision = tp / (tp + fp)
+            recall = tp / (tp + fn)
+            if precision + recall != 0:
+                f1 = 2 * (precision * recall) / (precision + recall)
+            else:
+                f1 = 0
+            results.append([precision, recall, f1])
+        results = pd.DataFrame(results, 
+                               index=categories, 
+                               columns = ['Precision', 'Recall', 'F score'])
+        results.loc['Mean'] = results.mean()
+        return results
+    
+    def predict(
+        self,
+        data=None,
+        group_membership=True,
+        probability=False,
+        logit=False,
+        add_to_data=False,
+    ):
+        """
+        Predict values of a dependent variable using a fitted model.
+        
+        Parameters:
+        ----------
+        data (DataFrame): data for prediction; 
+        may be not specified if you want to predict values for the same data that were used to fit a model
+        add_to_data (bool): whether to merge predictions with the given data.
+        Currently, this option returns data with a sorted index
+        """
+        name_memb = f'{self.dependent_variable} (predicted)'
+        name_prob = f'{self.dependent_variable} (predicted prob.)'
+        name_logit = f'{self.dependent_variable} (predicted logit)'
+        
+        all_columns = [name_memb, name_prob, name_logit]
+        
+        columns_to_show = []
+        if group_membership:
+            columns_to_show.append(name_memb)
+        if probability:
+            columns_to_show.append(name_prob)
+        if logit:
+            columns_to_show.append(name_logit)
+        
+        cutoff = self.classification_cutoff
+        
+        if data is None:
+            data_init = self._data.copy()
+            logit = self._model.fittedvalues
+            prob = logit.apply(lambda x: np.exp(x) / (1 + np.exp(x)))
+            memb = prob.apply(lambda x: 1 if x >= cutoff else 0).map(self._inv_mapper)
+            result = pd.DataFrame(index=self._observations_idx, columns=all_columns)
+            result[name_memb] = memb
+            result[name_prob] = prob
+            result[name_logit] = logit
+            result = result[columns_to_show]
+            if add_to_data:
+                return pd.concat([data_init, result], axis=1)
+            else:
+                return result
+                  
+        else:
+            aux_model = logit(self.formula, data).fit(**self._model_params)
+            aux_data_idx = aux_model.fittedvalues.index
+            aux_data_cols = aux_model.model.exog_names
+            aux_data_cols = [BinaryLogisticRegression._translate_from_patsy_notation(x)\
+                              for x in aux_data_cols]
+            aux_data = pd.DataFrame(aux_model.model.exog,
+                                    index=aux_data_idx,
+                                    columns=aux_data_cols)
+            aux_X = add_constant(aux_data[self.variables_included].copy())
+            aux_y = aux_model.model.endog.copy()
+                  
+            aux_model = Logit(aux_y, aux_X, missing='drop').fit(**self._model_params)
+            
+            logit = aux_model.fittedvalues
+            prob = logit.apply(lambda x: np.exp(x) / (1 + np.exp(x)))
+            memb = prob.apply(lambda x: 1 if x >= cutoff else 0).map(self._inv_mapper)
+            result = pd.DataFrame(index=aux_data_idx, columns=all_columns)
+            result[name_memb] = memb
+            result[name_prob] = prob
+            result[name_logit] = logit
+            result = result[columns_to_show]
+            if add_to_data:
+                return pd.concat([data, result], axis=1)
+            else:
+                return result
+            
+    def save_independent_variables(
+        self,
+        data=None,
+        add_to_data=False
+    ):
+        """
+        Produce values of independent variable remained in a fitted model.
+        This option is useful if you don't create dummy variables or interaction effects manually
+        but want to use them in a further analysis. Only variables remained in a model are returned
+        (those that are shown in a summary table).
+        
+        Parameters:
+        ----------
+        data (DataFrame): data for which independent variables are requested; 
+        may be not specified if you want to save values for the same data that were used to fit a model
+        add_to_data (bool): whether to merge new values with the given data.
+        Currently, this option returns data with a sorted index
+        """
+                  
+        if data is None:
+            data = self._data.copy()
+            if self.include_constant:
+                result = self._model.model.exog[:, 1:].copy()
+            else:
+                result = self._model.model.exog.copy()
+            columns = [x for x in self.variables_included if x!='Constant']
+            result = pd.DataFrame(
+                result,
+                columns=columns,
+                index=self._observations_idx)
+        
+        else:
+            aux_model = logit(self.formula, data).fit(**self._model_params)
+            aux_data_idx = aux_model.fittedvalues.index
+            aux_data_cols = aux_model.model.exog_names
+            aux_data_cols = [BinaryLogisticRegression._translate_from_patsy_notation(x)\
+                              for x in aux_data_cols]
+            aux_data = pd.DataFrame(aux_model.model.exog,
+                                    index=aux_data_idx,
+                                    columns=aux_data_cols)
+            result = aux_data[self.variables_included]
+        
+        if add_to_data:
+            result = pd.concat([data, result], axis=1)
+                  
+        return result
+    
+    def save_residuals(self,
+                      unstandardized=True,
+                      standardized=False,
+                      logit=False,
+                      deviance=False,
+                      add_to_data=False):
+        """
+        Produce values of various residuals. Residuals are returned only for data used to fit a model.
+        
+        Parameters:
+        ----------
+        unstandardized (bool): whether to save unstandardized (raw) residuals
+        standardized (bool): whether to save standardized (z-scores) residuals
+        logit (bool): whether to save studentized residuals
+        deviance (bool): whether to save deleted residuals
+        add_to_data (bool): whether to merge new values with data.
+        Currently, this option returns data with a sorted index
+        """
+                  
+        columns_to_show = [f'{k.capitalize().replace("ized", ".").replace("eted", ".").replace("_", " ")} res.' \
+                           for k, v in vars().items() if v==True and k!='add_to_data']
+        
+        result = []
+                  
+        res_unstand = self._model.resid_response
+        res_unstand.name = 'Unstandard. res.'
+                  
+        res_stand = self._model.resid_pearson
+        res_stand.name = 'Standard. res.'
+          
+        res_deviance = self._model.resid_dev
+        res_deviance.name = 'Deviance res.'                           
+        
+        preds_prob = self.predict(group_membership=False, probability=True)
+        
+        res_logit = res_unstand / (preds_prob * (1 - preds_prob)).iloc[:, 0]
+        res_logit.name = 'Logit res.'                   
+        
+        result.extend([
+            res_unstand, 
+            res_stand,
+            res_deviance,
+            res_logit
+        ])                                
+
+        result = pd.concat(result, axis=1)
+        
+        result = result[columns_to_show].copy()
+            
+        if add_to_data:
+            result = pd.concat([self._data, result], axis=1)
+            
         return result
