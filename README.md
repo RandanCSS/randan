@@ -47,6 +47,7 @@ By now, **three** modules have been included in the package. These modules corre
 | bivariate_association | Crosstab | Analyze -> Descriptive statistics -> Crosstabs | Analysis of contingency tables |
 | comparison_of_central_tendency | ANOVA | Analyze -> Compare means -> One-Way ANOVA | Analysis of variance |
 | regression | LinearRegression | Analyze -> Regression -> Linear | OLS regression |
+| regression | BinaryLogisticRegression | Analyze -> Regression -> Binary Logistic | Binary logistic regression |
 | tree | CHAIDRegressor, CHAIDClassifier | Analyze -> Classify -> Tree -> CHAID | CHAID decision tree for scale and categorical dependent variables, respectively | 
 
 ### Quick start
