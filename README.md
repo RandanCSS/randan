@@ -80,7 +80,7 @@ This module contains both parametric and non-parametric methods for comparison o
 from randan.comparison_of_central_tendency import ANOVA
 
 # with this code, you will immediately see the results
-anv = ANOVA(data, dependent_variable='kinopoisk_rate', independent_variable='genre')
+anv = ANOVA(data, dependent_variables='kinopoisk_rate', independent_variable='genre')
 
 # however, if you want to somehow use separate statistics, you can call them this way
 print(anv.F, anv.pvalue, anv.SSt)
