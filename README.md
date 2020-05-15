@@ -48,7 +48,8 @@ By now, **three** modules have been included in the package. These modules corre
 | comparison_of_central_tendency | ANOVA | Analyze -> Compare means -> One-Way ANOVA | Analysis of variance |
 | regression | LinearRegression | Analyze -> Regression -> Linear | OLS regression |
 | regression | BinaryLogisticRegression | Analyze -> Regression -> Binary Logistic | Binary logistic regression |
-| tree | CHAIDRegressor, CHAIDClassifier | Analyze -> Classify -> Tree -> CHAID | CHAID decision tree for scale and categorical dependent variables, respectively | 
+| tree | CHAIDRegressor, CHAIDClassifier | Analyze -> Classify -> Tree -> CHAID | CHAID decision tree for scale and categorical dependent variables, respectively |
+| clustering | KMeans | Analyze -> Classify -> K-Means Cluster | Cluster analysis with k-means algorithm |
 
 ### Quick start
 Although `randan` is built to be similar to SPSS, it reproduces the fit-predict and fit-transform approach, which is now being used in the most popular machine learning python packages. This approach means that you should, firstly, initialize your model and then, secondly, fit it to your data (i.e., use the `fit` function) if necessary. 
@@ -129,4 +130,18 @@ chaid = CHAIDRegressor().fit(
 # this is how you can predict values of the dependent variable, the node membership, 
 # and the description of the node in terms of interactions for the given data 
 predictions = chaid.predict(data, node=True, interaction=True)
+```
+#### Module `clustering`
+This module includes two main clustering methods: k-means and hierarchical (agglomerative) clustering. 
+
+Clustering methods belong to unsupervised learning, which means you should use the `fit` function after calling the appropriate class, and then, if necessary, the `transform` function to acquire cluster membership (and / or distances to each center in case of k-means).
+```python
+from randan.clustering import KMeans
+
+# with this code, you will immediately see the results, including visualization of clusters
+km = KMeans(2).fit(data, ['year', 'time', 'kinopoisk_rate_count'])
+
+# this is how you can predict the cluster membership, 
+# and the distances from each observation to each cluster's center
+clusters = km.transform(distance_to_centers=True)
 ```
