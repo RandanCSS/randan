@@ -145,3 +145,4 @@ km = KMeans(2).fit(data, ['year', 'time', 'kinopoisk_rate_count'])
 # and the distances from each observation to each cluster's center
 clusters = km.transform(distance_to_centers=True)
 ```
+> If you experience troubles with visualization and see captions like <Figure size 800x500 with 1 Axes> instead of plots, just re-run the code that produces them.
