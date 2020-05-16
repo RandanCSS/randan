@@ -37,7 +37,8 @@ class KMeans:
         random_state=14,
         show_results=True,
         n_decimals=3,
-        plot_clusters=True
+        plot_clusters=True,
+        plot_silhouette=False
     ):
         """
         Fit a model to the given data.
@@ -90,6 +91,13 @@ class KMeans:
         if show_results:
             self.show_results(n_decimals)
         
+        if plot_silhouette:
+            print('------------------\n')
+            print('Clusters quality')
+            self.get_silhouette_plot()
+            print("""This plot is based on the average silhouette score, 
+which can be obtained by using [model].get_silhouette_score()""")
+
         if plot_clusters:
             print('------------------\n')
             print('Clusters visualisation')
@@ -138,11 +146,7 @@ To see the exact centers, use [model].get_cluster_centers(round_discrete=False)"
                     .format(None, na_rep="")\
                     .set_caption(phrase.format('.get_number_of_cases_by_clusters()'))\
                     .set_precision(n_decimals))
-        print('------------------\n')
-        print('Clusters quality')
-        self.get_silhouette_plot()
-        print("""This plot is based on the average silhouette score, 
-which can be obtained by using [model].get_silhouette_score()""")
+
     
     def get_cluster_centers(self, round_discrete=False):
         """
