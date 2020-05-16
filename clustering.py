@@ -59,6 +59,7 @@ class KMeans:
         
         if variables is None:
             data = data.dropna().copy()
+            variables = list(data.columns)
         else:
             if not isinstance(variables, list):
                 raise TypeError(f'Variables should be passed as list. {type(variables)} was passed instead.')
