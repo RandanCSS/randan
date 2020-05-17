@@ -19,7 +19,7 @@ def binning(series, n_intervals):
 
 def merge_two_cats(series, cat1, cat2):
     joint_cat = str(cat1) + ' / ' + str(cat2)
-    return series.apply(lambda x: joint_cat if x in (cat1, cat2) else x)
+    return series.apply(lambda x: joint_cat if x in (cat1, cat2) else x).astype(str)
 
 def merge_two_intervals(series, cat1, cat2):
     pair = cat1, cat2
@@ -27,8 +27,6 @@ def merge_two_intervals(series, cat1, cat2):
     upper_bound = cat2.right if cat2.right > cat1.right else cat1.right
     return series.apply(lambda x: pd.Interval(lower_bound, upper_bound) if x in pair else x)
 
-# def get_categories(series):
-#     return sorted(list(series.value_counts(sort=False).index))
 def get_categories(series):
     return sorted(series.unique())
 
@@ -45,8 +43,11 @@ def get_ordered_combinations(categories, k):
 def confidence_interval_mean(mean, std, n, sig_level=0.05):
     z_crit = norm.isf(sig_level / 2)
     error = z_crit * (std/(n**(1/2)))
+    if pd.isnull(error):
+        error = 0
     lower_bound = mean - error
     upper_bound = mean + error
+    #print(z_crit, error, mean, lower_bound, upper_bound)
     return pd.Interval(lower_bound, upper_bound, closed='both')
 
 #move to descriptive statistics ?
