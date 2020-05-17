@@ -1,3 +1,6 @@
+#TODO - case when only root node remains 
+# (gives an error when checking on terminal nodes)
+
 from .utils import *
 from .bivariate_association import Crosstab
 from .comparison_of_central_tendency import ANOVA
@@ -104,6 +107,7 @@ class CHAIDClassifier:
         self._ordinal_variables = ordinal_variables
         self._scale_variables = scale_variables
         
+        
 
         if self.max_depth is None:
             self.max_depth = len(independent_variables)
@@ -121,16 +125,23 @@ class CHAIDClassifier:
                                        tree_nodes)
                                      
         self.nodes = pd.DataFrame(tree_nodes)
-        terminal_nodes_idx = self.nodes.apply(lambda x: self._check_if_terminal_node(x), axis=1)
-        self.terminal_nodes = self.nodes[terminal_nodes_idx]
-        terminal_nodes_lst = [tree_nodes[i] for i in self.terminal_nodes.index]
-        depths = [CHAIDClassifier._get_node_depth(node, tree_nodes)\
-                            for node in terminal_nodes_lst]
-        self.depth = max(depths)
         
-        self._node_interactions = self.get_interactions() 
-        self.significant_variables = self.get_significant_variables()
-        
+        #display(self.nodes)
+        if len(self.nodes) > 1:
+            terminal_nodes_idx = self.nodes.apply(lambda x: self._check_if_terminal_node(x), axis=1)
+            self.terminal_nodes = self.nodes[terminal_nodes_idx]
+            terminal_nodes_lst = [tree_nodes[i] for i in self.terminal_nodes.index]
+            depths = [CHAIDClassifier._get_node_depth(node, tree_nodes)\
+                                for node in terminal_nodes_lst]
+            self.depth = max(depths)
+            
+            self._node_interactions = self.get_interactions() 
+            self.significant_variables = self.get_significant_variables()
+        else:
+            self.terminal_nodes = []
+            self.depth = 0
+            self.significant_variables = []
+            self._data[f'{dependent_variable} (predicted)'] = self._data[dependent_variable].mode().item()
         self.classification_table = self.get_classification_table()
         self.precision_and_recall = self.get_precision_and_recall()
         
@@ -189,11 +200,16 @@ class CHAIDClassifier:
 
             current_node = node['Node']
             node_variable = node['Variable']
-            node_category = node['Category']
+            if 'Category' in node:
+                node_category = node['Category']
             predicted_category = node['Mode']
             n = node['N']
-            parent_node = node['Parent node']
-            chi2 = round(node['Chi-square'], 1)
+            if 'Parent node' in node:
+                parent_node = node['Parent node']
+            else:
+                parent_node = None
+            if 'Chi-square' in node:
+                chi2 = round(node['Chi-square'], 1)
             fillcolor=colors[predicted_category]
             if current_node == 'Node 0':
                 #fillcolor=#'lightgray'
@@ -383,7 +399,7 @@ class CHAIDClassifier:
             observation_category = observation[split_variable]
             #print(observation_category)
             if split_variable not in scale_variables:
-                rule = current_nodes_level.iloc[:, -1].str.split(' / ').apply(lambda x: True if observation_category in x else False)
+                rule = current_nodes_level.iloc[:, -1].str.split(' / ').apply(lambda x: True if str(observation_category) in x else False)
             else:
                 rule = current_nodes_level.iloc[:, -1].apply(lambda x: x.overlaps(pd.Interval(observation_category, observation_category, 'both')))
             predicted_category = current_nodes_level[rule]['Mode'].item()
@@ -440,10 +456,6 @@ class CHAIDClassifier:
         else:
             return result       
     
-#     @staticmethod
-#     def _binning(series, n_intervals):
-#         series = pd.qcut(series, n_intervals, duplicates='drop')
-#         return series
     
     @staticmethod
     def _get_most_significant_variable(data, 
@@ -474,7 +486,7 @@ class CHAIDClassifier:
             its_pvalue = results.loc[most_significant_variable, 'pvalue']
             its_chi2 = results.loc[most_significant_variable, 'chi2']
             its_dof = results.loc[most_significant_variable, 'dof']
-
+            #print(most_significant_variable, its_pvalue, its_chi2, its_dof)
             return most_significant_variable, its_pvalue, its_chi2, its_dof
 #         else:
 #             return None, None, None, None
@@ -517,6 +529,7 @@ class CHAIDClassifier:
                             data[independent_variable] = merge_two_intervals(data[independent_variable],
                                                                                               categories[0],
                                                                                               categories[1])
+                
                 return data[independent_variable]
             
             #start_time = time.time()     
@@ -680,8 +693,8 @@ class CHAIDClassifier:
                          'p-value': split_pvalue,
                          'dof': split_dof}
             #print(split_info)#'Variable': split_variable,
-
-            if split_info['dof'] > 1 and split_info['p-value'] <= self.sig_level_split:
+            #if split_info['dof'] > 1 and 
+            if split_info['p-value'] <= self.sig_level_split:
                 #print(split_info)
                 #start_time = time.time()
                 iter_nodes = self._build_nodes_from_variable(data_iter,
@@ -888,15 +901,22 @@ class CHAIDRegressor:
                                      
 
         self.nodes = pd.DataFrame(tree_nodes)
-        terminal_nodes_idx = self.nodes.apply(lambda x: self._check_if_terminal_node(x), axis=1)
-        self.terminal_nodes = self.nodes[terminal_nodes_idx]
-        terminal_nodes_lst = [tree_nodes[i] for i in self.terminal_nodes.index]
-        depths = [CHAIDRegressor._get_node_depth(node, tree_nodes)\
-                            for node in terminal_nodes_lst]
-        self.depth = max(depths)
 
-        self._node_interactions = self.get_interactions()      
-        self.significant_variables = self.get_significant_variables()
+        if len(self.nodes) > 1:
+            terminal_nodes_idx = self.nodes.apply(lambda x: self._check_if_terminal_node(x), axis=1)
+            self.terminal_nodes = self.nodes[terminal_nodes_idx]
+            terminal_nodes_lst = [tree_nodes[i] for i in self.terminal_nodes.index]
+            depths = [CHAIDRegressor._get_node_depth(node, tree_nodes)\
+                                for node in terminal_nodes_lst]
+            self.depth = max(depths)
+
+            self._node_interactions = self.get_interactions()      
+            self.significant_variables = self.get_significant_variables()
+        else:
+            self.terminal_nodes = []
+            self.depth = 0
+            self.significant_variables = []
+            self._data[f'{dependent_variable} (predicted)'] = self._data[dependent_variable].mean()
         
         self.r2 = r2(self._data[dependent_variable],
                     self._data[f'{self._dependent_variable} (predicted)'])
@@ -1092,7 +1112,7 @@ class CHAIDRegressor:
             observation_category = observation[split_variable]
             #print(observation_category)
             if split_variable not in scale_variables:
-                rule = current_nodes_level.iloc[:, -1].str.split(' / ').apply(lambda x: True if observation_category in x else False)
+                rule = current_nodes_level.iloc[:, -1].str.split(' / ').apply(lambda x: True if str(observation_category) in x else False)
             else:
                 rule = current_nodes_level.iloc[:, -1].apply(lambda x: x.overlaps(pd.Interval(observation_category, observation_category, 'both')))
             predicted_category = current_nodes_level[rule]['Mean'].item()
