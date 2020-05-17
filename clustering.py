@@ -10,6 +10,7 @@ from sklearn.cluster import KMeans as KM_Base
 from sklearn.metrics import silhouette_samples, silhouette_score
 
 from .comparison_of_central_tendency import ANOVA
+from scipy.spatial.distance import pdist, squareform
 
 
 class KMeans:
@@ -86,6 +87,7 @@ class KMeans:
         self.n_iters = self._model.n_iter_
         self.is_converged = True if self.n_iters < max_iter else False
         self.cluster_centers = self.get_cluster_centers(round_discrete=False)
+        self.inertia = self._model.inertia_
         self._predictions = self.transform(self._data, add_to_data=True)        
         
         if show_results:
@@ -134,6 +136,12 @@ To see more plots, use [model].get_bivariate_plots()""")
         if self._integer_type_vars != []:
             print("""Cluster centers for discrete variables are rounded for better interpretability.
 To see the exact centers, use [model].get_cluster_centers(round_discrete=False)""")
+        print('------------------\n')
+        print('Distances between centers')
+        display(self.get_distances_between_centers().style\
+                    .format(None, na_rep="")\
+                    .set_caption(phrase.format('.get_distances_between_centers()'))\
+                    .set_precision(n_decimals))
         print('------------------\n')
         print('ANOVA')
         display(self.get_ANOVA_table().style\
@@ -225,6 +233,17 @@ To see the exact centers, use [model].get_cluster_centers(round_discrete=False)"
             'p-value']
         return summary[columns_to_show]
     
+    def get_distances_between_centers(self):
+        """
+        Get Eucledian's distance between each cluster's centers.
+        """
+        centers = self.cluster_centers
+        idx = list(centers.index)
+        dists = squareform(pdist(centers))
+        dists = pd.DataFrame(dists, index=idx, columns=idx)
+        dists.index.name = 'Cluster'
+        return dists
+        
     def transform(
         self,
         data=None,
