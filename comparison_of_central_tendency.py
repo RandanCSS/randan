@@ -71,7 +71,10 @@ class ANOVA:
             else:
                 F = MSb / MSw
                 pvalue = f.sf(F, dof_b, dof_w)
-
+            
+            if pd.isnull(pvalue):
+                pvalue = 1
+                
             self.SSb = SSb
             self.SSw = SSw
             self.SSt = SSt
@@ -131,6 +134,8 @@ class ANOVA:
             aux_model = ANOVA(self._data, var, self._independent_variable, show_results=False)
             aux_model_summary = aux_model.summary()
             aux_model_summary.index = [f'{var}: {res}' for res in ['Between Groups', 'Within Groups', 'Total']]
+#             aux_model_summary.index = pd.MultiIndex.from_product([[var]*3,
+#                                                     ['Between Groups', 'Within Groups', 'Total']])
             summary = pd.concat([summary, aux_model_summary])
             
         return summary 
