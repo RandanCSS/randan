@@ -1,6 +1,7 @@
 from itertools import combinations
 from scipy.stats import norm
 import pandas as pd
+import numpy as np
 
 #extend this list
 available_colors = [
@@ -16,12 +17,19 @@ available_colors = [
 def binning(series, n_intervals):
     series = pd.qcut(series, n_intervals, duplicates='drop')
     return series
+# def binning(series, n_intervals):
+#     temp_series, bins = pd.qcut(series, n_intervals, duplicates='drop', retbins=True)
+#     bins[0] = -np.inf
+#     bins[-1] = np.inf
+#     series = pd.cut(series, bins, duplicates='drop')
+#     return series
 
 def merge_two_cats(series, cat1, cat2):
     joint_cat = str(cat1) + ' / ' + str(cat2)
     return series.apply(lambda x: joint_cat if x in (cat1, cat2) else x).astype(str)
 
 def merge_two_intervals(series, cat1, cat2):
+    #display(series, cat1, cat2)
     pair = cat1, cat2
     lower_bound = cat1.left if cat1.left < cat2.left else cat2.left
     upper_bound = cat2.right if cat2.right > cat1.right else cat1.right
@@ -58,3 +66,61 @@ def confidence_interval_comparison(first_ci, second_ci):
         return 'lower'
     elif first_ci > second_ci:
         return 'bigger'
+
+def classification_table(y_true, y_predicted):
+    #display(y_true, y_predicted)
+    classification = pd.crosstab(y_true, 
+                                    y_predicted,
+                                    margins=True)
+    classification.index.name = 'Observed'
+    classification.columns.name = 'Predicted'
+    all_categories = list(classification.index)
+    empty_categories = [value for value in all_categories if value not in classification.columns]
+    for category in empty_categories:
+        classification[category] = 0
+    classification = classification[all_categories]
+
+    all_categories.remove('All')
+    
+    n = classification.loc['All', 'All']
+    
+    for category in all_categories:
+        classification.loc[category, 'All'] =  classification.loc[category, category] / classification.loc[category, 'All'] * 100
+        classification.loc['All', category] =  classification.loc['All', category] / n * 100
+    
+    
+    classification.loc['All', 'All'] = np.diagonal(classification.loc[all_categories, all_categories]).sum() / n * 100
+    classification.index = all_categories + ['Percent predicted']
+    classification.index.name = 'Observed'
+    classification.columns = all_categories + ['Percent correct']
+    classification.columns.name = 'Predicted'
+    return classification
+
+def precision_and_recall(classification_table):
+    """
+    Estimate precision, recall, and F-score for all the categories.
+    """
+
+    preds = classification_table.iloc[:-1, :-1]
+    results = []
+    categories = list(preds.index)
+    for current_category in categories:
+        idx = [cat for cat in categories if cat!=current_category]
+        tp = preds.loc[current_category, current_category]
+        fp = preds.loc[idx, current_category].sum()
+        fn = preds.loc[current_category, idx].sum()
+        if fp == 0:
+            precision = 0
+        else:
+            precision = tp / (tp + fp)
+        recall = tp / (tp + fn)
+        if precision + recall != 0:
+            f1 = 2 * (precision * recall) / (precision + recall)
+        else:
+            f1 = 0
+        results.append([precision, recall, f1])
+    results = pd.DataFrame(results, 
+                            index=categories, 
+                            columns = ['Precision', 'Recall', 'F score'])
+    results.loc['Mean'] = results.mean()
+    return results
