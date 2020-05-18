@@ -60,6 +60,7 @@ class CHAIDClassifier:
             independent_variables,
             scale_variables=[],
             ordinal_variables=[],
+            test_data=None,
             show_results=True,
             plot_tree=True,
             save_plot=False,
@@ -85,6 +86,7 @@ class CHAIDClassifier:
         (i.e., 'low', 'medium', 'high' -> '1. low', '2. medium', '3. high')
         or convert your variable to pandas.Categorical and set the order,
         see more: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Categorical.html
+        test_data: data to test a model
         show_results (bool): whether to show results of analysis
         plot_tree (bool): whether to plot the obtained tree
         save_plot (bool): whether to save a plot
@@ -106,8 +108,11 @@ class CHAIDClassifier:
         self._independent_variables = independent_variables
         self._ordinal_variables = ordinal_variables
         self._scale_variables = scale_variables
+        self._use_test_data = True if test_data is not None else False
+        if self._use_test_data:
+            self._test_data = test_data.dropna(subset=independent_variables+[dependent_variable])
         
-        
+        self._mode = self._data[dependent_variable].mode().item()
 
         if self.max_depth is None:
             self.max_depth = len(independent_variables)
@@ -142,15 +147,22 @@ class CHAIDClassifier:
             self.depth = 0
             self.significant_variables = []
             self._data[f'{dependent_variable} (predicted)'] = self._data[dependent_variable].mode().item()
+        
         self.classification_table = self.get_classification_table()
         self.precision_and_recall = self.get_precision_and_recall()
         
+        if self._use_test_data:
+            test_predictions = self.predict(self._test_data)
+            self.classification_table_test = classification_table(self._test_data[dependent_variable],
+            test_predictions[f'{dependent_variable} (predicted)'])
+            self.precision_and_recall_test = precision_and_recall(self.classification_table_test)
+
         if show_results:
             self.show_results(tree_in_table_format=tree_in_table_format, 
                               n_decimals=n_decimals)
         if plot_tree:
-            print('Tree plot')
             print('------------------\n')
+            print('Tree plot')
             self.plot_tree(
                 save_plot=save_plot,
                 save_plot_path=save_plot_path,
@@ -257,28 +269,7 @@ class CHAIDClassifier:
         Estimate precision, recall, and F-score for all the categories.
         """
 
-        preds = self.classification_table.iloc[:-1, :-1]
-        results = []
-        categories = list(preds.index)
-        for current_category in categories:
-            idx = [cat for cat in categories if cat!=current_category]
-            tp = preds.loc[current_category, current_category]
-            fp = preds.loc[idx, current_category].sum()
-            fn = preds.loc[current_category, idx].sum()
-            if fp == 0:
-                precision = 0
-            else:
-                precision = tp / (tp + fp)
-            recall = tp / (tp + fn)
-            if precision + recall != 0:
-                f1 = 2 * (precision * recall) / (precision + recall)
-            else:
-                f1 = 0
-            results.append([precision, recall, f1])
-        results = pd.DataFrame(results, 
-                               index=categories, 
-                               columns = ['Precision', 'Recall', 'F score'])
-        results.loc['Mean'] = results.mean()
+        results = precision_and_recall(self.classification_table)
         return results
     
     def summary(self):
@@ -337,9 +328,17 @@ class CHAIDClassifier:
         print('Classification table')
         display(self.classification_table.style\
                 .set_precision(1))
+        if self._use_test_data:
+            print('Classification table for test data')
+            display(self.classification_table_test.style\
+                .set_precision(1))
         print('------------------\n')
         print('Prediction quality metrics')
         display(self.precision_and_recall.style\
+                .set_precision(n_decimals))
+        if self._use_test_data:
+            print('Prediction quality metrics for test data')
+            display(self.precision_and_recall_test.style\
                 .set_precision(n_decimals))
                              
     
@@ -348,31 +347,9 @@ class CHAIDClassifier:
         Get the classification table as it is shown in SPSS.
         """
         dependent_variable = self._dependent_variable
-        classification = pd.crosstab(self._data[dependent_variable], 
-                                     self._data[f'{dependent_variable} (predicted)'],
-                                     margins=True)
-        classification.index.name = 'Observed'
-        classification.columns.name = 'Predicted'
-        all_categories = list(classification.index)
-        empty_categories = [value for value in all_categories if value not in classification.columns]
-        for category in empty_categories:
-            classification[category] = 0
-        classification = classification[all_categories]
-
-        all_categories.remove('All')
-        
-        n = classification.loc['All', 'All']
-        
-        for category in all_categories:
-            classification.loc[category, 'All'] =  classification.loc[category, category] / classification.loc[category, 'All'] * 100
-            classification.loc['All', category] =  classification.loc['All', category] / n * 100
-        
-        
-        classification.loc['All', 'All'] = np.diagonal(classification.loc[all_categories, all_categories]).sum() / n * 100
-        classification.index = all_categories + ['Percent predicted']
-        classification.index.name = 'Observed'
-        classification.columns = all_categories + ['Percent correct']
-        classification.columns.name = 'Predicted'
+        classification = classification_table(self._data[dependent_variable],
+        self._data[f'{dependent_variable} (predicted)']
+        )
         return classification
         
     def _check_if_terminal_node(self, node):
@@ -384,7 +361,8 @@ class CHAIDClassifier:
     @staticmethod
     def _predict_one_observation(observation,
                                  nodes,
-                                 scale_variables):
+                                 scale_variables,
+                                 constant):
         if observation.hasnans:
             return None, None
 
@@ -399,16 +377,23 @@ class CHAIDClassifier:
             observation_category = observation[split_variable]
             #print(observation_category)
             if split_variable not in scale_variables:
-                rule = current_nodes_level.iloc[:, -1].str.split(' / ').apply(lambda x: True if str(observation_category) in x else False)
+                try:
+                    rule = current_nodes_level.loc[:, 'Category'].str.split(' / ').apply(lambda x: True if str(observation_category) in x else False)
+                except AttributeError:
+                    rule = current_nodes_level.loc[:, 'Category'].astype(float).astype(str).str.split(' / ').apply(lambda x: True if str(float(observation_category)) in x else False)
             else:
-                rule = current_nodes_level.iloc[:, -1].apply(lambda x: x.overlaps(pd.Interval(observation_category, observation_category, 'both')))
-            predicted_category = current_nodes_level[rule]['Mode'].item()
-            #print(predicted_category)
-            predicted_node = current_nodes_level[rule]['Node'].item()
-            #print(predicted_node)
+                rule = current_nodes_level.loc[:, 'Category'].apply(lambda x: x.overlaps(pd.Interval(observation_category, observation_category, 'both')))
+            #display(current_nodes_level[rule]['Mode'])
+            try:
+                predicted_category = current_nodes_level[rule]['Mode'].iloc[0]
+                #print(predicted_category)
+                predicted_node = current_nodes_level[rule]['Node'].iloc[0]
+            except IndexError:
+                predicted_category = constant
+                predicted_node = 'Out of tree'
     
     def predict(self,
-                data,
+                data=None,
                 dependent_variable=True,
                 node=False,
                 interaction=False,
@@ -425,8 +410,8 @@ class CHAIDClassifier:
         add_to_data (bool): whether to merge predictions with the given data
         """
 
-        if data[self._independent_variables + [self._dependent_variable]]\
-        .equals(self._initial_data[self._independent_variables + [self._dependent_variable]]):
+        if data is None or data[self._independent_variables]\
+        .equals(self._initial_data[self._independent_variables]):
             result = self._data[[f'{self._dependent_variable} (predicted)', 'Node']].copy()
         
         else:
@@ -435,7 +420,8 @@ class CHAIDClassifier:
             result = data_for_prediction.apply(lambda x: CHAIDClassifier._predict_one_observation(
                 x, 
                 self.nodes, 
-                self._scale_variables
+                self._scale_variables,
+                self._mode
             ), axis=1, result_type='expand')
             result.columns = [f'{self._dependent_variable} (predicted)', 'Node']
                                  
@@ -837,6 +823,7 @@ class CHAIDRegressor:
             independent_variables,
             scale_variables=[],
             ordinal_variables=[],
+            test_data=None,
             show_results=True,
             plot_tree=True,
             save_plot=False,
@@ -882,7 +869,11 @@ class CHAIDRegressor:
         self._independent_variables = independent_variables
         self._ordinal_variables = ordinal_variables
         self._scale_variables = scale_variables
-        
+        self._use_test_data = True if test_data is not None else False
+        if self._use_test_data:
+            self._test_data = test_data.dropna(subset=independent_variables+[dependent_variable])
+
+        self._mean = self._data[dependent_variable].mean()
 
         if self.max_depth is None:
             self.max_depth = len(independent_variables)
@@ -919,14 +910,19 @@ class CHAIDRegressor:
             self._data[f'{dependent_variable} (predicted)'] = self._data[dependent_variable].mean()
         
         self.r2 = r2(self._data[dependent_variable],
-                    self._data[f'{self._dependent_variable} (predicted)'])
+                    self._data[f'{dependent_variable} (predicted)'])
         
+        if self._use_test_data:
+            test_predictions = self.predict(self._test_data)
+            self.r2_test = r2(self._test_data[dependent_variable],
+                    test_predictions[f'{dependent_variable} (predicted)'])
+
         if show_results:
             self.show_results(tree_in_table_format=tree_in_table_format, 
                               n_decimals=n_decimals)
         if plot_tree:
-            print('Tree plot')
             print('------------------\n')
+            print('Tree plot')
             self.plot_tree(
                 save_plot=save_plot,
                 save_plot_path=save_plot_path,
@@ -1062,6 +1058,9 @@ class CHAIDRegressor:
         
         results = pd.DataFrame(data, index=statistics, columns=[''])
         
+        if self._use_test_data:
+            results.loc['R2 (test data)'] = round(self.r2_test, 3)
+
         return results
     
     def show_results(self,
@@ -1097,11 +1096,13 @@ class CHAIDRegressor:
     @staticmethod
     def _predict_one_observation(observation,
                                  nodes,
-                                 scale_variables):
+                                 scale_variables,
+                                 constant):
         if observation.hasnans:
             return None, None
 
         predicted_node = 'Node 0'
+        
         while True:
             current_nodes_level = nodes[nodes['Parent node']==predicted_node]
             #display(current_nodes_level)
@@ -1112,16 +1113,23 @@ class CHAIDRegressor:
             observation_category = observation[split_variable]
             #print(observation_category)
             if split_variable not in scale_variables:
-                rule = current_nodes_level.iloc[:, -1].str.split(' / ').apply(lambda x: True if str(observation_category) in x else False)
+                try:
+                    rule = current_nodes_level.loc[:, 'Category'].str.split(' / ').apply(lambda x: True if str(observation_category) in x else False)
+                except AttributeError:
+                    rule = current_nodes_level.loc[:, 'Category'].astype(float).astype(str).str.split(' / ').apply(lambda x: True if str(float(observation_category)) in x else False)
             else:
-                rule = current_nodes_level.iloc[:, -1].apply(lambda x: x.overlaps(pd.Interval(observation_category, observation_category, 'both')))
-            predicted_category = current_nodes_level[rule]['Mean'].item()
-            #print(predicted_category)
-            predicted_node = current_nodes_level[rule]['Node'].item()
+                rule = current_nodes_level.loc[:, 'Category'].apply(lambda x: x.overlaps(pd.Interval(observation_category, observation_category, 'both')))
+            try:
+                predicted_category = current_nodes_level[rule]['Mean'].iloc[0]
+                #print(predicted_category)
+                predicted_node = current_nodes_level[rule]['Node'].iloc[0]
+            except IndexError:
+                predicted_category = constant
+                predicted_node = 'Out of tree'
             #print(predicted_node)
     
     def predict(self,
-                data,
+                data=None,
                 dependent_variable=True,
                 node=False,
                 interaction=False,
@@ -1138,17 +1146,17 @@ class CHAIDRegressor:
         add_to_data (bool): whether to merge predictions with the given data
         """
         
-        if data[self._independent_variables + [self._dependent_variable]]\
-        .equals(self._initial_data[self._independent_variables + [self._dependent_variable]]):
+        if data is None:
             result = self._data[[f'{self._dependent_variable} (predicted)', 'Node']].copy()
         
         else:
         
-            data_for_prediction = data[self.significant_variables].copy()
+            data_for_prediction = data[self.significant_variables]
             result = data_for_prediction.apply(lambda x: CHAIDRegressor._predict_one_observation(
                 x, 
                 self.nodes, 
-                self._scale_variables
+                self._scale_variables,
+                self._mean
             ), axis=1, result_type='expand')
             result.columns = [f'{self._dependent_variable} (predicted)', 'Node']
                                  
@@ -1162,7 +1170,7 @@ class CHAIDRegressor:
         if interaction:
             columns_to_show.append('Interaction')
 
-        result = result[columns_to_show].copy()
+        result = result[columns_to_show]
             
         if add_to_data:
             return pd.concat([data, result], axis=1)
