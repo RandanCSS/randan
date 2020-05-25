@@ -35,7 +35,7 @@ class KMeans:
         variables=None,
         max_iter=100,
         tolerance=0.0001,
-        random_state=14,
+        random_state=1,
         show_results=True,
         n_decimals=3,
         plot_clusters=True,
