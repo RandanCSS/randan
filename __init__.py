@@ -3,5 +3,6 @@ from . import (
     tree, 
     comparison_of_central_tendency,
     regression,
-    clustering
+    clustering,
+    dimension_reduction
 )
