@@ -24,9 +24,9 @@ class Crosstab:
                  column=None,
                  sig_level=0.05,
                  show_results=True,
+                 n_decimals=3,
                  only_stats=False):
-        
-        #start_time = time.time()        
+              
         if row is not None and column is not None:
             self.data = data[[row, column]]
         elif (row is None or column is None) and len(data.columns) > 2:
@@ -36,12 +36,9 @@ class Crosstab:
             raise ValueError('''One or no variables were passed.''')
         else:
             self.data = data
-        #print(f'[witihn crosstab] filter data {time.time()-start_time}')
         
         self.sig_level = sig_level
         
-        #start_time = time.time()
-        #these frequencies do not contain marginals
         self._frequencies_observed = pd.crosstab(self.data.iloc[:, 0],
                                                 self.data.iloc[:, 1])
         
@@ -57,42 +54,32 @@ class Crosstab:
         self.row_categories = list(self._frequencies_observed.index)
         self.column_categories = list(self._frequencies_observed.columns)
         
-        #these frequencies contain marginals
         self.frequencies_observed = self._frequencies_observed.copy()
         
-        #start_time = time.time()
         self.row_marginals = Crosstab._get_marginals(self._frequencies_observed, 'row')       
         self.column_marginals = Crosstab._get_marginals(self._frequencies_observed, 'column')
-        #print(f'[witihn crosstab] getting marginals {time.time()-start_time}')
         
-        #start_time = time.time()
         self.frequencies_observed = Crosstab._add_marginals(self._frequencies_observed,
                                                             self.row_marginals,
                                                             self.column_marginals,
                                                             self.N)
 
-        #start_time = time.time()
         self._frequencies_expected = self._get_expected_frequencies()
-        #print(f'[witihn crosstab] getting exp freq {time.time()-start_time}')
-        
-        #start_time = time.time()        
+               
         self.frequencies_expected = Crosstab._add_marginals(self._frequencies_expected,
                                                             self.row_marginals,
                                                             self.column_marginals,
                                                             self.N)
-        #print(f'[witihn crosstab] adding marginals {time.time()-start_time}')
         self.residuals = self._frequencies_observed - self._frequencies_expected
         self.residuals_pearson = self.residuals / (self._frequencies_expected**0.5)
         self.chi_square = (self.residuals_pearson**2).sum().sum()
         self.dof = (len(self.row_categories) - 1)*(len(self.column_categories) - 1)
-        
-        #start_time = time.time()        
+               
 
         self.pvalue = chi2.sf(self.chi_square, self.dof)
-        #print(f'[witihn crosstab] p value {time.time()-start_time}')
         
         if show_results:
-            self.show_results()
+            self.show_results(n_decimals)
     
     @staticmethod
     def _get_marginals(crosstab, axis='row'):
@@ -130,7 +117,6 @@ class Crosstab:
         return crosstab
     
     def _get_expected_frequencies(self):
-        #print(self.column_marginals.T['Total'])
         frequencies_expected = np.array([self.column_marginals.T['Total'].to_list()] * len(self.row_categories))
         frequencies_expected = frequencies_expected * self.row_marginals['Total'].to_numpy()[:, np.newaxis] / self.N
         frequencies_expected = pd.DataFrame(frequencies_expected,
@@ -138,7 +124,7 @@ class Crosstab:
                                             index=self._frequencies_observed.index)
         return frequencies_expected
         
-    def check_small_counts(self):
+    def check_small_counts(self, n_decimals=3):
         """
         Check sparsity of the crosstab, i.e., calculate percentage of small expected frequencies
         (those that are less than 5).
@@ -148,10 +134,10 @@ class Crosstab:
         min_count = self._frequencies_expected.min().min()
         n_cells = self.n_cells
         perc_small_counts = n_small_counts / n_cells * 100
-        print(f'''{n_small_counts} ({round(perc_small_counts, 2)}%) cells have expected \
-frequency less than 5. The minimum expected frequency is {round(min_count, 3)}.''')
+        print(f'''{n_small_counts} ({round(perc_small_counts, n_decimals)}%) cells have expected \
+frequency less than 5. The minimum expected frequency is {round(min_count, n_decimals)}.''')
         
-    def check_significant_residuals(self, sig_level=0.05):
+    def check_significant_residuals(self, sig_level=0.05, n_decimals=3):
         """
         Identify significant Pearson's residuals based on the given significant level.
         """
@@ -168,12 +154,12 @@ frequency less than 5. The minimum expected frequency is {round(min_count, 3)}.'
         min_resid = self.residuals_pearson.min().min()
         min_resid_row = self.residuals_pearson.min(axis=1).idxmin()
         min_resid_column = self.residuals_pearson.min(axis=0).idxmin()
-        print(f'''{n_sig_resids} ({round(perc_sig_resids, 2)}%) cells have Pearson's \
+        print(f'''{n_sig_resids} ({round(perc_sig_resids, n_decimals)}%) cells have Pearson's \
 residual bigger than {round(critical_value, 2)}. 
-The biggest residual is {round(max_resid, 3)} (categories {max_resid_row} and {max_resid_column}).
-The smallest residual is {round(min_resid, 3)} (categories {min_resid_row} and {min_resid_column}).''')
+The biggest residual is {round(max_resid, n_decimals)} (categories {max_resid_row} and {max_resid_column}).
+The smallest residual is {round(min_resid, n_decimals)} (categories {min_resid_row} and {min_resid_column}).''')
         
-    def show_results(self):
+    def show_results(self, n_decimals=3):
         """
         Show results of the analysis in a readable form.
         """
@@ -183,14 +169,23 @@ The smallest residual is {round(min_resid, 3)} (categories {min_resid_row} and {
         print('\nCROSSTAB SUMMARY')
         print('------------------\n')
         print('Observed frequencies')
-        display(self.frequencies_observed)
+        display(self.frequencies_observed.style\
+                    .format(None, na_rep="")\
+                    .set_caption("attribute .frequencies_observed")\
+                    .set_precision(n_decimals))
         print('------------------\n')
         print('Expected frequencies')
-        display(self.frequencies_expected)        
-        self.check_small_counts()
+        display(self.frequencies_expected.style\
+                    .format(None, na_rep="")\
+                    .set_caption("attribute .frequencies_expected")\
+                    .set_precision(n_decimals))        
+        self.check_small_counts(n_decimals)
         print('------------------\n')
-        print(f'Chi-square statistic is {round(self.chi_square, 3)} (p-value = {round(self.pvalue, 3)}).')
+        print(f'Chi-square statistic is {round(self.chi_square, n_decimals)} (p-value = {round(self.pvalue, n_decimals)}).')
         print('------------------\n')
         print("Pearson's residuals")
-        display(self.residuals_pearson)
-        self.check_significant_residuals(sig_level)
+        display(self.residuals_pearson.style\
+                    .format(None, na_rep="")\
+                    .set_caption("attribute .residuals_pearson")\
+                    .set_precision(n_decimals))
+        self.check_significant_residuals(sig_level, n_decimals)
