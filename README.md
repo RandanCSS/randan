@@ -1,5 +1,5 @@
 # Randan
-_A python package for the analysis of sociological data_
+_A python package for the analysis of social data_
 
 ### Overview
 Randan is a python package that aims to provide most of the functions presented in SPSS. Unlike the other python packages for data analysis, it has three main features, which make it attractive for social scientists:
