@@ -14,11 +14,57 @@ class CA:
     a method for identifying associations of two categorical
     variables.
     
-    Parameters:
-    -----------
+    Parameters
+    ----------
+    n_dimensions : int 
+        A number of dimensions in solution (equals 2 by default)
     
-    n_dimensions (int): a number of dimensions
-    in solution (equals 2 by default)
+    Attributes
+    ----------
+    crosstab : pd.DataFrame
+        A contingency table
+    correspondence_matrix : pd.DataFrame
+        A normalized (divided by number of observations) contingency table 
+    row_categories : list
+        Names of the categories located at the rows of a crosstab
+    column_categories : list
+        Names of the categories located at the columns of a crosstab
+    row_mass : pd.Series
+        Masses of row categories
+    column_mass : pd.Series
+        Masses of column categories
+    inertia_total : float
+        Total inertia of a crosstab
+    inertia_by_dimensions : pd.DataFrame
+        Inertia accounted for
+    inertia_of_rows : np.ndarray
+        Inertia of row categories
+    inertia_of_columns : np.ndarray
+        Inertia of column categories
+    principal_row_coordinates : np.ndarray
+        Principal coordinates of row categories
+    principal_column_coordinates : np.ndarray
+        Principal coordinates of column categories
+    standard_row_coordinates : np.ndarray
+        Standard coordinates of row categories
+    standard_column_coordinates : np.ndarray
+        Standard coordinates of column categories
+    contribution_of_rows_to_inertia_of_dimensions : np.ndarray
+        Contribution of row categories to inertia of dimensions
+    contribution_of_columns_to_inertia_of_dimensions : np.ndarray
+        Contribution of column categories to inertia of dimensions
+    contribution_of_dimensions_to_inertia_of_rows : np.ndarray
+        Contribution of dimensions to inertia of row categories 
+    contribution_of_dimensions_to_inertia_of_columns : np.ndarray
+        Contribution of dimensions to inertia of column categories
+    communalities_rows : np.ndarray
+        Analogues of communalities for row categories
+    communalities_columns : np.ndarray
+        Analogues of communalities for column categories
+    component_loadings_rows : pd.DataFrame
+        Analogues of component (factor) loadings for row categories
+    component_loadings_columns : pd.DataFrame
+        Analogues of component (factor) loadings for column categories
     """
     
     def __init__(self, n_dimensions=2):
@@ -38,20 +84,31 @@ class CA:
         """
         Fit a model to the given data.
         
-        Parameters:
-        -----------
-        
-        data (DataFrame): data to fit the model, 
-        either the raw data or the contingency table with row categories as index
-        row (str): [only necessary if raw data are passed]
-        name of a variable of the data to be considered as row values
-        column (str): [only necessary if raw data are passed]
-        name of a variable of the data to be considered as column values
-        data_type (str): type of the data passed, 
-        possible values are 'raw' or 'crosstab' 
-        show_results (bool): whether to show results of the analysis
-        n_decimals (int): number of digits to round results when showing them
-        plot_dimensions (bool): whether to vizualize two first dimensions
+        Parameters
+        ----------
+        data : pd.DataFrame 
+            Data to fit a model. 
+            Either the raw data or the contingency table with row categories as index
+        row : str 
+            [only necessary if raw data are passed]
+            Name of a variable of the data to be considered as row values
+        column : str 
+            [only necessary if raw data are passed]
+            Name of a variable of the data to be considered as column values
+        data_type : str 
+            Type of the data passed, 
+            possible values are 'raw' or 'crosstab' 
+        show_results : bool 
+            Whether to show results of the analysis
+        n_decimals : int 
+            Number of digits to round results when showing them
+        plot_dimensions : bool 
+            Whether to vizualize two first dimensions
+
+        Returns
+        -------
+        self
+            The current instance of the CA class
         """
         
         if data_type.lower() == 'raw':
@@ -194,9 +251,10 @@ class CA:
         """
         Show results of the analysis in a readable form.
         
-        Parameters:
+        Parameters
         ----------
-        n_decimals (int): number of digits to round results when showing them
+        n_decimals : int 
+            Number of digits to round results when showing them
         """
         print('\nCA SUMMARY')
         print('------------------\n')
@@ -217,18 +275,25 @@ class CA:
                 display_contributions=False,
                 display_coordinates=False):
         """
-        Display summary of the fitted model
+        Return summary of the fitted model
         in terms of mass, inertia, contributions and communalities.
         
-        Parameters:
-        -----------
-        
-        display_component_loadings (bool): whether to display component loadings 
-        instead of 'raw' contributions of dimensions and points to inertia in the final table
-        display_contributions (bool): whether to display 
-        'raw' contributions of dimensions and points in the final table
-        display_coordinates (bool): whether to display 
-        coordinates of points in the final table
+        Parameters
+        ----------
+        display_component_loadings : bool 
+            Whether to display component loadings 
+            instead of 'raw' contributions of dimensions and points to inertia in the final table
+        display_contributions : bool 
+            Whether to display 
+            'raw' contributions of dimensions and points in the final table
+        display_coordinates : bool 
+            Whether to display 
+            coordinates of points in the final table
+
+        Returns
+        -------
+        pd.DataFrame
+            A summary table
         """
         
         summary_table = pd.DataFrame(index = self.row_categories + self.column_categories)
@@ -264,13 +329,19 @@ class CA:
         Useful when dealing with big crosstabs 
         (e.g., when CA is used to text data for topic modeling).
         
-        Parameters:
-        -----------
-        
-        axis (int or str): categories of which axis to show, possible values are
-        'row' (0) or 'column' (1)
-        n_indicators (int): how many indicators to show, if not specified,
-        all indicators will be shown
+        Parameters
+        ----------
+        axis : int or str 
+            Categories of which axis to show, 
+            possible values are 'row' (0) or 'column' (1)
+        n_indicators : int 
+            How many indicators to show, if not specified,
+            all indicators will be shown
+
+        Returns
+        -------
+        pd.DataFrame
+            A table with indicators and their loadings
         """
         row_categories = [str(category) + '__ROW' for category in self.row_categories]
         column_categories = [str(category) + '__COLUMN' for category in self.column_categories]
@@ -321,17 +392,20 @@ class CA:
         """
         Build plots of categories's coordinates in the obtained dimensions.
         
-        Parameters:
-        -----------
-        
-        dimensions_range (tuple): which dimensions to consider,
-        e.g. if dimensions_range is (1, 3), it will produce three plots
-        (the 1st dimension & the 2nd dimension,
-        the 2nd dimension & the 3rd dimension,
-        the 1st dimension & the 3rd dimension)
-        size (int): size of plots, in percentage (100 corresponds to figsize=(8, 5))
-        n_symbols (int): how many symbols of labels to display
-        save (bool): whether to save plots or not (in the current directory)
+        Parameters
+        ----------
+        dimensions_range : tuple 
+            Which dimensions to consider,
+            e.g. if dimensions_range is (1, 3), it will produce three plots
+            (the 1st dimension & the 2nd dimension,
+            the 2nd dimension & the 3rd dimension,
+            the 1st dimension & the 3rd dimension)
+        size : int 
+            Size of plots, in percentage (100 corresponds to figsize=(8, 5))
+        n_symbols : int 
+            How many symbols of labels to display
+        save : bool 
+            Whether to save plots or not (in the current directory)
         """
         
         if self.n_dimensions == 1:
@@ -392,17 +466,36 @@ class CA:
 
 class PCA:
     
-    """A class for implementing principal component analysis (PCA).
+    """
+    A class for implementing principal component analysis (PCA).
     
-    Parameters:
-    -----------
-    
-    n_components (int or str): the exact number of dimensions
-    in solution or the criterion for its automatic selection.
-    Current possible values: 'kaiser' (defualt),
-    which corresponds to Kaiser's criterion
-    rotation (None or 'varimax'): rotation to perform on factor loadings.
-    Currently, only varimax rotation is available
+    Parameters
+    ----------
+    n_components : int or str 
+        The exact number of dimensions
+        in solution or the criterion for its automatic selection.
+        Current possible values: 'kaiser' (defualt),
+        which corresponds to Kaiser's criterion
+    rotation : None or 'varimax' 
+        Rotation to perform on factor loadings.
+        Currently, only varimax rotation is available
+
+    Attributes
+    ----------
+    correlation_matrix : pd.DataFrame
+        A correlation matrix
+    explained_variance : pd.DataFrame
+        A table with eigenvalues and variance accounted for
+    explained_variance_total : float
+        Total percentage of the explained variance
+    component_loadings : pd.DataFrame
+        Component (factor) loadings
+    component_loadings_rotated : pd.DataFrame
+        Component (factor) loadings after rotation
+    communalities : pd.DataFrame
+        Communalities
+    communalities_and_loadings : pd.DataFrame
+        A joint table of component (factor) loadings and communalities
     """
     
     def __init__(self, n_components='Kaiser', rotation=None):
@@ -439,18 +532,31 @@ class PCA:
         n_decimals=3
     ):
         
-        """Fit model to the given data.
+        """
+        Fit a model to the given data.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         
-        data (DataFrame): data to fit a model
-        variables (None or list): variables from data to include in a model.
-        If not specified, all variables will be used.
-        scale (bool): whether data should be considered as scale variables. 
-        If set to False, data will be transformed to ranks. 
-        show_results (bool): whether to show results of the analysis
-        n_decimals (int): number of digits to round results when showing them
+        data : pd.DataFrame 
+            Data to fit a model
+            variables (None or list): variables from data to include in a model.
+            If not specified, all variables will be used.
+        variables : list
+            Names of variables from data that should be used in a model.
+            If not specified, all variables from data are used. Variables should have a numeric dtype.
+        scale : bool 
+            Whether data should be considered as scale variables. 
+            If set to False, data will be transformed to ranks. 
+        show_results :bool 
+            Whether to show results of the analysis
+        n_decimals : int 
+            Number of digits to round results when showing them
+
+        Returns
+        -------
+        self
+            The current instance of the PCA class
         """    
         
         if variables is not None:
@@ -524,9 +630,10 @@ class PCA:
         """
         Show results of the analysis in a readable form.
         
-        Parameters:
+        Parameters
         ----------
-        n_decimals (int): number of digits to round results when showing them
+        n_decimals : int 
+            Number of digits to round results when showing them
         """
         print('\nPCA SUMMARY')
         print('------------------\n')                                 
@@ -557,15 +664,20 @@ class PCA:
         """
         Return component scores for every observation in the given dataset. 
         
-        Parameters:
-        -----------
-        
-        data (DataFrame): data to apply the model.
-        If not specified, data that were used to fit the model will be used.
-        
-        standardize (bool): whether to apply z-standartization to component scores
-        
-        add_to_data (bool): whether to add variables of component scores to the given data
+        Parameters
+        ----------
+        data : pd.DataFrame 
+            Data to apply the model.
+            If not specified, data that were used to fit the model will be used.
+        standardize : bool 
+            Whether to apply z-standartization to component scores
+        add_to_data : bool 
+            Whether to add variables of component scores to the given data
+
+        Returns
+        -------
+        pd.DataFrame
+            Requested values
         """
         if data is None:
             data = self._data.copy()
@@ -625,13 +737,18 @@ class PCA:
 
     def get_communalities(self, min_max=True):
         
-        """Return communalities for every initial variable. 
+        """
+        Return communalities for every initial variable. 
         
-        Parameters:
-        -----------
-        
-        min_max (bool): whether to print minimum and maximum of communalities
-        
+        Parameters
+        ----------
+        min_max : bool 
+            Whether to print minimum and maximum of communalities
+
+        Returns
+        -------
+        pd.DataFrame
+            A table with communalities
         """
         loadings = self.component_loadings.copy()
         communalities = pd.DataFrame(index=loadings.index)
@@ -649,17 +766,22 @@ class PCA:
         """
         Return summary table with information about variance accounted for. 
         
-        Parameters:
-        -----------
-        
-        scree_plot (bool): whether to display scree plot
-        
-        annotate_bars (bool): whether to annotate exact percentage of variance on each bar
-        (if scree_plot set to True)
-        
-        annotate_current (bool): whether to show percentage of variance corresponded 
-        to the current solution
-        (if scree_plot set to True)
+        Parameters
+        ----------
+        scree_plot : bool 
+            Whether to display scree plot        
+        annotate_bars : bool 
+            Whether to annotate exact percentage of variance on each bar
+            (if scree_plot set to True)
+        annotate_current : bool 
+            Whether to show percentage of variance corresponded 
+            to the current solution
+            (if scree_plot set to True)
+
+        Returns
+        -------
+        pd.DataFrame
+            A table with explained variance
         """          
                   
         S = self._eigenvalues
@@ -682,14 +804,13 @@ class PCA:
         """
         Vizualize distribution of the variance accounted for.  
         
-        Parameters:
-        -----------
-        
-        annotate_bars (bool): whether to annotate exact percentage of variance on each bar
-        
-        annotate_current (bool): whether to show percentage of variance corresponded 
-        to the current solution
-        
+        Parameters
+        ----------
+        annotate_bars : bool 
+            Whether to annotate exact percentage of variance on each bar
+        annotate_current : bool 
+            Whether to show percentage of variance corresponded 
+            to the current solution
         """ 
             
         explained_variance = self.explained_variance.copy()    
