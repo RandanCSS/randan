@@ -2,6 +2,7 @@ numpy
 pandas
 ipython
 scikit-learn
+statsmodels
 matplotlib
 factor_analyzer
 pydot
