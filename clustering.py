@@ -17,9 +17,21 @@ class KMeans:
     """
     Class to perform k-means cluster analysis.
     
-    Parameters:
+    Parameters
     ----------
-    n_clusters (int): number of clusters in a solution
+    n_clusters : int 
+        Number of clusters in a solution
+
+    Attributes
+    ----------
+    n_iters : int
+        Number of iterations the algorithm used
+    is_converged : bool
+        Whether the algorithm was converged
+    cluster_centers : pd.DataFrame
+        Centers of obtained clusters
+    inertia : float
+        Sum of squared distances of observations to their cluster center
     """
     def __init__(
         self,
@@ -27,6 +39,7 @@ class KMeans:
     ):
         if n_clusters is None:
             raise ValueError('Please specify a number of clusters.')
+        
         self.n_clusters = n_clusters
         
     def fit(
@@ -44,18 +57,32 @@ class KMeans:
         """
         Fit a model to the given data.
         
-        Parameters:
+        Parameters
         ----------
-        data (DataFrame): data to fit a model
-        variables (list): names of variables from data that should be used in a cluster model.
-        If not specified, all variables from data are used. Variables should have a numeric dtype.
-        max_iter (int): maximum number of iterations after which the algorithm is forced to stop
-        tolerance (float): minimum change in clusters' centers after which the algorithm is forced to stop
-        random_state (int): an initial point of a random numbers generator to assure results' reproducibility
-        show_results (bool): whether to show results of analysis
-        n_decimals (int): number of digits to round results when showing them 
-        plot_clusters (bool): whether to visualize clusters in a dimension of two most influential variables 
-        
+        data : pd.DataFrame 
+            Data to fit a model
+        variables : list 
+            Names of variables from data that should be used in a cluster model.
+            If not specified, all variables from data are used. Variables should have a numeric dtype.
+        max_iter : int 
+            Maximum number of iterations after which the algorithm is forced to stop
+        tolerance : float 
+            Minimum change in clusters' centers after which the algorithm is forced to stop
+        random_state : int 
+            An initial point of a random numbers generator to assure results' reproducibility
+        show_results : bool 
+            Whether to show results of analysis
+        n_decimals : int 
+            Number of digits to round results when showing them 
+        plot_clusters : bool 
+            Whether to visualize clusters in a dimension of two most influential variables 
+        plot_silhouette : bool 
+            Whether to visualize silhouette coefficient (looks like in SPSS' Two-Step Clusters)
+
+        Returns
+        -------
+        self
+            The current instance of the KMeans class
         """
         self._data = data.copy()
         
@@ -114,9 +141,10 @@ To see more plots, use [model].get_bivariate_plots()""")
         """
         Show results of the analysis in a readable form.
         
-        Parameters:
+        Parameters
         ----------
-        n_decimals (int): number of digits to round results when showing them
+        n_decimals : int 
+            Number of digits to round results when showing them
         """
         phrase = 'method {}'
         
@@ -160,9 +188,15 @@ To see the exact centers, use [model].get_cluster_centers(round_discrete=False)"
         """
         Get the dataframe with cluster centers (means of each variable within clusters).
         
-        Parameters:
+        Parameters
         ----------
-        round_discrete (bool): whether to round values of discrete variables for better interpretability
+        round_discrete : bool 
+            Whether to round values of discrete variables for better interpretability
+
+        Returns
+        -------
+        pd.DataFrame
+            A table with cluster centers
         """
         
         centers = self._model.cluster_centers_
@@ -186,6 +220,11 @@ To see the exact centers, use [model].get_cluster_centers(round_discrete=False)"
     def get_number_of_cases_by_clusters(self):
         """
         Get the frequency table, illustrating the distribution of observations by clusters.
+        
+        Returns
+        -------
+        pd.DataFrame
+            A table with number of observations in each cluster
         """
         preds = self._predictions.copy()
         dist = pd.DataFrame(
@@ -193,9 +232,9 @@ To see the exact centers, use [model].get_cluster_centers(round_discrete=False)"
         )
         dist.columns = ['N']
         if len(dist.index) > len(self._cluster_idx):
-            dist.index=self._cluster_idx + ['Missing']
+            dist.index = self._cluster_idx + ['Missing']
         else:
-            dist.index=self._cluster_idx
+            dist.index = self._cluster_idx
         dist.index.name = 'Cluster'
         dist.loc['Valid'] = dist.loc[self._cluster_idx, 'N'].sum()
         
@@ -204,6 +243,11 @@ To see the exact centers, use [model].get_cluster_centers(round_discrete=False)"
     def get_ANOVA_table(self):
         """
         Get the results of ANOVA analysis, i.e. analysis of differences in means of each variable between clusters.
+
+        Returns
+        -------
+        pd.DataFrame
+            A table with results of ANOVA test
         """
         preds = self._predictions.copy()
         summary = ANOVA(preds, self._variables, 'Cluster', show_results=False).summary()
@@ -236,6 +280,11 @@ To see the exact centers, use [model].get_cluster_centers(round_discrete=False)"
     def get_distances_between_centers(self):
         """
         Get Eucledian's distance between each cluster's centers.
+
+        Returns
+        -------
+        pd.DataFrame
+            A table with distances between each cluster
         """
         centers = self.cluster_centers
         idx = list(centers.index)
@@ -255,13 +304,22 @@ To see the exact centers, use [model].get_cluster_centers(round_discrete=False)"
         Assign each observation to a relevant cluster and / or estimate distance between each observation 
         and all clusters' centers.
         
-        Parameters:
+        Parameters
         ----------
-        data (DataFrame): data for which new variables are etimated.
-        If not specified, data that were used to fit a model are used.
-        cluster_membership (bool): whether to return cluster membership for each observation
-        distance_to_centers (bool): whether to return distance to cluster centers for each observation
-        add_to_data (bool): whether to merge new values with the given data
+        data : pd.DataFrame 
+            Data for which new variables are estimated.
+            If not specified, data that were used to fit a model are used.
+        cluster_membership : bool 
+            Whether to return cluster membership for each observation
+        distance_to_centers : bool 
+            Whether to return distance to cluster centers for each observation
+        add_to_data : bool 
+            Whether to merge new values with the given data
+
+        Returns
+        -------
+        pd.DataFrame
+            Requested transformations
         """        
         if data is None:
             data_copy = self._data.copy()
@@ -309,10 +367,11 @@ To see the exact centers, use [model].get_cluster_centers(round_discrete=False)"
         """
         Visualize clusters in a bivariate dimension of all or the requested variables.
         
-        Parameters:
+        Parameters
         ----------
-        variables (list): list of names of variables for which plots should be shown.
-        If not specified, all the variables used to fit a model are used.
+        variables : list
+            List of names of variables for which plots should be shown.
+            If not specified, all variables that were used to fit a model are used.
         """ 
         if variables is None:
             variables = self._variables
@@ -349,6 +408,10 @@ To see the exact centers, use [model].get_cluster_centers(round_discrete=False)"
         """
         Return a value of the average silhouette score for the current model.
         
+        Returns
+        -------
+        float
+            A silhouette coefficient
         """
         data = self._predictions[self._variables].dropna()
         labels = np.ravel(self._predictions['Cluster'].dropna())
