@@ -1,0 +1,369 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Clustering &mdash; randan 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Dimension reduction" href="dimension_reduction.html" />
+    <link rel="prev" title="Comparison of central tendency" href="comparison_of_central_tendency.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> randan
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Bivariate analysis:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="bivariate_association.html">Bivariate association</a></li>
+<li class="toctree-l1"><a class="reference internal" href="comparison_of_central_tendency.html">Comparison of central tendency</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Multivariate analysis:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Clustering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dimension_reduction.html">Dimension reduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="regression.html">Regression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tree.html">Tree</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">randan</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Clustering</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/clustering.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="clustering">
+<h1>Clustering<a class="headerlink" href="#clustering" title="Permalink to this headline">¶</a></h1>
+<p>This module aggregates methods of clustering.</p>
+<p>Currently, it includes the following methods:</p>
+<ul class="simple">
+<li><p>k-means clustering (class KMeans)</p></li>
+</ul>
+<span class="target" id="module-randan.clustering"></span><dl class="class">
+<dt id="randan.clustering.KMeans">
+<em class="property">class </em><code class="sig-prename descclassname">randan.clustering.</code><code class="sig-name descname">KMeans</code><span class="sig-paren">(</span><em class="sig-param">n_clusters=None</em><span class="sig-paren">)</span><a class="headerlink" href="#randan.clustering.KMeans" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to perform k-means cluster analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n_clusters</strong> (<em>int</em>) – Number of clusters in a solution</p>
+</dd>
+<dt class="field-even">Variables</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>n_iters</strong> (<em>int</em>) – Number of iterations the algorithm used</p></li>
+<li><p><strong>is_converged</strong> (<em>bool</em>) – Whether the algorithm was converged</p></li>
+<li><p><strong>cluster_centers</strong> (<em>pd.DataFrame</em>) – Centers of obtained clusters</p></li>
+<li><p><strong>inertia</strong> (<em>float</em>) – Sum of squared distances of observations to their cluster center</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="randan.clustering.KMeans.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">variables=None</em>, <em class="sig-param">max_iter=100</em>, <em class="sig-param">tolerance=0.0001</em>, <em class="sig-param">random_state=1</em>, <em class="sig-param">show_results=True</em>, <em class="sig-param">n_decimals=3</em>, <em class="sig-param">plot_clusters=True</em>, <em class="sig-param">plot_silhouette=False</em><span class="sig-paren">)</span><a class="headerlink" href="#randan.clustering.KMeans.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit a model to the given data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>pd.DataFrame</em>) – Data to fit a model</p></li>
+<li><p><strong>variables</strong> (<em>list</em>) – Names of variables from data that should be used in a cluster model.
+If not specified, all variables from data are used. Variables should have a numeric dtype.</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em>) – Maximum number of iterations after which the algorithm is forced to stop</p></li>
+<li><p><strong>tolerance</strong> (<em>float</em>) – Minimum change in clusters’ centers after which the algorithm is forced to stop</p></li>
+<li><p><strong>random_state</strong> (<em>int</em>) – An initial point of a random numbers generator to assure results’ reproducibility</p></li>
+<li><p><strong>show_results</strong> (<em>bool</em>) – Whether to show results of analysis</p></li>
+<li><p><strong>n_decimals</strong> (<em>int</em>) – Number of digits to round results when showing them</p></li>
+<li><p><strong>plot_clusters</strong> (<em>bool</em>) – Whether to visualize clusters in a dimension of two most influential variables</p></li>
+<li><p><strong>plot_silhouette</strong> (<em>bool</em>) – Whether to visualize silhouette coefficient (looks like in SPSS’ Two-Step Clusters)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>self</em> – The current instance of the KMeans class</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.clustering.KMeans.get_ANOVA_table">
+<code class="sig-name descname">get_ANOVA_table</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#randan.clustering.KMeans.get_ANOVA_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the results of ANOVA analysis, i.e. analysis of differences in means of each variable between clusters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>pd.DataFrame</em> – A table with results of ANOVA test</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.clustering.KMeans.get_bivariate_plots">
+<code class="sig-name descname">get_bivariate_plots</code><span class="sig-paren">(</span><em class="sig-param">variables=None</em><span class="sig-paren">)</span><a class="headerlink" href="#randan.clustering.KMeans.get_bivariate_plots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualize clusters in a bivariate dimension of all or the requested variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>variables</strong> (<em>list</em>) – List of names of variables for which plots should be shown.
+If not specified, all variables that were used to fit a model are used.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.clustering.KMeans.get_cluster_centers">
+<code class="sig-name descname">get_cluster_centers</code><span class="sig-paren">(</span><em class="sig-param">round_discrete=False</em><span class="sig-paren">)</span><a class="headerlink" href="#randan.clustering.KMeans.get_cluster_centers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the dataframe with cluster centers (means of each variable within clusters).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>round_discrete</strong> (<em>bool</em>) – Whether to round values of discrete variables for better interpretability</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>pd.DataFrame</em> – A table with cluster centers</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.clustering.KMeans.get_distances_between_centers">
+<code class="sig-name descname">get_distances_between_centers</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#randan.clustering.KMeans.get_distances_between_centers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get Eucledian’s distance between each cluster’s centers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>pd.DataFrame</em> – A table with distances between each cluster</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.clustering.KMeans.get_number_of_cases_by_clusters">
+<code class="sig-name descname">get_number_of_cases_by_clusters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#randan.clustering.KMeans.get_number_of_cases_by_clusters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the frequency table, illustrating the distribution of observations by clusters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>pd.DataFrame</em> – A table with number of observations in each cluster</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.clustering.KMeans.get_silhouette_plot">
+<code class="sig-name descname">get_silhouette_plot</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#randan.clustering.KMeans.get_silhouette_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualize the model’s quality based on its average silhouette score.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.clustering.KMeans.get_silhouette_score">
+<code class="sig-name descname">get_silhouette_score</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#randan.clustering.KMeans.get_silhouette_score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a value of the average silhouette score for the current model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>float</em> – A silhouette coefficient</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.clustering.KMeans.show_results">
+<code class="sig-name descname">show_results</code><span class="sig-paren">(</span><em class="sig-param">n_decimals=3</em><span class="sig-paren">)</span><a class="headerlink" href="#randan.clustering.KMeans.show_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show results of the analysis in a readable form.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n_decimals</strong> (<em>int</em>) – Number of digits to round results when showing them</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.clustering.KMeans.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">data=None</em>, <em class="sig-param">cluster_membership=True</em>, <em class="sig-param">distance_to_centers=False</em>, <em class="sig-param">add_to_data=False</em><span class="sig-paren">)</span><a class="headerlink" href="#randan.clustering.KMeans.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign each observation to a relevant cluster and / or estimate distance between each observation
+and all clusters’ centers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>pd.DataFrame</em>) – Data for which new variables are estimated.
+If not specified, data that were used to fit a model are used.</p></li>
+<li><p><strong>cluster_membership</strong> (<em>bool</em>) – Whether to return cluster membership for each observation</p></li>
+<li><p><strong>distance_to_centers</strong> (<em>bool</em>) – Whether to return distance to cluster centers for each observation</p></li>
+<li><p><strong>add_to_data</strong> (<em>bool</em>) – Whether to merge new values with the given data</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>pd.DataFrame</em> – Requested transformations</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dimension_reduction.html" class="btn btn-neutral float-right" title="Dimension reduction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="comparison_of_central_tendency.html" class="btn btn-neutral float-left" title="Comparison of central tendency" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Svetlana Zhuchkova
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,628 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Regression &mdash; randan 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tree" href="tree.html" />
+    <link rel="prev" title="Dimension reduction" href="dimension_reduction.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> randan
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Bivariate analysis:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="bivariate_association.html">Bivariate association</a></li>
+<li class="toctree-l1"><a class="reference internal" href="comparison_of_central_tendency.html">Comparison of central tendency</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Multivariate analysis:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="clustering.html">Clustering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dimension_reduction.html">Dimension reduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Regression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tree.html">Tree</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">randan</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Regression</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/regression.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="regression">
+<h1>Regression<a class="headerlink" href="#regression" title="Permalink to this headline">¶</a></h1>
+<p>This module consists of classical regression models.</p>
+<p>Currently, it includes the following methods:</p>
+<ul class="simple">
+<li><p>Binary logistic regression (class BinaryLogisticRegression)</p></li>
+<li><p>Linear regression (class LinearRegression)</p></li>
+</ul>
+<span class="target" id="module-randan.regression"></span><dl class="class">
+<dt id="randan.regression.BinaryLogisticRegression">
+<em class="property">class </em><code class="sig-prename descclassname">randan.regression.</code><code class="sig-name descname">BinaryLogisticRegression</code><span class="sig-paren">(</span><em class="sig-param">method='enter'</em>, <em class="sig-param">include_constant=True</em>, <em class="sig-param">classification_cutoff=0.5</em>, <em class="sig-param">sig_level_entry=0.05</em>, <em class="sig-param">sig_level_removal=0.05</em><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.BinaryLogisticRegression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for binary logistic regression models based on the excellent statsmodels package.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<em>‘enter’ or ‘backward’</em>) – Method for predictors selection</p></li>
+<li><p><strong>include_constant</strong> (<em>bool</em>) – (CURRENTLY UNAVAILIABLE) Whether to include constant in the model</p></li>
+<li><p><strong>classification_cutoff</strong> (<em>float</em>) – Minimum probability to assign a prediction value 1</p></li>
+<li><p><strong>sig_level_entry</strong> (<em>float</em>) – (CURRENTLY UNAVAILIABLE) Max significance level to include predictor in the model</p></li>
+<li><p><strong>sig_level_removal</strong> (<em>float</em>) – Min significance level to exclude predictor from the model</p></li>
+</ul>
+</dd>
+<dt class="field-even">Variables</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>predictions</strong> – </p></li>
+<li><p><strong>classification_table</strong> – </p></li>
+<li><p><strong>precision_and_recall</strong> – </p></li>
+<li><p><strong>variables_excluded</strong> – </p></li>
+<li><p><strong>variables_included</strong> – </p></li>
+<li><p><strong>N</strong> – </p></li>
+<li><p><strong>r2_pseudo_macfadden</strong> – </p></li>
+<li><p><strong>r2_pseudo_cox_snell</strong> – </p></li>
+<li><p><strong>r2_pseudo_nagelkerke</strong> – </p></li>
+<li><p><strong>loglikelihood</strong> – </p></li>
+<li><p><strong>coefficients</strong> – </p></li>
+<li><p><strong>coefficients_sterrors</strong> – </p></li>
+<li><p><strong>coefficients_wald_statistics</strong> – </p></li>
+<li><p><strong>coefficients_zvalues</strong> – </p></li>
+<li><p><strong>coefficients_pvalues</strong> – </p></li>
+<li><p><strong>coefficients_exp</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="randan.regression.BinaryLogisticRegression.coefficients_confidence_interval">
+<em class="property">property </em><code class="sig-name descname">coefficients_confidence_interval</code><a class="headerlink" href="#randan.regression.BinaryLogisticRegression.coefficients_confidence_interval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.BinaryLogisticRegression.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">formula</em>, <em class="sig-param">categorical_variables=None</em>, <em class="sig-param">max_iterations=100</em>, <em class="sig-param">show_results=True</em>, <em class="sig-param">confidence_intervals=True</em>, <em class="sig-param">use_patsy_notation=False</em>, <em class="sig-param">n_decimals=3</em><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.BinaryLogisticRegression.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit model to the given data using formula.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>pd.DataFrame</em>) – Data to fit a model</p></li>
+<li><p><strong>formula</strong> (<em>str</em>) – Formula of a model specification, e.g. ‘y ~ x1 + x2’;
+should be passed either in Patsy (statsmodels) notation
+or using the following rules:
+‘*’ for interaction of the variables,
+‘:’ for interaction &amp; main effects,
+i.e., ‘y ~ x:z’ equals to ‘y ~ x + z + x*z’ (unlike the Patsy notation).
+If you use Patsy notation, please specify the parameter use_patsy_notation=True.</p></li>
+<li><p><strong>categorical_variables</strong> (<em>list</em>) – List of names of the variables that should be considered categorical.
+These variables would be automatically converted into sets of dummy variables.
+If you want to use this option, please make sure that you don’t have nested names of variables
+(e.g. ‘imdb’ and ‘imdb_rate’ at the same time), otherwise this option results in an incorrect procedure.</p></li>
+<li><p><strong>max_iterations</strong> (<em>int</em>) – Maximum iterations for convergence</p></li>
+<li><p><strong>show_results</strong> (<em>bool</em>) – Whether to show results of analysis</p></li>
+<li><p><strong>confidence_intervals</strong> (<em>bool</em>) – Whether to include coefficients’ confidence intervals in the summary table</p></li>
+<li><p><strong>use_patsy_notation</strong> (<em>bool</em>) – Turn this on if you use strictly Patsy’s rules to define a formula.
+See more: <a class="reference external" href="https://patsy.readthedocs.io/en/latest/quickstart.html">https://patsy.readthedocs.io/en/latest/quickstart.html</a></p></li>
+<li><p><strong>n_decimals</strong> (<em>int</em>) – Number of digits to round results when showing them</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>self</em> – The current instance of the BinaryLogisticRegression class</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.BinaryLogisticRegression.get_classification_table">
+<code class="sig-name descname">get_classification_table</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.BinaryLogisticRegression.get_classification_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a classification table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>pd.DataFrame</em> – A classification table</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.BinaryLogisticRegression.get_dependent_variable_codes">
+<code class="sig-name descname">get_dependent_variable_codes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.BinaryLogisticRegression.get_dependent_variable_codes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get information on how categories of a dependent variable were encoded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>pd.DataFrame</em> – A table explaining encodings</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.BinaryLogisticRegression.get_precision_and_recall">
+<code class="sig-name descname">get_precision_and_recall</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.BinaryLogisticRegression.get_precision_and_recall" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate precision, recall, and F-score for all the categories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>pd.DataFrame</em> – A table with estimated metrics</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.BinaryLogisticRegression.predict">
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">data=None</em>, <em class="sig-param">group_membership=True</em>, <em class="sig-param">probability=False</em>, <em class="sig-param">logit=False</em>, <em class="sig-param">add_to_data=False</em><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.BinaryLogisticRegression.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict values of a dependent variable using the fitted model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>pd.DataFrame</em>) – Data for prediction;
+may be not specified if you want to predict values for the same data that were used to fit a model</p></li>
+<li><p><strong>group_membership</strong> (<em>bool</em>) – Whether to predict observation’s membership
+to categories of a dependent variable</p></li>
+<li><p><strong>probability</strong> (<em>bool</em>) – Whether to predict exact probability</p></li>
+<li><p><strong>logit</strong> (<em>bool</em>) – Whether to predict a logit value</p></li>
+<li><p><strong>add_to_data</strong> (<em>bool</em>) – Whether to merge predictions with the given data.
+Currently, this option returns data with a sorted index</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>pd.DataFrame</em> – Predictions</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.BinaryLogisticRegression.save_independent_variables">
+<code class="sig-name descname">save_independent_variables</code><span class="sig-paren">(</span><em class="sig-param">data=None</em>, <em class="sig-param">add_to_data=False</em><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.BinaryLogisticRegression.save_independent_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produce values of independent variable remained in a fitted model.
+This option is useful if you don’t create dummy variables or interaction effects manually
+but want to use them in a further analysis. Only variables remained in a model are returned
+(those that are shown in a summary table).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>pd.DataFrame</em>) – Data for which independent variables are requested;
+may be not specified if you want to save values for the same data that were used to fit a model</p></li>
+<li><p><strong>add_to_data</strong> (<em>bool</em>) – Whether to merge new values with the given data.
+Currently, this option returns data with a sorted index</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>pd.DataFrame</em> – Values of independent variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.BinaryLogisticRegression.save_residuals">
+<code class="sig-name descname">save_residuals</code><span class="sig-paren">(</span><em class="sig-param">unstandardized=True</em>, <em class="sig-param">standardized=False</em>, <em class="sig-param">logit=False</em>, <em class="sig-param">deviance=False</em>, <em class="sig-param">add_to_data=False</em><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.BinaryLogisticRegression.save_residuals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produce values of various residuals. Residuals are returned only for data used to fit a model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>unstandardized</strong> (<em>bool</em>) – Whether to save unstandardized (raw) residuals</p></li>
+<li><p><strong>standardized</strong> (<em>bool</em>) – Whether to save standardized (z-scores) residuals</p></li>
+<li><p><strong>logit</strong> (<em>bool</em>) – Whether to save logit residuals</p></li>
+<li><p><strong>deviance</strong> (<em>bool</em>) – Whether to save deviance residuals</p></li>
+<li><p><strong>add_to_data</strong> (<em>bool</em>) – Whether to merge new values with data.
+Currently, this option returns data with a sorted index</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>pd.DataFrame</em> – Requested residuals</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.BinaryLogisticRegression.show_results">
+<code class="sig-name descname">show_results</code><span class="sig-paren">(</span><em class="sig-param">n_decimals</em><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.BinaryLogisticRegression.show_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show results of the analysis in a readable form.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n_decimals</strong> (<em>int</em>) – Number of digits to round results when showing them</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.BinaryLogisticRegression.summary">
+<code class="sig-name descname">summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.BinaryLogisticRegression.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Summary table with requested information related to regression coefficients.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>pd.DataFrame</em> – A summary table</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.BinaryLogisticRegression.summary_r2">
+<code class="sig-name descname">summary_r2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.BinaryLogisticRegression.summary_r2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Summary table with information related to pseudo coefficients of determination.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>pd.DataFrame</em> – A summary table</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="randan.regression.LinearRegression">
+<em class="property">class </em><code class="sig-prename descclassname">randan.regression.</code><code class="sig-name descname">LinearRegression</code><span class="sig-paren">(</span><em class="sig-param">method='enter'</em>, <em class="sig-param">include_constant=True</em>, <em class="sig-param">sig_level_entry=0.05</em>, <em class="sig-param">sig_level_removal=0.05</em><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.LinearRegression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for OLS regression models based on the excellent statsmodels package.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<em>‘enter’ or ‘backward’</em>) – Method for predictors selection</p></li>
+<li><p><strong>include_constant</strong> (<em>bool</em>) – (CURRENTLY UNAVAILIABLE) Whether to include constant in the model</p></li>
+<li><p><strong>sig_level_entry</strong> (<em>float</em>) – (CURRENTLY UNAVAILIABLE) Max significance level to include predictor in the model</p></li>
+<li><p><strong>sig_level_removal</strong> (<em>float</em>) – Min significance level to exclude predictor from the model</p></li>
+</ul>
+</dd>
+<dt class="field-even">Variables</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>variables_excluded</strong> – </p></li>
+<li><p><strong>variables_included</strong> – </p></li>
+<li><p><strong>predictions</strong> – </p></li>
+<li><p><strong>N</strong> – </p></li>
+<li><p><strong>r2</strong> – </p></li>
+<li><p><strong>r2_adjusted</strong> – </p></li>
+<li><p><strong>F</strong> – </p></li>
+<li><p><strong>F_pvalue</strong> – </p></li>
+<li><p><strong>ess</strong> – </p></li>
+<li><p><strong>rss</strong> – </p></li>
+<li><p><strong>tss</strong> – </p></li>
+<li><p><strong>ms_model</strong> – </p></li>
+<li><p><strong>ms_resid</strong> – </p></li>
+<li><p><strong>ms_total</strong> – </p></li>
+<li><p><strong>dof_model</strong> – </p></li>
+<li><p><strong>dof_resid</strong> – </p></li>
+<li><p><strong>dof_total</strong> – </p></li>
+<li><p><strong>coefficients</strong> – </p></li>
+<li><p><strong>coefficients_sterrors</strong> – </p></li>
+<li><p><strong>coefficients_tvalues</strong> – </p></li>
+<li><p><strong>coefficients_pvalues</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="randan.regression.LinearRegression.coefficients_VIF">
+<em class="property">property </em><code class="sig-name descname">coefficients_VIF</code><a class="headerlink" href="#randan.regression.LinearRegression.coefficients_VIF" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.LinearRegression.coefficients_beta">
+<em class="property">property </em><code class="sig-name descname">coefficients_beta</code><a class="headerlink" href="#randan.regression.LinearRegression.coefficients_beta" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.LinearRegression.coefficients_confidence_interval">
+<em class="property">property </em><code class="sig-name descname">coefficients_confidence_interval</code><a class="headerlink" href="#randan.regression.LinearRegression.coefficients_confidence_interval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.LinearRegression.coefficients_tolerance">
+<em class="property">property </em><code class="sig-name descname">coefficients_tolerance</code><a class="headerlink" href="#randan.regression.LinearRegression.coefficients_tolerance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.LinearRegression.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">formula</em>, <em class="sig-param">categorical_variables=None</em>, <em class="sig-param">show_results=True</em>, <em class="sig-param">confidence_intervals=True</em>, <em class="sig-param">collinearity_statistics=False</em>, <em class="sig-param">use_patsy_notation=False</em>, <em class="sig-param">n_decimals=3</em><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.LinearRegression.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit model to the given data using formula.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>pd.DataFrame</em>) – Data to fit a model</p></li>
+<li><p><strong>formula</strong> (<em>str</em>) – Formula of a model specification, e.g. ‘y ~ x1 + x2’;
+should be passed either in Patsy (statsmodels) notation
+or using the following rules:
+‘*’ for interaction of the variables,
+‘:’ for interaction &amp; main effects,
+i.e., ‘y ~ x:z’ equals to ‘y ~ x + z + x*z’ (unlike the Patsy notation).
+If you use Patsy notation, please specify the parameter use_patsy_notation=True.</p></li>
+<li><p><strong>categorical_variables</strong> (<em>list</em>) – List of names of the variables that should be considered categorical.
+These variables would be automatically converted into sets of dummy variables.
+If you want to use this option, please make sure that you don’t have nested names of variables
+(e.g. ‘imdb’ and ‘imdb_rate’ at the same time), otherwise this option results in an incorrect procedure.</p></li>
+<li><p><strong>show_results</strong> (<em>bool</em>) – Whether to show results of analysis</p></li>
+<li><p><strong>confidence_intervals</strong> (<em>bool</em>) – Whether to include coefficients’ confidence intervals in the summary table</p></li>
+<li><p><strong>collinearity_statistics</strong> (<em>bool</em>) – whether to include coefficients’ tolerance and VIF in the summary table</p></li>
+<li><p><strong>use_patsy_notation</strong> (<em>bool</em>) – turn this on if you use strictly Patsy’s rules to define a formula.
+See more: <a class="reference external" href="https://patsy.readthedocs.io/en/latest/quickstart.html">https://patsy.readthedocs.io/en/latest/quickstart.html</a></p></li>
+<li><p><strong>n_decimals</strong> (<em>int</em>) – Number of digits to round results when showing them</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>self</em> – The current instance of the LinearRegression class</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.LinearRegression.predict">
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">data=None</em>, <em class="sig-param">add_to_data=False</em><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.LinearRegression.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict values of a dependent variable for the given data using the fitted model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>pd.DataFrame</em>) – Data for predictions,
+may be not specified if you want to predict values for the same data that were used to fit a model</p></li>
+<li><p><strong>add_to_data</strong> (<em>bool</em>) – Whether to merge predictions with the given data.
+Currently, this option returns data with a sorted index</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>pd.DataFrame</em> – Predictions</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.LinearRegression.save_independent_variables">
+<code class="sig-name descname">save_independent_variables</code><span class="sig-paren">(</span><em class="sig-param">data=None</em>, <em class="sig-param">add_to_data=False</em><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.LinearRegression.save_independent_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produce values of independent variable remained in a fitted model.
+This option is useful if you don’t create dummy variables or interaction effects manually
+but want to use them in a further analysis. Only variables remained in a model are returned
+(those that are shown in a summary table).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>pd.DataFrame</em>) – Data for which independent variables are requested;
+may be not specified if you want to save values for the same data that were used to fit a model</p></li>
+<li><p><strong>add_to_data</strong> (<em>bool</em>) – Whether to merge new values with the given data.
+Currently, this option returns data with a sorted index</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>pd.DataFrame</em> – Values of independent variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.LinearRegression.save_residuals">
+<code class="sig-name descname">save_residuals</code><span class="sig-paren">(</span><em class="sig-param">unstandardized=True</em>, <em class="sig-param">standardized=False</em>, <em class="sig-param">studentized=False</em>, <em class="sig-param">deleted=False</em>, <em class="sig-param">studentized_deleted=False</em>, <em class="sig-param">add_to_data=False</em><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.LinearRegression.save_residuals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produce values of various residuals.
+Residuals are returned only for data used to fit a model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>unstandardized</strong> (<em>bool</em>) – Whether to save unstandardized (raw) residuals</p></li>
+<li><p><strong>standardized</strong> (<em>bool</em>) – Whether to save standardized (z-scores) residuals</p></li>
+<li><p><strong>studentized</strong> (<em>bool</em>) – Whether to save studentized residuals</p></li>
+<li><p><strong>deleted</strong> (<em>bool</em>) – Whether to save deleted residuals</p></li>
+<li><p><strong>studentized_deleted</strong> (<em>bool</em>) – Whether to save studentized deleted residuals</p></li>
+<li><p><strong>add_to_data</strong> (<em>bool</em>) – Whether to merge new values with data.
+Currently, this option returns data with a sorted index</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>pd.DataFrame</em> – Requested residuals</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.LinearRegression.show_results">
+<code class="sig-name descname">show_results</code><span class="sig-paren">(</span><em class="sig-param">n_decimals</em><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.LinearRegression.show_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show results of the analysis in a readable form.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n_decimals</strong> (<em>int</em>) – Number of digits to round results when showing them</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.LinearRegression.summary">
+<code class="sig-name descname">summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.LinearRegression.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Summary table with requested information related to regression coefficients.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>pd.DataFrame</em> – A summary table</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.LinearRegression.summary_F">
+<code class="sig-name descname">summary_F</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.LinearRegression.summary_F" title="Permalink to this definition">¶</a></dt>
+<dd><p>Summary table with information related to F-statistic.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>pd.DataFrame</em> – A summary table</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="randan.regression.LinearRegression.summary_r2">
+<code class="sig-name descname">summary_r2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#randan.regression.LinearRegression.summary_r2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Summary table with information related to coefficient of determination.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>pd.DataFrame</em> – A summary table</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tree.html" class="btn btn-neutral float-right" title="Tree" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dimension_reduction.html" class="btn btn-neutral float-left" title="Dimension reduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Svetlana Zhuchkova
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
