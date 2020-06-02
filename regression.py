@@ -13,18 +13,45 @@ from IPython.display import display
 from pandas.api.types import is_numeric_dtype
 from .utils import get_categories
 
-
 class LinearRegression:
     
     """
     Class for OLS regression models based on the excellent statsmodels package.
     
-    Parameters:
+    Parameters
     ----------
-    method (str: 'enter', 'backward'):  method for predictors selection
-    include_constant (bool): !CURRENTLY UNAVAILIABLE! whether to include constant in the model
-    sig_level_entry (float): !CURRENTLY UNAVAILIABLE! max significance level to include predictor in the model 
-    sig_level_removal (float): min significance level to exclude predictor from the model
+    method : 'enter' or 'backward' 
+        Method for predictors selection
+    include_constant : bool 
+        (CURRENTLY UNAVAILIABLE) Whether to include constant in the model
+    sig_level_entry : float 
+        (CURRENTLY UNAVAILIABLE) Max significance level to include predictor in the model 
+    sig_level_removal : float
+        Min significance level to exclude predictor from the model
+
+    Attributes
+    ----------
+    variables_excluded
+    variables_included
+    predictions
+    N
+    r2
+    r2_adjusted
+    F
+    F_pvalue
+    ess
+    rss
+    tss
+    ms_model
+    ms_resid
+    ms_total
+    dof_model
+    dof_resid
+    dof_total 
+    coefficients
+    coefficients_sterrors
+    coefficients_tvalues
+    coefficients_pvalues
     """
     
     def __init__(
@@ -55,26 +82,39 @@ class LinearRegression:
         """
         Fit model to the given data using formula.
 
-        Parameters:
+        Parameters
         ----------
-        data (DataFrame): data to fit the model  
-        formula (str): formula of a model specification, e.g. 'y ~ x1 + x2'; 
-        should be passed either in Patsy (statsmodels) notation
-        or using the following rules: 
-        '*' for interaction of the variables,
-        ':' for interaction & main effects, 
-        i.e., 'y ~ x:z' equals to 'y ~ x + z + x*z' (unlike the Patsy notation).
-        If you use Patsy notation, please specify the parameter use_patsy_notation=True.
-        categorical_variables (list): list of names of the variables that should be considered categorical.
-        These variables would be automatically converted into sets of dummy variables.
-        If you want to use this option, please make sure that you don't have nested names of variables
-        (e.g. 'imdb' and 'imdb_rate' at the same time), otherwise this option results in an incorrect procedure.
-        show_results (bool): whether to show results of analysis
-        confidence_intervals (bool): whether to include coefficients' confidence intervals in the summary table
-        collinearity_statistics (bool): whether to include coefficients' tolerance and VIF in the summary table
-        use_patsy_notation (bool): turn this on if you use strictly Patsy's rules to define a formula.
-        See more: https://patsy.readthedocs.io/en/latest/quickstart.html
-        n_decimals (int): number of digits to round results when showing them
+        data : pd.DataFrame 
+            Data to fit a model  
+        formula : str 
+            Formula of a model specification, e.g. 'y ~ x1 + x2'; 
+            should be passed either in Patsy (statsmodels) notation
+            or using the following rules: 
+            '*' for interaction of the variables,
+            ':' for interaction & main effects, 
+            i.e., 'y ~ x:z' equals to 'y ~ x + z + x*z' (unlike the Patsy notation).
+            If you use Patsy notation, please specify the parameter use_patsy_notation=True.
+        categorical_variables : list 
+            List of names of the variables that should be considered categorical.
+            These variables would be automatically converted into sets of dummy variables.
+            If you want to use this option, please make sure that you don't have nested names of variables
+            (e.g. 'imdb' and 'imdb_rate' at the same time), otherwise this option results in an incorrect procedure.
+        show_results : bool 
+            Whether to show results of analysis
+        confidence_intervals : bool 
+            Whether to include coefficients' confidence intervals in the summary table
+        collinearity_statistics : bool 
+            whether to include coefficients' tolerance and VIF in the summary table
+        use_patsy_notation : bool 
+            turn this on if you use strictly Patsy's rules to define a formula.
+            See more: https://patsy.readthedocs.io/en/latest/quickstart.html
+        n_decimals : int 
+            Number of digits to round results when showing them
+
+        Returns
+        -------
+        self
+            The current instance of the LinearRegression class
         """
 
         self._data = data.copy()
@@ -135,14 +175,21 @@ class LinearRegression:
         add_to_data=False,
     ):
         """
-        Predict values of a dependent variable using a fitted model.
+        Predict values of a dependent variable for the given data using the fitted model.
         
-        Parameters:
+        Parameters
         ----------
-        data (DataFrame): data for prediction; 
-        may be not specified if you want to predict values for the same data that were used to fit a model
-        add_to_data (bool): whether to merge predictions with the given data.
-        Currently, this option returns data with a sorted index
+        data : pd.DataFrame 
+            Data for predictions, 
+            may be not specified if you want to predict values for the same data that were used to fit a model
+        add_to_data : bool 
+            Whether to merge predictions with the given data.
+            Currently, this option returns data with a sorted index
+
+        Returns
+        -------
+        pd.DataFrame
+            Predictions
         """
         name = f'{self.dependent_variable} (predicted)'
         
@@ -276,9 +323,10 @@ class LinearRegression:
         """
         Show results of the analysis in a readable form.
         
-        Parameters:
+        Parameters
         ----------
-        n_decimals (int): number of digits to round results when showing them
+        n_decimals : int 
+            Number of digits to round results when showing them
         """
         phrase = 'method {}'
         
@@ -304,6 +352,11 @@ class LinearRegression:
     def summary(self):
         """
         Summary table with requested information related to regression coefficients.
+
+        Returns
+        -------
+        pd.DataFrame
+            A summary table
         """
                   
         statistics = [
@@ -342,6 +395,11 @@ class LinearRegression:
     def summary_r2(self):
         """
         Summary table with information related to coefficient of determination.
+
+        Returns
+        -------
+        pd.DataFrame
+            A summary table
         """
         r = self.r2 ** 0.5
         r2 = self.r2
@@ -365,6 +423,11 @@ class LinearRegression:
     def summary_F(self):
         """
         Summary table with information related to F-statistic.
+
+        Returns
+        -------
+        pd.DataFrame
+            A summary table
         """
         
         results = [[self.ess, self.dof_model, self.ms_model, self.F, self.F_pvalue],
@@ -430,12 +493,19 @@ class LinearRegression:
         but want to use them in a further analysis. Only variables remained in a model are returned
         (those that are shown in a summary table).
         
-        Parameters:
+        Parameters
         ----------
-        data (DataFrame): data for which independent variables are requested; 
-        may be not specified if you want to save values for the same data that were used to fit a model
-        add_to_data (bool): whether to merge new values with the given data.
-        Currently, this option returns data with a sorted index
+        data : pd.DataFrame 
+            Data for which independent variables are requested; 
+            may be not specified if you want to save values for the same data that were used to fit a model
+        add_to_data : bool 
+            Whether to merge new values with the given data.
+            Currently, this option returns data with a sorted index
+
+        Returns
+        -------
+        pd.DataFrame
+            Values of independent variables
         """
                   
         if data is None:
@@ -474,17 +544,29 @@ class LinearRegression:
                       studentized_deleted=False,
                       add_to_data=False):
         """
-        Produce values of various residuals. Residuals are returned only for data used to fit a model.
+        Produce values of various residuals. 
+        Residuals are returned only for data used to fit a model.
         
-        Parameters:
+        Parameters
         ----------
-        unstandardized (bool): whether to save unstandardized (raw) residuals
-        standardized (bool): whether to save standardized (z-scores) residuals
-        studentized (bool): whether to save studentized residuals
-        deleted (bool): whether to save deleted residuals
-        studentized_deleted (bool): whether to save studentized deleted residuals
-        add_to_data (bool): whether to merge new values with data.
-        Currently, this option returns data with a sorted index
+        unstandardized : bool 
+            Whether to save unstandardized (raw) residuals
+        standardized : bool 
+            Whether to save standardized (z-scores) residuals
+        studentized : bool 
+            Whether to save studentized residuals
+        deleted : bool 
+            Whether to save deleted residuals
+        studentized_deleted : bool
+            Whether to save studentized deleted residuals
+        add_to_data : bool
+            Whether to merge new values with data.
+            Currently, this option returns data with a sorted index
+
+        Returns
+        -------
+        pd.DataFrame
+            Requested residuals
         """
                   
         columns_to_show = [f'{k.capitalize().replace("ized", ".").replace("eted", ".").replace("_", " ")} res.' \
@@ -554,13 +636,37 @@ class BinaryLogisticRegression:
     """
     Class for binary logistic regression models based on the excellent statsmodels package.
     
-    Parameters:
+    Parameters
     ----------
-    method (str: 'enter', 'backward'): method for predictors selection 
-    include_constant (bool): !CURRENTLY UNAVAILIABLE! whether to include constant in the model
-    classification_cutoff (float): minimum probability to assign a prediction value 1
-    sig_level_entry (float): !CURRENTLY UNAVAILIABLE! max significance level to include predictor in the model 
-    sig_level_removal (float): min significance level to exclude predictor from the model
+    method : 'enter' or 'backward' 
+        Method for predictors selection 
+    include_constant : bool 
+        (CURRENTLY UNAVAILIABLE) Whether to include constant in the model
+    classification_cutoff : float 
+        Minimum probability to assign a prediction value 1
+    sig_level_entry : float 
+        (CURRENTLY UNAVAILIABLE) Max significance level to include predictor in the model 
+    sig_level_removal : float 
+        Min significance level to exclude predictor from the model
+
+    Attributes
+    ----------
+    predictions
+    classification_table
+    precision_and_recall
+    variables_excluded
+    variables_included
+    N
+    r2_pseudo_macfadden
+    r2_pseudo_cox_snell
+    r2_pseudo_nagelkerke
+    loglikelihood 
+    coefficients
+    coefficients_sterrors
+    coefficients_wald_statistics
+    coefficients_zvalues
+    coefficients_pvalues
+    coefficients_exp
     """
     
     def __init__(
@@ -592,27 +698,39 @@ class BinaryLogisticRegression:
         """
         Fit model to the given data using formula.
 
-        Parameters:
+        Parameters
         ----------
-        data (DataFrame): data to fit the model  
-        formula (str): formula of a model specification, e.g. 'y ~ x1 + x2'; 
-        should be passed either in Patsy (statsmodels) notation
-        or using the following rules: 
-        '*' for interaction of the variables,
-        ':' for interaction & main effects, 
-        i.e., 'y ~ x:z' equals to 'y ~ x + z + x*z' (unlike the Patsy notation).
-        If you use Patsy notation, please specify the parameter use_patsy_notation=True.
-        categorical_variables (list): list of names of the variables that should be considered categorical.
-        These variables would be automatically converted into sets of dummy variables.
-        If you want to use this option, please make sure that you don't have nested names of variables
-        (e.g. 'imdb' and 'imdb_rate' at the same time), otherwise this option results in an incorrect procedure.
-        max_iterations (int): maximum iterations for convergence
-        show_results (bool): whether to show results of analysis
-        confidence_intervals (bool): whether to include coefficients' confidence intervals in the summary table
-        collinearity_statistics (bool): whether to include coefficients' tolerance and VIF in the summary table
-        use_patsy_notation (bool): turn this on if you use strictly Patsy's rules to define a formula.
-        See more: https://patsy.readthedocs.io/en/latest/quickstart.html
-        n_decimals (int): number of digits to round results when showing them
+        data : pd.DataFrame 
+            Data to fit a model  
+        formula : str 
+            Formula of a model specification, e.g. 'y ~ x1 + x2'; 
+            should be passed either in Patsy (statsmodels) notation
+            or using the following rules: 
+            '*' for interaction of the variables,
+            ':' for interaction & main effects, 
+            i.e., 'y ~ x:z' equals to 'y ~ x + z + x*z' (unlike the Patsy notation).
+            If you use Patsy notation, please specify the parameter use_patsy_notation=True.
+        categorical_variables : list 
+            List of names of the variables that should be considered categorical.
+            These variables would be automatically converted into sets of dummy variables.
+            If you want to use this option, please make sure that you don't have nested names of variables
+            (e.g. 'imdb' and 'imdb_rate' at the same time), otherwise this option results in an incorrect procedure.
+        max_iterations : int 
+            Maximum iterations for convergence
+        show_results : bool 
+            Whether to show results of analysis
+        confidence_intervals : bool 
+            Whether to include coefficients' confidence intervals in the summary table
+        use_patsy_notation : bool 
+            Turn this on if you use strictly Patsy's rules to define a formula.
+            See more: https://patsy.readthedocs.io/en/latest/quickstart.html
+        n_decimals : int 
+            Number of digits to round results when showing them
+
+        Returns
+        -------
+        self
+            The current instance of the BinaryLogisticRegression class
         """
         
         self._data = data.copy()
@@ -803,6 +921,11 @@ class BinaryLogisticRegression:
     def summary(self):
         """
         Summary table with requested information related to regression coefficients.
+        
+        Returns
+        -------
+        pd.DataFrame
+            A summary table
         """
                   
         statistics = [
@@ -847,9 +970,10 @@ class BinaryLogisticRegression:
         """
         Show results of the analysis in a readable form.
         
-        Parameters:
+        Parameters
         ----------
-        n_decimals (int): number of digits to round results when showing them
+        n_decimals : int 
+            Number of digits to round results when showing them
         """
         phrase = 'method {}'
         
@@ -888,6 +1012,11 @@ class BinaryLogisticRegression:
     def summary_r2(self):
         """
         Summary table with information related to pseudo coefficients of determination.
+
+        Returns
+        -------
+        pd.DataFrame
+            A summary table
         """
         ll = self.loglikelihood
         mf = self.r2_pseudo_macfadden
@@ -913,6 +1042,11 @@ class BinaryLogisticRegression:
     def get_dependent_variable_codes(self):
         """
         Get information on how categories of a dependent variable were encoded.
+
+        Returns
+        -------
+        pd.DataFrame
+            A table explaining encodings
         """
         mapper = self._mapper
         result = pd.DataFrame(
@@ -925,6 +1059,11 @@ class BinaryLogisticRegression:
     def get_classification_table(self):
         """
         Get a classification table.
+
+        Returns
+        -------
+        pd.DataFrame
+            A classification table
         """
         all_categories = self._dep_cats
 
@@ -955,6 +1094,11 @@ class BinaryLogisticRegression:
     def get_precision_and_recall(self):
         """
         Estimate precision, recall, and F-score for all the categories.
+
+        Returns
+        -------
+        pd.DataFrame
+            A table with estimated metrics
         """
 
         preds = self.classification_table.iloc[:-1, :-1]
@@ -990,18 +1134,28 @@ class BinaryLogisticRegression:
         add_to_data=False,
     ):
         """
-        Predict values of a dependent variable using a fitted model.
+        Predict values of a dependent variable using the fitted model.
         
-        Parameters:
+        Parameters
         ----------
-        data (DataFrame): data for prediction; 
-        may be not specified if you want to predict values for the same data that were used to fit a model
-        group_membership (bool): whether to predict observation's membership 
-        to categories of a dependent variable
-        probability (bool): whether to predict exact probability
-        logit (bool): whether to predict a logit value 
-        add_to_data (bool): whether to merge predictions with the given data.
-        Currently, this option returns data with a sorted index
+        data : pd.DataFrame 
+            Data for prediction; 
+            may be not specified if you want to predict values for the same data that were used to fit a model
+        group_membership : bool 
+            Whether to predict observation's membership 
+            to categories of a dependent variable
+        probability : bool 
+            Whether to predict exact probability
+        logit : bool 
+            Whether to predict a logit value 
+        add_to_data : bool 
+            Whether to merge predictions with the given data.
+            Currently, this option returns data with a sorted index
+
+        Returns
+        -------
+        pd.DataFrame
+            Predictions
         """
         name_memb = f'{self.dependent_variable} (predicted)'
         name_prob = f'{self.dependent_variable} (predicted prob.)'
@@ -1072,12 +1226,19 @@ class BinaryLogisticRegression:
         but want to use them in a further analysis. Only variables remained in a model are returned
         (those that are shown in a summary table).
         
-        Parameters:
+        Parameters
         ----------
-        data (DataFrame): data for which independent variables are requested; 
-        may be not specified if you want to save values for the same data that were used to fit a model
-        add_to_data (bool): whether to merge new values with the given data.
-        Currently, this option returns data with a sorted index
+        data : pd.DataFrame 
+            Data for which independent variables are requested; 
+            may be not specified if you want to save values for the same data that were used to fit a model
+        add_to_data : bool 
+            Whether to merge new values with the given data.
+            Currently, this option returns data with a sorted index
+        
+        Returns
+        -------
+        pd.DataFrame
+            Values of independent variables
         """
                   
         if data is None:
@@ -1117,14 +1278,24 @@ class BinaryLogisticRegression:
         """
         Produce values of various residuals. Residuals are returned only for data used to fit a model.
         
-        Parameters:
+        Parameters
         ----------
-        unstandardized (bool): whether to save unstandardized (raw) residuals
-        standardized (bool): whether to save standardized (z-scores) residuals
-        logit (bool): whether to save logit residuals
-        deviance (bool): whether to save deviance residuals
-        add_to_data (bool): whether to merge new values with data.
-        Currently, this option returns data with a sorted index
+        unstandardized : bool 
+            Whether to save unstandardized (raw) residuals
+        standardized : bool 
+            Whether to save standardized (z-scores) residuals
+        logit : bool 
+            Whether to save logit residuals
+        deviance : bool 
+            Whether to save deviance residuals
+        add_to_data : bool 
+            Whether to merge new values with data.
+            Currently, this option returns data with a sorted index
+
+        Returns
+        -------
+        pd.DataFrame
+            Requested residuals
         """
                   
         columns_to_show = [f'{k.capitalize().replace("ized", ".").replace("eted", ".").replace("_", " ")} res.' \
