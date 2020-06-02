@@ -1,6 +1,3 @@
-#TODO - case when only root node remains 
-# (gives an error when checking on terminal nodes)
-
 from .utils import *
 from .bivariate_association import Crosstab
 from .comparison_of_central_tendency import ANOVA
@@ -17,19 +14,46 @@ class CHAIDClassifier:
     """
     Class to build the CHAID tree on a categorical dependent variable.
 
-    Parameters:
+    Parameters
     ----------
-    method (str): which Chi-square metric to use, 'pearson' or 'likelihood'
-    !CURRENTLY ONLY 'PEARSON' IS AVAILABLE!
-    max_depth (int): maximum possible depth of tree
-    min_child_node (int): minimum possible number of observations in a child node
-    min_parent_node (int): minimum possible number of observations in a parent node
-    sig_level_split (float): significance level to split a node
-    sig_level_merge (float): significance level to merge categories
-    bonferroni (bool): !CURRENTLY UNAVAILIABLE! whether to use a Bonferroni's adjustment for p-values
-    allow_resplit (bool): !CURRENTLY UNAVAILIABLE! whether to re-split merged categories
-    n_intervals (int): maximum possible number of intervals to bin scale variables
+    method : 'pearson' or 'likelihood' 
+        Which Chi-square metric to use
+        (CURRENTLY ONLY 'PEARSON' IS AVAILABLE)
+    max_depth : int 
+        Maximum possible depth of tree
+    min_child_node : int 
+        Minimum possible number of observations in a child node
+    min_parent_node : int 
+        Minimum possible number of observations in a parent node
+    sig_level_split : float 
+        Significance level to split a node
+    sig_level_merge : float 
+        Significance level to merge categories
+    bonferroni : bool 
+        (CURRENTLY UNAVAILIABLE) Whether to use a Bonferroni's adjustment for p-values
+    allow_resplit : bool 
+        (CURRENTLY UNAVAILIABLE) Whether to re-split merged categories
+    n_intervals : int 
+        Maximum possible number of intervals to bin scale variables
 
+    Attributes
+    ----------
+    depth : int
+        The depth of the obtained tree
+    nodes : pd.DataFrame
+        A table aggregating information about all nodes of a tree
+    terminal_nodes : pd.DataFrame
+        A table aggregating information about terminal nodes of a tree
+    significant_variables : list
+        Names of variables remained in a tree
+    classification_table : pd.DataFrame
+        A classification table for train data
+    precision_and_recall : pd.DataFrame
+        A table with precision, recall, and f1-score for train data
+    classification_table_test : pd.DataFrame
+        A classification table for test data
+    precision_and_recall_test : pd.DataFrame
+        A table with precision, recall, and f1-score for test data
     """
     def __init__(self,
                 method='pearson',
@@ -71,30 +95,50 @@ class CHAIDClassifier:
             n_decimals=3):
 
         """
-        Fit model to the given data.
+        Fit a model to the given data.
 
-        Parameters:
+        Parameters
         ----------
-        data (DataFrame): data to fit a model
-        dependent_variable (str): name of a categorical dependent variable
-        independent_variables (list): list of names of independent variables
-        scale_variables (list): names of independent variables that should
-        be considered as scale variables
-        ordinal_variables (list): names of independent variables that should
-        be considered as ordinal variables; to use this option properly 
-        you should either add digits to the labels 
-        (i.e., 'low', 'medium', 'high' -> '1. low', '2. medium', '3. high')
-        or convert your variable to pandas.Categorical and set the order,
-        see more: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Categorical.html
-        test_data: data to test a model
-        show_results (bool): whether to show results of analysis
-        plot_tree (bool): whether to plot the obtained tree
-        save_plot (bool): whether to save a plot
-        save_plot_path (str): folder to save a plot
-        save_plot_name (str): what name to use when save a plot
-        save_plot_format (str): what format to use when save a plot ('png', 'svg', 'jpg')
-        tree_in_table_format (bool): whether to show tree as a table when showing results
-        n_decimals (int): number of digits to round results when showing them
+        data : pd.DataFrame 
+            Data to fit a model (train data)
+        dependent_variable : str 
+            Name of a categorical dependent variable
+        independent_variables : list 
+            List of names of independent variables
+        scale_variables : list 
+            Names of independent variables that should
+            be considered as scale variables
+        ordinal_variables : list 
+            Names of independent variables that should
+            be considered as ordinal variables; to use this option properly 
+            you should either add digits to the labels 
+            (i.e., 'low', 'medium', 'high' -> '1. low', '2. medium', '3. high'),
+            or turn data into a numeric dtype (1, 2, 3),
+            or convert your variable to pandas.Categorical and set the order,
+            see more: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Categorical.html
+        test_data : pd.DataFrame
+            Data to test a model
+        show_results : bool 
+            Whether to show results of analysis
+        plot_tree : bool 
+            Whether to plot the obtained tree
+        save_plot : bool 
+            Whether to save a plot
+        save_plot_path : str 
+            Folder to save a plot
+        save_plot_name :str 
+            What name to use when save a plot
+        save_plot_format : str 
+            What format to use when save a plot ('png', 'svg', 'jpg')
+        tree_in_table_format : bool 
+            Whether to show tree as a table when showing results
+        n_decimals : int 
+            Number of digits to round results when showing them
+
+        Returns
+        -------
+        self
+            The current instance of the CHAIDClassifier class
         """
         #todo - handle missing data
         #todo - allow resplit
@@ -121,7 +165,7 @@ class CHAIDClassifier:
         
         tree_nodes.extend(self._build_nodes_from_variable(data,
                                                           dependent_variable))
-        #print(tree_nodes)
+        
         
         
         tree_nodes = self._split_nodes(data,
@@ -131,7 +175,7 @@ class CHAIDClassifier:
                                      
         self.nodes = pd.DataFrame(tree_nodes)
         
-        #display(self.nodes)
+        
         if len(self.nodes) > 1:
             terminal_nodes_idx = self.nodes.apply(lambda x: self._check_if_terminal_node(x), axis=1)
             self.terminal_nodes = self.nodes[terminal_nodes_idx]
@@ -175,6 +219,11 @@ class CHAIDClassifier:
         """
         Identify which variables remained in the tree,
         i.e. should be considered as significant ones.
+
+        Returns
+        -------
+        list
+            Names of significant variables
         """
 
         significant_variables = get_categories(self.nodes['Variable'])
@@ -189,13 +238,18 @@ class CHAIDClassifier:
         """
         Plot the obtained tree.
 
-        Parameters:
+        Parameters
         ----------
-        save_plot (bool): whether to save a plot
-        save_plot_path (str): folder to save a plot
-        save_plot_name (str): what name to use when save a plot
-        save_plot_format (str): what format to use when save a plot ('png', 'svg', 'jpg')
-        tree_in_table_format (bool): whether to show tree as a table when showing results
+        save_plot : bool 
+            Whether to save a plot
+        save_plot_path : str 
+            Folder to save a plot
+        save_plot_name : str 
+            What name to use when save a plot
+        save_plot_format : str 
+            What format to use when save a plot ('png', 'svg', 'jpg')
+        tree_in_table_format : bool 
+            Whether to show tree as a table when showing results
         """
         
         graph = pydot.Dot(graph_type='graph', rankdir='LR')
@@ -224,15 +278,11 @@ class CHAIDClassifier:
                 chi2 = round(node['Chi-square'], 1)
             fillcolor=colors[predicted_category]
             if current_node == 'Node 0':
-                #fillcolor=#'lightgray'
-                #fillcolor=colors[predicted_category]
                 node_label = {
                     current_node: f'{current_node}\n{node_variable}\nN = {n}\nMode = {predicted_category}'
                 }
 
             else:
-                #fillcolor=colors[predicted_category]
-                #xlabel = ''
                 node_label = {
                     current_node: f'{current_node}\n{node_variable} =\n{node_category}\nN = {n}\n{dep_var} = {predicted_category}'
                 }
@@ -267,6 +317,11 @@ class CHAIDClassifier:
     def get_precision_and_recall(self):
         """
         Estimate precision, recall, and F-score for all the categories.
+
+        Returns
+        -------
+        pd.DataFrame
+            A table with estimated metrics
         """
 
         results = precision_and_recall(self.classification_table)
@@ -275,6 +330,11 @@ class CHAIDClassifier:
     def summary(self):
         """
         Get model summary.
+
+        Returns
+        -------
+        pd.DataFrame
+            A summary table
         """
         statistics = ['Growing Method',
                      'Dependent variable',
@@ -308,10 +368,12 @@ class CHAIDClassifier:
         """
         Show results of the analysis in a readable form.
         
-        Parameters:
+        Parameters
         ----------
-        tree_in_table_format (bool): whether to show tree as a table when showing results
-        n_decimals (int): number of digits to round results when showing them
+        tree_in_table_format : bool 
+            Whether to show tree as a table when showing results
+        n_decimals : int 
+            Number of digits to round results when showing them
         """
         print('\nCHAID SUMMARY')
         print('------------------\n')
@@ -345,6 +407,11 @@ class CHAIDClassifier:
     def get_classification_table(self):
         """
         Get the classification table as it is shown in SPSS.
+
+        Returns
+        -------
+        pd.DataFrame
+            A classification table
         """
         dependent_variable = self._dependent_variable
         classification = classification_table(self._data[dependent_variable],
@@ -369,13 +436,10 @@ class CHAIDClassifier:
         predicted_node = 'Node 0'
         while True:
             current_nodes_level = nodes[nodes['Parent node']==predicted_node]
-            #display(current_nodes_level)
             if len(current_nodes_level) == 0:
                 return predicted_category, predicted_node
             split_variable = current_nodes_level['Variable'].iloc[0]
-            #print(split_variable)
             observation_category = observation[split_variable]
-            #print(observation_category)
             if split_variable not in scale_variables:
                 try:
                     rule = current_nodes_level.loc[:, 'Category'].str.split(' / ').apply(lambda x: True if str(observation_category) in x else False)
@@ -383,10 +447,9 @@ class CHAIDClassifier:
                     rule = current_nodes_level.loc[:, 'Category'].astype(float).astype(str).str.split(' / ').apply(lambda x: True if str(float(observation_category)) in x else False)
             else:
                 rule = current_nodes_level.loc[:, 'Category'].apply(lambda x: x.overlaps(pd.Interval(observation_category, observation_category, 'both')))
-            #display(current_nodes_level[rule]['Mode'])
+            
             try:
                 predicted_category = current_nodes_level[rule]['Mode'].iloc[0]
-                #print(predicted_category)
                 predicted_node = current_nodes_level[rule]['Node'].iloc[0]
             except IndexError:
                 predicted_category = constant
@@ -401,13 +464,23 @@ class CHAIDClassifier:
         """
         Predict a value of the dependent variable and/or a node for the given data.
 
-        Parameters:
+        Parameters
         ----------
-        data (DataFrame): data for which values or nodes should be predicted
-        dependent_variable (bool): whether to predict the value of the dependent variable
-        node (bool): whether to predict the node
-        interaction (bool): whether to predict interaction corresponded to the node
-        add_to_data (bool): whether to merge predictions with the given data
+        data : pd.DataFrame 
+            Data for which values or nodes should be predicted
+        dependent_variable : bool 
+            Whether to predict the value of the dependent variable
+        node : bool 
+            Whether to predict the node
+        interaction : bool 
+            Whether to predict interaction corresponded to the node
+        add_to_data : bool 
+            Whether to merge predictions with the given data
+
+        Returns
+        -------
+        pd.DataFrame
+            Requested values
         """
 
         if data is None or data[self._independent_variables]\
@@ -450,12 +523,9 @@ class CHAIDClassifier:
                                        method):
         #todo - different methods in crosstab (pearson+likelihood)
         results = []
-        #print(independent_variables)
-        #if len(independent_variables) > 1:
         for variable in independent_variables:
             if len(data[variable].value_counts()) > 1:
                 ctab = Crosstab(data, variable, dependent_variable, show_results=False, only_stats=True)
-                #display(ctab.frequencies_observed)#add method
                 results.append([ctab.pvalue, ctab.chi_square, ctab.dof])
             else:
                 results.append([1, 0, 0])
@@ -466,18 +536,12 @@ class CHAIDClassifier:
             results = pd.DataFrame(results,
                                    columns=['pvalue', 'chi2', 'dof'],
                                    index=independent_variables)
-
-            #display(results)
             most_significant_variable = results['pvalue'].idxmin()
             its_pvalue = results.loc[most_significant_variable, 'pvalue']
             its_chi2 = results.loc[most_significant_variable, 'chi2']
             its_dof = results.loc[most_significant_variable, 'dof']
-            #print(most_significant_variable, its_pvalue, its_chi2, its_dof)
             return most_significant_variable, its_pvalue, its_chi2, its_dof
-#         else:
-#             return None, None, None, None
-        
-    #@staticmethod
+
     def _merging(self,
                  data,
                  dependent_variable,
@@ -497,11 +561,8 @@ class CHAIDClassifier:
         
         max_pvalue = 1
         
-        while max_pvalue > sig_level:
-            #print(list(data[independent_variable].unique()))
-            #start_time = time.time()            
+        while max_pvalue > sig_level:           
             categories = get_categories(data[independent_variable])
-            #print(f'[within merging] _get_categories: {time.time() - start_time}')
             
             if len(categories) <= 2:
                 if len(categories) == 2 and min_child_node is not None:
@@ -517,28 +578,22 @@ class CHAIDClassifier:
                                                                                               categories[1])
                 
                 return data[independent_variable]
-            
-            #start_time = time.time()     
+                 
             if independent_variable not in self._ordinal_variables + self._scale_variables:
                 categories_combo = get_unordered_combinations(categories, 2)
             else:
                 categories_combo = get_ordered_combinations(categories, 2)
-            #print(f'[within merging] _get_combinations: {time.time() - start_time}')
             
             results = pd.DataFrame(columns=categories,
                                    index=categories)
-            #start_time = time.time()
             for pair in categories_combo:
                 pair_data = data[data[independent_variable].isin(pair)]
-                if len(pair_data) > 0:                #start_time = time.time()
+                if len(pair_data) > 0:
                     ctab = Crosstab(pair_data, independent_variable, dependent_variable, only_stats=True) #add method
-                    #print(f'[within merging] crosstab: {time.time() - start_time}')
                     var1, var2 = pair
                     results.loc[var1, var2] = ctab.pvalue
                     results.loc[var2, var1] = ctab.pvalue
-            #print(f'[within merging] all crosstabs: {time.time() - start_time}')
             max_pvalue = results.max().max()
-            #start_time = time.time()
             if max_pvalue > sig_level:
                 cat1 = results.max().idxmax()
                 cat2 = results[cat1][results[cat1]==max_pvalue].index[0]
@@ -550,12 +605,9 @@ class CHAIDClassifier:
                     data[independent_variable] = merge_two_intervals(data[independent_variable],
                                                                                       cat1,
                                                                                       cat2)
-            #print(f'[within merging] merging: {time.time() - start_time}')
         
-        #start_time = time.time()
         if min_child_node is not None:
             min_count = data[independent_variable].value_counts().min()
-            #print(min_count)
             n_categories = len(data[independent_variable].unique())
     #         (Optional) Any category having too few observations (as compared with a user-specified minimum segment size) 
     #         is merged with the most similar other category as measured by the largest of the p-values.
@@ -578,9 +630,7 @@ class CHAIDClassifier:
                         results.loc[var1, var2] = ctab.pvalue
                         results.loc[var2, var1] = ctab.pvalue
 
-                #display(results)
                 max_pvalue = results[min_count_category].max()
-                #print(results[min_count_category])
                 max_pvalue_category = pd.to_numeric(results[min_count_category]).idxmax()
                 if independent_variable not in self._scale_variables:
                     data[independent_variable] = merge_two_cats(data[independent_variable],
@@ -592,8 +642,6 @@ class CHAIDClassifier:
                                                                                  max_pvalue_category)          
                 min_count = data[independent_variable].value_counts().min()
                 n_categories = len(data[independent_variable].unique())
-            #print(f'[within merging] checking small counts: {time.time() - start_time}')
-        #print(data[independent_variable].unique())
         return data[independent_variable]
 
     def _build_nodes_from_variable(self,
@@ -612,8 +660,7 @@ class CHAIDClassifier:
                 filter_data = data[data[independent_variable]==category][dependent_variable]
                 n = len(filter_data)
                 n_observations.append(n)
-            small_n = [n for n in n_observations if n <= self.min_child_node]
-            #print(n_observations, categories)    
+            small_n = [n for n in n_observations if n <= self.min_child_node]   
             if len(small_n) < len(categories) - 1:
                 for category in categories:
                     filter_data = data[data[independent_variable]==category][dependent_variable]
@@ -655,70 +702,47 @@ class CHAIDClassifier:
             
             if variable in self._scale_variables:
                 
-                #start_time = time.time()
                 data_iter[variable] = binning(data_iter[variable], self.n_intervals)
-                #print(f'binning: {time.time() - start_time}')
             
-            #start_time = time.time()
             data_iter[variable] = self._merging(data_iter,
                                                 dependent_variable,
                                                 variable)
-            #print(f'merging: {time.time() - start_time}')
         
-        #start_time = time.time()
         split_variable, split_pvalue, split_chi2, split_dof = CHAIDClassifier\
         ._get_most_significant_variable(data_iter,
                                         dependent_variable,
                                         independent_variables,
                                         self.method)
-        #print(f'defining variable for split: {time.time() - start_time}')
         
         if split_variable is not None:
             split_info = {
                          'Chi-square': split_chi2,
                          'p-value': split_pvalue,
                          'dof': split_dof}
-            #print(split_info)#'Variable': split_variable,
-            #if split_info['dof'] > 1 and 
             if split_info['p-value'] <= self.sig_level_split:
-                #print(split_info)
-                #start_time = time.time()
                 iter_nodes = self._build_nodes_from_variable(data_iter,
                                                                        dependent_variable,
                                                                        split_variable,
                                                                        start_counter=len(tree_nodes),
                                                                        parent_node=parent_node)
-                #print(iter_nodes)
                 for node in iter_nodes:
                     node.update(split_info)
-                #print(iter_nodes)
-                #print(f'building_nodes_from_variable: {time.time() - start_time}')
                 
-                #print(iter_nodes)
                 if len(iter_nodes) >= 2:
                     tree_nodes.extend(iter_nodes)
-                    #start_time = time.time()
                     current_depths = [CHAIDClassifier._get_node_depth(node, tree_nodes)\
                                         for node in iter_nodes if node['Node']!='Node 0']
                     current_depth = max(current_depths)
-                    #self.depth = current_depth
-                    #print(f'defining current depth: {time.time() - start_time}')
-                    #print(current_depths)
                     if current_depth < self.max_depth:    
                         
-                        #print('building nodes...')
                         for i in range(len(iter_nodes)):
                             parent_node = iter_nodes[i]['Node']
-                            #print(iter_nodes[i])
                             node_variable = iter_nodes[i]['Variable']
                             node_category = iter_nodes[i]['Category']
                             node_prediction = iter_nodes[i]['Mode']
-    #                         data_change_one_var = data.copy()
-    #                         data_change_one_var[node_variable] = data_iter[node_variable].copy()
                             data_per_node = data[data_iter[node_variable]==node_category].copy()
                             self._data.loc[data_per_node.index, f'{self._dependent_variable} (predicted)'] = node_prediction
                             self._data.loc[data_per_node.index, 'Node'] = parent_node
-                            #display(data_per_node)
                             if len(data_per_node) >= self.min_parent_node:
                                 available_variables = independent_variables.copy()
                                 available_variables.remove(node_variable)
@@ -730,7 +754,6 @@ class CHAIDClassifier:
                     else:
                         for i in range(len(iter_nodes)):
                             parent_node = iter_nodes[i]['Node']
-                            #print(iter_nodes[i])
                             node_variable = iter_nodes[i]['Variable']
                             node_category = iter_nodes[i]['Category']
                             node_prediction = iter_nodes[i]['Mode']
@@ -768,7 +791,17 @@ class CHAIDClassifier:
                                
     def get_interactions(self, result='dict'):
         """
-        Returns a dictionary or a DataFrame with nodes and interactions corresponded to them.
+        Return a dictionary or a DataFrame with nodes and interactions corresponded to them.
+
+        Parameters
+        ----------
+        result : 'dict' or 'DataFrame'
+            Data type of results
+
+        Returns
+        -------
+        dict or pd.DataFrame
+            Definitions of nodes in terms of interactions
         """
                                
         results = self.nodes.apply(lambda x: CHAIDClassifier._get_one_node_interaction(x, self.nodes), axis=1)
@@ -785,17 +818,39 @@ class CHAIDRegressor:
     """
     Class to build the CHAID tree on a scale dependent variable.
 
-    Parameters:
+    Parameters
     ----------
-    max_depth (int): maximum possible depth of tree
-    min_child_node (int): minimum possible number of observations in a child node
-    min_parent_node (int): minimum possible number of observations in a parent node
-    sig_level_split (float): significance level to split a node
-    sig_level_merge (float): significance level to merge categories
-    bonferroni (bool): !CURRENTLY UNAVAILIABLE! whether to use a Bonferroni's adjustment for p-values
-    allow_resplit (bool): !CURRENTLY UNAVAILIABLE! whether to re-split merged categories
-    n_intervals (int): maximum possible number of intervals to bin scale variables
+    max_depth : int 
+        Maximum possible depth of tree
+    min_child_node : int 
+        Minimum possible number of observations in a child node
+    min_parent_node : int 
+        Minimum possible number of observations in a parent node
+    sig_level_split : float 
+        Significance level to split a node
+    sig_level_merge : float 
+        Significance level to merge categories
+    bonferroni : bool 
+        (CURRENTLY UNAVAILIABLE) Whether to use a Bonferroni's adjustment for p-values
+    allow_resplit : bool 
+        (CURRENTLY UNAVAILIABLE) Whether to re-split merged categories
+    n_intervals : int 
+        Maximum possible number of intervals to bin scale variables
 
+    Attributes
+    ----------
+    depth : int
+        The depth of the obtained tree
+    nodes : pd.DataFrame
+        A table aggregating information about all nodes of a tree
+    terminal_nodes : pd.DataFrame
+        A table aggregating information about terminal nodes of a tree
+    significant_variables : list
+        Names of variables remained in a tree
+    r2 : float
+        R2 score on train data
+    r2_test : float 
+        R2 score on test data
     """
     def __init__(self,
                  max_depth=3,
@@ -835,27 +890,48 @@ class CHAIDRegressor:
         """
         Fit model to the given data.
 
-        Parameters:
+        Parameters
         ----------
-        data (DataFrame): data to fit a model
-        dependent_variable (str): name of a categorical dependent variable
-        independent_variables (list): list of names of independent variables
-        scale_variables (list): names of independent variables that should
-        be considered as scale variables
-        ordinal_variables (list): names of independent variables that should
-        be considered as ordinal variables; to use this option properly 
-        you should either add digits to the labels 
-        (i.e., 'low', 'medium', 'high' -> '1. low', '2. medium', '3. high')
-        or convert your variable to pandas.Categorical and set the order,
-        see more: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Categorical.html
-        show_results (bool): whether to show results of analysis
-        plot_tree (bool): whether to plot the obtained tree
-        save_plot (bool): whether to save a plot
-        save_plot_path (str): folder to save a plot
-        save_plot_name (str): what name to use when save a plot
-        save_plot_format (str): what format to use when save a plot ('png', 'svg', 'jpg')
-        tree_in_table_format (bool): whether to show tree as a table when showing results
-        n_decimals (int): number of digits to round results when showing them
+        data : pd.DataFrame 
+            Data to fit a model (train data)
+        dependent_variable : str 
+            Name of a categorical dependent variable
+        independent_variables : list 
+            List of names of independent variables
+        scale_variables : list 
+            Names of independent variables that should
+            be considered as scale variables
+        ordinal_variables : list 
+            Names of independent variables that should
+            be considered as ordinal variables; to use this option properly 
+            you should either add digits to the labels 
+            (i.e., 'low', 'medium', 'high' -> '1. low', '2. medium', '3. high'),
+            or turn data into a numeric dtype (1, 2, 3),
+            or convert your variable to pandas.Categorical and set the order,
+            see more: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Categorical.html
+        test_data : pd.DataFrame
+            Data to test a model
+        show_results : bool 
+            Whether to show results of analysis
+        plot_tree : bool 
+            Whether to plot the obtained tree
+        save_plot : bool 
+            Whether to save a plot
+        save_plot_path : str 
+            Folder to save a plot
+        save_plot_name :str 
+            What name to use when save a plot
+        save_plot_format : str 
+            What format to use when save a plot ('png', 'svg', 'jpg')
+        tree_in_table_format : bool 
+            Whether to show tree as a table when showing results
+        n_decimals : int 
+            Number of digits to round results when showing them
+
+        Returns
+        -------
+        self
+            The current instance of the CHAIDClassifier class
         """
         #todo - handle missing data
         #todo - allow resplit
@@ -934,7 +1010,12 @@ class CHAIDRegressor:
     def get_significant_variables(self):
         """
         Identify which variables remained in the tree,
-        i.e. should be considered significant ones.
+        i.e. should be considered as significant ones.
+
+        Returns
+        -------
+        list
+            Names of significant variables
         """
         significant_variables = get_categories(self.nodes['Variable'])
         significant_variables.remove(self._dependent_variable)  
@@ -948,13 +1029,18 @@ class CHAIDRegressor:
         """
         Plot the obtained tree.
 
-        Parameters:
+        Parameters
         ----------
-        save_plot (bool): whether to save a plot
-        save_plot_path (str): folder to save a plot
-        save_plot_name (str): what name to use when save a plot
-        save_plot_format (str): what format to use when save a plot ('png', 'svg', 'jpg')
-        tree_in_table_format (bool): whether to show tree as a table when showing results
+        save_plot : bool 
+            Whether to save a plot
+        save_plot_path : str 
+            Folder to save a plot
+        save_plot_name : str 
+            What name to use when save a plot
+        save_plot_format : str 
+            What format to use when save a plot ('png', 'svg', 'jpg')
+        tree_in_table_format : bool 
+            Whether to show tree as a table when showing results
         """
         
         graph = pydot.Dot(graph_type='graph', rankdir='LR')
@@ -1029,6 +1115,11 @@ class CHAIDRegressor:
     def summary(self):
         """
         Get model summary.
+
+        Returns
+        -------
+        pd.DataFrame
+            A summary table
         """
         statistics = ['Growing Method',
                      'Dependent variable',
@@ -1069,10 +1160,12 @@ class CHAIDRegressor:
         """
         Show results of the analysis in a readable form.
         
-        Parameters:
+        Parameters
         ----------
-        tree_in_table_format (bool): whether to show tree as a table when showing results
-        n_decimals (int): number of digits to round results when showing them
+        tree_in_table_format : bool 
+            Whether to show tree as a table when showing results
+        n_decimals : int 
+            Number of digits to round results when showing them
         """
         
         print('\nCHAID SUMMARY')
@@ -1137,13 +1230,23 @@ class CHAIDRegressor:
         """
         Predict a value of the dependent variable and/or a node for the given data.
 
-        Parameters:
+        Parameters
         ----------
-        data (DataFrame): data for which values or nodes should be predicted
-        dependent_variable (bool): whether to predict the value of the dependent variable
-        node (bool): whether to predict the node
-        interaction (bool): whether to predict interaction corresponded to the node
-        add_to_data (bool): whether to merge predictions with the given data
+        data : pd.DataFrame 
+            Data for which values or nodes should be predicted
+        dependent_variable : bool 
+            Whether to predict the value of the dependent variable
+        node : bool 
+            Whether to predict the node
+        interaction : bool 
+            Whether to predict interaction corresponded to the node
+        add_to_data : bool 
+            Whether to merge predictions with the given data
+
+        Returns
+        -------
+        pd.DataFrame
+            Requested values
         """
         
         if data is None:
@@ -1205,7 +1308,6 @@ class CHAIDRegressor:
             return most_significant_variable, its_pvalue, its_chi2, its_dof_b, its_dof_w
 
         
-    #@staticmethod
     def _merging(self,
                  data,
                  dependent_variable,
@@ -1222,11 +1324,8 @@ class CHAIDRegressor:
         
         max_pvalue = 1
         
-        while max_pvalue > sig_level:
-            #print(list(data[independent_variable].unique()))
-            #start_time = time.time()            
+        while max_pvalue > sig_level:            
             categories = get_categories(data[independent_variable])
-            #print(f'[within merging] _get_categories: {time.time() - start_time}')
             
             if len(categories) <= 2:
                 if len(categories) == 2 and min_child_node is not None:
@@ -1241,30 +1340,22 @@ class CHAIDRegressor:
                                                                                               categories[0],
                                                                                               categories[1])
                 return data[independent_variable]
-            
-            #start_time = time.time()     
+                 
             if independent_variable not in self._ordinal_variables + self._scale_variables:
                 categories_combo = get_unordered_combinations(categories, 2)
             else:
                 categories_combo = get_ordered_combinations(categories, 2)
-            #print(f'[within merging] _get_combinations: {time.time() - start_time}')
             
             results = pd.DataFrame(columns=categories,
                                    index=categories)
-            #start_time = time.time()
             for pair in categories_combo:
                 pair_data = data[data[independent_variable].isin(pair)]
-                if len(pair_data) > 0:                #start_time = time.time()
+                if len(pair_data) > 0:
                     anv = ANOVA(pair_data, dependent_variable, independent_variable, show_results=False)
-                    #print(f'[within merging] crosstab: {time.time() - start_time}')
                     var1, var2 = pair
                     results.loc[var1, var2] = anv.pvalue
                     results.loc[var2, var1] = anv.pvalue
-            #display(results)
-            #print(f'[within merging] all crosstabs: {time.time() - start_time}')
-            #display(results)
             max_pvalue = results.max().max()
-            #start_time = time.time()
             if max_pvalue > sig_level:
                 cat1 = results.max().idxmax()
                 cat2 = results[cat1][results[cat1]==max_pvalue].index[0]
@@ -1276,12 +1367,9 @@ class CHAIDRegressor:
                     data[independent_variable] = merge_two_intervals(data[independent_variable],
                                                                                       cat1,
                                                                                       cat2)
-            #print(f'[within merging] merging: {time.time() - start_time}')
-        
-        #start_time = time.time()
+            
         if min_child_node is not None:
             min_count = data[independent_variable].value_counts().min()
-            #print(min_count)
             n_categories = len(data[independent_variable].unique())
     #         (Optional) Any category having too few observations (as compared with a user-specified minimum segment size) 
     #         is merged with the most similar other category as measured by the largest of the p-values.
@@ -1300,14 +1388,11 @@ class CHAIDRegressor:
                     pair_data = data[data[independent_variable].isin(pair)]
                     if len(pair_data) > 0:
                         anv = ANOVA(pair_data, dependent_variable, independent_variable, show_results=False)
-                        #print(f'[within merging] crosstab: {time.time() - start_time}')
                         var1, var2 = pair
                         results.loc[var1, var2] = anv.pvalue
                         results.loc[var2, var1] = anv.pvalue
 
-                #display(results)
                 max_pvalue = results[min_count_category].max()
-                #print(results[min_count_category])
                 max_pvalue_category = pd.to_numeric(results[min_count_category]).idxmax()
                 if independent_variable not in self._scale_variables:
                     data[independent_variable] = merge_two_cats(data[independent_variable],
@@ -1319,8 +1404,6 @@ class CHAIDRegressor:
                                                                                  max_pvalue_category)          
                 min_count = data[independent_variable].value_counts().min()
                 n_categories = len(data[independent_variable].unique())
-            #print(f'[within merging] checking small counts: {time.time() - start_time}')
-        #print(data[independent_variable].unique())
         return data[independent_variable]
 
     def _build_nodes_from_variable(self,
@@ -1339,13 +1422,11 @@ class CHAIDRegressor:
                 filter_data = data[data[independent_variable]==category][dependent_variable]
                 n = len(filter_data)
                 n_observations.append(n)
-            small_n = [n for n in n_observations if n <= self.min_child_node]
-            #print(n_observations, categories)    
+            small_n = [n for n in n_observations if n <= self.min_child_node]    
             if len(small_n) < len(categories) - 1:
                 for category in categories:
                     filter_data = data[data[independent_variable]==category][dependent_variable]
                     n = len(filter_data)
-                    #dependent_variable_dist = dict((round(filter_data.value_counts(normalize=True, sort=False)*100, 3).items()))
                     mean = filter_data.mean()
                     std = filter_data.std()
                     node_info = {'Node': f'Node {counter}',
@@ -1382,23 +1463,16 @@ class CHAIDRegressor:
         for variable in independent_variables:
             
             if variable in self._scale_variables:
-                
-                #start_time = time.time()
                 data_iter[variable] = binning(data_iter[variable], self.n_intervals)
-                #print(f'binning: {time.time() - start_time}')
-            
-            #start_time = time.time()
+
             data_iter[variable] = self._merging(data_iter,
                                                 dependent_variable,
                                                 variable)
-            #print(f'merging: {time.time() - start_time}')
-        
-        #start_time = time.time()
+
         split_variable, split_pvalue, split_F, split_dof_b, split_dof_w = CHAIDRegressor\
         ._get_most_significant_variable(data_iter,
                                         dependent_variable,
                                         independent_variables)
-        #print(f'defining variable for split: {time.time() - start_time}')
         
         if split_variable is not None:
             split_info = {
@@ -1406,17 +1480,13 @@ class CHAIDRegressor:
                          'p-value': split_pvalue,
                          'dof_b': split_dof_b,
             'dof_w': split_dof_w}
-            #print(split_info)#'Variable': split_variable,
 
             if split_info['p-value'] <= self.sig_level_split:
-                #print(split_info)
-                #start_time = time.time()
                 iter_nodes = self._build_nodes_from_variable(data_iter,
                                                                        dependent_variable,
                                                                        split_variable,
                                                                        start_counter=len(tree_nodes),
                                                                        parent_node=parent_node)
-                #print(iter_nodes)
                 for node in iter_nodes:
                     node.update(split_info)
                                  
@@ -1425,12 +1495,9 @@ class CHAIDRegressor:
                     current_depths = [CHAIDRegressor._get_node_depth(node, tree_nodes)\
                                         for node in iter_nodes if node['Node']!='Node 0']
                     current_depth = max(current_depths)
-                    if current_depth < self.max_depth:    
-                        
-                        #print('building nodes...')
+                    if current_depth < self.max_depth:
                         for i in range(len(iter_nodes)):
                             parent_node = iter_nodes[i]['Node']
-                            #print(iter_nodes[i])
                             node_variable = iter_nodes[i]['Variable']
                             node_category = iter_nodes[i]['Category']
                             node_prediction = iter_nodes[i]['Mean']
@@ -1484,7 +1551,17 @@ class CHAIDRegressor:
                                
     def get_interactions(self, result='dict'):
         """
-        Returns a dictionary or a DataFrame with nodes and interactions corresponded to them.
+        Return a dictionary or a DataFrame with nodes and interactions corresponded to them.
+
+        Parameters
+        ----------
+        result : 'dict' or 'DataFrame'
+            Data type of results
+
+        Returns
+        -------
+        dict or pd.DataFrame
+            Definitions of nodes in terms of interactions
         """
                                
         results = self.nodes.apply(lambda x: CHAIDRegressor._get_one_node_interaction(x, self.nodes), axis=1)
