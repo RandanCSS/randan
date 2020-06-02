@@ -5,17 +5,57 @@ from IPython.display import display
 
 class Crosstab:
     """
+    
     Class to perform analysis of contingency tables based on Pearson's chi-square.
     
-    Parameters:
+    Parameters
     ----------
-    data (DataFrame): data to build a contingency table on
-    row (str): exact variable from the data to create rows of a contingency table
-    column (str): exact variable from the data to create columns of a contingency table
-    sig_level (float): level of significance to analyze Pearson's residuals
-    show_results (bool): whether to show results of analysis
-    only_stats (bool): use this if you only want to get final statistics,
-    i.e. chi2, p-value, dof, and expected frequencies
+    data : pd.DataFrame 
+        Data to build a contingency table on
+    row : str 
+        Exact variable from the data to create rows of a contingency table
+    column : str 
+        Exact variable from the data to create columns of a contingency table
+    sig_level : float
+        Level of significance to analyze Pearson's residuals
+    show_results : bool 
+        Whether to show results of analysis
+    n_decimals : int
+        Number of digits to round results when showing them
+    only_stats : bool 
+        Use this if you only want to get final statistics,
+        i.e. chi2, p-value, dof, and expected frequencies
+
+    Attributes
+    ----------
+    N : int
+        Number of observations used in the analysis
+    n_cells : int
+        Number of cells in a contingency table 
+    frequencies_observed : pd.DataFrame
+        Observed frequencies
+    frequencies_expected : pd.DataFrame
+        Expected frequencies
+    residuals : pd.DataFrame
+        'Raw' residuals 
+        (differences between obs. and exp. frequencies)
+    residuals_pearson : pd.DataFrame
+        Pearson's residuals
+        (raw residuals divided by square root of expected frequencies)
+    chi_square: float
+        Chi-square statistics
+    dof : int
+        Degrees of freedom
+    pvalue : float
+        P-value of a chi-square statistic
+    row_categories : list
+        Names of categories located at rows of a contingency table
+    column_categories : list
+        Names of categories located at columns of a contingency table
+    row_marginals : pd.DataFrame
+        Marginal frequencies of row categories
+    column_marginals : pd.DataFrame
+        Marginal frequencies of column categories
     """        
     
     def __init__(self, 
@@ -126,8 +166,15 @@ class Crosstab:
         
     def check_small_counts(self, n_decimals=3):
         """
-        Check sparsity of the crosstab, i.e., calculate percentage of small expected frequencies
+        Check sparsity of the crosstab, i.e., 
+        calculate percentage of small expected frequencies
         (those that are less than 5).
+
+        Parameters
+        ----------
+        n_decimals : int
+            Number of digits to round results when showing them
+
         """
         
         n_small_counts = (self._frequencies_expected < 5).sum().sum()
@@ -139,7 +186,15 @@ frequency less than 5. The minimum expected frequency is {round(min_count, n_dec
         
     def check_significant_residuals(self, sig_level=0.05, n_decimals=3):
         """
-        Identify significant Pearson's residuals based on the given significant level.
+        Identify significant Pearson's residuals 
+        based on the given significant level.
+
+        Parameters
+        ----------
+        sig_level : float
+            Significance level (alpha) to identify significant residuals
+        n_decimals : int
+            Number of digits to round results when showing them
         """
         
         critical_value = norm.isf(sig_level / 2)
@@ -162,6 +217,11 @@ The smallest residual is {round(min_resid, n_decimals)} (categories {min_resid_r
     def show_results(self, n_decimals=3):
         """
         Show results of the analysis in a readable form.
+
+        Parameters
+        ----------
+        n_decimals : int
+            Number of digits to round results when showing them
         """
         
         sig_level = self.sig_level
