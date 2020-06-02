@@ -17,12 +17,6 @@ available_colors = [
 def binning(series, n_intervals):
     series = pd.qcut(series, n_intervals, duplicates='drop')
     return series
-# def binning(series, n_intervals):
-#     temp_series, bins = pd.qcut(series, n_intervals, duplicates='drop', retbins=True)
-#     bins[0] = -np.inf
-#     bins[-1] = np.inf
-#     series = pd.cut(series, bins, duplicates='drop')
-#     return series
 
 def merge_two_cats(series, cat1, cat2):
     joint_cat = str(cat1) + ' / ' + str(cat2)
@@ -55,7 +49,6 @@ def confidence_interval_mean(mean, std, n, sig_level=0.05):
         error = 0
     lower_bound = mean - error
     upper_bound = mean + error
-    #print(z_crit, error, mean, lower_bound, upper_bound)
     return pd.Interval(lower_bound, upper_bound, closed='both')
 
 #move to descriptive statistics ?
@@ -68,7 +61,6 @@ def confidence_interval_comparison(first_ci, second_ci):
         return 'bigger'
 
 def classification_table(y_true, y_predicted):
-    #display(y_true, y_predicted)
     classification = pd.crosstab(y_true, 
                                     y_predicted,
                                     margins=True)
