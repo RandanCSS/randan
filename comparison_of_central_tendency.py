@@ -8,14 +8,42 @@ class ANOVA:
     """
     Class to perform analysis of variance (AnOVa).
 
-    Parameters:
+    Parameters
     ----------
-    data (DataFrame): data used to perform the analysis
-    dependent_variables (str or list): name(s) of (a) scale dependent variable(s).
-    Note that if several variables are used, only summary table is available as a result.
-    independent_variable (str): name of an independent (factor, grouping) variable
-    show_results (bool): whether to show results of analysis
-    n_decimals (int): number of digits to round results when showing them
+    data : pd.DataFrame
+        Data used to perform the analysis
+    dependent_variables : str or list 
+        Name(s) of (a) scale dependent variable(s).
+        Note that if several variables are used, only summary table is available as a result.
+    independent_variable : str 
+        Name of an independent (factor, grouping) variable
+    show_results : bool 
+        Whether to show results of analysis
+    n_decimals : int 
+        Number of digits to round results when showing them
+
+    Attributes
+    ----------
+    SSb : float
+        Sum of squares between groups
+    SSw : float
+        Sum of squares within groups
+    SSt : float
+        Total sum of squares
+    MSb : float
+        Mean squares between groups
+    MSw : float
+        Mean squares within groups
+    F : float
+        F-statistic
+    pvalue : float
+        P-value of the F-statistic
+    dof_b : int
+        Degrees of freedom between groups
+    dof_w : int
+        Degrees of freedom within groups
+    dof_t : int
+        Total degrees of freedom
     """
     def __init__(self, 
                  data, 
@@ -74,7 +102,7 @@ class ANOVA:
             
             if pd.isnull(pvalue):
                 pvalue = 1
-                
+
             self.SSb = SSb
             self.SSw = SSw
             self.SSt = SSt
@@ -92,6 +120,11 @@ class ANOVA:
     def summary(self):
         """
         Get summary information on the conducted analysis.
+
+        Returns
+        -------
+        pd.DataFrame
+            Summary table with results of analysis
         """
         if self._several_variables_used:
             
@@ -112,9 +145,10 @@ class ANOVA:
         """
         Show results of the analysis in a readable form.
         
-        Parameters:
+        Parameters
         ----------
-        n_decimals (int): number of digits to round results when showing them
+        n_decimals : int
+            Number of digits to round results when showing them
         """
 
         
