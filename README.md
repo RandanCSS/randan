@@ -25,7 +25,7 @@ conda install graphviz pydot
 conda install -c ets factor_analyzer
 ```
 
-Once you have the package in the folder, you can import it as any python package:
+Once you install the package, you can import it as any python package:
 
 ```python
 # like this
@@ -38,7 +38,7 @@ from randan.tree import CHAIDRegressor
 ```
 
 ### Structure
-By now, **three** modules have been included in the package. These modules correspond to the SPSS functions as follows:
+By now, **six** modules have been included in the package. These modules correspond to the SPSS functions as follows:
 
 | Module | Class or function | Corresponding SPSS function | Description |
 |--------|-------------------|-----------------------------|-------------|
@@ -48,6 +48,8 @@ By now, **three** modules have been included in the package. These modules corre
 | regression | BinaryLogisticRegression | Analyze -> Regression -> Binary Logistic | Binary logistic regression |
 | tree | CHAIDRegressor, CHAIDClassifier | Analyze -> Classify -> Tree -> CHAID | CHAID decision tree for scale and categorical dependent variables, respectively |
 | clustering | KMeans | Analyze -> Classify -> K-Means Cluster | Cluster analysis with k-means algorithm |
+| dimension_reduction | CA | Analyze -> Dimension Reduction -> Correspondence Analysis | Correspondence analysis |
+| dimension_reduction | PCA | Analyze -> Dimension Reduction -> Factor (extraction method: principal components) | Principal component analysis |
 
 ### Quick start
 Although `randan` is built to be similar to SPSS, it reproduces the fit-predict and fit-transform approach, which is now being used in the most popular machine learning python packages. This approach means that you should, firstly, initialize your model and then, secondly, fit it to your data (i.e., use the `fit` function) if necessary. 
