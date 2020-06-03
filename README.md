@@ -12,14 +12,18 @@ As we emphasize the importance of the way your results look like, we highly sugg
 > _**N.B.:** You should understand that this project is under development now, which means it is constantly updating. We will have finished the main part of the package by the middle of June, 2020._ 
 
 ### Installation
-Currently, `randan` is **unavailable** to install by `pip`. However, you can use two options to download our package:
+You can easily install the package from the PyPi by running:
 
-1. download it manually by using `Clone or download` -> `Download ZIP` and unzip the downloaded archive in a desired folder
-2. download it automatically by running `!git clone https://github.com/LanaLob/randan.git` in Jupyter Notebook. This will create a local copy of the current version of our package on your computer. To specify any particular folder for the package, modify this command as follows: `!git clone https://github.com/LanaLob/randan.git [desired path]`. If you have troubles with `git`, try to install it from the [official source](https://git-scm.com/downloads) and **restart** your computer afterwards.
+```
+pip install randan
+```
 
-We recommend using the second way and clone our package every time you're going to use it as it allows you to have all the updates in time. If you had already cloned the package folder, next time use this command to get updates: `!cd randan && git pull` 
+For proper work, it is also required to install three dependencies by running this command in Anaconda Prompt:
 
-
+```
+conda install graphviz pydot
+conda install -c ets factor_analyzer
+```
 
 Once you have the package in the folder, you can import it as any python package:
 
@@ -31,12 +35,6 @@ import randan
 from randan.tree import CHAIDRegressor
 
 # etc.
-```
-
-**Important note**: `randan` depends on the several packages, most of which are considered pre-built packages (this means you likely do not have to install them manually). However, there are two dependencies that are still required to install if you're going to use `randan.tree` module. If so, please install them by running this command in any command-line interface (such as Terminal on MacOS, cmd on Windows, Anaconda Prompt on both etc.):
-
-```
-conda install graphviz pydot
 ```
 
 ### Structure
