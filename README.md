@@ -44,12 +44,12 @@ By now, **six** modules have been included in the package. These modules corresp
 |--------|-------------------|-----------------------------|-------------|
 | bivariate_association | Crosstab | Analyze -> Descriptive statistics -> Crosstabs | Analysis of contingency tables |
 | comparison_of_central_tendency | ANOVA | Analyze -> Compare means -> One-Way ANOVA | Analysis of variance |
-| regression | LinearRegression | Analyze -> Regression -> Linear | OLS regression |
-| regression | BinaryLogisticRegression | Analyze -> Regression -> Binary Logistic | Binary logistic regression |
-| tree | CHAIDRegressor, CHAIDClassifier | Analyze -> Classify -> Tree -> CHAID | CHAID decision tree for scale and categorical dependent variables, respectively |
 | clustering | KMeans | Analyze -> Classify -> K-Means Cluster | Cluster analysis with k-means algorithm |
 | dimension_reduction | CA | Analyze -> Dimension Reduction -> Correspondence Analysis | Correspondence analysis |
 | dimension_reduction | PCA | Analyze -> Dimension Reduction -> Factor (extraction method: principal components) | Principal component analysis |
+| regression | LinearRegression | Analyze -> Regression -> Linear | OLS regression |
+| regression | BinaryLogisticRegression | Analyze -> Regression -> Binary Logistic | Binary logistic regression |
+| tree | CHAIDRegressor, CHAIDClassifier | Analyze -> Classify -> Tree -> CHAID | CHAID decision tree for scale and categorical dependent variables, respectively |
 
 ### Quick start
 Although `randan` is built to be similar to SPSS, it reproduces the fit-predict and fit-transform approach, which is now being used in the most popular machine learning python packages. This approach means that you should, firstly, initialize your model and then, secondly, fit it to your data (i.e., use the `fit` function) if necessary. 
