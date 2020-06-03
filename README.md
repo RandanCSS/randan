@@ -57,7 +57,7 @@ Although `randan` is built to be similar to SPSS, it reproduces the fit-predict 
 > 2. If the method you use belongs to the *supervised methods* (i.e., you *have* a dependent variable in your data), you can then use `predict` function to get values of the given dependent variable. 
 > 3. If the method does not assume to estimate new values for your data (such methods are crosstabs, t-tests etc.), then it does not require to use `fit` and `transform` / `predict` functions. 
 
-If you want to see the full list of the availiable functions associated with some class, literally ask for help:
+If you want to see the full list of the availiable functions associated with some class, please visit our [documentation page](https://randan.readthedocs.io/en/latest/) or literally ask for help:
 ```python
 from randan.bivariate_association import Crosstab
 help(Crosstab)
