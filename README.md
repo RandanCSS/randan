@@ -129,7 +129,7 @@ chaid = CHAIDRegressor().fit(
 
 # this is how you can predict values of the dependent variable, the node membership, 
 # and the description of the node in terms of interactions for the given data 
-predictions = chaid.predict(data, node=True, interaction=True)
+predictions = chaid.predict(node=True, interaction=True)
 ```
 #### Module `clustering`
 This module includes two main clustering methods: k-means and hierarchical (agglomerative) clustering. 
