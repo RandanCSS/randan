@@ -18,7 +18,7 @@ You can easily install the package from the PyPi by running:
 pip install randan
 ```
 
-For proper work, it is also required to install three dependencies by running this command in Anaconda Prompt:
+For proper work, it is also required to install three dependencies by running these commands in Anaconda Prompt:
 
 ```
 conda install graphviz pydot
