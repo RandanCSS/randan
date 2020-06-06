@@ -31,27 +31,36 @@ class LinearRegression:
 
     Attributes
     ----------
-    variables_excluded
-    variables_included
-    predictions
-    N
-    r2
-    r2_adjusted
-    F
-    F_pvalue
-    ess
-    rss
-    tss
-    ms_model
-    ms_resid
-    ms_total
-    dof_model
-    dof_resid
-    dof_total 
-    coefficients
-    coefficients_sterrors
-    coefficients_tvalues
-    coefficients_pvalues
+    variables_excluded : list
+        Variables excluded because of zero variance
+    variables_included : list
+        Variables included in a model
+    predictions : pd.Series
+        Predicted values
+    N : int
+        Number of observations included in a model
+    r2 : float
+        R-squared (coefficient of determination)
+    r2_adjusted : float
+        Adjusted r-squared
+    F : float
+        F-statistic
+    F_pvalue : float
+        P-value for F-statistic
+    ess : float
+        Explained sum of squares
+    rss : float
+        Residual sum of squares
+    tss : float
+        Total sum of squares
+    coefficients : pd.Series
+        Regression coefficients
+    coefficients_sterrors : pd.Series
+        Standard errors of regression coefficients 
+    coefficients_tvalues : pd.Series
+        T-statistics of regression coefficients 
+    coefficients_pvalues : pd.Series
+        P-values of regression coefficients
     """
     
     def __init__(
@@ -651,22 +660,38 @@ class BinaryLogisticRegression:
 
     Attributes
     ----------
-    predictions
-    classification_table
-    precision_and_recall
-    variables_excluded
-    variables_included
-    N
-    r2_pseudo_macfadden
-    r2_pseudo_cox_snell
-    r2_pseudo_nagelkerke
-    loglikelihood 
-    coefficients
-    coefficients_sterrors
-    coefficients_wald_statistics
-    coefficients_zvalues
-    coefficients_pvalues
-    coefficients_exp
+    predictions : pd.Series
+        Predicted values
+    classification_table : pd.DataFrame
+        A classification table
+    precision_and_recall : pd.DataFrame
+        Table with precision, recall, and F1-score of the model
+    variables_excluded : list
+        Variables excluded because of zero variance
+    variables_included : list
+        Variables included in a model
+    N : int
+        Number of observations included in a model
+    r2_pseudo_macfadden : float
+        MacFadden's pseudo coefficient of determination
+    r2_pseudo_cox_snell : float
+        Cox&Snell's pseudo coefficient of determination
+    r2_pseudo_nagelkerke : float
+        Nagelkerke's pseudo coefficient of determination
+    loglikelihood : float
+        -2LL
+    coefficients : pd.Series
+        Regression coefficients
+    coefficients_sterrors : pd.Series
+        Standard errors of regression coefficients
+    coefficients_wald_statistics : pd.Series
+        Wald statistic of regression coefficients
+    coefficients_zvalues : pd.Series
+        z-statistic of regression coefficients
+    coefficients_pvalues : pd.Series
+        P-values of regression coefficients
+    coefficients_exp : pd.Series
+        e ** regression coefficients
     """
     
     def __init__(
