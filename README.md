@@ -17,12 +17,15 @@ You can easily install the package from the PyPi by running:
 ```
 pip install randan
 ```
-
-For proper work, it is also required to install three dependencies by running these commands in Anaconda Prompt:
+If something goes wrong during the installation, consider using this code:
 
 ```
-conda install graphviz pydot
-conda install -c ets factor_analyzer
+pip install --user randan
+```
+
+To upgrade package's version, run this code:
+```
+pip install --upgrade randan
 ```
 
 Once you install the package, you can import it as any python package:
@@ -86,6 +89,36 @@ anv = ANOVA(data, dependent_variables='kinopoisk_rate', independent_variable='ge
 # however, if you want to somehow use separate statistics, you can call them this way
 print(anv.F, anv.pvalue, anv.SSt)
 ```
+#### Module `clustering`
+This module includes two main clustering methods: k-means and hierarchical (agglomerative) clustering. 
+
+Clustering methods belong to unsupervised learning, which means you should use the `fit` function after calling the appropriate class, and then, if necessary, the `transform` function to acquire cluster membership (and / or distances to each center in case of k-means).
+```python
+from randan.clustering import KMeans
+
+# with this code, you will immediately see the results, including visualization of clusters
+km = KMeans(2).fit(data, ['year', 'time', 'kinopoisk_rate_count'])
+
+# this is how you can predict the cluster membership, 
+# and the distances from each observation to each cluster's center
+clusters = km.transform(distance_to_centers=True)
+```
+> If you experience troubles with visualization and see captions like <Figure size 800x500 with 1 Axes> instead of plots, just re-run the code that produces them.
+#### Module `dimension_reduction`
+This module unites methods for factorization of nominal and scale variables: correspondence analysis (class `CA`) and principal component analysis (class `PCA`). 
+
+Factorization methods belong to unsupervised learning, which means you should use the `fit` function after calling the appropriate class, and then, if necessary, the `transform` function to acquire so-called factor scores.
+```python
+from randan.dimension_reduction import PCA 
+ 
+vars_ = ['trstprl', 'trstlgl', 'trstplc', 'ppltrst', 'pplfair', 'pplhlp']
+
+# with this code, you will immediately see the results
+pca = PCA(n_components=2, rotation='varimax').fit(data, variables=vars_)
+
+# this is how you can predict the factor scores
+f_scores = pca.transform()
+```
 #### Module `regression`
 This module consists of two classical regression models: linear regression and binary logistic regression. This group of methods belongs to supervised learning, which means you should use the `fit` function after calling the appropriate class, and then, if necessary, the `predict` function to acquire predictions.
 ```python
@@ -131,18 +164,3 @@ chaid = CHAIDRegressor().fit(
 # and the description of the node in terms of interactions for the given data 
 predictions = chaid.predict(node=True, interaction=True)
 ```
-#### Module `clustering`
-This module includes two main clustering methods: k-means and hierarchical (agglomerative) clustering. 
-
-Clustering methods belong to unsupervised learning, which means you should use the `fit` function after calling the appropriate class, and then, if necessary, the `transform` function to acquire cluster membership (and / or distances to each center in case of k-means).
-```python
-from randan.clustering import KMeans
-
-# with this code, you will immediately see the results, including visualization of clusters
-km = KMeans(2).fit(data, ['year', 'time', 'kinopoisk_rate_count'])
-
-# this is how you can predict the cluster membership, 
-# and the distances from each observation to each cluster's center
-clusters = km.transform(distance_to_centers=True)
-```
-> If you experience troubles with visualization and see captions like <Figure size 800x500 with 1 Axes> instead of plots, just re-run the code that produces them.
