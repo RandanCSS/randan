@@ -5,6 +5,8 @@ _Current version: 0.0.3_
 
 _Documentation: https://randan.readthedocs.io/en/latest/_
 
+_If you want to contribute or report a bug, do not hesitate to [open an issue](https://github.com/LanaLob/randan/issues) on this page or contact us: lana_lob@mail.ru (Svetlana Zhuchkova)._ 
+
 ### Overview
 Randan is a python package that aims to provide most of the functions presented in SPSS. Unlike the other python packages for data analysis, it has three main features, which make it attractive for social scientists:
 1. it provides the results of the analysis in a readable and understandable form, similar to SPSS
@@ -13,7 +15,7 @@ Randan is a python package that aims to provide most of the functions presented 
 
 As we emphasize the importance of the way your results look like, we highly suggest to use `randan` in Jupyter Notebook and store your data in `pandas` DataFrames.
 
-> _**N.B.:** You should understand that this project is under development now, which means it is constantly updating. We will have finished the main part of the package by the middle of June, 2020._ 
+> _**N.B.:** You should understand that this project is under development now, which means it is constantly updating. But you can use all the modules and classes presented in the last release._ 
 
 ### Installation
 You can easily install the package from the PyPi by running:
