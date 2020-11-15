@@ -2,6 +2,9 @@ import numpy as np
 import pandas as pd
 from scipy.stats import chi2, chi2_contingency, norm
 from IPython.display import display
+from scipy.stats import pearsonr, spearmanr, kendalltau
+from pandas.api.types import is_numeric_dtype
+
 
 class Crosstab:
     """
@@ -249,3 +252,177 @@ The smallest residual is {round(min_resid, n_decimals)} (categories {min_resid_r
                     .set_caption("attribute .residuals_pearson")\
                     .set_precision(n_decimals))
         self.check_significant_residuals(sig_level, n_decimals)
+
+#todo: flag significant, pairwise deletion
+
+class Correlation:
+    """
+    
+    Class to perform correlation analysis.
+    
+    Parameters
+    ----------
+    data : pd.DataFrame 
+        Data to perform the analysis
+    variables : list
+        Variables from data to include in the analysis
+    method : str
+        Which correlation coefficient to use.
+        Available values: 'pearson', 'spearman', 'kendall'
+    two_tailed : bool
+        Whether to calculate two-tailed p-value (set to False if you are interested in one-tailed p-value)
+    show_results : bool 
+        Whether to show results of analysis
+    n_decimals : int
+        Number of digits to round results when showing them
+    min_max : bool
+        Whether to print minimum and maximum correlation coefficients
+    Attributes
+    ----------
+    tailes : int
+        Number of tailes (1 or 2) to estimate p-value
+    method : int
+        Type of correlation coefficient  
+    N : int
+        Number of observations included in the analysis
+    correlation_matrix : pd.DataFrame
+        Correlation matrix
+    """ 
+    def __init__(
+        self,
+        data,
+        variables=None,
+        method='pearson',
+        two_tailed=True,
+        show_results=True,
+        n_decimals=3, 
+        min_max=True
+    ):
+        if variables is not None and not isinstance(variables, list):
+            raise TypeError(f'Variables should be passed as list. Type {type(variables)} was passed instead.')
+            
+        if not isinstance(method, str):
+            raise TypeError(f'Method should be passed as str. Type {type(method)} was passed instead.')
+            
+        if variables is None:
+            variables = data.columns
+        
+        non_num_vars = [var for var in variables if not is_numeric_dtype(data[var])]
+        zero_var_vars = [var for var in variables if is_numeric_dtype(data[var]) and data[var].var()==0]
+        variables = [var for var in variables if var not in non_num_vars and var not in zero_var_vars]
+        
+        self._non_num_vars = []
+        self._zero_var_vars = []
+        
+        if len(non_num_vars) > 0:
+            self._non_num_vars = non_num_vars
+        if len(zero_var_vars) > 0:
+            self._zero_var_vars = zero_var_vars    
+        
+        if len(variables) < 2:
+            raise ValueError('One or zero numeric variables were passed or found in a dataframe.')
+        
+        data = data[variables].dropna().copy()
+        
+        self.tailes = 2 if two_tailed else 1
+        
+        if method.lower() == 'pearson':
+            metric = pearsonr
+        elif method.lower() == 'spearman':
+            metric = spearmanr
+        elif method.lower() == 'kendall':
+            metric = kendalltau
+#         elif method.lower() == 'all':
+#             pass
+        else:
+            raise ValueError("Unknown method requested. Possible values: 'pearson', 'spearman', 'kendall'")
+            
+        self.method = method
+        
+        N = len(data)
+        self.N = N
+        
+        stats = ['Coefficient', 'p-value', 'N']
+        index = [variables, stats]
+        index = pd.MultiIndex.from_product(index)
+        results = pd.DataFrame(index=index)
+        
+        corr_dict = {}
+        
+        for var_1 in variables:
+            for var_2 in variables:
+                if var_1 == var_2:
+                    r, pval = 1, np.nan
+                else:
+                    r, pval = metric(data[var_1], data[var_2])
+                    if not two_tailed:
+                        pval /= 2
+                    if (var_2, var_1) not in corr_dict.keys():
+                        corr_dict.update({(var_1, var_2): (r, pval)})
+                
+                results.loc[(var_1, 'Coefficient'), var_2] = r
+                results.loc[(var_1, 'p-value'), var_2] = pval
+                results.loc[(var_1, 'N'), var_2] = N
+        
+        self._corr_dict = corr_dict
+        
+        self.correlation_matrix = results
+        
+        if show_results:
+            self.show_results(n_decimals, min_max)
+            
+    def show_results(self, n_decimals=3, min_max=True):
+        """
+        Show results of the analysis in a readable form.
+        
+        Parameters
+        ----------
+        n_decimals : int
+            Number of digits to round results when showing them
+        min_max : bool
+            Whether to print minimum and maximum correlation coefficients
+        """
+        print(f'\nCORRELATION SUMMARY ({self.method.upper()} METHOD, {self.tailes}-TAILED)')
+        print('------------------')
+        
+        if len(self._non_num_vars) > 0:
+            phrase = 'The following variables were removed from the analysis since they do not belong to numerical dtypes: {}\n'
+            print(phrase.format(', '.join(self._non_num_vars)))
+        if len(self._zero_var_vars) > 0:
+            phrase = 'The following variables were removed from the analysis since they have zero variance: {}\n'
+            print(phrase.format(', '.join(self._zero_var_vars)))
+        display(self.correlation_matrix.style\
+                    .format(None, na_rep="")\
+                    .set_caption("attribute .correlation_matrix")\
+                    .set_precision(n_decimals))
+        if min_max:
+            results = self.sort_correlations()
+            self.min_corr = results['Coefficient'].min()
+            idxmin = results['Coefficient'].idxmin()
+            min_pval = round(results.loc[idxmin, 'p-value'], n_decimals)
+            self.max_corr = results['Coefficient'].max()
+            idxmax = results['Coefficient'].idxmax()
+            max_pval = round(results.loc[idxmax, 'p-value'], n_decimals)
+            print(f'Maximum correlation is {round(self.max_corr, n_decimals)} (p-value {max_pval}) for variables {idxmax[0]} and {idxmax[1]},',
+                  f'minimum correlation is {round(self.min_corr, n_decimals)} (p-value {min_pval}) for variables {idxmin[0]} and {idxmin[1]}.', 
+                  sep='\n')
+            
+    def sort_correlations(self, by='coefficient', ascending=True):
+        """
+        Sort correlations between all possible pairs of variables.
+
+        Parameters
+        ----------
+        by : str
+            Which parameter should define sorting: 'coefficient' or 'pvalue'
+        ascending : bool
+            Whether to sort values in ascending order
+        """
+        coefs = pd.DataFrame(self._corr_dict, index=[0, 1]).T
+        coefs.columns = ['Coefficient', 'p-value']
+        if by.lower() == 'coefficient':
+            by = 'Coefficient'
+        elif by.lower() in ['p-value', 'pvalue', 'p_value']:
+            by = 'p-value'
+        print('Note: Each empty index duplicates the previous one.')
+        return coefs.sort_values(by=by, ascending=ascending)
