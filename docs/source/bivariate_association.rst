@@ -5,6 +5,7 @@ This module aggregates methods devoted to searching for statistical relationship
 Currently, it includes the following methods:
 
 * Analysis of contingency tables with Chi-square (class Crosstab)
+* Correlation analysis (class Correlation)
 
 .. automodule:: randan.bivariate_association
    :members:
