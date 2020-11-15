@@ -1,7 +1,7 @@
 # Randan
 _A python package for the analysis of social data_
 
-_Current version: 0.0.3_
+_Current version: 0.1.1_
 
 _Documentation: https://randan.readthedocs.io/en/latest/_
 
@@ -47,11 +47,15 @@ from randan.tree import CHAIDRegressor
 ```
 
 ### Structure
-By now, **six** modules have been included in the package. These modules correspond to the SPSS functions as follows:
+By now, **seven** modules have been included in the package. These modules correspond to the SPSS functions as follows:
 
 | Module | Class or function | Corresponding SPSS function | Description |
 |--------|-------------------|-----------------------------|-------------|
+| descriptive_statistics | NominalStatistics | Analyze -> Descriptive statistics -> Frequencies, Descriptives, Explore | Descriptive statistics relevant for nominal variables |
+| descriptive_statistics | OrdinalStatistics | Analyze -> Descriptive statistics -> Frequencies, Descriptives, Explore | Descriptive statistics relevant for ordinal variables |
+| descriptive_statistics | ScaleStatistics | Analyze -> Descriptive statistics -> Frequencies, Descriptives, Explore | Descriptive statistics relevant for scale (interval) variables |
 | bivariate_association | Crosstab | Analyze -> Descriptive statistics -> Crosstabs | Analysis of contingency tables |
+| bivariate_association | Correlation | Analyze -> Correlate -> Bivariate | Correlation coefficients |
 | comparison_of_central_tendency | ANOVA | Analyze -> Compare means -> One-Way ANOVA | Analysis of variance |
 | clustering | KMeans | Analyze -> Classify -> K-Means Cluster | Cluster analysis with k-means algorithm |
 | dimension_reduction | CA | Analyze -> Dimension Reduction -> Correspondence Analysis | Correspondence analysis |
