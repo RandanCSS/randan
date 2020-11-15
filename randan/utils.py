@@ -30,7 +30,7 @@ def merge_two_intervals(series, cat1, cat2):
     return series.apply(lambda x: pd.Interval(lower_bound, upper_bound) if x in pair else x)
 
 def get_categories(series):
-    return sorted(series.unique())
+    return sorted(series.dropna().unique())
 
 def get_unordered_combinations(categories, k):
     return list(combinations(categories, k))
