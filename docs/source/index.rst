@@ -23,6 +23,12 @@ Use the links below to explore ``randan``'s functionality.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Univariate analysis:
+
+   descriptive_statistics
+
+.. toctree::
+   :maxdepth: 2
    :caption: Bivariate analysis:
 
    bivariate_association
