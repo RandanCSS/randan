@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="randan", # Replace with your own username
-    version="0.0.3",
+    version="0.1.2",
     author="Svetlana Zhuchkova",
     author_email="lana_lob@mail.ru",
     description="A python package for the analysis of social data",
