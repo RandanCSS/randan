@@ -279,10 +279,12 @@ class OrdinalStatistics:
             entr = OrdinalStatistics._entropy_coef(ser)
             cqv = OrdinalStatistics._cqv_coef(ser)
             iqv = q75 - q25
-            measures.update({var: [n, mode, median, q25, q75, iqv, min_, max_, range_, entr, cqv]})
-        measures = pd.DataFrame(measures, 
-                                index=['N', 'mode', 'median', 
+            iqv_norm = iqv / range_
+            measures.update({var: [n, mode, median, q25, q75, iqv, iqv_norm, min_, max_, range_, entr, cqv]})
+        measures = pd.DataFrame(measures,
+                                index=['N', 'mode', 'median',
                                        '25%', '75%', 'interquart. range',
+                                       'interquart. range (norm.)',
                                        'min', 'max', 'range',
                                        'entropy coef.', 'quality var.'])
         if len(self._mappers) > 0:
@@ -532,10 +534,12 @@ class ScaleStatistics:
             entr = ScaleStatistics._entropy_coef(ser)
             cqv = ScaleStatistics._cqv_coef(ser)
             iqv = q75 - q25
-            measures.update({var: [n, mode, median, mean, q25, q75, iqv, min_, max_, range_, std, var_, entr, cqv]})
-        measures = pd.DataFrame(measures, 
+            iqv_norm = iqv / range_
+            measures.update({var: [n, mode, median, mean, q25, q75, iqv, iqv_norm, min_, max_, range_, std, var_, entr, cqv]})
+        measures = pd.DataFrame(measures,
                                 index=['N', 'mode', 'median', 'mean',
                                        '25%', '75%', 'interquart. range',
+                                       'interquart. range (norm.)',
                                        'min', 'max', 'range', 'std', 'var',
                                        'entropy coef.', 'quality var.'])
         if len(self._mappers) > 0:
