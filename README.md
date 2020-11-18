@@ -1,7 +1,7 @@
 # Randan
 _A python package for the analysis of social data_
 
-_Current version: 0.1.1_
+_Current version: 0.1.2_
 
 _Documentation: https://randan.readthedocs.io/en/latest/_
 
