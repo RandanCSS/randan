@@ -5,7 +5,7 @@ _Current version: 0.2.1_
 
 _Documentation: https://randan.readthedocs.io/en/latest/_
 
-_If you want to contribute or report a bug, do not hesitate to [open an issue](https://github.com/LanaLob/randan/issues) on this page or contact us: lana_lob@mail.ru (Svetlana Zhuchkova)._ 
+_If you want to contribute or report a bug, do not hesitate to [open an issue](https://github.com/LanaLob/randan/issues) on this page or contact us: alexey.n.rotmistrov@gmail.com (Aleksei Rotmistrov), lana_lob@mail.ru (Svetlana Zhuchkova)._ 
 
 ### Overview
 Randan is a python package that aims to provide most of the functions presented in SPSS. Unlike the other python packages for data analysis, it has three main features, which make it attractive for social scientists:
