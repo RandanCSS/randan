@@ -158,30 +158,26 @@ To see more plots, use [model].get_bivariate_plots()""")
         print('------------------\n')
         print('Final cluster centers')
         display(self.get_cluster_centers(round_discrete=True).style\
-                    .format(None, na_rep="")\
-                    .set_caption(phrase.format('.get_cluster_centers()'))\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption(phrase.format('.get_cluster_centers()')))
         if self._integer_type_vars != []:
             print("""Cluster centers for discrete variables are rounded for better interpretability.
 To see the exact centers, use [model].get_cluster_centers(round_discrete=False)""")
         print('------------------\n')
         print('Distances between centers')
         display(self.get_distances_between_centers().style\
-                    .format(None, na_rep="")\
-                    .set_caption(phrase.format('.get_distances_between_centers()'))\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption(phrase.format('.get_distances_between_centers()')))
         print('------------------\n')
         print('ANOVA')
         display(self.get_ANOVA_table().style\
-                    .format(None, na_rep="")\
-                    .set_caption(phrase.format('.get_ANOVA_table()'))\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption(phrase.format('.get_ANOVA_table()')))
         print('------------------\n')
         print('Cluster membership')
         display(self.get_number_of_cases_by_clusters().style\
-                    .format(None, na_rep="")\
-                    .set_caption(phrase.format('.get_number_of_cases_by_clusters()'))\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption(phrase.format('.get_number_of_cases_by_clusters()')))
 
     
     def get_cluster_centers(self, round_discrete=False):
