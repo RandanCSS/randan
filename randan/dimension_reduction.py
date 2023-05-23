@@ -265,15 +265,13 @@ class CA:
         print('------------------\n')
         print('Explained inertia')
         display(self.inertia_by_dimensions.style\
-                    .format(None, na_rep="")\
-                    .set_caption("attribute .inertia_by_dimensions")\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption("attribute .inertia_by_dimensions"))
         print('------------------\n')
         print('Detailed information')
         display(self.summary().style\
-                    .format(None, na_rep="")\
-                    .set_caption("method .summary()")\
-                    .set_precision(n_decimals))        
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption("method .summary()"))
     
     def summary(self, 
                 display_component_loadings=True, 
@@ -1038,9 +1036,8 @@ class PCA: # первичен
         if self.rotation != 'natural collinearity':
             print('Explained variance')
             display(self.get_explained_variance(scree_plot=True).style\
-                    .format(None, na_rep="")\
-                    .set_caption("methods .get_explained_variance() and .scree_plot()")\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption("methods .get_explained_variance() and .scree_plot()"))
             print(f'The model explains {round(self.explained_variance_total, n_decimals)}% of variance.')
             print('------------------\n')
         if self.rotation is None:
@@ -1050,16 +1047,14 @@ class PCA: # первичен
         elif self.rotation in ['natural collinearity', 'promax']:
             print('Structure matrix')
         display(self.communalities_and_loadings.style\
-                .format(None, na_rep="")\
-                .set_caption("attribute .communalities_and_loadings")\
-                .set_precision(n_decimals))
+                .format(None, na_rep="", precision=n_decimals)\
+                .set_caption("attribute .communalities_and_loadings"))
         print(f'The minimum communality is {round(self.communalities["Communality"].min(), n_decimals)}.')
         if self.rotation in ['natural collinearity', 'promax']:
             print("Components' correlation")
             display(self.correlation_matrix_components.style\
-                .format(None, na_rep="")\
-                .set_caption("attribute .correlation_matrix_components")\
-                .set_precision(n_decimals))
+                .format(None, na_rep="", precision=n_decimals)\
+                .set_caption("attribute .correlation_matrix_components"))
         print('------------------\n')
         print('To get component scores, use [model].transform().')
     def transform(self, data, standardize=True, add_to_data=False):
@@ -1632,9 +1627,8 @@ class PCA: # первичен
 #             print('------------------\n')
 #         print('Explained variance')
 #         display(self.get_explained_variance(scree_plot=True).style\
-#                     .format(None, na_rep="")\
-#                     .set_caption("methods .get_explained_variance() and .scree_plot()")\
-#                     .set_precision(n_decimals))
+#                     .format(None, na_rep="", precision=n_decimals)\
+#                     .set_caption("methods .get_explained_variance() and .scree_plot()"))
 #         print(f'The model explains {round(self.explained_variance_total, 3)}% of variance.')
 #         print('------------------\n')
 #         if self.rotation is None:
@@ -1642,9 +1636,8 @@ class PCA: # первичен
 #         elif self.rotation == 'varimax':
 #             print('Rotated component loadings')
 #         display(self.communalities_and_loadings.style\
-#                 .format(None, na_rep="")\
-#                 .set_caption("attribute .communalities_and_loadings")\
-#                 .set_precision(n_decimals))
+#                 .format(None, na_rep="", precision=n_decimals)\
+#                 .set_caption("attribute .communalities_and_loadings"))
 #         print(f'The minimum communality is {round(self.communalities["Communality"].min(), 3)}.')
 #         print('------------------\n')
 #         print('To get component scores, use [model].transform().')
