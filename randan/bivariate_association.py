@@ -233,24 +233,21 @@ The smallest residual is {round(min_resid, n_decimals)} (categories {min_resid_r
         print('------------------\n')
         print('Observed frequencies')
         display(self.frequencies_observed.style\
-                    .format(None, na_rep="")\
-                    .set_caption("attribute .frequencies_observed")\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption("attribute .frequencies_observed"))
         print('------------------\n')
         print('Expected frequencies')
         display(self.frequencies_expected.style\
-                    .format(None, na_rep="")\
-                    .set_caption("attribute .frequencies_expected")\
-                    .set_precision(n_decimals))        
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption("attribute .frequencies_expected"))
         self.check_small_counts(n_decimals)
         print('------------------\n')
         print(f'Chi-square statistic is {round(self.chi_square, n_decimals)} (p-value = {round(self.pvalue, n_decimals)}).')
         print('------------------\n')
         print("Pearson's residuals")
         display(self.residuals_pearson.style\
-                    .format(None, na_rep="")\
-                    .set_caption("attribute .residuals_pearson")\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption("attribute .residuals_pearson"))
         self.check_significant_residuals(sig_level, n_decimals)
 
 #todo: flag significant, pairwise deletion
@@ -392,9 +389,8 @@ class Correlation:
             phrase = 'The following variables were removed from the analysis since they have zero variance: {}\n'
             print(phrase.format(', '.join(self._zero_var_vars)))
         display(self.correlation_matrix.style\
-                    .format(None, na_rep="")\
-                    .set_caption("attribute .correlation_matrix")\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption("attribute .correlation_matrix"))
         if min_max:
             results = self.sort_correlations()
             self.min_corr = results['Coefficient'].min()
