@@ -344,19 +344,17 @@ class LinearRegression:
         print('Model summary')
         display(self.summary_r2().style\
                     .set_caption(phrase.format('.summary_r2()'))\
-                    .set_precision(n_decimals))
+                    .format(precision=n_decimals))
         print('------------------\n')
         print('ANOVA')
         display(self.summary_F().style\
-                    .format(None, na_rep="")\
-                    .set_caption(phrase.format('.summary_F()'))\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption(phrase.format('.summary_F()')))
         print('------------------\n')
         print('Coefficients')
         display(self.summary().style\
-                    .format(None, na_rep="")\
-                    .set_caption(phrase.format('.summary()'))\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption(phrase.format('.summary()')))
     
     def summary(self):
         """
@@ -1016,23 +1014,22 @@ class BinaryLogisticRegression:
         print('Model summary')
         display(self.summary_r2().style\
                     .set_caption(phrase.format('.summary_r2()'))\
-                    .set_precision(n_decimals))
+                    .format(precision=n_decimals))
         print('------------------\n')
         print('Classification table')
         display(self.get_classification_table().style\
                     .set_caption(phrase.format('.get_classification_table()'))\
-                    .set_precision(n_decimals))
+                    .format(precision=n_decimals))
         print('------------------\n')
         print('Precision and recall')
         display(self.get_precision_and_recall().style\
                     .set_caption(phrase.format('.get_precision_and_recall()'))\
-                    .set_precision(n_decimals))
+                    .format(precision=n_decimals))
         print('------------------\n')
         print('Coefficients')
         display(self.summary().style\
-                    .format(None, na_rep="")\
-                    .set_caption(phrase.format('.summary()'))\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption(phrase.format('.summary()')))
         
     def summary_r2(self):
         """
