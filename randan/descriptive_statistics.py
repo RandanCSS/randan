@@ -67,9 +67,8 @@ class NominalStatistics:
         print('\nNOMINAL STATISTICS SUMMARY')
         print('------------------\n')
         display(self.summary().style\
-                    .format(None, na_rep="")\
-                    .set_caption("method .summary()")\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption("method .summary()"))
         if len(self._mult_modes) > 0:
             vars_ = ', '.join(self._mult_modes)
             print(f'Following variables have multiple modes: {vars_}')
@@ -88,9 +87,8 @@ class NominalStatistics:
             print('------------------\n')
             print(f'variable: {var}')
             display(self.frequencies()[var].style\
-                        .format(None, na_rep="")\
-                        .set_caption(f"method .frequencies()['{var}']")\
-                        .set_precision(n_decimals))
+                        .format(None, na_rep="", precision=n_decimals)\
+                        .set_caption(f"method .frequencies()['{var}']"))
     
     def _get_statistics(self):
         measures = {}
@@ -234,9 +232,8 @@ class OrdinalStatistics:
         print('\nORDINAL STATISTICS SUMMARY')
         print('------------------\n')
         display(self.summary().style\
-                    .format(None, na_rep="")\
-                    .set_caption("method .summary()")\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption("method .summary()"))
         if len(self._mult_modes) > 0:
             vars_ = ', '.join(self._mult_modes)
             print(f'Following variables have multiple modes: {vars_}')
@@ -255,9 +252,8 @@ class OrdinalStatistics:
             print('------------------\n')
             print(f'variable: {var}')
             display(self.frequencies()[var].style\
-                        .format(None, na_rep="")\
-                        .set_caption(f"method .frequencies()['{var}']")\
-                        .set_precision(n_decimals))
+                        .format(None, na_rep="", precision=n_decimals)\
+                        .set_caption(f"method .frequencies()['{var}']"))
     
     def _get_statistics(self):
         measures = {}
@@ -455,9 +451,8 @@ class ScaleStatistics:
         print('\nNORMALITY TESTS')
         print('------------------\n')
         display(self.normality_test(self.normality_test_type).style\
-                    .format(None, na_rep="")\
-                    .set_caption(f"method .normality_test(test_type='{self.normality_test_type}')")\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption(f"method .normality_test(test_type='{self.normality_test_type}')"))
     
     def _get_mappers_for_nonumerical_vars(self):
         nonnum_vars = [var for var in self._variables if not is_numeric_dtype(self._data[var])]
@@ -486,9 +481,8 @@ class ScaleStatistics:
         print('\nSCALE STATISTICS SUMMARY')
         print('------------------\n')
         display(self.summary().style\
-                    .format(None, na_rep="")\
-                    .set_caption("method .summary()")\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption("method .summary()"))
         if len(self._mult_modes) > 0:
             vars_ = ', '.join(self._mult_modes)
             print(f'Following variables have multiple modes: {vars_}')
@@ -507,9 +501,8 @@ class ScaleStatistics:
             print('------------------\n')
             print(f'variable: {var}')
             display(self.frequencies()[var].style\
-                        .format(None, na_rep="")\
-                        .set_caption(f"method .frequencies()['{var}']")\
-                        .set_precision(n_decimals))
+                        .format(None, na_rep="", precision=n_decimals)\
+                        .set_caption(f"method .frequencies()['{var}']"))
     
     def _get_statistics(self):
         measures = {}
