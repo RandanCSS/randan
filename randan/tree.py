@@ -383,25 +383,24 @@ class CHAIDClassifier:
             print('------------------\n')
             print('Tree nodes')
             display(self.nodes.style\
-                    .format(None, na_rep="")\
-                    .set_caption(f'Dependent variable: {self._dependent_variable}, independent variables: {", ".join(self._independent_variables)}')\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption(f'Dependent variable: {self._dependent_variable}, independent variables: {", ".join(self._independent_variables)}'))
         print('------------------\n')
         print('Classification table')
         display(self.classification_table.style\
-                .set_precision(1))
+                .format(precision=1))
         if self._use_test_data:
             print('Classification table for test data')
             display(self.classification_table_test.style\
-                .set_precision(1))
+                    .format(precision=1))
         print('------------------\n')
         print('Prediction quality metrics')
         display(self.precision_and_recall.style\
-                .set_precision(n_decimals))
+                .format(precision=n_decimals))
         if self._use_test_data:
             print('Prediction quality metrics for test data')
             display(self.precision_and_recall_test.style\
-                .set_precision(n_decimals))
+                .format(precision=n_decimals))
                              
     
     def get_classification_table(self):
@@ -1176,9 +1175,8 @@ class CHAIDRegressor:
             print('------------------\n')
             print('Tree nodes')
             display(self.nodes.style\
-                    .format(None, na_rep="")\
-                    .set_caption(f'Dependent variable: {self._dependent_variable}, independent variables: {", ".join(self._independent_variables)}')\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption(f'Dependent variable: {self._dependent_variable}, independent variables: {", ".join(self._independent_variables)}'))
                                  
     def _check_if_terminal_node(self, node):
         if node['Node'] in self.nodes['Parent node'].tolist() or pd.isna(node['Parent node']):
