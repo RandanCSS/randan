@@ -155,9 +155,8 @@ class ANOVA:
         print('\nANOVA SUMMARY')
         print('------------------')
         display(self.summary().style\
-                    .format(None, na_rep="")\
-                    .set_caption("method .summary()")\
-                    .set_precision(n_decimals))
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption("method .summary()"))
         
     def _perform_anova_for_several_variables(self):
         summary = pd.DataFrame(
