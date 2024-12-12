@@ -1,23 +1,23 @@
 # Randan
-_A python package for the analysis of social data_
+_A python package for gaining social and financial data and their analysis_
 
-_Current version: 0.2.1_
+_Current version: 0.2.2_
 
 _Documentation: https://randan.readthedocs.io/en/latest/_
 
 _If you want to contribute or report a bug, do not hesitate to [open an issue](https://github.com/LanaLob/randan/issues) on this page or contact us: alexey.n.rotmistrov@gmail.com (Aleksei Rotmistrov), lana_lob@mail.ru (Svetlana Zhuchkova)._ 
 
-### Overview
-Randan is a python package that aims to provide most of the functions presented in SPSS. Unlike the other python packages for data analysis, it has three main features, which make it attractive for social scientists:
+## Overview
+Randan is a python package that aims to help social scientists, statisticians and financier. For the former it provides most of the functions presented in SPSS. Unlike the other python packages for data analysis, it has three main features, which make it attractive for social scientists:
 1. it provides the results of the analysis in a readable and understandable form, similar to SPSS
 2. it gives you information about statistical significance of the parameters whenever possible
 3. it unites all the necessary methods so you do not need to switch between different packages and software anymore
 
-As we emphasize the importance of the way your results look like, we highly suggest to use `randan` in Jupyter Notebook and store your data in `pandas` DataFrames.
+As we emphasize the importance of the way your results look like, we highly suggest to use `randan` in Anaconda or CoLab and store your data in `pandas` DataFrames.
 
 > _**N.B.:** You should understand that this project is under development now, which means it is constantly updating. But you can use all the modules and classes presented in the last release._ 
 
-### Installation
+## Installation
 You can easily install the package from the PyPi by running:
 
 ```
@@ -46,8 +46,9 @@ from randan.tree import CHAIDRegressor
 # etc.
 ```
 
-### Structure
-By now, **seven** modules have been included in the package. These modules correspond to the SPSS functions as follows:
+## Structure
+### Statistical modules
+By now, **seven statistical** modules have been included in the package. These modules correspond to the SPSS functions as follows:
 
 | Module | Class or function | Corresponding SPSS function | Description |
 |--------|-------------------|-----------------------------|-------------|
@@ -64,8 +65,8 @@ By now, **seven** modules have been included in the package. These modules corre
 | regression | BinaryLogisticRegression | Analyze -> Regression -> Binary Logistic | Binary logistic regression |
 | tree | CHAIDRegressor, CHAIDClassifier | Analyze -> Classify -> Tree -> CHAID | CHAID decision tree for scale and categorical dependent variables, respectively |
 
-### Quick start
-Although `randan` is built to be similar to SPSS, it reproduces the fit-predict and fit-transform approach, which is now being used in the most popular machine learning python packages. This approach means that you should, firstly, initialize your model and then, secondly, fit it to your data (i.e., use the `fit` function) if necessary. 
+## Quick start
+Although statistical modules of `randan` are built to be similar to SPSS, they reproduces the fit-predict and fit-transform approach, which is now being used in the most popular machine learning python packages. This approach means that you should, firstly, initialize your model and then, secondly, fit it to your data (i.e., use the `fit` function) if necessary. 
 > 1. If the method you use belongs to the *unsupervised methods* (i.e., you *do not have* a dependent variable in your data), you can then use `transform` function to get values of the obtained, hidden, dependent variable such as cluster membership, factor scores etc. 
 > 2. If the method you use belongs to the *supervised methods* (i.e., you *have* a dependent variable in your data), you can then use `predict` function to get values of the given dependent variable. 
 > 3. If the method does not assume to estimate new values for your data (such methods are crosstabs, t-tests etc.), then it does not require to use `fit` and `transform` / `predict` functions. 
