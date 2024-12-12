@@ -48,7 +48,7 @@ from randan.tree import CHAIDRegressor
 
 ## Structure
 ### Statistical modules
-By now, **seven statistical** modules have been included in the package. These modules correspond to the SPSS functions as follows:
+By now, **eleven statistical** modules have been included in the package. These modules correspond to the SPSS functions as follows:
 
 | Module | Class or function | Corresponding SPSS function | Description |
 |--------|-------------------|-----------------------------|-------------|
