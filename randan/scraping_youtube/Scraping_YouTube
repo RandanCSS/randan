@@ -3,6 +3,7 @@
 
 # # 0. Настройки и авторизация
 
+
 # In[1]:
 
 
@@ -15,7 +16,7 @@ from subprocess import check_call
 while True:
     try:
         from tqdm import tqdm
-        import datetime, os, pandas, re, time, warnings
+        import datetime, os, pandas, randan, re, time, warnings
         import googleapiclient.discovery as api
         import googleapiclient.errors
         break
@@ -96,8 +97,8 @@ while True:
     if len(folderFile) == 0:
         break
     else:
-        from files2df import excel2df
-        itemS, error, fileName, folder, slash = excel2df(folderFile)
+        from randan.tools import files2df
+        itemS, error, fileName, folder, slash = files2df.excel2df(folderFile)
         if 'No such file or directory' in error: print('Файл:', folder + slash + fileName, '-- не существует; попробуйте, пожалуйста, ещё раз..')
         else: break 
     # display(itemS)
