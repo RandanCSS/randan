@@ -2,7 +2,7 @@
 # coding: utf-8
 
 '''
-A module for creating a matrix `documents-tokens` from a documents corpus using the methods of the CountVectorizer and TfidfVectorizer classes
+A module for creating a matrix `documents-tokens` from a corpus of documents using the methods of the CountVectorizer and TfidfVectorizer classes
 '''
 
 # sys & subprocess -- эти пакеты должны быть предустанавлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
