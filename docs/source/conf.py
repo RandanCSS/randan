@@ -1,7 +1,7 @@
 # Configuration file for the Sphinx documentation builder.
 #
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
+# This file only contains a selection of the most common options.
+# For a full list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 # -- Path setup --------------------------------------------------------------
@@ -28,9 +28,9 @@ release = '0.2.1'
 
 # -- General configuration ---------------------------------------------------
 
-# Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
+# Add any Sphinx extension module names here, as strings.
+# They can be extensions coming with Sphinx (named 'sphinx.ext.*')
+# or your custom ones.
 extensions = [ 
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon'
