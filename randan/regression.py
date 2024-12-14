@@ -305,7 +305,7 @@ class LinearRegression:
     def coefficients_VIF(self):
         #eps = 1e-20
         x = self._model.model.exog[:, 1:].copy()
-        inv_corr = np.linalg.inv(sp.corrcoef(x, rowvar=False))
+        inv_corr = np.linalg.inv(np.corrcoef(x, rowvar=False))
         diag = list(inv_corr.diagonal())
         if self.include_constant:
             diag = [np.nan] + diag
