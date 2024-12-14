@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="randan", # Replace with your own username
     packages=["randan"],
-    version="0.3.0",
+    version="0.3.1",
     license="MIT",
     description="A python package for gaining social and financial data and their analysis",
     author="Aleksei Rotmistrov, Svetlana Zhuchkova",
