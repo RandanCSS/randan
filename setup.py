@@ -5,17 +5,20 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="randan", # Replace with your own username
+    packages=["randan"],
     version="0.3.0",
-    download_url='https://github.com/RandanCSS/randan/archive/refs/tags/v0.3.0.tar.gz',
+    license="MIT",
+    description="A python package for gaining social and financial data and their analysis",
     author="Aleksei Rotmistrov, Svetlana Zhuchkova",
     author_email="alexey.n.rotmistrov@gmail.com, lana_lob@mail.ru",
-    description="A python package for gaining social and financial data and their analysis",
-    long_description='randan is a python package that aims to help social scientists, statisticians and financiers.'
-        , 'For the former ones it provides twelve analytical modules that emulate the most popular options presented in SPSS.'
-        , 'A new -- thirteenth -- module provides data from YouTube literally by couple of clicks.',
-    long_description_content_type="text/markdown",
     url="https://github.com/RandanCSS/randan",
-    packages=setuptools.find_packages(),
+    download_url='https://github.com/RandanCSS/randan/archive/refs/tags/v0.3.0.tar.gz',
+    keywords=["data", "analysis", "spss", "youtube"],
+    # long_description='randan is a python package that aims to help social scientists, statisticians and financiers.'
+    #     , 'For the former ones it provides twelve analytical modules that emulate the most popular options presented in SPSS.'
+    #     , 'A new -- thirteenth -- module provides data from YouTube literally by couple of clicks.',
+    # long_description_content_type="text/markdown",
+    # packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
