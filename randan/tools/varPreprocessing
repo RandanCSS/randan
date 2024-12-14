@@ -2,7 +2,7 @@
 # coding: utf-8
 
 '''
-A module for preprocessing variables of nominal, ordinal, interval, and higher level measurement
+A module for preprocessing variables of nominal, ordinal, interval, and higher-level measurement
 '''
 
 # sys & subprocess -- эти пакеты должны быть предустанавлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
