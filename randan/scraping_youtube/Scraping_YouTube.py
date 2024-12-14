@@ -99,7 +99,8 @@ while True:
     else:
         from files2df import excel2df
         itemS, error, fileName, folder, slash = excel2df(folderFile)
-        if 'No such file or directory' in error: print('Файл:', folder + slash + fileName, '-- не существует; попробуйте, пожалуйста, ещё раз..')
+        if error != None:
+            if 'No such file or directory' in error: print('Файл:', folder + slash + fileName, '-- не существует; попробуйте, пожалуйста, ещё раз..')
         else: break 
     # display(itemS)
 
