@@ -13,7 +13,7 @@ randan is a python package that aims to help social scientists, statisticians an
 2. it provides information about statistical significance of the parameters whenever possible
 3. it meets the most popular analytical needs of social scientists; so, the switching among different packages and software stays in the past
 
-As we emphasize the importance of the way that the output looks like, we highly recommend to use `randan` in Anaconda or CoLab and store data in `pandas` DataFrames.
+As we emphasize the importance of the way that the output looks like, we highly recommend using `randan` in Anaconda or CoLab and store data in `pandas` DataFrames.
 
 A new -- thirteenth -- module provides data from YouTube literally by couple of clicks.
 
