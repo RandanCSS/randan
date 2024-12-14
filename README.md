@@ -1,19 +1,21 @@
 # Randan
 _A python package for gaining social and financial data and their analysis_
 
-_Current version: 0.3_
+_Current version: 0.3.0_
 
 _Documentation: https://randan.readthedocs.io/en/latest/_
 
 _If you want to contribute or report a bug, do not hesitate to [open an issue](https://github.com/LanaLob/randan/issues) on this page or contact us: alexey.n.rotmistrov@gmail.com (Aleksei Rotmistrov), lana_lob@mail.ru (Svetlana Zhuchkova)._ 
 
 ## Overview
-Randan is a python package that aims to help social scientists, statisticians and financier. For the former it provides most of the functions presented in SPSS. Unlike the other python packages for data analysis, it has three main features, which make it attractive for social scientists:
+Randan is a python package that aims to help social scientists, statisticians and financier. For the former ones it provides twelve analytical modules that emulate the most popular options presented in SPSS. Unlike the other python packages for data analysis, it has three main features, which make it attractive for social scientists:
 1. it provides the results of the analysis in a readable and understandable form, similar to SPSS
-2. it gives you information about statistical significance of the parameters whenever possible
-3. it unites all the necessary methods so you do not need to switch between different packages and software anymore
+2. it provides information about statistical significance of the parameters whenever possible
+3. it meets the most popular social scientists' analytical needs, so the switching among different packages and software stays in the past anymore
 
-As we emphasize the importance of the way your results look like, we highly suggest to use `randan` in Anaconda or CoLab and store your data in `pandas` DataFrames.
+As we emphasize the importance of the way that the output looks like, we highly recommend to use `randan` in Anaconda or CoLab and store data in `pandas` DataFrames.
+
+A new -- thirteen -- module provides data from YouTube literally by couplke of clicks.
 
 > _**N.B.:** You should understand that this project is under development now, which means it is constantly updating. But you can use all the modules and classes presented in the last release._ 
 
@@ -50,7 +52,7 @@ from randan.tree import CHAIDRegressor
 ### Statistical modules
 By now, **twelve statistical** modules have been included in the package. These modules correspond to the SPSS functions as follows:
 
-| Module | Class or function | Corresponding SPSS function | Description |
+| Module | Class or function | Corresponding SPSS option | Description |
 |--------|-------------------|-----------------------------|-------------|
 | descriptive_statistics | NominalStatistics | Analyze -> Descriptive statistics -> Frequencies, Descriptives, Explore | Descriptive statistics relevant for nominal variables |
 | descriptive_statistics | OrdinalStatistics | Analyze -> Descriptive statistics -> Frequencies, Descriptives, Explore | Descriptive statistics relevant for ordinal variables |
