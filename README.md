@@ -11,11 +11,11 @@ _If you want to contribute or report a bug, do not hesitate to [open an issue](h
 randan is a python package that aims to help social scientists, statisticians and financier. For the former ones it provides twelve analytical modules that emulate the most popular options presented in SPSS. Unlike the other python packages for data analysis, it has three main features, which make it attractive for social scientists:
 1. it provides the results of the analysis in a readable and understandable form, similar to SPSS
 2. it provides information about statistical significance of the parameters whenever possible
-3. it meets the most popular social scientists' analytical needs, so the switching among different packages and software stays in the past anymore
+3. it meets the most popular analytical needs of social scientists; so, the switching among different packages and software stays in the past anymore
 
 As we emphasize the importance of the way that the output looks like, we highly recommend to use `randan` in Anaconda or CoLab and store data in `pandas` DataFrames.
 
-A new -- thirteen -- module provides data from YouTube literally by couplke of clicks.
+A new -- thirteenth -- module provides data from YouTube literally by couple of clicks.
 
 > _**N.B.:** You should understand that this project is under development now, which means it is constantly updating. But you can use all the modules and classes presented in the last release._ 
 
