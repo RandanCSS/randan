@@ -12,7 +12,7 @@ setuptools.setup(
     author="Aleksei Rotmistrov, Svetlana Zhuchkova",
     author_email="alexey.n.rotmistrov@gmail.com, lana_lob@mail.ru",
     url="https://github.com/RandanCSS/randan",
-    # download_url='https://github.com/RandanCSS/randan/archive/refs/tags/v0.3.1.tar.gz',
+    download_url='https://github.com/RandanCSS/randan/archive/refs/tags/v0.3.1.2.tar.gz',
     keywords=["data", "analysis", "spss", "youtube"],
     # long_description='randan is a python package that aims to help social scientists, statisticians and financiers.'
     #     , 'For the former ones it provides twelve analytical modules that emulate the most popular options presented in SPSS.'
