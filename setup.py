@@ -6,13 +6,13 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="randan", # Replace with your own username
     packages=["randan"],
-    version="0.3.1",
+    version="0.3.1.2",
     license="MIT",
     description="A python package for gaining social and financial data and their analysis",
     author="Aleksei Rotmistrov, Svetlana Zhuchkova",
     author_email="alexey.n.rotmistrov@gmail.com, lana_lob@mail.ru",
     url="https://github.com/RandanCSS/randan",
-    download_url='https://github.com/RandanCSS/randan/archive/refs/tags/v0.3.1.tar.gz',
+    # download_url='https://github.com/RandanCSS/randan/archive/refs/tags/v0.3.1.tar.gz',
     keywords=["data", "analysis", "spss", "youtube"],
     # long_description='randan is a python package that aims to help social scientists, statisticians and financiers.'
     #     , 'For the former ones it provides twelve analytical modules that emulate the most popular options presented in SPSS.'
