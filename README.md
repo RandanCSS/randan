@@ -67,7 +67,7 @@ By now, **twelve statistical** modules have been included in the package. These 
 | regression | BinaryLogisticRegression | Analyze -> Regression -> Binary Logistic | Binary logistic regression |
 | tree | CHAIDRegressor, CHAIDClassifier | Analyze -> Classify -> Tree -> CHAID | CHAID decision tree for scale and categorical dependent variables, respectively |
 
-The module **Scraping_Youtube** aims to gain data from YouTube by means of seven methods of its API. These methods are: search, videos, commentThreads & comments, channels, playlists & playlistItems. In this module, complicated iterative implementing of these methods allows to maximize output volume. The iterative implementing includes resorting the output and segmenting it by years. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. The module provides a user with a default scenario of gaining YouTube data. This scenario is arranged as a simple dialog interface. Guiding by this interface and pressing Enter on the keyboard, a user has no need for coding. Meanwhile, an advanced user might customize both the scenario and the module's code itself if needs.
+The module **scrapingYouTube** aims to gain data from YouTube by means of seven methods of its API. These methods are: search, videos, commentThreads & comments, channels, playlists & playlistItems. In this module, complicated iterative implementing of these methods allows to maximize output volume. The iterative implementing includes resorting the output and segmenting it by years. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. The module provides a user with a default scenario of gaining YouTube data. This scenario is arranged as a simple dialog interface. Guiding by this interface and pressing Enter on the keyboard, a user has no need for coding. Meanwhile, an advanced user might customize both the scenario and the module's code itself if needs.
 
 ## Quick start
 Although statistical modules of `randan` are built to be similar to SPSS, they reproduces the fit-predict and fit-transform approach, which is now being used in the most popular machine learning python packages. This approach means that you should, firstly, initialize your model and then, secondly, fit it to your data (i.e., use the `fit` function) if necessary. 
@@ -179,10 +179,10 @@ chaid = CHAIDRegressor().fit(
 # and the description of the node in terms of interactions for the given data 
 predictions = chaid.predict(node=True, interaction=True)
 ```
-#### Module `Scraping_YouTube`
+#### Module `scrapingYouTube`
 This module aggregates seven YouTube API methods: search, videos, commentThreads & comments, channels, playlists & playlistItems. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. You only need to call the necessary class:
 ```python
-from randan.scraping_youtube import Scraping_YouTube
+from randan.scrapingYouTube import scrapingYouTube
 
 # with this code, you will immediately see the instruction. Just follow it for executing the default scenario, episodically pressing Enter on your keyboard
 
