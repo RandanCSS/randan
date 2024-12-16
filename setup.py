@@ -2,6 +2,7 @@ from setuptools import setup, find_packages
 import os
 
 name="randan"
+version="0.3.1.4"
 slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
 
 folderS = []
@@ -15,7 +16,7 @@ for folder in folderS:
 
 setup(
     name=name,
-    version="0.3.1.4",
+    version=version,
     author="Aleksei Rotmistrov, Svetlana Zhuchkova",
     author_email="alexey.n.rotmistrov@gmail.com, lana_lob@mail.ru",
     package_data={'randan': folderFileS},
