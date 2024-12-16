@@ -15,7 +15,7 @@ for folder in folderS:
 
 setup(
     name=name,
-    version="0.3.1.3",
+    version="0.3.1.4",
     author="Aleksei Rotmistrov, Svetlana Zhuchkova",
     author_email="alexey.n.rotmistrov@gmail.com, lana_lob@mail.ru",
     package_data={'randan': folderFileS},
@@ -23,7 +23,7 @@ setup(
     license="MIT",
     description="A python package for gaining social and financial data and their analysis",
     long_description=open('README.markdown').read() if os.path.exists("README.markdown") else "",
-    download_url='https://github.com/RandanCSS/randan/archive/refs/tags/v0.3.1.3.tar.gz',
+    download_url=f'https://github.com/RandanCSS/randan/archive/refs/tags/v{version}.tar.gz',
     keywords=["data", "analysis", "spss", "youtube"],
     
     classifiers=[
