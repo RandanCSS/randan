@@ -609,7 +609,7 @@ print('Выгрузка метода search содержит НЕ ВСЕ дос�
 if len(input()) > 0:
     import warnings
     warnings.filterwarnings("ignore")
-    input('Скрипт исполнен. Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" \nТак и должно быть')
+    input('Скрипт исполнен. Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" \nТак и должно быть\Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
     sys.exit()
 
 # 3.0.1 Этап stage = 3
@@ -1231,7 +1231,7 @@ if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # е�
 
 import warnings
 warnings.filterwarnings("ignore")
-input('Скрипт исполнен. Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" \nТак и должно быть')
+input('Скрипт исполнен. Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" \nТак и должно быть\Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
 sys.exit()
 
 
