@@ -1,24 +1,31 @@
-import setuptools
+from setuptools import setup, find_packages
+import os
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+name="randan"
+slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
 
-setuptools.setup(
-    name="randan", # Replace with your own username
-    packages=["randan"],
-    version="0.3.1.2",
-    license="MIT",
-    description="A python package for gaining social and financial data and their analysis",
+folderS = []
+for item in os.listdir(name):
+    if '.' not in item: folderS.append(item)
+
+folderFileS = []
+for folder in folderS:
+    for file in os.listdir(name + slash + folder):
+        folderFileS.append(folder + '/' + file)
+
+setup(
+    name=name,
+    version="0.3.1.3",
     author="Aleksei Rotmistrov, Svetlana Zhuchkova",
     author_email="alexey.n.rotmistrov@gmail.com, lana_lob@mail.ru",
+    package_data={'randan': folderFileS},
     url="https://github.com/RandanCSS/randan",
-    download_url='https://github.com/RandanCSS/randan/archive/refs/tags/v0.3.1.2.tar.gz',
+    license="MIT",
+    description="A python package for gaining social and financial data and their analysis",
+    long_description=open('README.markdown').read() if os.path.exists("README.markdown") else "",
+    download_url='https://github.com/RandanCSS/randan/archive/refs/tags/v0.3.1.3.tar.gz',
     keywords=["data", "analysis", "spss", "youtube"],
-    # long_description='randan is a python package that aims to help social scientists, statisticians and financiers.'
-    #     , 'For the former ones it provides twelve analytical modules that emulate the most popular options presented in SPSS.'
-    #     , 'A new -- thirteenth -- module provides data from YouTube literally by couple of clicks.',
-    # long_description_content_type="text/markdown",
-    # packages=setuptools.find_packages(),
+    
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
