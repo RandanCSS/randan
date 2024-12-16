@@ -180,7 +180,7 @@ chaid = CHAIDRegressor().fit(
 predictions = chaid.predict(node=True, interaction=True)
 ```
 #### Module `scrapingYouTube`
-This module aggregates seven YouTube API methods: search, videos, commentThreads & comments, channels, playlists & playlistItems. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. You only need to call the necessary class:
+This module aggregates seven YouTube API methods: search, videos, commentThreads & comments, channels, playlists & playlistItems. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. You only need to call the necessary module:
 ```python
 from randan.scrapingYouTube import scrapingYouTube
 
