@@ -43,9 +43,10 @@ def simbolsCleaner(text):
     cleaned_text = ''
     for a in text:
         if (a.isalnum()) | (a == ' '): cleaned_text += a
-
-    while '  ' in cleaned_text:
-        cleaned_text = cleaned_text.replace('  ', ' ')
+            
+    while '  ' in cleaned_text: cleaned_text = cleaned_text.replace('  ', ' ')
+    while cleaned_text[0] == ' ': cleaned_text = cleaned_text[1:] # избавиться от пробелов в начале текста 
+    while cleaned_text[-1] == ' ': cleaned_text = cleaned_text[:-1] # избавиться от пробелов в конце текста 
     return cleaned_text
 
 def stopwordsDropper(text):
