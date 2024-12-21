@@ -184,7 +184,7 @@ This module aggregates seven YouTube API methods: search, videos, commentThreads
 ```python
 from randan.scrapingYouTube import scrapingYouTube
 
-# with this code, you will immediately see the instruction. Just follow it for executing the default scenario, episodically pressing Enter on your keyboard
+# with this code, you will immediately see an instruction. Just follow it for executing the default scenario, episodically pressing Enter on your keyboard
 
 # however, if you want to customize the default scenario, you might both use the dialog interface and alter the module's code 
 ```
