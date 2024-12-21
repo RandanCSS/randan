@@ -42,8 +42,8 @@ def simbolsCleaner(text):
     print('Эта функция предназначена для чистки текстов от невербального мусора (ненужных символов)', end='\r')
     cleaned_text = ''
     for a in text:
-        if (a.isalnum()) or (a == ' '):
-            cleaned_text = cleaned_text + a
+        if (a.isalnum()) | (a == ' '): cleaned_text += a
+
     while '  ' in cleaned_text:
         cleaned_text = cleaned_text.replace('  ', ' ')
     return cleaned_text
