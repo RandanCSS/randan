@@ -12,7 +12,7 @@ from subprocess import check_call
 # --- остальные модули и пакеты
 while True:
     try:
-        import os, pandas, pymystem3, re, stop_words
+        import os, pandas, pymystem3, re, stop_words, time
         break
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
@@ -25,6 +25,8 @@ while True:
 def pymystemLemmatizer(dfIn, columnWithText):
     df = dfIn.copy()
     print('Эта функция предназначена для лмматизации текстов пакетом pymystem3', end='\r')
+    time.sleep(0.1)
+    print('                                                                                          ', end='\r')
     mstem = pymystem3.Mystem()
     separator = r'|||'
     while len(df[df[columnWithText].str.contains(separator)]) == 0:
@@ -40,6 +42,8 @@ def pymystemLemmatizer(dfIn, columnWithText):
 
 def simbolsCleaner(text):
     print('Эта функция предназначена для чистки текстов от невербального мусора (ненужных символов)', end='\r')
+    time.sleep(0.1)
+    print('                                                                                          ', end='\r')
     cleaned_text = ''
     for a in text:
         if (a.isalnum()) | (a == ' '): cleaned_text += a
@@ -51,6 +55,8 @@ def simbolsCleaner(text):
 
 def stopwordsDropper(text):
     print('Эта функция предназначена для чистки текстов от стоп-слов пакетом stop_words', end='\r')
+    time.sleep(0.1)
+    print('                                                                                          ', end='\r')
     stopwords_list = stop_words.get_stop_words('russian')
     text_cleaned = ''
     for word in text.split(' '):
