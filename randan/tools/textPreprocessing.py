@@ -25,7 +25,7 @@ while True:
 def pymystemLemmatizer(dfIn, columnWithText):
     df = dfIn.copy()
     print('Эта функция предназначена для лмматизации текстов пакетом pymystem3', end='\r')
-    time.sleep(0.1)
+    time.sleep(0.01)
     print('                                                                                          ', end='\r')
     mstem = pymystem3.Mystem()
     separator = r'|||'
@@ -42,7 +42,7 @@ def pymystemLemmatizer(dfIn, columnWithText):
 
 def simbolsCleaner(text):
     print('Эта функция предназначена для чистки текстов от невербального мусора (ненужных символов)', end='\r')
-    time.sleep(0.1)
+    time.sleep(0.01)
     print('                                                                                          ', end='\r')
     cleaned_text = ''
     for a in text:
@@ -55,7 +55,7 @@ def simbolsCleaner(text):
 
 def stopwordsDropper(text):
     print('Эта функция предназначена для чистки текстов от стоп-слов пакетом stop_words', end='\r')
-    time.sleep(0.1)
+    time.sleep(0.01)
     print('                                                                                          ', end='\r')
     stopwords_list = stop_words.get_stop_words('russian')
     text_cleaned = ''
