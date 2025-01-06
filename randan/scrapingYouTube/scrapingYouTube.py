@@ -47,12 +47,21 @@ if 'credentials.txt' not in os.listdir():
           , '(примерная видео-инструкция, как создать API key, доступна по ссылке https://www.youtube.com/watch?v=EXysYgWeapI&t=490s ).'
           , 'Для увеличения размера выгрузки желательно создать несколько ключей (пять -- отлично) и ввести их без кавычек через запятую с пробелом'
           , '\n--- После ввода нажмите Enter')
-    API_keyS = input()
-    print('-- далее буд[еу]т использован[ы] эт[и] ключ[и]')
-    
-    file = open("credentials.txt", "w+") # открыть на запись
-    file.write(API_keyS)
-    file.close()
+    while True:
+        API_keyS = input()
+        if len(API_keyS) != 0:
+            print('-- далее буд[еу]т использован[ы] эт[и] ключ[и]')
+            
+            from randan.tools import textPreprocessing
+            API_keyS = textPreprocessing.multispaceCleaner(API_keyS)
+            while API_keyS[-1] == ',': API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста 
+            
+            file = open("credentials.txt", "w+") # открыть на запись
+            file.write(API_keyS)
+            file.close()
+            break
+        else:
+            print('--- Вы ничего НЕ ввели. Попробуйте ещё раз')
 else:
     file = open('credentials.txt')
     API_keyS = file.read()
