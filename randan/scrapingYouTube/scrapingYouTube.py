@@ -52,8 +52,8 @@ if 'credentials.txt' not in os.listdir():
         if len(API_keyS) != 0:
             print('-- далее буд[еу]т использован[ы] эт[и] ключ[и]')
             
-            from randan.tools import textPreprocessing
-            API_keyS = textPreprocessing.multispaceCleaner(API_keyS)
+            from randan.tools.textPreprocessing import multispaceCleaner
+            API_keyS = multispaceCleaner(API_keyS)
             while API_keyS[-1] == ',': API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста 
             
             file = open("credentials.txt", "w+") # открыть на запись
