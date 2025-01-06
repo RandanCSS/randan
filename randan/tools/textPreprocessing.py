@@ -24,7 +24,7 @@ while True:
 
 def pymystemLemmatizer(dfIn, columnWithText):
     df = dfIn.copy()
-    print('Эта функция предназначена для лмматизации текстов пакетом pymystem3', end='\r')
+    print('Эта функция предназначена для лемматизации текстов пакетом pymystem3', end='\r')
     time.sleep(0.01)
     print('                                                                                          ', end='\r')
     mstem = pymystem3.Mystem()
