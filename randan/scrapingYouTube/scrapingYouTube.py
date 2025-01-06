@@ -44,7 +44,7 @@ goS = True
 # 0.1 Подготовка ключей
 if 'credentials.txt' not in os.listdir():
     print('\n--- Введите в окно Ваш API key для авторизации в API YouTube по ключу'
-          , '(примерная видео-инструкция для создания API key доступна по ссылке https://www.youtube.com/watch?v=EXysYgWeapI&t=490s ).'
+          , '(примерная видео-инструкция, как создать API key, доступна по ссылке https://www.youtube.com/watch?v=EXysYgWeapI&t=490s ).'
           , 'Для увеличения размера выгрузки желательно создать несколько ключей (пять -- отлично) и ввести их без кавычек через запятую с пробелом'
           , '\n--- После ввода нажмите Enter')
     API_keyS = input()
