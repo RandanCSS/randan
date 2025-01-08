@@ -77,7 +77,7 @@ yearMaxByUser = None # в случае отсутствия пользовате
 
 # 0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
 # 0.1.0 Функции блока:
-    # для сохранения следа непосредственно в директорию randan
+    # для сохранения следа непосредственно в директорию Temporal в текущей директории
 def saveSettings(channelIdForSearch, complicatedNamePart, contentType, itemS, method, q, slash, stageTarget, totalResults, year, yearsRange):  
     file = open(f'{today}{complicatedNamePart}_Temporal{slash}channelIdForSearch.txt', 'w+') # открыть на запись
     file.write(channelIdsForSearch[0])
@@ -694,8 +694,8 @@ def df2fileYT(complicatedNamePart, dfIn, fileFormatChoice, method, today):
         print('Такой директории не существовало, поэтому она создана')
     
     # df2file(itemS) # при такой записи имя сохранаяемого файла и директория, в которую сохранить, вводятся вручную
-    print('При сохранении возможно появление обширного предупреждения UserWarning: Ignoring URL.'
-          , 'Оно вызвано слишком длинными URL-адресами в датафрейме и не является проблемой; его следует пролистать и перейти к диалоговому окну' )
+    # print('При сохранении возможно появление обширного предупреждения UserWarning: Ignoring URL.'
+    #       , 'Оно вызвано слишком длинными URL-адресами в датафрейме и не является проблемой; его следует пролистать и перейти к диалоговому окну' )
     df2file(dfIn, f'{folder} {method}{fileFormatChoice}', folder)
 
 # if len(folderFile) == 0: # eсли НЕТ файла с id
