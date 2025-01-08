@@ -7,7 +7,7 @@
 # In[1]:
 
 
-# 0.0 Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
+# 0.0.0 Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
 # sys & subprocess -- эти пакеты должны быть предустанавлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
 import sys
 from subprocess import check_call
@@ -15,35 +15,123 @@ from subprocess import check_call
 # --- остальные модули и пакеты
 while True:
     try:
+        from randan.tools.df2file import df2file # авторский модуль для сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
+        from randan.tools.files2df import excel2df # авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
         from tqdm import tqdm
-        import datetime, os, pandas, re, time, warnings
+        import datetime, os, pandas, re, shutil, time, warnings
         import googleapiclient.discovery as api
         import googleapiclient.errors
         break
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
-        if '.' in module: module = module.split('.')[1] 
+        if '.' in module: module = module.split('.')[0]
         if module == 'googleapiclient': module = 'google-api-python-client'
         print('Пакет', module, 'НЕ прединсталируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталирован сейчас\n')
         check_call([sys.executable, "-m", "pip", "install", module])
 
-print('Для исполнения скрипта не обязательны пререквизиты (предшествующие скрпиты и файлы с данными). Но оно требует от пользователя предварительно получить API key для авторизации в API YouTube по ключу (см. примерную видео-инструкцию: https://www.youtube.com/watch?v=EXysYgWeapI&t=490s ). Для получения API key следует создать проект, авторизовать его, подключить к нему API нужного сервиса Google. Проект -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому сервисов Google и применения на этой основе API разных сервисов Google в рамках установленных Гуглом ограничений (the units of quota). Разные уровни авторизации -- это авторизация ключом (представляющим собой код) и полная авторизация (ключ + протокол Google OAuth 2.0, реализующийся в формате файла JSON). Авторизация ключом нужна, чтобы использовать любой метод любого API. Её достаточно, если выполнять действия, которые были бы доступны Вам как пользователю сервисов Google без Вашего входа в аккаунт: посмотреть видео, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления видео, то Вам придётся пройти полную авторизацию. Далее разные API как бы подключаются к проектам (кнопка Enable APIs and servises), используются, затем отключаются (кнопка Disable APIs).'
-      , '\nКвоты одного ключа может не хватить (quota is exceeded) для выгрузки всего предоставляемого ЮТьюбом по запросу пользователя контента. К счастью, использованный ключ ежесуточно восстанавливается ЮТьюбом. Скрпит позволяет сохранить промежуточную выгрузку и после восстановления ключа автоматически продолжит её дополнять с момента остановки. В момент остановки появится надпись: "Поскольку ключи закончились, исполнение скрипта завершаю. Подождите сутки для восстановления ключей или подготовьте новый ключ -- и запустите скрипт с начала", а исполнение скрипта прервётся. Не пугайтесь, нажмите OK и следуйте этой инструкции.'
-      , '\nСкрипт нацелен на выгрузку характеристик контента YouTube семью методами его API: search, videos, commentThreads и comments, channels, playlists и playlistItems. Причём количество объектов выгрузки максимизируется путём её пересортировки и сегментирования по годам.'
-      , '\nДля корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.'
-      , '\nПреимущества скрипта перед выгрузкой контента из YouTube вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API YouTube: гораздо быстрее, гораздо большее количество контента с одним и тем же ключом, не требуется тщательно изучать обширную документацию семи методов API YouTube (search, videos, commentThreads и comments, channels, playlists и playlistItems), выстроена логика обрашения к этим методам')
+print('    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрпиты и файлы с данными).'
+      , 'Но от пользователя требуется предварительно получить API key для авторизации в API YouTube по ключу (см. примерную видео-инструкцию: https://www.youtube.com/watch?v=EXysYgWeapI&t=490s ).'
+      , 'Для получения API key следует создать проект, авторизовать его, подключить к нему API нужного сервиса Google.'
+      , 'Проект -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому сервисов Google'
+      , 'и применения на этой основе API разных сервисов Google в рамках установленных Гуглом ограничений (the units of quota).'
+      , 'Разные уровни авторизации -- это авторизация ключом (представляющим собой код) и полная авторизация (ключ + протокол Google OAuth 2.0, реализующийся в формате файла JSON).'
+      , 'Авторизация ключом нужна, чтобы использовать любой метод любого API. Её достаточно, если выполнять действия, которые были бы доступны Вам как пользователю сервисов Google без Вашего входа в аккаунт:'
+      , 'посмотреть видео, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления видео, то Вам придётся пройти полную авторизацию.'
+      , 'Далее разные API как бы подключаются к проектам (кнопка Enable APIs and servises), используются, затем отключаются (кнопка Disable APIs).'
+      , '\n    Квоты одного ключа может не хватить (quota is exceeded) для выгрузки всего предоставляемого ЮТьюбом по запросу пользователя контента.'
+      , 'К счастью, использованный ключ ежесуточно восстанавливается ЮТьюбом. Скрпит позволяет сохранить промежуточную выгрузку и после восстановления ключа автоматически продолжит её дополнять'
+      , 'с момента остановки. В момент остановки появится надпись: "Поскольку ключи закончились, исполнение скрипта завершаю. Подождите сутки для восстановления ключей или подготовьте новый ключ'
+      , '-- и запустите скрипт с начала", а исполнение скрипта прервётся. Не пугайтесь, нажмите OK и следуйте этой инструкции.'
+      , '\n    Скрипт нацелен на выгрузку характеристик контента YouTube семью методами его API: search, videos, commentThreads и comments, channels, playlists и playlistItems.'
+      , 'Причём количество объектов выгрузки максимизируется путём её пересортировки и сегментирования по годам.'
+      , '\n    Для корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.'
+      , '\n    Преимущества скрипта перед выгрузкой контента из YouTube вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel.'
+      , 'Преимущества скрипта перед выгрузкой контента через непосредственно API YouTube: гораздо быстрее, гораздо большее количество контента с одним и тем же ключом,'
+      , 'не требуется тщательно изучать обширную документацию семи методов API YouTube (search, videos, commentThreads и comments, channels, playlists и playlistItems),'
+      , 'выстроена логика обрашения к этим методам')
 input('--- После прочтения этой инструкции нажмите Enter')
 
+# 0.0.1 Некоторые базовые настройки запроса к API YouTube
+folder = ''
+folderFile = ''
 goS = True
+itemS = pandas.DataFrame()
+slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+stageTarget = 0 # stageTarget принимает значения [0; 3] и относится к стадиям скрипта
+yearsRange = ''
+
+today = datetime.date.today().strftime("%Y%m%d") # запрос сегодняшней даты в формате yyyymmdd
+print('\nТекущяя дата:', today, '-- она будет использована для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках\n')
+# print('Сегодня год:', today[:4])
+# print('Сегодня месяц:', today[4:6])
+# print('Сегодня день:', today[6:])
+year = int(today[:4]) # в случае отсутствия пользовательского временнОго диапазона
+    # с этого года возможно сегментирование по годам вглубь веков (пока выдача не пустая)
+yearMinByUser = None # в случае отсутствия пользовательского временнОго диапазона
+yearMaxByUser = None # в случае отсутствия пользовательского временнОго диапазона
 
 
 # In[2]:
 
 
-# 0.1 Подготовка ключей
-if 'credentials.txt' not in os.listdir():
-    print('\n--- Введите в окно Ваш API key для авторизации в API YouTube по ключу'
+# 0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
+# 0.1.0 Функции блока:
+    # для сохранения следа непосредственно в директорию randan
+def saveSettings(channelIdForSearch, complicatedNamePart, contentType, itemS, method, q, slash, stageTarget, totalResults, year, yearsRange):  
+    file = open(f'{today}{complicatedNamePart}_Temporal{slash}channelIdForSearch.txt', 'w+') # открыть на запись
+    file.write(channelIdsForSearch[0])
+    file.close()
+    
+    file = open(f'{today}{complicatedNamePart}_Temporal{slash}contentType.txt', 'w+') # открыть на запись
+    file.write(contentType)
+    file.close()
+    
+    file = open(f'{today}{complicatedNamePart}_Temporal{slash}q.txt', 'w+') # открыть на запись
+    file.write(q)
+    file.close()
+    
+    file = open(f'{today}{complicatedNamePart}_Temporal{slash}method.txt', 'w+') # открыть на запись
+    file.write(method)
+    file.close()
+    
+    file = open(f'{today}{complicatedNamePart}_Temporal{slash}stageTarget.txt', 'w+')
+    file.write(str(stageTarget)) # stageTarget принимает значения [0; 3]
+    file.close()
+    
+    file = open(f'{today}{complicatedNamePart}_Temporal{slash}totalResults.txt', 'w+')
+    file.write(str(totalResults))
+    file.close()
+    
+    file = open(f'{today}{complicatedNamePart}_Temporal{slash}year.txt', 'w+')
+    file.write(str(year)) # год, на котором остановилось исполнение скрипта
+    file.close()
+    
+    file = open(f'{today}{complicatedNamePart}_Temporal{slash}yearsRange.txt', 'w+')
+    file.write(yearsRange) # пользовательский временнОй диапазон
+    file.close()
+    
+    itemS.to_excel(f'{today}{complicatedNamePart}_Temporal{slash}{complicatedNamePart} {method}.xlsx')
+
+    # для парсинга пользовательского временнОго диапазона в случае использования сохранённого следа
+        # и в случае назначения пользовательского временнОго диапазона
+def yearsRangeParser(yearsRange):
+    yearsRange.sort()
+    yearMinByUser = int(yearsRange[0])
+    yearMaxByUser = int(yearsRange[-1])
+    publishedAfter=f'{yearMinByUser}-01-01T00:00:00Z'
+    publishedBefore=f'{yearMaxByUser}-01-01T00:00:00Z'
+    return yearMaxByUser, yearMinByUser, publishedAfter, publishedBefore
+
+rootNameS = os.listdir()
+# Поиск ключей
+print('Проверяю наличие файла credentialsYouTube.txt с ключ[ом ами], гипотетически сохранённым[и] при первом запуске скрипта')
+if 'credentialsYouTube.txt' in rootNameS:
+    file = open('credentialsYouTube.txt')
+    API_keyS = file.read()
+    print('Нашёл файл credentialsYouTube.txt; далее буду использовать ключ[и] из него:', API_keyS)
+else:
+    print('\n--- НЕ нашёл файл credentialsYouTube.txt . Введите в окно Ваш API key для авторизации в API YouTube по ключу'
           , '(примерная видео-инструкция, как создать API key, доступна по ссылке https://www.youtube.com/watch?v=EXysYgWeapI&t=490s ).'
           , 'Для увеличения размера выгрузки желательно создать несколько ключей (пять -- отлично) и ввести их без кавычек через запятую с пробелом'
           , '\n--- После ввода нажмите Enter')
@@ -52,73 +140,111 @@ if 'credentials.txt' not in os.listdir():
         if len(API_keyS) != 0:
             print('-- далее буд[еу]т использован[ы] эт[и] ключ[и]')
             
-            from randan.tools.textPreprocessing import multispaceCleaner
+            from randan.tools.textPreprocessing import multispaceCleaner # авторский модуль для предобработки нестандартизированнрого текста
             API_keyS = multispaceCleaner(API_keyS)
-            while API_keyS[-1] == ',': API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста 
+            while API_keyS[-1] == ',': API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста
             
-            file = open("credentials.txt", "w+") # открыть на запись
+            file = open("credentialsYouTube.txt", "w+") # открыть на запись
             file.write(API_keyS)
             file.close()
             break
         else:
-            print('--- Вы ничего НЕ ввели. Попробуйте ещё раз')
-else:
-    file = open('credentials.txt')
-    API_keyS = file.read()
-    print('Нашёл файл credentials.txt с ключ[ом ами]; далее буду использовать ключ[и] из него:', API_keyS)
-
+            print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
 API_keyS = API_keyS.split(', ')
 print('Количество ключей:', len(API_keyS), '\n')
 keyOrder = 0
 
+# 0.1.1 Скрипт может начаться с данных, сохранённых при прошлом запуске скрипта, завершившегося исчерпанием ключ[а ей]
+# 0.1.2 Поиск данных
+print('Проверяю наличие директории Temporal с данными и их мета-данными,'
+      ,'гипотетически сохранёнными при прошлом запуске скрипта, завершившегося исчерпанием ключ[а ей]')
+for rootName in rootNameS:
+    if 'Temporal' in rootName:        
+        file = open(f'{rootName}{slash}totalResults.txt')
+        totalResults = file.read()
+        file.close()
+        totalResults = int(totalResults)
+        
+        file = open(f'{rootName}{slash}method.txt')
+        method = file.read()
+        file.close()
+        
+        file = open(f'{rootName}{slash}year.txt')
+        year = file.read()
+        file.close()
+        year = int(year)
+        
+        file = open(f'{rootName}{slash}contentType.txt')
+        contentType = file.read()
+        file.close()
 
-# In[3]:
+        file = open(f'{rootName}{slash}channelIdForSearch.txt')
+        channelIdForSearch = file.read()
+        file.close()
 
+        file = open(f'{rootName}{slash}q.txt', encoding='utf-8')
+        q = file.read()
+        file.close()
 
-# 0.2 Запрос сегодняшней даты в формате yyyymmdd
-today = datetime.date.today().strftime("%Y%m%d")
-print('Текущяя дата:', today, '-- она будет использована для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках\n')
-# print('Сегодня год:', today[:4])
-# print('Сегодня месяц:', today[4:6])
-# print('Сегодня день:', today[6:])
-year = int(today[:4])
+        file = open(f'{rootName}{slash}yearsRange.txt')
+        yearsRange = file.read()
+        file.close()
+        
+        file = open(f'{rootName}{slash}stageTarget.txt')
+        stageTarget = file.read()
+        file.close()
+        stageTarget = int(stageTarget)
+        
+        print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:'
+              , '\n- было выявлено целевое число записей (totalResults)', totalResults
+              , '\n- скрипт остановился на методе', method)
+        if year < int(today[:4]): print('- и на годе (при сегментировани по годам)', year)        
+        print('- пользователь НЕ определил тип контента' if contentType == '' else  f'- пользователь определил тип контента как "{contentType}"')
+        if contentType == 'video':
+            print('- пользователь НЕ выбрал конкретный канал для выгрузки видео' if channelIdForSearch == '' else  f'- пользователь выбрал канал с id "{channelIdForSearch}" для выгрузки видео')
+        print('- пользователь НЕ сформулировал запрос-фильтр' if q == '' else  f'- пользователь сформулировал запрос-фильтр как "{q}"')
+        print('- пользователь НЕ ограничил временнОй диапазон' if yearsRange == '' else  f'- пользователь ограничил временнОй диапазон границами {yearsRange}')
+        print('--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter'
+              , '\n--- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите "R" и нажмите Enter'
+              , '\n--- Если хотите найти другие промежуточные результаты, введите любой символ, кроме "R", и нажмите Enter')
+        decision = input()
+        if len(decision) == 0:
+            temporalNameS = os.listdir(rootName)
+            for temporalName in temporalNameS:
+                if '.xlsx' in temporalName: break
+            itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
+            if yearsRange != '':
+                yearsRange = yearsRange.split('-')
+                yearMaxByUser, yearMinByUser, publishedAfter, publishedBefore = yearsRangeParser(yearsRange)
+# 0.1.3 Данные, сохранённые при прошлом запуске скрипта, загружены;
+    # их метаданные (q, contentType, yearsRange, stageTarget) будут использоваться при исполнении скрипта
+            break
+        elif decision == 'R': shutil.rmtree(rootName, ignore_errors=True)
 
-
-# In[4]:
-
-
-# 0.3 Некоторые базовые настройки запроса к API YouTube
-q = ''
-complicatedNamePart = '' # сложная часть имени будущих директорий и файлов в случае первичного сбора контента
-stageTarget = 0 # stageTarget принимает значения [0; 3] и относится к стадиям скрипта
-yearMinByUser = None
-yearMaxByUser = None
-
-
-# In[5]:
-
-
-# 0.4 Пользовательские настройки запроса к API YouTube
-print('--- Если НЕ располагаете файлом, в котором есть хотя бы столбец id, и планируете первичный сбор контента, нажмите Enter'
-      , ' \n--- Если располагаете таким файлом, укажите полный путь, включая название файла, и нажмите Enter')
-while True:
-    folderFile = input()
-    if len(folderFile) == 0:
-        break
-    else:
-        from files2df import excel2df
-        itemS, error, fileName, folder, slash = excel2df(folderFile)
-        if error != None:
-            if 'No such file or directory' in error: print('Файл:', folder + slash + fileName, '-- не существует; попробуйте, пожалуйста, ещё раз..')
-        else: break 
-    # display(itemS)
-
-if len(folderFile) == 0: # eсли НЕТ файла с id
-    # Контент: канал или видео? Или вообще плейлист?
-    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+# 0.1.4 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
+if len(itemS) == 0:
+    print('Не найдены подходящие данные и их мета-данные, гипотетически сохранённые при прошлом запуске скрипта')
+    print('--- Возможно, Вы располагаете файлом, в котором есть, как минимум, столбец id, и который хотели бы дополнить?'
+          ,'Или планируете первичный сбор контента?'
+          , '\n--- Если планируете первичный сбор, нажмите Enter'
+          , '\n--- Если располагаете файлом, укажите полный путь, включая название файла, и нажмите Enter')
     while True:
-        print('--- Если НЕ требуется выбрать тип контента, нажмите Enter'
-              , ' \n--- Если требуется выбрать, введите символ: c -- channel, p -- playlist, v -- video -- и нажмите Enter')
+        folderFile = input()
+        if len(folderFile) == 0:
+            break
+        else:
+            itemS, error, fileName, folder, slash = excel2df(folderFile)
+            if error != None:
+                if 'No such file or directory' in error:
+                    print('Файл:', folder + slash + fileName, '-- не существует; попробуйте, пожалуйста, ещё раз..')
+            else: break
+        # display(itemS)
+# 0.1.5 Теперь определены объекты: folder и folderFile (оба пустые или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
+# 0.1.6 Пользовательские настройки запроса к API YouTube
+    # Контент: канал или видео? Или вообще плейлист?
+    while True:
+        print('--- Если НЕ требуется определить тип контента, нажмите Enter'
+              , ' \n--- Если требуется определить, введите символ: c -- channel, p -- playlist, v -- video -- и нажмите Enter')
         contentType = input()
     
         if contentType.lower() == '':
@@ -138,86 +264,86 @@ if len(folderFile) == 0: # eсли НЕТ файла с id
     
     if contentType == 'video':
         print('\n--- Вы выбрали тип контента video'
-              , '\n--- Если НЕ предполагается поиск видео в пределах конкретного канала или списка каналов, нажмите Enter'
-              , '\n--- Если предполагается такой поиск, введите id канала'
-              , 'или путь к ранее созданногму Вами файлу, в котором есть столбец'
-              , 'snippet.channelId с id каналов, после чего нажмите Enter')  
-        channelId = input()
-    
+              , '\n--- Если НЕ предполагается поиск видео в пределах конкретн[ого ых] канал[а ов], нажмите Enter'
+              , '\n--- Если предполагается такой поиск, введите id канала, после чего нажмите Enter.'
+              , 'Этот id можете найти либо в URL-адресе интересующего канала,'
+              , 'либо -- если прежде выгружали контент из YouTube -- в столбце "snippet.channelId" выдачи методов search, playlistItems, videos или в столбце "id" метода cannels')  
+        while True:
+            channelIdForSearch = input()
+            if len(channelIdForSearch) == 0:
+                break
+# --- Если развивать опцию подачи списка каналов
+            # elif '.xlsx' in channelIdsForSearch:
+            #     channelIdsForSearch, error, fileName, folder, slash = excel2df(channelIdsForSearch)
+            #     if error != None:
+            #         if 'No such file or directory' in error:
+            #             print('Файл:', folder + slash + fileName, '-- не существует; попробуйте, пожалуйста, ещё раз..')
+            #     else:
+            #         try:
+            #             channelIdsForSearch = channelIdsForSearch['snippet.channelId'].to_list()
+            #             print('Количество id каналов:', len(channelIdsForSearch), '\n')
+            #             break
+            #         except KeyError:
+            #             errorDescription = sys.exc_info()
+            #             if 'snippet.channelId' in str(errorDescription[1]):
+            #                 print('В предлагаемом Вами файле, к сожалению, нет требуемого столбца snippet.channelId . Попробуйте ещё раз..')
+# ЛАЙФХАК: автоматизированно оперировать многими каналами можно через файл channelIdForSearch директорий _Temporal , в котором подаются стартовые настройки + id каждого из интересующих каналов
+# ----------
+            else:
+                from randan.tools.textPreprocessing import multispaceCleaner
+                channelIdForSearch = multispaceCleaner(channelIdForSearch)
+                while channelIdForSearch[-1] == ',': channelIdForSearch = channelIdForSearch[:-1] # избавиться от запятых в конце текста
+                channelIdForSearch = channelIdForSearch.split(', ')
+                print('Количество id каналов:', len(channelIdForSearch), '\n')
+                break
     print('--- Если НЕ предполагается поиск контента по текстовому запросу-фильтру, нажмите Enter'
           , '\n--- Если предполагается такой поиск, введите текст, который ожидаете в атрибутах и характеристиках'
           , '(описание, название, теги, категории и т.п.) релевантного YouTube-контента,'
-          , 'после чего нажмите Enter'
-          , '\nВАЖНО! Если запускаете скрипт после истечения ключа,'
-          , 'убедитесь, что вводите тот же текст запроса-фильтра, что и перед истечением ключа')
+          , 'после чего нажмите Enter')
+    if len(folderFile) > 0: print('ВАЖНО! В результате исполнения текущего скрипта данные из указанного Вами файла'
+        , folderFile
+        , 'будут объединены с выдачей скрипта, поэтому, вероятно, следует ввести тот же запрос-фильтр, что и при формировании указанного Вами файла')
     q = input()
     
     # Ограничения временнОго диапазона
-    goC = True
-    while goC:
-        print('\nАлгоритм API Youtube для ограничения временнОго диапазона выдаваемого контента работает со странностями.'
-              , 'Поэтому если требуется конкретный временнОй диапазон, то лучше использовать его НЕ на текущем этапе выгрузки данных,'
-              , 'а на следующем этапе -- предобработки датафрейма с выгруженными данными')
-        print('--- Если НЕ требуется задать временнОй диапазон на этапе выгрузки данных, нажмите Enter'
-              , '\n--- Если всё же требуется задать временнОй диапазон, настоятельная рекомендация задать его годами,'
-              , 'а не более мелкими единицами времени. Для задания диапазона введите без кавычек минимальный год диапазона, тире,'
-              , 'максимальный год диапазона (минимум и максимум могут совпадать) и нажмите Enter')
-        yearS = input()
-        if len(yearS) != 0:
-            yearS = re.sub(r' *', '', yearS)
-            if '-' in yearS:
-                yearS = yearS.split('-')
-                print('--- Вы ввели тире, но при этом ввели НЕ два года. Попробуйте ещё раз') if len(yearS) != 2  else ''
-                yearS.sort()
-                yearMinByUser = int(yearS[0])
-                yearMaxByUser = int(yearS[-1])
-                year = yearMaxByUser 
-                publishedAfter=f'{yearMinByUser}-01-01T00:00:00Z'
-                publishedBefore=f'{yearMaxByUser}-01-01T00:00:00Z'
-                goC = False
+    print('\nАлгоритм API Youtube для ограничения временнОго диапазона выдаваемого контента работает со странностями.'
+          , 'Поэтому если требуется конкретный временнОй диапазон, то лучше использовать его НЕ на текущем этапе выгрузки данных,'
+          , 'а на следующем этапе -- предобработки датафрейма с выгруженными данными')
+    print('--- Если НЕ требуется задать временнОй диапазон на этапе выгрузки данных, нажмите Enter'
+          , '\n--- Если всё же требуется задать временнОй диапазон, настоятельная рекомендация задать его годами,'
+          , 'а не более мелкими единицами времени. Для задания диапазона введите без кавычек минимальный год диапазона, тире,'
+          , 'максимальный год диапазона (минимум и максимум могут совпадать) и нажмите Enter')
+    while True:
+        yearsRange = input()
+        if len(yearsRange) != 0:
+            yearsRange = re.sub(r' *', '', yearsRange)
+            if '-' in yearsRange:
+                yearsRange = yearsRange.split('-')
+                if len(yearsRange) == 2:
+                    yearMaxByUser, yearMinByUser, publishedAfter, publishedBefore = yearsRangeParser(yearsRange)
+                    year = yearMaxByUser
+                    break
+                else:
+                    print('--- Вы ввели тире, но при этом ввели НЕ два года. Попробуйте ещё раз..')
             else:
-                print('--- Вы НЕ ввели тире. Попробуйте ещё раз')
+                print('--- Вы НЕ ввели тире. Попробуйте ещё раз..')
         else:
-            goC = False
-    # Сложная часть имени будущих директорий и файлов
-    complicatedNamePart = f'{"" if len(q) == 0 else "_"}{q}{"" if len(contentType) == 0 else "_"}{contentType}'
-    complicatedNamePart = complicatedNamePart if yearS == '' else complicatedNamePart + ' ' + str(yearMinByUser) + '-' + str(yearMaxByUser)
+            break
+# Сложная часть имени будущих директорий и файлов
+complicatedNamePart = f'{"" if len(contentType) == 0 else "_"}{contentType}'
+complicatedNamePart += f'{"" if len(channelIdForSearch) == 0 else "_channelId"}{channelIdForSearch}'
+complicatedNamePart += f'{"" if len(q) == 0 else "_"}{q}'
+complicatedNamePart += f'{"" if len(yearsRange) == 0 else "_"}{yearMinByUser}-{yearMaxByUser}'
+# print('complicatedNamePart', complicatedNamePart)
 
 
-# In[6]:
-
-
-# 0.5
-def saveSettings(complicatedNamePart, method, q, slash, stageTarget, totalResults, year):
-    file = open(f'{complicatedNamePart} Temporal{slash}stage.txt', 'w+') # открыть на запись
-    file.write(str(stage) + '|' + str(totalResults) + '|' + str(year)) # stageTarget принимает значения [0; 3]
-    file.close()
-    itemS.to_excel(f'{complicatedNamePart} Temporal{slash}{complicatedNamePart} {method}.xlsx')
-
-if len(folderFile) == 0: # eсли НЕТ файла с id
-    print('\nПроверяю наличие директории с настройками и контентом,'
-          , f'сохранёнными при прошлом запросе "{complicatedNamePart[1:]}", к YouTube') # индексирование, чтобы избавиться от _
-    if os.path.exists(f'{complicatedNamePart} Temporal'):
-        print(f'Настройки найдены в файле stage.txt директории "{complicatedNamePart} Temporal"')
-        
-        print(f'Считываю их')
-        file = open(f'{complicatedNamePart} Temporal{slash}stage.txt')
-        file = file.read()
-        stageTarget = int(file.split('|')[0])
-        totalResults = int(file.split('|')[1])
-        year = int(file.split('|')[2]) # если при предыдущих запусках скипт исполнился до этапа stage = 2
-            
-        print('Импортирую ранее выгруженный контент'
-              , f'из файла "{complicatedNamePart} search.xlsx" директории "{complicatedNamePart} Temporal"')
-        itemS = pandas.read_excel(f'{complicatedNamePart} Temporal{slash}{complicatedNamePart} search.xlsx', index_col=0)
-    else:
-        print(f'Настройки и контент по запросу "{complicatedNamePart[1:]}" не найдены. Возможно, они не сохранялись прежде') # индексирование, чтобы избавиться от _
+# In[3]:
 
 
 # # 1. Первичный сбор контента методом search
 
 
-# In[7]:
+# In[4]:
 
 
 # 1.0 Авторские функции для обработки ошибок
@@ -242,24 +368,20 @@ def googleapiclientError(errorDescription, keyOrder, *arg): # арки: id
 def indexError(complicatedNamePart, errorDescription, method, q, slash, stageTarget, totalResults, year):
     # print('\n    ', errorDescription[1])
     print('Похоже, ключи закончились'
-          , f'\nПоэтому ссохраняю выгруженный контент и текущий этап поиска в директорию "{complicatedNamePart} Temporal"')         
-    if not os.path.exists(f'{complicatedNamePart} Temporal'):
-        os.makedirs(f'{complicatedNamePart} Temporal')
-        print(f'Директория "{complicatedNamePart} Temporal" создана')
+          , f'\nПоэтому ссохраняю выгруженный контент и текущий этап поиска в директорию "{today}{complicatedNamePart}_Temporal"')         
+    if not os.path.exists(f'{today}{complicatedNamePart}_Temporal'):
+        os.makedirs(f'{today}{complicatedNamePart}_Temporal')
+        print(f'Директория "{today}{complicatedNamePart}_Temporal" создана')
     else:
-        print(f'Директория "{complicatedNamePart} Temporal" существует')
-    saveSettings(complicatedNamePart, method, q, slash, stageTarget, totalResults, year)
+        print(f'Директория "{today}{complicatedNamePart}_Temporal" существует')
+    saveSettings(channelIdForSearch, complicatedNamePart, contentType, itemS, method, q, slash, stage, totalResults, year, yearsRange)
     goC = False # нет смысла возвращяться со следующим keyOrder к прежнему id
     goS = False # нет смысла продолжать исполнение скрипта
     return goC, goS
 
-
-# In[8]:
-
-
 # 1.1 Авторская функция для метода search из API YouTube, помогающая работе с ключами
 def bigSearch(API_keyS
-              , channelId
+              , channelId # согласно документации API YouTube, подать можно лишь один channelId
               , contentType
               , goS
               , iteration
@@ -309,22 +431,18 @@ def bigSearch(API_keyS
 if len(folderFile) == 0: # eсли НЕТ файла с id
     print('\nВ скрипте используются следующие аргументы метода search API YouTube:'
           , 'channelId, maxResults, order, pageToken, part, publishedAfter, publishedBefore, q, type.'
-          , 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта'
-          , '\n--- Если хотите добавить другие аргументы метода search API YouTube, доступные по ссылке https://developers.google.com/youtube/v3/docs/search'
+          , 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
+          , 'Если хотите добавить другие аргументы метода search API YouTube, доступные по ссылке https://developers.google.com/youtube/v3/docs/search'
           , '-- можете сделать это внутри метода search в чанке 1.0 исполняемого сейчас скрипта')
     input('--- После прочтения этой инструкции нажмите Enter')
 
-    channelId = None
+    channelIdForSearch = ''
     itemS = pandas.DataFrame()
     method = 'search'
     order = None
     orderS = ['date', 'rating', 'title', 'videoCount', 'viewCount']
     publishedAfter = None
     publishedBefore = None
-
-
-# In[9]:
-
 
 # 1.2 Авторская функция для обработки выдачи любого из методов, помогающая работе с ключами
 def dfsProcessing(complicatedNamePart, dfAdd, dfIn, goS, keyOrder, slash, stage):
@@ -343,93 +461,84 @@ def dfsProcessing(complicatedNamePart, dfAdd, dfIn, goS, keyOrder, slash, stage)
    
     if keyOrder > (len(API_keyS) - 1):
         print('Поскольку ключи закончились,'
-              , f'сохраняю выгруженный контент и текущий этап поиска в директорию "{complicatedNamePart} Temporal"')         
-        if not os.path.exists(f'{complicatedNamePart} Temporal'):
-                os.makedirs(f'{complicatedNamePart} Temporal')
-                print(f'Директория "{complicatedNamePart} Temporal" создана')
+              , f'сохраняю выгруженный контент и текущий этап поиска в директорию "{today}{complicatedNamePart}_Temporal"')         
+        if not os.path.exists(f'{today}{complicatedNamePart}_Temporal'):
+                os.makedirs(f'{today}{complicatedNamePart}_Temporal')
+                print(f'Директория "{today}{complicatedNamePart}_Temporal" создана')
         else:
-            print(f'Директория "{complicatedNamePart} Temporal" существует')
-        saveSettings(complicatedNamePart, method, q, slash, stageTarget, totalResults, year)
+            print(f'Директория "{today}{complicatedNamePart}_Temporal" существует')
+        saveSettings(channelIdForSearch, complicatedNamePart, contentType, itemS, method, q, slash, stage, totalResults, year, yearsRange)
         
         if goS == False:
-            print('Поскольку ключи закончились, исполнение скрипта завершаю',
-                  '\nПодождите сутки для восстановления ключей или подготовьте новый ключ -- и запустите скрипт с начала')
+            print('Поскольку ключи закончились, исполнение скрипта завершаю'
+                  , '\nПодождите сутки для восстановления ключей или подготовьте новый ключ -- и запустите скрипт с начала'
+                  , '\nСейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit"'
+                  , '\nТак и должно быть'
+                  , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
             sys.exit()
     return df
 
-
-# In[10]:
-
-
 # 1.3 Первый заход БЕЗ аргумента order (этап stage = 0)
+iteration = 0 # номер итерации применения текущего метода
 stage = 0
-if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла с id и нет временных файлов с настройками и контентом
-    iteration = 0 # номер итерации применения текущего метода
-    
+if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла с id и нет временных файлов с настройками и контентом    
     print('\nЗаход на первую страницу выдачи')
     addItemS, goS, iteration, keyOrder, response = bigSearch(API_keyS
-                                                               , channelId
-                                                               , contentType
-                                                               , goS
-                                                               , iteration
-                                                               , keyOrder
-                                                               , order
-                                                               , None
-                                                               , publishedAfter
-                                                               , publishedBefore
-                                                               , q
-                                                               , year)
+                                                             , channelIdForSearch
+                                                             , contentType
+                                                             , goS
+                                                             , iteration
+                                                             , keyOrder
+                                                             , order
+                                                             , None
+                                                             , publishedAfter
+                                                             , publishedBefore
+                                                             , q
+                                                             , year)
     itemS = dfsProcessing(complicatedNamePart, addItemS, itemS, goS, keyOrder, slash, stage)
 
     totalResults = response['pageInfo']['totalResults']
     
-    print('  Проход по всем следующим страницам с выдачей')
+    print('  Проход по всем следующим страницам с выдачей          ')
     while 'nextPageToken' in response.keys():
         pageToken = response['nextPageToken']
         addItemS, goS, iteration, keyOrder, response = bigSearch(API_keyS
-                                                                   , channelId
-                                                                   , contentType
-                                                                   , iteration
-                                                                   , goS
-                                                                   , keyOrder
-                                                                   , order
-                                                                   , pageToken
-                                                                   , publishedAfter
-                                                                   , publishedBefore
-                                                                   , q
-                                                                   , year)
+                                                                 , channelIdForSearch
+                                                                 , contentType
+                                                                 , iteration
+                                                                 , goS
+                                                                 , keyOrder
+                                                                 , order
+                                                                 , pageToken
+                                                                 , publishedAfter
+                                                                 , publishedBefore
+                                                                 , q
+                                                                 , year)
         itemS = dfsProcessing(complicatedNamePart, addItemS, itemS, goS, keyOrder, slash, stage)
     print('  Искомых объектов', totalResults
           , ', а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
 elif stage < stageTarget:
-    print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{complicatedNamePart} Temporal"')
-
-
-# In[11]:
-
+    print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{rootName}"')
 
 # 1.4 Цикл для прохода по значениям аргумента order, внутри которых проход по всем страницам выдачи (этап stage = 1)
 stage = 1
 if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла с id и нет временных файлов с настройками и контентом
     if len(itemS) < totalResults:
     # -- для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
-
-        iteration = 0 # номер итерации применения текущего метода
-
         print('Проход по значениям аргумента order, внутри которых проход по всем страницам выдачи')
         for order in orderS:
             addItemS, goS, iteration, keyOrder, response = bigSearch(API_keyS
-                                                                       , channelId
-                                                                       , contentType
-                                                                       , goS
-                                                                       , iteration
-                                                                       , keyOrder
-                                                                       , order
-                                                                       , None
-                                                                       , publishedAfter
-                                                                       , publishedBefore
-                                                                       , q
-                                                                       , year)
+                                                                     , channelIdForSearch
+                                                                     , contentType
+                                                                     , goS
+                                                                     , iteration
+                                                                     , keyOrder
+                                                                     , order
+                                                                     , None
+                                                                     , publishedAfter
+                                                                     , publishedBefore
+                                                                     , q
+                                                                     , year)
             itemS = dfsProcessing(complicatedNamePart, addItemS, itemS, goS, keyOrder, slash, stage)
     
             print('  Проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order, '          ')
@@ -441,7 +550,7 @@ if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла 
                 pageToken = response['nextPageToken']
                 # print('pageToken', pageToken)
                 addItemS, goS, iteration, keyOrder, response = bigSearch(API_keyS
-                                                                         , channelId
+                                                                         , channelIdForSearch
                                                                          , contentType
                                                                          , goS
                                                                          , iteration
@@ -457,11 +566,7 @@ if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла 
     else:
         print('Все искомые объекты найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
 elif stage < stageTarget:
-    print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{complicatedNamePart} Temporal"')
-
-
-# In[12]:
-
+    print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{rootName}"')
 
 # 1.5 Этап stage = 2
 stage = 2
@@ -479,7 +584,7 @@ if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла 
             while (len(itemS) < totalResults) & (goC):
                 print(f'  Для года {year - 1} заход на первую страницу выдачи БЕЗ аргумента order')
                 addItemS, goS, iteration, keyOrder, response = bigSearch(API_keyS
-                                                                           , channelId
+                                                                           , channelIdForSearch
                                                                            , contentType
                                                                            , goS
                                                                            , iteration
@@ -503,7 +608,7 @@ if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла 
                 while 'nextPageToken' in response.keys():
                     pageToken = response['nextPageToken']
                     addItemS, goS, iteration, keyOrder, response = bigSearch(API_keyS
-                                                                               , channelId
+                                                                               , channelIdForSearch
                                                                                , contentType
                                                                                , goS
                                                                                , iteration
@@ -524,7 +629,7 @@ if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла 
                           , 'внутри которых проход по всем страницам выдачи')
                     for order in orderS:
                         addItemS, goS, iteration, keyOrder, response = bigSearch(API_keyS
-                                                                                   , channelId
+                                                                                   , channelIdForSearch
                                                                                    , contentType
                                                                                    , goS
                                                                                    , iteration
@@ -542,7 +647,7 @@ if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла 
                         while ('nextPageToken' in response.keys()) & (len(itemS) < totalResults) & (len(response["items"]) > 0):
                             pageToken = response['nextPageToken']
                             addItemS, goS, iteration, keyOrder, response = bigSearch(API_keyS
-                                                                                       , channelId
+                                                                                       , channelIdForSearch
                                                                                        , contentType
                                                                                        , goS
                                                                                        , iteration
@@ -566,60 +671,62 @@ if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла 
                         goC = False
                         print(f'\nЗавершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser}')
 elif stage < stageTarget:
-    print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{complicatedNamePart} Temporal"')
+    print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{today}{complicatedNamePart}_Temporal"')
+
+
+# In[5]:
 
 
 # # 2. Сохранение в Excel выгрузки метода search
 
-# In[13]:
+
+# In[6]:
 
 
-# 2.0 Авторская функция для аккуратного сохранения выгрузки текущего метода в Excel
+# 2.0 Авторская функция для аккуратного сохранения выгрузки текущего метода в Excel в директорию, создаваемую в текущей директории
 def df2fileYT(complicatedNamePart, dfIn, fileFormatChoice, method, today):
     folder = f'{today}{complicatedNamePart}'
     print('Сохраняю выгрузку метода', method, 'в директорию:', folder)
     if os.path.exists(folder):
-        print('Эта директория существует')
+        # print('Эта директория существует')
     else:
         os.makedirs(folder)
         print('Такой директории не существовало, поэтому она создана')
-    # itemS.to_excel(f'{folder}{slash}{folder} {method}.xlsx')
-    
-    if os.path.exists(f'{complicatedNamePart} Temporal'):
-        print(f'\n--- Директорию "{complicatedNamePart} Temporal" с промежуточными результатами можете удалить вручную') 
-    
-    from df2file import df2file # авторский модуль для сохранения датафрейма в файл одного из форматов:
-        # CSV, Excel и JSON в рамках работы с данными из YouTube
     
     # df2file(itemS) # при такой записи имя сохранаяемого файла и директория, в которую сохранить, вводятся вручную
     print('При сохранении возможно появление обширного предупреждения UserWarning: Ignoring URL.'
           , 'Оно вызвано слишком длинными URL-адресами в датафрейме и не является проблемой; его следует пролистать и перейти к диалоговому окну' )
     df2file(dfIn, f'{folder} {method}{fileFormatChoice}', folder)
 
-if len(folderFile) == 0: # eсли НЕТ файла с id
-    df2fileYT(complicatedNamePart, itemS, '.xlsx', method, today)
+# if len(folderFile) == 0: # eсли НЕТ файла с id
+df2fileYT(complicatedNamePart, itemS, '.xlsx', method, today)
 
 
 # # 3. Выгрузка дополнительных характеристик и контента методами playlists и playlistItems, videos, commentThreads и comments, channels
 
 
-# In[14]:
+# In[7]:
 
 
 # 3.0.0
-if len(folderFile) == 0: # eсли НЕТ файла с id
-      print(f'\nФайл "{today}{complicatedNamePart} search.xlsx" можно удалить (вручную),'
-      , 'поскольку вся информация из него сохранена в основ[ой ые] файл[ы]')
+# if len(folderFile) == 0: # eсли НЕТ файла с id
+#       print(f'\nФайл "{today}{complicatedNamePart} search.xlsx" можно удалить (вручную),'
+#       , 'поскольку вся информация из него сохранена в основ[ой ые] файл[ы]')
 
 print('Выгрузка метода search содержит НЕ ВСЕ доступные для выгрузки из API YouTube характеристки контента'
       , '\n--- Если хотите выгрузить дополнительные характеристики (ссылки для ознакомления с ними появятся ниже), нажмите Enter'
       , '\n--- Если НЕ хотите их выгрузить, введите любой символ и нажмите Enter. Тогда исполнение скрипта завершится')
 
 if len(input()) > 0:
-    import warnings
+    print('Скрипт исполнен. Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
+          , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
+    shutil.rmtree(rootName, ignore_errors=True)
+    
     warnings.filterwarnings("ignore")
-    input('Скрипт исполнен. Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" \nТак и должно быть\Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+    print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
+          , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
     sys.exit()
+
 
 # 3.0.1 Этап stage = 3
 stage = 3
@@ -699,7 +806,7 @@ def portionProcessing(complicatedNamePart, goS, idS, keyOrder, method, q, slash,
                     print(f'Директория "{complicatedNamePart} Temporal" создана')
             else:
                 print(f'Директория "{complicatedNamePart} Temporal" существует')
-            saveSettings(complicatedNamePart, method, q, slash, stageTarget, totalResults, year)
+            saveSettings(channelIdForSearch, complicatedNamePart, contentType, itemS, method, q, slash, stage, totalResults, year, yearsRange)
             goC = False
     return chplviS
 
@@ -719,7 +826,7 @@ def iterationVisualization(idS, portion):
     if portion > 1: print('   Сколько в порции наблюдений?', len(response['items']), end='\r')
 
 
-# In[16]:
+# In[8]:
 
 
 # 3.1 Выгрузка дополнительных характеристик плейлистов
@@ -812,7 +919,7 @@ if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # е�
     df2fileYT(complicatedNamePart, playlistS, '.xlsx', method, today)
 
 
-# In[17]:
+# In[9]:
 
 
 # 3.2.0 Выгрузка дополнительных характеристик видео
@@ -892,7 +999,7 @@ if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # е�
                     print(f'Директория "{complicatedNamePart} Temporal" создана')
             else:
                 print(f'Директория "{complicatedNamePart} Temporal" существует')
-            saveSettings(complicatedNamePart, method, q, slash, stageTarget, totalResults, year)
+            saveSettings(channelIdForSearch, complicatedNamePart, contentType, itemS, method, q, slash, stage, totalResults, year, yearsRange)
             goC = False
 
 # ********** categoryId
@@ -919,7 +1026,7 @@ if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # е�
                 print(f'Директория "{complicatedNamePart} Temporal" создана')
         else:
             print(f'Директория "{complicatedNamePart} Temporal" существует')
-        saveSettings(complicatedNamePart, method, q, slash, stageTarget, totalResults, year)
+        saveSettings(complicatedNamePart, contentType, itemS, method, q, slash, stage, totalResults, year, yearsRange)
 
     # Оформить как датафрейм id категорий из списка uniqueCategorieS и их расшифровки
     categoryNameS = pandas.json_normalize(response['items'])
@@ -946,7 +1053,7 @@ if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # е�
     commentS = pandas.DataFrame() # не в следующем ченке, чтобы иметь возможность перезапускать его, не затирая промежуточный результат выгрузки
 
 
-# In[ ]:
+# In[10]:
 
 
 # 3.2.1 Выгрузка комментариев к видео
@@ -1117,7 +1224,7 @@ if len(videoS) > 0:
                 if errorDescription != None: problemCommentIdS.loc[problemCommentId, 'errorDescription'] = errorDescription
                 replieS = dfsProcessing(complicatedNamePart, addReplieS, replieS, goS, keyOrder, slash, stage)
         print('Ответов выгружено', len(replieS)
-              , '; проблемные родительские (topLevel) комментарии:', problemCommentIdS)
+              , '; проблемные родительские (topLevel) комментарии:', problemCommentIdS if len(problemCommentIdS) > 0  else 'отсутствуют')
         
         # Для совместимости датафреймов добавить столбцы`snippet.totalReplyCount` и `Недостача_ответов`
         replieS.loc[:, 'snippet.totalReplyCount'] = 0
@@ -1130,7 +1237,7 @@ if len(videoS) > 0:
         df2fileYT(complicatedNamePart, commentReplieS, '.xlsx', 'commentReplieS', today)
 
 
-# In[ ]:
+# In[11]:
 
 
 # 3.3 Выгрузка дополнительных характеристик каналов
@@ -1220,31 +1327,41 @@ if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # е�
                     print(f'Директория "{complicatedNamePart} Temporal" создана')
             else:
                 print(f'Директория "{complicatedNamePart} Temporal" существует')
-            saveSettings(complicatedNamePart, method, q, slash, stageTarget, totalResults, year)
+            saveSettings(channelIdForSearch, complicatedNamePart, contentType, itemS, method, q, slash, stage, totalResults, year, yearsRange)
             goC = False
     columnsToJSON = [] # столбцы с JSON для сохранения в отдельный JSON
     for column in ['topicDetails.topicIds'
                    , 'topicDetails.topicCategories'
                    , 'brandingSettings.hints'
                    , 'brandingSettings.channel.featuredChannelsUrls']:
-        if column in videoS.columns: columnsToJSON.append(column)
+        if column in channelS.columns: columnsToJSON.append(column)
     print('В выгрузке метода', {method}, 'есть столбцы, содержащие внутри своих ячеек JSON-объекты; Excel не поддерживает JSON-формат;'
           , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
-    df2fileYT(complicatedNamePart, videoS.drop(columnsToJSON, axis=1), '.xlsx', f'{method} Other varS', today)
+    df2fileYT(complicatedNamePart, channelS.drop(columnsToJSON, axis=1), '.xlsx', f'{method} Other varS', today)
     columnsToJSON.append('id')
-    df2fileYT(complicatedNamePart, videoS[columnsToJSON], '.json', f'{method} JSON varS', today)
+    df2fileYT(complicatedNamePart, channelS[columnsToJSON], '.json', f'{method} JSON varS', today)
 
 
-# In[ ]:
+# In[12]:
 
 
-import warnings
+print('Скрипт исполнен. Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
+      , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
+shutil.rmtree(rootName, ignore_errors=True)
+
 warnings.filterwarnings("ignore")
-input('Скрипт исполнен. Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" \nТак и должно быть\Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
+      , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
 sys.exit()
 
 
-# In[ ]:
+# In[13]:
+
+# warnings.filterwarnings("ignore")
+# print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
+#       , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+# input()
+# sys.exit()
 
 
 # https://stackoverflow.com/questions/30475309/get-youtube-trends-v3-country-wise-in-json -- про тренды
