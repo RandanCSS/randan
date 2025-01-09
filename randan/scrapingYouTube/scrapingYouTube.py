@@ -327,8 +327,7 @@ if len(itemS) == 0:
                     print('--- Вы ввели тире, но при этом ввели НЕ два года. Попробуйте ещё раз..')
             else:
                 print('--- Вы НЕ ввели тире. Попробуйте ещё раз..')
-        else:
-            break
+        else: break
 # Сложная часть имени будущих директорий и файлов
 complicatedNamePart = f'{"" if len(contentType) == 0 else "_"}{contentType}'
 complicatedNamePart += f'{"" if len(channelIdForSearch) == 0 else "_channelId"}{channelIdForSearch}'
