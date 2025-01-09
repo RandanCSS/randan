@@ -160,7 +160,7 @@ keyOrder = 0
 print('Проверяю наличие директории Temporal с данными и их мета-данными,'
       ,'гипотетически сохранёнными при прошлом запуске скрипта, завершившемся исчерпанием ключ[а ей]')
 for rootName in rootNameS:
-    if 'Temporal' in rootName:        
+    if 'Temporal' in rootName:
         file = open(f'{rootName}{slash}totalResults.txt')
         totalResults = file.read()
         file.close()
