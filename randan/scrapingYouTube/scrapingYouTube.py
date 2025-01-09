@@ -326,7 +326,7 @@ if len(itemS) == 0:
                     print('--- Вы ввели тире, но при этом ввели НЕ два года. Попробуйте ещё раз..')
             else:
                 print('--- Вы НЕ ввели тире. Попробуйте ещё раз..')
-        else: break
+        else:break
 # Сложная часть имени будущих директорий и файлов
 complicatedNamePart = f'{"" if len(contentType) == 0 else "_"}{contentType}'
 complicatedNamePart += f'{"" if len(channelIdForSearch) == 0 else "_channelId"}{channelIdForSearch}'
@@ -479,7 +479,7 @@ def dfsProcessing(complicatedNamePart, dfAdd, dfIn, goS, keyOrder, slash, stage)
 # 1.3 Первый заход БЕЗ аргумента order (этап stage = 0)
 iteration = 0 # номер итерации применения текущего метода
 stage = 0
-if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла с id и нет временных файлов с настройками и контентом    
+if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла с id и нет временного файла stage.txt с указанием пропустить этап   
     print('\nЗаход на первую страницу выдачи')
     addItemS, goS, iteration, keyOrder, response = bigSearch(API_keyS
                                                              , channelIdForSearch
@@ -520,7 +520,7 @@ elif stage < stageTarget:
 
 # 1.4 Цикл для прохода по значениям аргумента order, внутри которых проход по всем страницам выдачи (этап stage = 1)
 stage = 1
-if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла с id и нет временных файлов с настройками и контентом
+if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла с id и нет временного файла stage.txt с указанием пропустить этап
     if len(itemS) < totalResults:
     # -- для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
         print('Проход по значениям аргумента order, внутри которых проход по всем страницам выдачи')
@@ -568,7 +568,7 @@ elif stage < stageTarget:
 
 # 1.5 Этап stage = 2
 stage = 2
-if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла с id и нет временных файлов с настройками и контентом
+if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла с id и нет временного файла stage.txt с указанием пропустить этап
     if len(itemS) < totalResults:
     # для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
         print('Увы'
