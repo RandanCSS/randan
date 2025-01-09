@@ -14,7 +14,7 @@ from subprocess import check_call
 # --- остальные модули и пакеты
 while True:
     try:
-        from pandas import DataFram
+        from pandas import DataFrame
         break
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
