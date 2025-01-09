@@ -22,7 +22,7 @@ while True:
         print('Пакет', module, 'НЕ прединсталируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталирован сейчас\n')
         check_call([sys.executable, "-m", "pip", "install", module])
 
-def calendarWithinYear(year)
+def calendarWithinYear(year):
     # Календарь день-месяц для лучшей визуализации дальнейшего процесса
     calendar = pandas.DataFrame()
     mnth_n31 = [2, 4, 6, 9, 11] # месяцы с числом дней менее 31
