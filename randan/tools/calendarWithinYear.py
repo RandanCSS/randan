@@ -24,7 +24,7 @@ while True:
 
 def calendarWithinYear(year):
     # Календарь день-месяц для лучшей визуализации дальнейшего процесса
-    calendar = pandas.DataFrame()
+    calendar = DataFrame()
     mnth_n31 = [2, 4, 6, 9, 11] # месяцы с числом дней менее 31
     for mnth in range(1, 13):
         if mnth == 2: # обработка февраля
