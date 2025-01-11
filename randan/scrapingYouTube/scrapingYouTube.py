@@ -331,7 +331,8 @@ if os.path.exists(f'{rootName}{slash}{temporalName}') == False: # если itemS
                 print('--- Вы НЕ ввели тире. Попробуйте ещё раз..')
         else:break
 # Сложная часть имени будущих директорий и файлов
-complicatedNamePart = f'{"" if len(contentType) == 0 else "_"}{contentType}'
+complicatedNamePart = '_YouTube'
+complicatedNamePart += f'{"" if len(contentType) == 0 else "_"}{contentType}'
 complicatedNamePart += f'{"" if len(channelIdForSearch) == 0 else "_channelId"}{channelIdForSearch}'
 complicatedNamePart += f'{"" if len(q) == 0 else "_"}{q}'
 complicatedNamePart += f'{"" if len(yearsRange) == 0 else "_"}{yearMinByUser}-{yearMaxByUser}'
