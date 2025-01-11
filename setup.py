@@ -44,6 +44,7 @@ setup(
         'scikit-learn>=0.23.1',
         'statsmodels>=0.11.1',
         'tqdm>=4.66.5',
+        'vk_requests>=1.2.1',
     ],
     python_requires='>=3.6',
 )
