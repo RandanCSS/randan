@@ -63,7 +63,7 @@ stageTarget = 0 # stageTarget принимает значения [0; 3] и от
 yearsRange = ''
 
 today = datetime.date.today().strftime("%Y%m%d") # запрос сегодняшней даты в формате yyyymmdd
-print('\nТекущяя дата:', today, '-- она будет использована для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках\n')
+print('\nТекущяя дата:', today, '-- она будет использована для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
 # print('Сегодня год:', today[:4])
 # print('Сегодня месяц:', today[4:6])
 # print('Сегодня день:', today[6:])
@@ -223,7 +223,7 @@ for rootName in rootNameS:
         elif decision == 'R': shutil.rmtree(rootName, ignore_errors=True)
 
 # 0.1.4 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
-if len(itemS) == 0:
+if os.path.exists(f'{rootName}{slash}{temporalName}') == False: # если itemS существует, в т.ч. пустой
     print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
     print('--- Возможно, Вы располагаете файлом, в котором есть, как минимум, столбец id, и который хотели бы дополнить?'
           , 'Или планируете первичный сбор контента?'
@@ -426,8 +426,11 @@ def bigSearch(api
 
 # 1.2 Авторская функция для обработки выдачи любого из методов, помогающая работе с ключами
 def dfsProcessing(complicatedNamePart, dfAdd, dfIn, goS, slash, stage):
-    df = dfIn.copy()
-    df = pandas.concat([df, dfAdd])
+    if len(dfIn) > 0:
+        df = dfIn.copy()
+        df = pandas.concat([dfIn, dfAdd])
+    else: df = dfAdd.copy()
+
     columnsForCheck = []
     for column in df.columns: # выдача многих методов содержит столбец id, он оптимален для проверки дублирующхся строк
         if 'id' == column:
@@ -468,7 +471,7 @@ publishedBefore = None
 print(f'\nВ скрипте используются следующие аргументы метода {method} API YouTube:'
       , 'channelId, maxResults, order, pageToken, part, publishedAfter, publishedBefore, q, type.'
       , 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
-      , f'Если хотите добавить другие аргументы метода {method} API YouTube, доступные по ссылке https://developers.google.com/youtube/v3/docs/search'
+      , f'Если хотите добавить другие аргументы метода {method} API YouTube, доступные по ссылке https://developers.google.com/youtube/v3/docs/search ,'
       , f'-- можете сделать это внутри метода {method} в чанке 1.1 исполняемого сейчас скрипта')
 input('--- После прочтения этой инструкции нажмите Enter')
 
