@@ -108,7 +108,7 @@ if 'credentialsVK.txt' in rootNameS:
     API_keyS = file.read()
     print('Нашёл файл credentialsVK.txt; далее буду использовать ключ[и] из него:', API_keyS)
 else:
-    print('\n--- НЕ нашёл файл credentialsVK.txt . Введите в окно Ваш API key для авторизации в API ВК'
+    print('--- НЕ нашёл файл credentialsVK.txt . Введите в окно Ваш API key для авторизации в API ВК'
           , '(примерная инструкция, как создать API key, доступна по ссылке https://docs.google.com/document/d/1dRqPGzLgr1wLp-_N6iuuZCmzCqrjYg1PuH7G7yomYdw ).'
           , 'Для подстраховки от ограничения действия API key желательно создать несколько ключей (три -- отлично) и ввести их без кавычек через запятую с пробелом'
           , '\n--- После ввода нажмите Enter')
@@ -253,15 +253,15 @@ if os.path.exists(f'{rootName}{slash}{temporalName}') == False: # если itemS
               , '\n--- Поэтому если всё же требуется назначить временнОй диапазон на этапе выгрузки данных, назначьте его годами (а не более мелкими единицами времени).'
               , 'Для назначения диапазона введите без кавычек минимальный год диапазона, тире, максимальный год диапазона (минимум и максимум могут совпадать) и нажмите Enter'
               , '\n--- Если НЕ требуется назначить временнОй диапазон на этапе выгрузки данных, нажмите Enter')
-        yearS = input()
-        if len(yearS) != 0:
-            yearS = re.sub(r' *', '', yearS)
-            if '-' in yearS:
-                yearS = yearS.split('-')
-                print('--- Вы ввели тире, но при этом ввели НЕ два года. Попробуйте ещё раз') if len(yearS) != 2  else ''
-                yearS.sort()
-                yearMinByUser = int(yearS[0])
-                yearMaxByUser = int(yearS[-1])
+        yearsRange = input()
+        if len(yearsRange) != 0:
+            yearsRange = re.sub(r' *', '', yearsRange)
+            if '-' in yearsRange:
+                yearsRange = yearsRange.split('-')
+                print('--- Вы ввели тире, но при этом ввели НЕ два года. Попробуйте ещё раз') if len(yearsRange) != 2  else ''
+                yearsRange.sort()
+                yearMinByUser = int(yearsRange[0])
+                yearMaxByUser = int(yearsRange[-1])
                 break
             else:
                 print('--- Вы НЕ ввели тире. Попробуйте ещё раз')
