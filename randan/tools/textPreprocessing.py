@@ -22,6 +22,13 @@ while True:
               'НЕ прединсталируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталирован сейчас\n')
         check_call([sys.executable, "-m", "pip", "install", module])
 
+def multispaceCleaner(text):
+    cleaned_text = text
+    while '  ' in text: cleaned_text = text.replace('  ', ' ')
+    while cleaned_text[0] == ' ': cleaned_text = cleaned_text[1:] # избавиться от пробелов в начале текста 
+    while cleaned_text[-1] == ' ': cleaned_text = cleaned_text[:-1] # избавиться от пробелов в конце текста 
+    return cleaned_text
+
 def pymystemLemmatizer(dfIn, columnWithText):
     df = dfIn.copy()
     print('Эта функция предназначена для лемматизации текстов пакетом pymystem3', end='\r')
