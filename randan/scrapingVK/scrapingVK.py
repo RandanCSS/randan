@@ -46,6 +46,7 @@ goS = True
 itemS = pandas.DataFrame()
 slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
 stageTarget = 0 # stageTarget принимает значения [0; 3] и относится к стадиям скрипта
+temporalName = ''
 yearsRange = ''
 
 today = date.today().strftime("%Y%m%d") # запрос сегодняшней даты в формате yyyymmdd
