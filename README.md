@@ -1,7 +1,7 @@
 # randan
 _A python package for gaining social and financial data and their analysis_
 
-_Current version: 0.3.1.4_
+_Current version: 0.3.1.5_
 
 _Documentation: https://randan.readthedocs.io/en/latest/_
 
@@ -15,7 +15,7 @@ randan is a python package that aims to help social scientists, statisticians an
 
 As we emphasize the importance of the way that the output looks like, we highly recommend using `randan` in Anaconda or CoLab and store data in `pandas` DataFrames.
 
-A new -- thirteenth -- module provides data from YouTube literally by couple of clicks.
+A new -- thirteenth and forteenth -- modules provide data from YouTube and VK respectively literally by couple of clicks.
 
 > _**N.B.:** You should understand that this project is under development now, which means it is constantly updating. But you can use all the modules and classes presented in the last release._ 
 
@@ -68,6 +68,8 @@ By now, **twelve statistical** modules have been included in the package. These 
 | tree | CHAIDRegressor, CHAIDClassifier | Analyze -> Classify -> Tree -> CHAID | CHAID decision tree for scale and categorical dependent variables, respectively |
 
 The module **scrapingYouTube** aims to gain data from YouTube by means of seven methods of its API. These methods are: search, videos, commentThreads & comments, channels, playlists & playlistItems. In this module, complicated iterative implementing of these methods allows to maximize output volume. The iterative implementing includes resorting the output and segmenting it by years. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. The module provides a user with a default scenario of gaining YouTube data. This scenario is arranged as a simple dialog interface. Guiding by this interface and pressing Enter on the keyboard, a user has no need for coding. Meanwhile, an advanced user might customize both the scenario and the module's code itself if needs.
+
+The module **scrapingVK** aims to gain data from Russian popular social medium VK by means of its API method news.search. In this module, iterative implementing of this method allows to maximize output volume. The iterative implementing includes segmenting output by years and months. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. The module provides a user with a default scenario of gaining VK data. This scenario is arranged as a simple dialog interface. Guiding by this interface and pressing Enter on the keyboard, a user has no need for coding. Meanwhile, an advanced user might customize both the scenario and the module's code itself if needs.
 
 ## Quick start
 Although statistical modules of `randan` are built to be similar to SPSS, they reproduces the fit-predict and fit-transform approach, which is now being used in the most popular machine learning python packages. This approach means that you should, firstly, initialize your model and then, secondly, fit it to your data (i.e., use the `fit` function) if necessary. 
@@ -186,5 +188,14 @@ from randan.scrapingYouTube import scrapingYouTube
 
 # with this code, you will immediately see an instruction. Just follow it for executing the default scenario, episodically pressing Enter on your keyboard
 
-# however, if you want to customize the default scenario, you might both use the dialog interface and alter the module's code 
+# however, if you want to customize the default scenario, you might both use the dialog interface and alter the module's code
+```
+#### Module `scrapingVK`
+This module utilise VK API method news.search. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. You only need to call the necessary module:
+```python
+from randan.scrapingVK import scrapingVK
+
+# with this code, you will immediately see an instruction. Just follow it for executing the default scenario, episodically pressing Enter on your keyboard
+
+# however, if you want to customize the default scenario, you might both use the dialog interface and alter the module's code
 ```
