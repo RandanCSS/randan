@@ -258,17 +258,15 @@ if os.path.exists(f'{rootName}{slash}{temporalName}') == False: # если itemS
             yearsRange = re.sub(r' *', '', yearsRange)
             if '-' in yearsRange:
                 yearsRange = yearsRange.split('-')
-                print('--- Вы ввели тире, но при этом ввели НЕ два года. Попробуйте ещё раз') if len(yearsRange) != 2  else ''
-                yearsRange.sort()
-                yearMinByUser = int(yearsRange[0])
-                yearMaxByUser = int(yearsRange[-1])
-                break
-            else:
-                print('--- Вы НЕ ввели тире. Попробуйте ещё раз')
+                if len(yearsRange) == 2:
+                    yearMaxByUser, yearMinByUser, publishedAfter, publishedBefore = yearsRangeParser(yearsRange)
+                    year = yearMaxByUser
+                    break
+                else: print('--- Вы ввели тире, но при этом ввели НЕ два года. Попробуйте ещё раз..')
+            else: print('--- Вы НЕ ввели тире. Попробуйте ещё раз..')
         else: break
 # Сложная часть имени будущих директорий и файлов
-complicatedNamePart = '_VK'
-# complicatedNamePart += f'{"" if len(contentType) == 0 else "_"}{contentType}'
+# complicatedNamePart = f'{"" if len(contentType) == 0 else "_"}{contentType}'
 # complicatedNamePart += f'{"" if len(channelIdForSearch) == 0 else "_channelId"}{channelIdForSearch}'
 complicatedNamePart = f'{"" if len(q) == 0 else "_"}{q}'
 complicatedNamePart += f'{"" if len(yearsRange) == 0 else "_"}{yearMinByUser}-{yearMaxByUser}'
