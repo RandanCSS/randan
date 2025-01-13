@@ -370,7 +370,7 @@ def googleapiclientError(errorDescription, keyOrder, *arg): # арки: id
 
 def indexError(errorDescription): # функция прерывания скрипта при исчерпании ключей
     print('\n    ', errorDescription[1])
-    print('Похоже, ключи закончились')
+    print('Похоже, ключи закончились. Подождите сутки для восстановления ключей или подготовьте новый ключ -- и запустите скрипт с начала')
     goS = False # нет смысла продолжать исполнение скрипта
     goC = False # и, следовательно, нет смысла в новых итерациях цикла
     return goC, goS
@@ -452,8 +452,7 @@ def dfsProcessing(complicatedNamePart, dfAdd, dfIn, goS, slash, stage):
         # else:
             # print(f'Директория "{today}{complicatedNamePart}_Temporal" существует')
         saveSettings(channelIdForSearch, complicatedNamePart, contentType, itemS, method, q, slash, stage, totalResults, year, yearsRange)
-        print('Подождите сутки для восстановления ключей или подготовьте новый ключ -- и запустите скрипт с начала'
-              , '\nСейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit"'
+        print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit"'
               , '\nТак и должно быть'
               , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
         sys.exit()
