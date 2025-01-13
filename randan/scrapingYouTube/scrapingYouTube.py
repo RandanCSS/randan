@@ -88,12 +88,12 @@ def saveSettings(channelIdForSearch, complicatedNamePart, contentType, itemS, me
     file.write(contentType)
     file.close()
 
-    file = open(f'{today}{complicatedNamePart}_Temporal{slash}q.txt', 'w+') # открыть на запись
-    file.write(q)
-    file.close()
-
     file = open(f'{today}{complicatedNamePart}_Temporal{slash}method.txt', 'w+') # открыть на запись
     file.write(method)
+    file.close()
+
+    file = open(f'{today}{complicatedNamePart}_Temporal{slash}q.txt', 'w+') # открыть на запись
+    file.write(q)
     file.close()
 
     file = open(f'{today}{complicatedNamePart}_Temporal{slash}stageTarget.txt', 'w+')
