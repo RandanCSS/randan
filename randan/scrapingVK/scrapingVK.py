@@ -348,7 +348,7 @@ def dfsProcessing(complicatedNamePart, dfAdd, dfIn, goS, slash, stage):
     return df
 
 # 1.3 Первое обращение к API БЕЗ аргументов start_time, end_time (этап stage = 0)
-method = 'news.search'
+method = 'newsfeed.search'
 pause = 0.25
 stage = 0
 
