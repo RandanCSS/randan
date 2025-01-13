@@ -120,9 +120,8 @@ def yearsRangeParser(yearsRange):
     yearsRange.sort()
     yearMinByUser = int(yearsRange[0])
     yearMaxByUser = int(yearsRange[-1])
-    publishedAfter=f'{yearMinByUser}-01-01T00:00:00Z'
-    publishedBefore=f'{yearMaxByUser}-01-01T00:00:00Z'
-    return yearMaxByUser, yearMinByUser, publishedAfter, publishedBefore
+    yearsRange = f'{yearMinByUser}-{yearMaxByUser}'
+    return yearMaxByUser, yearMinByUser, yearsRange
 
 rootNameS = os.listdir()
 # Поиск ключей
@@ -216,7 +215,7 @@ for rootName in rootNameS:
             itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
             if yearsRange != '':
                 yearsRange = yearsRange.split('-')
-                yearMaxByUser, yearMinByUser, publishedAfter, publishedBefore = yearsRangeParser(yearsRange)
+                yearMaxByUser, yearMinByUser, yearsRange = yearsRangeParser(yearsRange)
 # 0.1.3 Данные, сохранённые при прошлом запуске скрипта, загружены;
     # их метаданные (q, contentType, yearsRange, stageTarget) будут использоваться при исполнении скрипта
             break
@@ -322,7 +321,7 @@ if os.path.exists(f'{rootName}{slash}{temporalName}') == False: # если itemS
             if '-' in yearsRange:
                 yearsRange = yearsRange.split('-')
                 if len(yearsRange) == 2:
-                    yearMaxByUser, yearMinByUser, publishedAfter, publishedBefore = yearsRangeParser(yearsRange)
+                    yearMaxByUser, yearMinByUser, yearsRange = yearsRangeParser(yearsRange)
                     year = yearMaxByUser
                     break
                 else:
@@ -464,8 +463,8 @@ method = 'search'
 iteration = 0 # номер итерации применения текущего метода
 order = None
 orderS = ['date', 'rating', 'title', 'videoCount', 'viewCount']
-publishedAfter = None
-publishedBefore = None
+# publishedAfter = None
+# publishedBefore = None
 
 # if len(folderFile) == 0: # eсли НЕТ файла с id
 print(f'\nВ скрипте используются следующие аргументы метода {method} API YouTube:'
