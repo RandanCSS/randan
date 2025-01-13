@@ -9,7 +9,7 @@ while True:
         from datetime import date, datetime
         from randan.tools.df2file import df2file # авторский модуль для сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
         from randan.tools.calendarWithinYear import calendarWithinYear # авторский модуль для работы с календарём конкретного года
-        from randan.tools.files2df import excel2df # авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
+        from randan.tools import files2df # авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
         from vk_requests.exceptions import VkAPIError # на всякий случай, хотя и без этого класса ошибки нормлаьно обрабатываются
         from tqdm import tqdm
         import os, pandas, re, shutil, time, vk_requests, warnings
@@ -40,6 +40,7 @@ print('    Для исполнения скрипта не обязательн�
 input('--- После прочтения этой инструкции нажмите Enter')
 
 # 0.0.1 Некоторые базовые настройки запроса к API YouTube
+fileFormatChoice = '.xlsx' # базовый формат сохраняемых файлов; формат .json добавляется опционально через наличие columnsToJSON
 folder = ''
 folderFile = ''
 goS = True
@@ -61,15 +62,40 @@ yearMaxByUser = None # в случае отсутствия пользовате
 
 # 0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
 # 0.1.0 Функции блока:
-    # для сохранения следа непосредственно в директорию Temporal в текущей директории
-def saveSettings(complicatedNamePart, itemS, method, q, slash, stageTarget, targetCount, year, yearsRange):
+# для аккуратного сохранения выгрузки текущего метода в Excel в директорию, создаваемую в текущей директории
+def df2fileVK(columnsToJSON, complicatedNamePart, dfIn, fileFormatChoice, method, today):
+    folder = f'{today}{complicatedNamePart}'
+    print('Сохраняю выгрузку метода', method)
+    if os.path.exists(folder) == False:
+        print('Такой директории не существовало, поэтому она создана')
+        os.makedirs(folder)
+    # else:
+        # print('Эта директория существует')
 
-    file = open(f'{today}{complicatedNamePart}_Temporal{slash}q.txt', 'w+') # открыть на запись
-    file.write(q)
-    file.close()
+    # df2file(itemS) # при такой записи имя сохранаяемого файла и директория, в которую сохранить, вводятся вручную
+    # print('При сохранении возможно появление обширного предупреждения UserWarning: Ignoring URL.'
+    #       , 'Оно вызвано слишком длинными URL-адресами в датафрейме и не является проблемой; его следует пролистать и перейти к диалоговому окну' )
 
+    if (columnsToJSON != None) | (columnsToJSON != []):
+        for column in columnsToJSON:
+            if column not in itemS.columns: columnsToJSON.remove(column)
+        print('В выгрузке метода', method, 'есть столбцы, содержащие внутри своих ячеек JSON-объекты; Excel не поддерживает JSON-формат;'
+              , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
+
+        df2file(dfIn.drop(columnsToJSON, axis=1), f'{folder} {method} Other varS{fileFormatChoice}', folder)
+        columnsToJSON.append('id')
+        df2file(dfIn[columnsToJSON], f'{folder} {method} JSON varS.json', folder)
+
+    else: df2file(dfIn, f'{folder} {method}{fileFormatChoice}', folder)
+
+# для сохранения следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
+def saveSettings(columnsToJSON, complicatedNamePart, fileFormatChoice, itemS, method, q, slash, stageTarget, targetCount, today, year, yearsRange):
     file = open(f'{today}{complicatedNamePart}_Temporal{slash}method.txt', 'w+') # открыть на запись
     file.write(method)
+    file.close()
+    
+    file = open(f'{today}{complicatedNamePart}_Temporal{slash}q.txt', 'w+')
+    file.write(q)
     file.close()
 
     file = open(f'{today}{complicatedNamePart}_Temporal{slash}stageTarget.txt', 'w+')
@@ -88,7 +114,14 @@ def saveSettings(complicatedNamePart, itemS, method, q, slash, stageTarget, targ
     file.write(yearsRange) # пользовательский временнОй диапазон
     file.close()
 
-    itemS.to_excel(f'{today}{complicatedNamePart}_Temporal{slash}{complicatedNamePart} {method}.xlsx')
+    # itemS.to_excel(f'{today}{complicatedNamePart}_Temporal{slash}{complicatedNamePart} {method}.xlsx')
+    if '.' in method: df2fileVK(columnsToJSON, f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method.split('.')[0] + method.split('.')[1].capitalize(), today)
+        # чтобы избавиться от лишней точки в имени файла
+    else: df2fileVK(columnsToJSON, f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method, today)
+    
+    print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
+          , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
+    shutil.rmtree(rootName, ignore_errors=True)
 
     # для парсинга пользовательского временнОго диапазона в случае использования сохранённого следа
         # и в случае назначения пользовательского временнОго диапазона
@@ -96,9 +129,8 @@ def yearsRangeParser(yearsRange):
     yearsRange.sort()
     yearMinByUser = int(yearsRange[0])
     yearMaxByUser = int(yearsRange[-1])
-    publishedAfter=f'{yearMinByUser}-01-01T00:00:00Z'
-    publishedBefore=f'{yearMaxByUser}-01-01T00:00:00Z'
-    return yearMaxByUser, yearMinByUser, publishedAfter, publishedBefore
+    yearsRange = f'{yearMinByUser}-{yearMaxByUser}'
+    return yearMaxByUser, yearMinByUser, yearsRange
 
 rootNameS = os.listdir()
 # Поиск ключей
@@ -131,16 +163,16 @@ API_keyS = API_keyS.split(', ')
 print('Количество ключей:', len(API_keyS), '\n')
 keyOrder = 0
 
-# 0.1.1 Скрипт может начаться с данных, сохранённых при прошлом запуске скрипта, завершившемся ограничением аккаунта
+# 0.1.1 Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
 # 0.1.2 Поиск данных
 print('Проверяю наличие директории Temporal с данными и их мета-данными,'
-      ,'гипотетически сохранёнными при прошлом запуске скрипта, завершившемся ограничением аккаунта')
+      ,'гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
 for rootName in rootNameS:
     if 'Temporal' in rootName:
-        # file = open(f'{rootName}{slash}targetCount.txt')
-        # targetCount = file.read()
-        # file.close()
-        # targetCount = int(targetCount)
+        file = open(f'{rootName}{slash}targetCount.txt')
+        targetCount = file.read()
+        file.close()
+        targetCount = int(targetCount)
 
         file = open(f'{rootName}{slash}method.txt')
         method = file.read()
@@ -159,7 +191,7 @@ for rootName in rootNameS:
         # channelIdForSearch = file.read()
         # file.close()
 
-        file = open(f'{rootName}{slash}q.txt', encoding='utf-8')
+        file = open(f'{rootName}{slash}q.txt') # , encoding='utf-8'
         q = file.read()
         file.close()
 
@@ -173,7 +205,7 @@ for rootName in rootNameS:
         stageTarget = int(stageTarget)
 
         print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:'
-              # , '\n- было выявлено целевое число записей (targetCount)', targetCount
+              # , '\n- было выявлено целевое число объектов (targetCount)', targetCount
               , '\n- скрипт остановился на методе', method)
         if year < int(today[:4]): print('- и на годе (при сегментировани по годам)', year)
         # print('- пользователь НЕ определил тип контента' if contentType == '' else  f'- пользователь определил тип контента как "{contentType}"')
@@ -190,18 +222,24 @@ for rootName in rootNameS:
             for temporalName in temporalNameS:
                 if '.xlsx' in temporalName: break
             itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
+            
+            for temporalName in temporalNameS:
+                if '.json' in temporalName: break
+            itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
+            
             if yearsRange != '':
                 yearsRange = yearsRange.split('-')
-                yearMaxByUser, yearMinByUser, publishedAfter, publishedBefore = yearsRangeParser(yearsRange)
+                yearMaxByUser, yearMinByUser, yearsRange = yearsRangeParser(yearsRange)
 # 0.1.3 Данные, сохранённые при прошлом запуске скрипта, загружены;
     # их метаданные (q, contentType, yearsRange, stageTarget) будут использоваться при исполнении скрипта
             break
         elif decision == 'R': shutil.rmtree(rootName, ignore_errors=True)
 
-# 0.1.4 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
-if os.path.exists(f'{rootName}{slash}{temporalName}') == False: # если itemS существует, в т.ч. пустой
-    print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
-    print('--- Возможно, Вы располагаете файлом, в котором есть ранее выгруженные из ВК методом newsfeed.search данные, и который хотели бы дополнить?'
+# 0.1.4 Если такие данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
+if os.path.exists(f'{rootName}{slash}{temporalName}') == False: # если itemsTemporal, в т.ч. пустой, не существует
+        # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
+    print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку')
+    print('\nВозможно, Вы располагаете файлом, в котором есть ранее выгруженные из ВК методом newsfeed.search данные, и который хотели бы дополнить?'
           , 'Или планируете первичный сбор контента?'
           , '\n--- Если планируете первичный сбор, нажмите Enter'
           , '\n--- Если располагаете файлом, укажите полный путь, включая название файла, и нажмите Enter')
@@ -209,10 +247,10 @@ if os.path.exists(f'{rootName}{slash}{temporalName}') == False: # если itemS
         folderFile = input()
         if len(folderFile) == 0: break
         else:
-            itemS, error, fileName, folder, slash = excel2df(folderFile)
+            itemS, error, folder = files2df.files2df(folderFile)
             if error != None:
                 if 'No such file or directory' in error:
-                    print('Файл:', folder + slash + fileName, '-- не существует; попробуйте, пожалуйста, ещё раз..')
+                    print('Путь:', folderFile, '-- не существует; попробуйте, пожалуйста, ещё раз..')
             else: break
         # display(itemS)
 # 0.1.5 Теперь определены объекты: folder и folderFile (оба пустые или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
@@ -242,14 +280,14 @@ if os.path.exists(f'{rootName}{slash}{temporalName}') == False: # если itemS
     if len(folderFile) > 0: print('ВАЖНО! В результате исполнения текущего скрипта данные из указанного Вами файла'
         , folderFile
         , 'будут дополнены актуальными данными из выдачи скрипта'
-        , '(возможно появление новых записей и новых столбцов, а также актуализация содержимого столбцов),'
+        , '(возможно появление новых объектов и новых столбцов, а также актуализация содержимого столбцов),'
         , 'поэтому, вероятно, следует ввести тот же запрос-фильтр, что и при формировании указанного Вами файла')
     q = input()
 
     # Ограничения временнОго диапазона
     while True:
         print('Если требуется конкретный временнОй диапазон, то можно использовать его не на текущем этапе выгрузки данных, а на следующем этапе -- предобработки датафрейма с выгруженными данными.'
-              , 'Проблема в том, что без назначения временнОго диапазона метод newsfeed.search выдаёт ограниченное количество записей, причём наиболее приближенных к текущему моменту.'
+              , 'Проблема в том, что без назначения временнОго диапазона метод newsfeed.search выдаёт ограниченное количество объектов, причём наиболее приближенных к текущему моменту.'
               , '\n--- Поэтому если всё же требуется назначить временнОй диапазон на этапе выгрузки данных, назначьте его годами (а не более мелкими единицами времени).'
               , 'Для назначения диапазона введите без кавычек минимальный год диапазона, тире, максимальный год диапазона (минимум и максимум могут совпадать) и нажмите Enter'
               , '\n--- Если НЕ требуется назначить временнОй диапазон на этапе выгрузки данных, нажмите Enter')
@@ -259,7 +297,7 @@ if os.path.exists(f'{rootName}{slash}{temporalName}') == False: # если itemS
             if '-' in yearsRange:
                 yearsRange = yearsRange.split('-')
                 if len(yearsRange) == 2:
-                    yearMaxByUser, yearMinByUser, publishedAfter, publishedBefore = yearsRangeParser(yearsRange)
+                    yearMaxByUser, yearMinByUser, yearsRange = yearsRangeParser(yearsRange)
                     year = yearMaxByUser
                     break
                 else: print('--- Вы ввели тире, но при этом ввели НЕ два года. Попробуйте ещё раз..')
@@ -284,25 +322,34 @@ complicatedNamePart += f'{"" if len(yearsRange) == 0 else "_"}{yearMinByUser}-{y
 
 
 # 1.1 Авторская функция для метода search из API YouTube, помогающая работе с ключами
-def bigSearch(API_keyS, goS, keyOrder, pause, q, start_time, end_time, vk_requests):
+def bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time, vk_requests):
     while True:
         try:
             api = vk_requests.create_api(service_token=API_keyS[keyOrder])
-            response = api.newsfeed.search(q=q, start_time=start_time, end_time=end_time, extended=1)
+            response = api.newsfeed.search(q=q, start_from=start_from, start_time=start_time, end_time=end_time, extended=1)
             # print('response', response)
+
+            # Для визуализации процесса
+            print('    Итерация №', iteration, ', number of items', len(response['items']), '                    ', end='\r')
+            iteration += 1
+            
             break
         except:
             errorDescription = sys.exc_info()
             # print('\n    ', errorDescription[1])
             if 'Too many requests per second' in str(errorDescription[1]):
-                print('\nПохоже, ключ попал под ограничение вследствие слишком высокой частоты обращения скрипта к API; пробую перейти к следующему ключу и снизить частоту')
-                keyOrder += 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
-                print('  keyOrder', keyOrder)
+                # print('  keyOrder до замены', '                    ') # для отладки
+                print('\n    ', errorDescription)
+                keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
+                print(f'\nПохоже, ключ попал под ограничение вследствие слишком высокой частоты обращения скрипта к API; пробую перейти к следующему ключу (№ {keyOrder}) и снизить частоту')
+                # print('  keyOrder после замены', keyOrder, '                    ') # для отладки
                 pause += 0.25
             elif 'User authorization failed' in str(errorDescription[1]):
-                print('\nПохоже, аккаунт попал под ограничение')
-                response = {'count': 0
-                            , 'items': []} # принудительная выдача для response без request.execute()
+                print('\nПохоже, аккаунт попал под ограничение. Оно может быть снято с аккаунта сразу или спустя какое-то время.'
+                      , 'Подождите или подготовьте новый ключ в другом аккаунте. И запустите скрипт с начала')
+                print('\n    ', errorDescription)
+                response = {'items': [], 'total_count': 0
+                            , } # принудительная выдача для response без request.execute()
                 goS = False # нет смысла продолжать исполнение скрипта
                 break # и, следовательно, нет смысла в новых итерациях цикла                
             else:
@@ -310,16 +357,21 @@ def bigSearch(API_keyS, goS, keyOrder, pause, q, start_time, end_time, vk_reques
                 print('\n    ', errorDescription)
                 goS = False # нет смысла продолжать исполнение скрипта
                 break # и, следовательно, нет смысла в новых итерациях цикла
-    itemsAdditional = pandas.json_normalize(response['items'])
-    return itemsAdditional, goS, keyOrder, pause, response
+    dfAdd = pandas.json_normalize(response['items'])
+
+    # Сменить формат представления дат, класс данных столбцов с id, создать столбец с кликабельными ссылками на контент. Здесь, а не в конце, поскольку нужна совместимость с itemS из Temporal и от пользователя
+    if len(dfAdd) > 0:
+        dfAdd['date'] = dfAdd['date'].apply(lambda content: datetime.fromtimestamp(content).strftime('%d.%m.%Y'))
+        dfAdd['URL'] = dfAdd['from_id'].astype(str)
+        dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL'] = 'id' + dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL']
+        dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'] = dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'].str.replace('-', 'public')
+        dfAdd['URL'] = 'https://vk.com' + '/' + dfAdd['URL'] + '?w=' + dfAdd['inner_type'].str.split('_').str[0] + dfAdd['owner_id'].astype(str) + '_' + dfAdd['id'].astype(str)
+
+    return dfAdd, goS, iteration, keyOrder, pause, response
 
 # 1.2 Авторская функция для обработки выдачи любого из методов, помогающая работе с ключами
-def dfsProcessing(complicatedNamePart, dfAdd, dfIn, goS, slash, stage):
-    if len(dfIn) > 0:
-        df = dfIn.copy()
-        df = pandas.concat([dfIn, dfAdd])
-    else: df = dfAdd.copy()
-    
+def dfsProcessing(columnsToJSON, complicatedNamePart, fileFormatChoice, dfAdd, dfFinal, dfIn, goS, method, q, slash, stage, targetCount, today, year, yearsRange):
+    df = pandas.concat([dfIn, dfAdd])        
     columnsForCheck = []
     for column in df.columns: # выдача многих методов содержит столбец id, он оптимален для проверки дублирующхся строк
         if 'id' == column:
@@ -329,19 +381,18 @@ def dfsProcessing(complicatedNamePart, dfAdd, dfIn, goS, slash, stage):
             if 'id.' in column:
                 columnsForCheck.append(column)
     # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck)
-    df = df.drop_duplicates(columnsForCheck).reset_index(drop=True)
+    df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True) # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые 
 
-    if goS == False: # условие выполняется после исполнения авторской функции indexError
-        print('Поскольку аккаунт попал под ограничение,'
+    if goS == False:
+        print('Поскольку исполнение скрипта натолкнулось на ошибку,'
               , f'сохраняю выгруженный контент и текущий этап поиска в директорию "{today}{complicatedNamePart}_Temporal"')
         if not os.path.exists(f'{today}{complicatedNamePart}_Temporal'):
                 os.makedirs(f'{today}{complicatedNamePart}_Temporal')
                 print(f'Директория "{today}{complicatedNamePart}_Temporal" создана')
         # else:
             # print(f'Директория "{today}{complicatedNamePart}_Temporal" существует')
-        saveSettings(channelIdForSearch, complicatedNamePart, contentType, itemS, method, q, slash, stage, targetCount, year, yearsRange)
-        print('Ограничение может быть снято с аккаунта сразу или спустя какое-то время. Подождите или подготовьте новый ключ в другом аккаунте. И запустите скрипт с начала'
-              , '\nСейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit"'
+        saveSettings(columnsToJSON, complicatedNamePart, fileFormatChoice, itemS, method, q, slash, stage, targetCount, today, year, yearsRange)
+        print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit"'
               , '\nТак и должно быть'
               , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
         sys.exit()
@@ -349,12 +400,14 @@ def dfsProcessing(complicatedNamePart, dfAdd, dfIn, goS, slash, stage):
 
 # 1.3 Первое обращение к API БЕЗ аргументов start_time, end_time (этап stage = 0)
 method = 'newsfeed.search'
+columnsToJSON = ['attachments', 'copy_history']
+iteration = 0 # номер итерации применения текущего метода
 pause = 0.25
 stage = 0
 
 # if len(folderFile) == 0: # eсли НЕТ файла с id
 print(f'В скрипте используются следующие аргументы метода {method} API YouTube:'
-      , 'q, start_time, end_time, expand.'
+      , 'q, start_from, start_time, end_time, expand.'
       , 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
       , f'Если хотите добавить другие аргументы метода {method} API ВК, доступные по ссылке https://dev.vk.com/ru/method/newsfeed.search ,'
       , f'-- можете сделать это внутри метода {method} в чанке 1.1 исполняемого сейчас скрипта')
@@ -363,14 +416,24 @@ input('--- После прочтения этой инструкции нажм�
 # if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла с id и нет временного файла stage.txt с указанием пропустить этап
 if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
     print('\nПервое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов')
-    itemsAdditional, goS, keyOrder, pause, response = bigSearch(API_keyS, goS, keyOrder, pause, q, None, None, vk_requests)
-    itemS = dfsProcessing(complicatedNamePart, itemsAdditional, itemS, goS, slash, stage)
-    targetCount = response['count']
+    itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, None, None, vk_requests)
+    targetCount = response['total_count']
+    # if len(itemS) < targetCount: # на случай достаточности
+    itemS = dfsProcessing(columnsToJSON, complicatedNamePart, fileFormatChoice, itemsAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+    print('  Проход по всем следующим страницам с выдачей          ')
+    while 'next_from' in response.keys():
+        start_from = response['next_from']
+        # print('    start_from', start_from) # для отладки
+        itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, None, None, vk_requests)
+        itemS = dfsProcessing(columnsToJSON, complicatedNamePart, fileFormatChoice, itemsAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
     print('  Искомых объектов', targetCount, ', а найденных БЕЗ сегментирования по годам и месяцам:', len(itemS))
 
+# 1.4 Этап stage = 1
+stage = 1
+if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
     if len(itemS) < targetCount:
     # -- для остановки алгоритма, если все искомые объекты найдены БЕЗ сегментирования по годам и месяцам
-        print('Увы, без назначения временнОго диапазона метод newsfeed.search выдаёт ограниченное количество записей, причём наиболее приближенных к текущему моменту.'
+        print('Увы, без назначения временнОго диапазона метод newsfeed.search выдаёт ограниченное количество объектов, причём наиболее приближенных к текущему моменту.'
           , 'Поэтому внутри каждого года, начиная с теущего, помесячно выгружаю контент, после чего меняю год -- вглубь веков, пока не достигну заданной пользователем левой границы временнОго диапазона,'
           , 'или года с пустой выдачей')
         while True:
@@ -380,14 +443,49 @@ if stage >= stageTarget: # eсли нет временного файла stage.
             calendarColumnS = calendar.columns
             if year == int(today[:4]): calendarColumnS = calendarColumnS[:int(today[4:6])] # чтобы исключить проход по будущим месяцам текущего года
             for month in calendarColumnS:
-                print('Ищу текст запроса-фильтра в контенте за',  month, 'месяц', year, 'года', '               ', end='\r')
+                print('Ищу текст запроса-фильтра в контенте за',  month, 'месяц', year, 'года', '               ') # , end='\r'
+                print('  Заход на первую страницу выдачи', '               ', end='\r')
                 start_time = int(time.mktime(datetime(year, int(month), 1).timetuple()))
                 end_time = int(time.mktime(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timetuple()))
-                # print('\n  Period from start_time', start_time, 'to end_time', end_time)
-                itemsMonthlyAdditional, goS, keyOrder, pause, response = bigSearch(API_keyS, goS, keyOrder, pause, q, start_time, end_time, vk_requests)
-                itemsYearlyAdditional = dfsProcessing(complicatedNamePart, itemsMonthlyAdditional, itemsYearlyAdditional, goS, slash, stage)
-                time.sleep(pause)
-            itemS = dfsProcessing(complicatedNamePart, itemsYearlyAdditional, itemS, goS, slash, stage)
+                # print('\n  Period from start_time', start_time, 'to end_time', end_time) # для отладки
+                itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, start_time, end_time, vk_requests)
+                itemsYearlyAdditional = dfsProcessing(columnsToJSON
+                                                      , complicatedNamePart
+                                                      , fileFormatChoice
+                                                      , itemsMonthlyAdditional
+                                                      , itemS
+                                                      , itemsYearlyAdditional
+                                                      , goS
+                                                      , method
+                                                      , q
+                                                      , slash
+                                                      , stage
+                                                      , targetCount
+                                                      , today
+                                                      , year
+                                                      , yearsRange)
+                print('  Проход по всем следующим страницам с выдачей', '               ', end='\r')
+                while 'next_from' in response.keys():
+                    start_from = response['next_from']
+                    # print('    start_from', start_from) # для отладки
+                    itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time, vk_requests)
+                    itemsYearlyAdditional = dfsProcessing(columnsToJSON
+                                                          , complicatedNamePart
+                                                          , fileFormatChoice
+                                                          , itemsMonthlyAdditional
+                                                          , itemS
+                                                          , itemsYearlyAdditional
+                                                          , goS
+                                                          , method
+                                                          , q
+                                                          , slash
+                                                          , stage
+                                                          , targetCount
+                                                          , today
+                                                          , year
+                                                          , yearsRange)
+                    time.sleep(pause)
+            itemS = dfsProcessing(columnsToJSON, complicatedNamePart, fileFormatChoice, itemsYearlyAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
             # display(itemS.head())
             # print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
 
@@ -408,12 +506,12 @@ if stage >= stageTarget: # eсли нет временного файла stage.
             year -= 1
         print('Искомых объектов', targetCount, ', а найденных:', len(itemS), '          ')
 
-    # Сменить формат представления дат, класс данных столбцов с id, создать столбец с кликабельными ссылками на контент
-    itemS['date'] = itemS['date'].progress_apply(lambda content: datetime.fromtimestamp(content).strftime('%d.%m.%Y'))
-    itemS['URL'] = itemS['from_id'].astype(str)
-    itemS.loc[itemS[itemS['URL'].str.contains('-') == False].index, 'URL'] = 'id' + itemS.loc[itemS[itemS['URL'].str.contains('-') == False].index, 'URL']
-    itemS.loc[itemS[itemS['URL'].str.contains('-')].index, 'URL'] = itemS.loc[itemS[itemS['URL'].str.contains('-')].index, 'URL'].str.replace('-', 'public')
-    itemS['URL'] = 'https://vk.com' + '/' + itemS['URL'] + '?w=' + itemS['inner_type'].str.split('_').str[0] + itemS['owner_id'].astype(str) + '_' + itemS['id'].astype(str)
+    # # Сменить формат представления дат, класс данных столбцов с id, создать столбец с кликабельными ссылками на контент
+    # itemS['date'] = itemS['date'].progress_apply(lambda content: datetime.fromtimestamp(content).strftime('%d.%m.%Y'))
+    # itemS['URL'] = itemS['from_id'].astype(str)
+    # itemS.loc[itemS[itemS['URL'].str.contains('-') == False].index, 'URL'] = 'id' + itemS.loc[itemS[itemS['URL'].str.contains('-') == False].index, 'URL']
+    # itemS.loc[itemS[itemS['URL'].str.contains('-')].index, 'URL'] = itemS.loc[itemS[itemS['URL'].str.contains('-')].index, 'URL'].str.replace('-', 'public')
+    # itemS['URL'] = 'https://vk.com' + '/' + itemS['URL'] + '?w=' + itemS['inner_type'].str.split('_').str[0] + itemS['owner_id'].astype(str) + '_' + itemS['id'].astype(str)
 
     # pandas.set_option('display.max_columns', None)
     display(itemS.head())
@@ -432,30 +530,16 @@ elif stage < stageTarget:
 # In[ ]:
 
 
-# 2.0 Авторская функция для аккуратного сохранения выгрузки текущего метода в Excel в директорию, создаваемую в текущей директории
-def df2fileVK(complicatedNamePart, dfIn, fileFormatChoice, method, today):
-    folder = f'{today}{complicatedNamePart}'
-    print('Сохраняю выгрузку метода', method)
-    if os.path.exists(folder) == False:
-        print('Такой директории не существовало, поэтому она создана')
-        os.makedirs(folder)
-    # else:
-        # print('Эта директория существует')
+# columnsToJSON = ['attachments', 'copy_history'] # столбцы с JSON для сохранения в отдельный JSON
+# for column in columnsToJSON:
+#     if column not in itemS.columns: columnsToJSON.remove(column)
+# print('В выгрузке метода', method, 'есть столбцы, содержащие внутри своих ячеек JSON-объекты; Excel не поддерживает JSON-формат;'
+#       , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
+# df2fileVK(complicatedNamePart, itemS.drop(columnsToJSON, axis=1), '.xlsx', f'{method.split('.')[0] + method.split('.')[1].capitalize()} Other varS', today) # чтобы избавиться от лишней точки в имени файла
+# columnsToJSON.append('id')
+# df2fileVK(complicatedNamePart, itemS[columnsToJSON], '.json', f'{method.split('.')[0] + method.split('.')[1].capitalize()} JSON varS', today) # чтобы избавиться от лишней точки в имени файла
 
-    # df2file(itemS) # при такой записи имя сохранаяемого файла и директория, в которую сохранить, вводятся вручную
-    # print('При сохранении возможно появление обширного предупреждения UserWarning: Ignoring URL.'
-    #       , 'Оно вызвано слишком длинными URL-адресами в датафрейме и не является проблемой; его следует пролистать и перейти к диалоговому окну' )
-    df2file(dfIn, f'{folder} {method}{fileFormatChoice}', folder)
-
-columnsToJSON = [] # столбцы с JSON для сохранения в отдельный JSON
-for column in ['attachments', 'copy_history']:
-    if column in itemS.columns: columnsToJSON.append(column)
-print('В выгрузке метода', method, 'есть столбцы, содержащие внутри своих ячеек JSON-объекты; Excel не поддерживает JSON-формат;'
-      , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
-df2fileVK(complicatedNamePart, itemS.drop(columnsToJSON, axis=1), '.xlsx', f'{method.split('.')[0] + method.split('.')[1].capitalize()} Other varS', today) # чтобы избавиться от лишней точки в имени файла
-columnsToJSON.append('id')
-df2fileVK(complicatedNamePart, itemS[columnsToJSON], '.json', f'{method.split('.')[0] + method.split('.')[1].capitalize()} JSON varS', today) # чтобы избавиться от лишней точки в имени файла
-
+df2fileVK(columnsToJSON,complicatedNamePart, itemS, '.xlsx', method.split('.')[0] + method.split('.')[1].capitalize(), today) # чтобы избавиться от лишней точки в имени файла
 
 # In[ ]:
 
