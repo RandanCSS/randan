@@ -38,7 +38,7 @@ def getFolderFile(*arg): # арки: fileName и folder
         # print(folderFile)
         fileName = folderFile.split(slash)[-1]
         # print(fileName)
-        folder = slash.join(folderFile.split(slash)[:-1])
+        folder = slash.join(folderFile.split(slash)[:-1]) # из полного пути убрать имя файла
         folder += slash
         # print(folder)
 
@@ -84,33 +84,41 @@ def excel2df(*arg):
 def files2df(*arg):
     # print(*arg)
     print('Эта функция предназначена для оформления в датафрейм таблицы из файла формата Excel'
-          , '\nи присоединения к ней связанных ключом (id) таблиц из файлов форматов CSV, Excel и JSON,'
-          , '\nрасположенных в той же директории')
-    df, fileName, folder, slash = excel2df(*arg)
-    # print(fileName)
-    # print(folder)
+          , 'и присоединения к ней связанных ключом (id) таблиц из файлов форматов CSV, Excel и JSON,'
+          , 'расположенных в той же директории')
+    df, error, fileName, folder, slash  = excel2df(*arg)
+    
+    # print('fileName', fileName) # для отладки
+    # print('folder', folder) # для отладки
+    if len(folder) == 0: # значит, из excel2df олный путь передан в fileName
+        folder = slash.join(fileName.split(slash)[:-1]) + slash # из полного пути убрать имя файла
+        fileName = fileName.split(slash)[-1] # из полного пути оставить только имя файла
+
     fileNameS = os.listdir(folder)
-    # print(fileNameS)
+    print(fileNameS)
     fileNameS.remove(fileName)      
     
     formatS = ['XLSX', 'CSV', 'JSON']
-    for format in formatS:
-        print('\n--- Если требуется найти ещё файл формата', format, 'для присоединения, то нажмите Enter'
+    for frmt in formatS:
+        print('\n--- Если требуется найти ещё файл формата', frmt, 'для присоединения, то нажмите Enter'
               , '\n--- Если НЕ требуется, то введите любой символ и нажмите Enter')    
         if len(input()) == 0:
             fileNamesForImport = []
             for fileName in fileNameS:
-                if ('.' + format.lower()) in fileName:
+                if ('.' + frmt.lower()) in fileName:
                     print('--- Найден файл', fileName, '. Если он подходит, то нажмите Enter'
                           , '\n--- Если искать дальше, то введите любой символ и нажмите Enter')
                     if len(input()) == 0:
                         fileNamesForImport.append(fileName)
-                        print('--- Файл', fileName, 'учтён; если требуется найти ещё файл формата', format, ', то нажмите Enter'
+                        print('--- Файл', fileName, 'учтён; если требуется найти ещё файл формата', frmt, ', то нажмите Enter'
                               , '\n--- Если НЕ требуется, то введите любой символ и нажмите Enter')
                         if len(input()) > 0:
                             break
 
             if len(fileNamesForImport) > 0:
+                # print('fileNamesForImport', fileNamesForImport) # для отладки
+                # print('folder', folder) # для отладки
+                # print('fileName', fileName) # для отладки
                 error = None
                 try:
                     for fileName in fileNamesForImport:
@@ -120,7 +128,7 @@ def files2df(*arg):
                         # if 'json' in fileName: df = pandas.concat([df, pandas.read_json(f'{folder}{fileName}')], axis=1)
                 except FileNotFoundError:
                     errorDescription = sys.exc_info()
-                    error = str(errorDescription[1]).replace("No module named '", '').replace("'", '').replace('_', '')
+                    error = str(errorDescription[1])
                     print('error:', error) 
             else:
                 print('Файлы форматов', formatS, 'не найдены в директории\n')
