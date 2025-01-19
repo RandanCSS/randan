@@ -1368,3 +1368,6 @@ sys.exit()
 
 # https://stackoverflow.com/questions/30475309/get-youtube-trends-v3-country-wise-in-json -- про тренды
 # Следует поработать с dfProcessing в том же ключе, как в scrapingVK
+# Следует поработать с df2fileYT в том же ключе, как в scrapingVK
+
+
