@@ -63,7 +63,7 @@ yearMaxByUser = None # в случае отсутствия пользовате
 # 0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
 # 0.1.0 Функции блока:
 # для аккуратного сохранения выгрузки текущего метода в Excel в директорию, создаваемую в текущей директории
-def df2fileVK(columnsToJSON, complicatedNamePart, dfIn, fileFormatChoice, method, today):
+def df2fileVK(complicatedNamePart, dfIn, fileFormatChoice, method, today):
     folder = f'{today}{complicatedNamePart}'
     print('Сохраняю выгрузку метода', method)
     if os.path.exists(folder) == False:
@@ -76,20 +76,23 @@ def df2fileVK(columnsToJSON, complicatedNamePart, dfIn, fileFormatChoice, method
     # print('При сохранении возможно появление обширного предупреждения UserWarning: Ignoring URL.'
     #       , 'Оно вызвано слишком длинными URL-адресами в датафрейме и не является проблемой; его следует пролистать и перейти к диалоговому окну' )
 
-    if (columnsToJSON != None) | (columnsToJSON != []):
-        for column in columnsToJSON:
-            if column not in itemS.columns: columnsToJSON.remove(column)
-        print('В выгрузке метода', method, 'есть столбцы, содержащие внутри своих ячеек JSON-объекты; Excel не поддерживает JSON-формат;'
-              , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
+# Проверка всех столбцов на наличие в их ячейках JSON-формата
+columnsToJSON = list(dfIn.columns) # все столбцы объекта itemS записать в объект columnsToJSON , причём отнести класс этого объекта к списку
+for column in dfIn.columns: # цикл для прохода по всем столбцам объекта itemS
+    # Если в столбце не встречаются ячейки со словарями или списками, то..
+    if dfIn[column].apply(lambda content: True if (type(content) == dict) | (type(content) == list) else False).sum() == 0:
+        columnsToJSON.remove(column) # .. то этот столбец исключается из "подозреваемых"
 
-        df2file(dfIn.drop(columnsToJSON, axis=1), f'{folder} {method} Other varS{fileFormatChoice}', folder)
-        columnsToJSON.append('id')
-        df2file(dfIn[columnsToJSON], f'{folder} {method} JSON varS.json', folder)
-
-    else: df2file(dfIn, f'{folder} {method}{fileFormatChoice}', folder)
+if len(columnsToJSON) > 0:
+    print('В выгрузке метода', method, 'есть столбцы, содержащие внутри своих ячеек JSON-объекты; Excel не поддерживает JSON-формат;'
+          , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
+    df2file(dfIn.drop(columnsToJSON, axis=1), f'{folder} {method} Other varS{fileFormatChoice}', folder)
+    columnsToJSON.append('id')
+    df2file(dfIn[columnsToJSON], f'{folder} {method} JSON varS.json', folder)
+else: df2file(dfIn, f'{folder} {method}{fileFormatChoice}', folder)
 
 # для сохранения следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
-def saveSettings(columnsToJSON, complicatedNamePart, fileFormatChoice, itemS, method, q, slash, stageTarget, targetCount, today, year, yearsRange):
+def saveSettings(complicatedNamePart, fileFormatChoice, itemS, method, q, slash, stageTarget, targetCount, today, year, yearsRange):
     file = open(f'{today}{complicatedNamePart}_Temporal{slash}method.txt', 'w+') # открыть на запись
     file.write(method)
     file.close()
@@ -115,9 +118,9 @@ def saveSettings(columnsToJSON, complicatedNamePart, fileFormatChoice, itemS, me
     file.close()
 
     # itemS.to_excel(f'{today}{complicatedNamePart}_Temporal{slash}{complicatedNamePart} {method}.xlsx')
-    if '.' in method: df2fileVK(columnsToJSON, f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method.split('.')[0] + method.split('.')[1].capitalize(), today)
+    if '.' in method: df2fileVK(f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method.split('.')[0] + method.split('.')[1].capitalize(), today)
         # чтобы избавиться от лишней точки в имени файла
-    else: df2fileVK(columnsToJSON, f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method, today)
+    else: df2fileVK(f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method, today)
     
     print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
           , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
@@ -370,7 +373,7 @@ def bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_ti
     return dfAdd, goS, iteration, keyOrder, pause, response
 
 # 1.2 Авторская функция для обработки выдачи любого из методов, помогающая работе с ключами
-def dfsProcessing(columnsToJSON, complicatedNamePart, fileFormatChoice, dfAdd, dfFinal, dfIn, goS, method, q, slash, stage, targetCount, today, year, yearsRange):
+def dfsProcessing(complicatedNamePart, fileFormatChoice, dfAdd, dfFinal, dfIn, goS, method, q, slash, stage, targetCount, today, year, yearsRange):
     df = pandas.concat([dfIn, dfAdd])        
     columnsForCheck = []
     for column in df.columns: # выдача многих методов содержит столбец id, он оптимален для проверки дублирующхся строк
@@ -391,7 +394,7 @@ def dfsProcessing(columnsToJSON, complicatedNamePart, fileFormatChoice, dfAdd, d
                 print(f'Директория "{today}{complicatedNamePart}_Temporal" создана')
         # else:
             # print(f'Директория "{today}{complicatedNamePart}_Temporal" существует')
-        saveSettings(columnsToJSON, complicatedNamePart, fileFormatChoice, itemS, method, q, slash, stage, targetCount, today, year, yearsRange)
+        saveSettings(complicatedNamePart, fileFormatChoice, itemS, method, q, slash, stage, targetCount, today, year, yearsRange)
         print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit"'
               , '\nТак и должно быть'
               , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
@@ -400,7 +403,6 @@ def dfsProcessing(columnsToJSON, complicatedNamePart, fileFormatChoice, dfAdd, d
 
 # 1.3 Первое обращение к API БЕЗ аргументов start_time, end_time (этап stage = 0)
 method = 'newsfeed.search'
-columnsToJSON = ['attachments', 'copy_history']
 iteration = 0 # номер итерации применения текущего метода
 pause = 0.25
 stage = 0
@@ -419,13 +421,13 @@ if stage >= stageTarget: # eсли нет временного файла stage.
     itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, None, None, vk_requests)
     targetCount = response['total_count']
     # if len(itemS) < targetCount: # на случай достаточности
-    itemS = dfsProcessing(columnsToJSON, complicatedNamePart, fileFormatChoice, itemsAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+    itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, itemsAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
     print('  Проход по всем следующим страницам с выдачей          ')
     while 'next_from' in response.keys():
         start_from = response['next_from']
         # print('    start_from', start_from) # для отладки
         itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, None, None, vk_requests)
-        itemS = dfsProcessing(columnsToJSON, complicatedNamePart, fileFormatChoice, itemsAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+        itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, itemsAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
     print('  Искомых объектов', targetCount, ', а найденных БЕЗ сегментирования по годам и месяцам:', len(itemS))
 
 # 1.4 Этап stage = 1
@@ -449,8 +451,7 @@ if stage >= stageTarget: # eсли нет временного файла stage.
                 end_time = int(time.mktime(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timetuple()))
                 # print('\n  Period from start_time', start_time, 'to end_time', end_time) # для отладки
                 itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, start_time, end_time, vk_requests)
-                itemsYearlyAdditional = dfsProcessing(columnsToJSON
-                                                      , complicatedNamePart
+                itemsYearlyAdditional = dfsProcessing(complicatedNamePart
                                                       , fileFormatChoice
                                                       , itemsMonthlyAdditional
                                                       , itemS
@@ -469,8 +470,7 @@ if stage >= stageTarget: # eсли нет временного файла stage.
                     start_from = response['next_from']
                     # print('    start_from', start_from) # для отладки
                     itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time, vk_requests)
-                    itemsYearlyAdditional = dfsProcessing(columnsToJSON
-                                                          , complicatedNamePart
+                    itemsYearlyAdditional = dfsProcessing(complicatedNamePart
                                                           , fileFormatChoice
                                                           , itemsMonthlyAdditional
                                                           , itemS
@@ -485,7 +485,7 @@ if stage >= stageTarget: # eсли нет временного файла stage.
                                                           , year
                                                           , yearsRange)
                     time.sleep(pause)
-            itemS = dfsProcessing(columnsToJSON, complicatedNamePart, fileFormatChoice, itemsYearlyAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+            itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, itemsYearlyAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
             # display(itemS.head())
             # print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
 
@@ -539,7 +539,7 @@ elif stage < stageTarget:
 # columnsToJSON.append('id')
 # df2fileVK(complicatedNamePart, itemS[columnsToJSON], '.json', f'{method.split('.')[0] + method.split('.')[1].capitalize()} JSON varS', today) # чтобы избавиться от лишней точки в имени файла
 
-df2fileVK(columnsToJSON,complicatedNamePart, itemS, '.xlsx', method.split('.')[0] + method.split('.')[1].capitalize(), today) # чтобы избавиться от лишней точки в имени файла
+df2fileVK(complicatedNamePart, itemS, '.xlsx', method.split('.')[0] + method.split('.')[1].capitalize(), today) # чтобы избавиться от лишней точки в имени файла
 
 # In[ ]:
 
