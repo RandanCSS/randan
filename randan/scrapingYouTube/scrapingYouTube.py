@@ -138,7 +138,7 @@ else:
     while True:
         API_keyS = input()
         if len(API_keyS) != 0:
-            print('-- далее буд[еу]т использован[ы] эт[и] ключ[и]')
+            print('-- далее буд[е у]т использован[ы] эт[от и] ключ[и]')
         
             from randan.tools.textPreprocessing import multispaceCleaner # авторский модуль для предобработки нестандартизированнрого текста
             API_keyS = multispaceCleaner(API_keyS)
