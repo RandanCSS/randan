@@ -10,9 +10,8 @@ while True:
         from randan.tools.df2file import df2file # авторский модуль для сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
         from randan.tools.calendarWithinYear import calendarWithinYear # авторский модуль для работы с календарём конкретного года
         from randan.tools import files2df # авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
-        from vk_requests.exceptions import VkAPIError # на всякий случай, хотя и без этого класса ошибки нормлаьно обрабатываются
         from tqdm import tqdm
-        import os, pandas, re, shutil, time, vk_requests, warnings
+        import os, pandas, re, shutil, time, requests, warnings
         break
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
@@ -76,20 +75,20 @@ def df2fileVK(complicatedNamePart, dfIn, fileFormatChoice, method, today):
     # print('При сохранении возможно появление обширного предупреждения UserWarning: Ignoring URL.'
     #       , 'Оно вызвано слишком длинными URL-адресами в датафрейме и не является проблемой; его следует пролистать и перейти к диалоговому окну' )
 
-# Проверка всех столбцов на наличие в их ячейках JSON-формата
-columnsToJSON = list(dfIn.columns) # все столбцы объекта itemS записать в объект columnsToJSON , причём отнести класс этого объекта к списку
-for column in dfIn.columns: # цикл для прохода по всем столбцам объекта itemS
-    # Если в столбце не встречаются ячейки со словарями или списками, то..
-    if dfIn[column].apply(lambda content: True if (type(content) == dict) | (type(content) == list) else False).sum() == 0:
-        columnsToJSON.remove(column) # .. то этот столбец исключается из "подозреваемых"
+    # Проверка всех столбцов на наличие в их ячейках JSON-формата
+    columnsToJSON = list(dfIn.columns) # все столбцы объекта dfIn записать в объект columnsToJSON , причём отнести класс этого объекта к списку
+    for column in dfIn.columns: # цикл для прохода по всем столбцам объекта dfIn
+        # Если в столбце не встречаются ячейки со словарями или списками, то..
+        if dfIn[column].apply(lambda content: True if (type(content) == dict) | (type(content) == list) else False).sum() == 0:
+            columnsToJSON.remove(column) # .. то этот столбец исключается из "подозреваемых"
 
-if len(columnsToJSON) > 0:
-    print('В выгрузке метода', method, 'есть столбцы, содержащие внутри своих ячеек JSON-объекты; Excel не поддерживает JSON-формат;'
-          , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
-    df2file(dfIn.drop(columnsToJSON, axis=1), f'{folder} {method} Other varS{fileFormatChoice}', folder)
-    columnsToJSON.append('id')
-    df2file(dfIn[columnsToJSON], f'{folder} {method} JSON varS.json', folder)
-else: df2file(dfIn, f'{folder} {method}{fileFormatChoice}', folder)
+    if len(columnsToJSON) > 0:
+        print('В выгрузке метода', method, 'есть столбцы, содержащие внутри своих ячеек JSON-объекты; Excel не поддерживает JSON-формат;'
+              , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
+        df2file(dfIn.drop(columnsToJSON, axis=1), f'{folder}_{method}_Other_varS{fileFormatChoice}', folder)
+        columnsToJSON.append('id')
+        df2file(dfIn[columnsToJSON], f'{folder}_{method}_JSON_varS.json', folder)
+    else: df2file(dfIn, f'{folder}_{method}{fileFormatChoice}', folder)
 
 # для сохранения следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
 def saveSettings(complicatedNamePart, fileFormatChoice, itemS, method, q, slash, stageTarget, targetCount, today, year, yearsRange):
@@ -150,7 +149,7 @@ else:
     while True:
         API_keyS = input()
         if len(API_keyS) != 0:
-            print('-- далее буд[еу]т использован[ы] эт[и] ключ[и]')
+            print('-- далее буд[е у]т использован[ы] эт[от и] ключ[и]')
 
             from randan.tools.textPreprocessing import multispaceCleaner # авторский модуль для предобработки нестандартизированнрого текста
             API_keyS = multispaceCleaner(API_keyS)
@@ -325,46 +324,52 @@ complicatedNamePart += f'{"" if len(yearsRange) == 0 else "_"}{yearMinByUser}-{y
 
 
 # 1.1 Авторская функция для метода search из API YouTube, помогающая работе с ключами
-def bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time, vk_requests):
+def bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time, requests):
+    dfAdd = pandas.DataFrame()
     while True:
-        try:
-            api = vk_requests.create_api(service_token=API_keyS[keyOrder])
-            response = api.newsfeed.search(q=q, start_from=start_from, start_time=start_time, end_time=end_time, extended=1)
-            # print('response', response)
-
-            # Для визуализации процесса
-            print('    Итерация №', iteration, ', number of items', len(response['items']), '                    ', end='\r')
-            iteration += 1
-            
+        params = {
+            'access_token': API_keyS[keyOrder] # обязательный параметр
+            , 'v': '5.199' # обязательный параметр
+            , 'q': q # опциональный параметр
+            , 'start_from': start_from # опциональный параметр
+            , 'start_time': start_time # опциональный параметр
+            , 'end_time': end_time # опциональный параметр
+            , 'extended': 1 # опциональный параметр
+            }
+    
+        response = requests.get('https://api.vk.ru/method/newsfeed.search', params=params)
+        response = response.json() # отобразить выдачу метода get в виде JSON
+        # print('response', response) # для отладки
+        if 'response' in response.keys():
+            response = response['response']
+            dfAdd = pandas.json_normalize(response['items'])
             break
-        except:
-            errorDescription = sys.exc_info()
-            # print('\n    ', errorDescription[1])
-            if 'Too many requests per second' in str(errorDescription[1]):
+        elif 'error' in response.keys():
+            if 'Too many requests per second' in response['error']['error_msg']:
                 # print('  keyOrder до замены', '                    ') # для отладки
-                print('\n    ', errorDescription)
                 keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
                 print(f'\nПохоже, ключ попал под ограничение вследствие слишком высокой частоты обращения скрипта к API; пробую перейти к следующему ключу (№ {keyOrder}) и снизить частоту')
                 # print('  keyOrder после замены', keyOrder, '                    ') # для отладки
                 pause += 0.25
-            elif 'User authorization failed' in str(errorDescription[1]):
+            elif 'User authorization failed' in response['error']['error_msg']:
                 print('\nПохоже, аккаунт попал под ограничение. Оно может быть снято с аккаунта сразу или спустя какое-то время.'
                       , 'Подождите или подготовьте новый ключ в другом аккаунте. И запустите скрипт с начала')
-                print('\n    ', errorDescription)
-                response = {'items': [], 'total_count': 0
-                            , } # принудительная выдача для response без request.execute()
+                response = {'items': [], 'total_count': 0} # принудительная выдача для response
                 goS = False # нет смысла продолжать исполнение скрипта
                 break # и, следовательно, нет смысла в новых итерациях цикла                
             else:
                 print('  Похоже, проблема НЕ в слишком высокой частоте обращения скрипта к API((')
-                print('\n    ', errorDescription)
+                print('  ', response['error']['error_msg'])
                 goS = False # нет смысла продолжать исполнение скрипта
-                break # и, следовательно, нет смысла в новых итерациях цикла
-    dfAdd = pandas.json_normalize(response['items'])
+                break # и, следовательно, нет смысла в новых итерациях цикла                
+
+    # Для визуализации процесса
+    print('    Итерация №', iteration, ', number of items', len(response['items']), '                    ', end='\r')
+    iteration += 1
 
     # Сменить формат представления дат, класс данных столбцов с id, создать столбец с кликабельными ссылками на контент. Здесь, а не в конце, поскольку нужна совместимость с itemS из Temporal и от пользователя
     if len(dfAdd) > 0:
-        dfAdd['date'] = dfAdd['date'].apply(lambda content: datetime.fromtimestamp(content).strftime('%d.%m.%Y'))
+        dfAdd['date'] = dfAdd['date'].apply(lambda content: datetime.fromtimestamp(content).strftime('%Y.%m.%d'))
         dfAdd['URL'] = dfAdd['from_id'].astype(str)
         dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL'] = 'id' + dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL']
         dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'] = dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'].str.replace('-', 'public')
@@ -418,7 +423,7 @@ input('--- После прочтения этой инструкции нажм�
 # if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла с id и нет временного файла stage.txt с указанием пропустить этап
 if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
     print('\nПервое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов')
-    itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, None, None, vk_requests)
+    itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, None, None, requests)
     targetCount = response['total_count']
     # if len(itemS) < targetCount: # на случай достаточности
     itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, itemsAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
@@ -426,7 +431,7 @@ if stage >= stageTarget: # eсли нет временного файла stage.
     while 'next_from' in response.keys():
         start_from = response['next_from']
         # print('    start_from', start_from) # для отладки
-        itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, None, None, vk_requests)
+        itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, None, None, requests)
         itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, itemsAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
     print('  Искомых объектов', targetCount, ', а найденных БЕЗ сегментирования по годам и месяцам:', len(itemS))
 
@@ -450,7 +455,7 @@ if stage >= stageTarget: # eсли нет временного файла stage.
                 start_time = int(time.mktime(datetime(year, int(month), 1).timetuple()))
                 end_time = int(time.mktime(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timetuple()))
                 # print('\n  Period from start_time', start_time, 'to end_time', end_time) # для отладки
-                itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, start_time, end_time, vk_requests)
+                itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, start_time, end_time, requests)
                 itemsYearlyAdditional = dfsProcessing(complicatedNamePart
                                                       , fileFormatChoice
                                                       , itemsMonthlyAdditional
@@ -469,7 +474,7 @@ if stage >= stageTarget: # eсли нет временного файла stage.
                 while 'next_from' in response.keys():
                     start_from = response['next_from']
                     # print('    start_from', start_from) # для отладки
-                    itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time, vk_requests)
+                    itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time, requests)
                     itemsYearlyAdditional = dfsProcessing(complicatedNamePart
                                                           , fileFormatChoice
                                                           , itemsMonthlyAdditional
@@ -559,5 +564,5 @@ sys.exit()
 # input()
 # sys.exit()
 
-# Хорошо бы, чтобы в имени директории и файла метод шёл через нижнее подчёркивание
-... чтобы функция files2df уведомляла об имени первого импортированного файла
+# Хорошо бы, чтобы в имени директории и файла метод шёл через нижнее подчёркивание +
+# ... и чтобы функция files2df уведомляла об имени первого импортированного файла
