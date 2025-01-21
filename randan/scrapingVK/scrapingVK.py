@@ -324,7 +324,7 @@ complicatedNamePart += f'{"" if len(yearsRange) == 0 else "_"}{yearMinByUser}-{y
 
 
 # 1.1 Авторская функция для метода search из API YouTube, помогающая работе с ключами
-def bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time, requests):
+def bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time):
     dfAdd = pandas.DataFrame()
     while True:
         params = {
@@ -423,7 +423,7 @@ input('--- После прочтения этой инструкции нажм�
 # if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла с id и нет временного файла stage.txt с указанием пропустить этап
 if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
     print('\nПервое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов')
-    itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, None, None, requests)
+    itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, None, None)
     targetCount = response['total_count']
     # if len(itemS) < targetCount: # на случай достаточности
     itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, itemsAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
@@ -431,7 +431,7 @@ if stage >= stageTarget: # eсли нет временного файла stage.
     while 'next_from' in response.keys():
         start_from = response['next_from']
         # print('    start_from', start_from) # для отладки
-        itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, None, None, requests)
+        itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, None, None)
         itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, itemsAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
     print('  Искомых объектов', targetCount, ', а найденных БЕЗ сегментирования по годам и месяцам:', len(itemS))
 
@@ -455,7 +455,7 @@ if stage >= stageTarget: # eсли нет временного файла stage.
                 start_time = int(time.mktime(datetime(year, int(month), 1).timetuple()))
                 end_time = int(time.mktime(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timetuple()))
                 # print('\n  Period from start_time', start_time, 'to end_time', end_time) # для отладки
-                itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, start_time, end_time, requests)
+                itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, start_time, end_time)
                 itemsYearlyAdditional = dfsProcessing(complicatedNamePart
                                                       , fileFormatChoice
                                                       , itemsMonthlyAdditional
@@ -474,7 +474,7 @@ if stage >= stageTarget: # eсли нет временного файла stage.
                 while 'next_from' in response.keys():
                     start_from = response['next_from']
                     # print('    start_from', start_from) # для отладки
-                    itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time, requests)
+                    itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time)
                     itemsYearlyAdditional = dfsProcessing(complicatedNamePart
                                                           , fileFormatChoice
                                                           , itemsMonthlyAdditional
