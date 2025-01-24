@@ -23,9 +23,14 @@ while True:
         check_call([sys.executable, "-m", "pip", "install", module])
 
 def tag_topic_URL(videoS):
+    """
+    Функция для обработки двух (полу)стандартизированных текстовых переменных выгрузки метода videos: snippet.tags, topicDetails.topicCategories, а также создания столбца с абсолютной ссылкой
+    
+    Parameters
+    ----------
+    videoS : DataFrame
+    """    
     warnings.filterwarnings("ignore")
-    print('Эта функция предназначена для обработки двух (полу)стандартизированных текстовых переменных выгрузки метода videos:'
-          , 'snippet.tags, topicDetails.topicCategories, а также создания столбца с абсолютной ссылкой')
     varS = ['snippet.tags', 'topicDetails.topicCategories']
     for var in varS:
         nanVideoS = videoS[videoS[var].isna()]
