@@ -69,6 +69,7 @@ def excel2df(*arg):
     error = None
     try:
         df = pandas.read_excel(folderFile, index_col=0)
+        print(f'Файл "{folderFile}" импортирован')
     except FileNotFoundError:
         errorDescription = sys.exc_info()
         error = str(errorDescription[1]).replace("No module named '", '').replace("'", '').replace('_', '')
@@ -82,15 +83,22 @@ def excel2df(*arg):
     return df, error, fileName, folder, slash    
 
 def files2df(*arg):
+    """
+    Функция для оформления в датафрейм таблицы из файла формата Excel и присоединения к ней связанных ключом (id) таблиц из файлов форматов CSV, Excel и JSON, расположенных в той же директории
+    
+    Parameters
+    ----------
+
+    """    
     # print(*arg)
     print('Эта функция предназначена для оформления в датафрейм таблицы из файла формата Excel'
           , 'и присоединения к ней связанных ключом (id) таблиц из файлов форматов CSV, Excel и JSON,'
           , 'расположенных в той же директории')
-    df, error, fileName, folder, slash  = excel2df(*arg)
+    df, error, fileName, folder, slash = excel2df(*arg)
     
     # print('fileName', fileName) # для отладки
     # print('folder', folder) # для отладки
-    if len(folder) == 0: # значит, из excel2df олный путь передан в fileName
+    if len(folder) == 0: # значит, из excel2df полный путь передан в fileName
         folder = slash.join(fileName.split(slash)[:-1]) + slash # из полного пути убрать имя файла
         fileName = fileName.split(slash)[-1] # из полного пути оставить только имя файла
 
