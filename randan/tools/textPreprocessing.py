@@ -30,8 +30,15 @@ def multispaceCleaner(text):
     return cleaned_text
 
 def pymystemLemmatizer(dfIn, columnWithText):
+    """
+    Функция для лемматизации текстов пакетом pymystem3
+    
+    Parameters
+    ----------
+              dfIn : DataFrame
+    columnWithText : str
+    """
     df = dfIn.copy()
-    print('Эта функция предназначена для лемматизации текстов пакетом pymystem3', end='\r')
     time.sleep(0.01)
     print('                                                                                          ', end='\r')
     mstem = pymystem3.Mystem()
@@ -48,7 +55,13 @@ def pymystemLemmatizer(dfIn, columnWithText):
     return df[columnWithText]
 
 def simbolsCleaner(text):
-    print('Эта функция предназначена для чистки текстов от невербального мусора (ненужных символов)', end='\r')
+    """
+    Функция для чистки текстов от невербального мусора (ненужных символов)
+    
+    Parameters
+    ----------
+    text : str
+    """
     time.sleep(0.01)
     print('                                                                                          ', end='\r')
     cleaned_text = ''
@@ -61,7 +74,13 @@ def simbolsCleaner(text):
     return cleaned_text
 
 def stopwordsDropper(text):
-    print('Эта функция предназначена для чистки текстов от стоп-слов пакетом stop_words', end='\r')
+    """
+    Функция для чистки текстов от стоп-слов пакетом stop_words
+    
+    Parameters
+    ----------
+    text : str
+    """
     time.sleep(0.01)
     print('                                                                                          ', end='\r')
     stopwords_list = stop_words.get_stop_words('russian')
