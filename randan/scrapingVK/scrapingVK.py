@@ -1,4 +1,18 @@
 def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitude=None, longitude=None, fields=None):
+    """
+    Функция для выгрузки характеристик контента ВК методом его API newsfeed.search. Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам
+    
+    Parameters
+    ----------
+    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/newsfeed.search
+    access_token : str
+               q : str
+      start_time : int
+        end_time : int
+        latitude : int
+       longitude : int
+          fields : list
+    """
     if (access_token == None) & (q == None) & (start_time == None) & (end_time == None) & (latitude == None) & (longitude == None) & (fields == None):
         # print('Пользователь не подал аргументы')
         expiriencedMode = False
@@ -29,8 +43,8 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
 
     if expiriencedMode == False:
         print('    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрпиты и файлы с данными).'
-              , 'Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию: https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ).'
-              , 'Для получения API key следует создать приложение и из него скопировать сервисный ключ.'
+              , 'Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию:'
+              , 'https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ). Для получения API key следует создать приложение и из него скопировать сервисный ключ.'
               , 'Приложение -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому ВК.'
               , 'Авторизация сервисным ключом позволяет использовать некоторые методы API -- в документации API ВК ( https://dev.vk.com/ru/method ) они помечены серым кружком'
               , '(одним или в сочетании с кружками другого цвета). Его достаточно, если выполнять действия, которые были бы доступны Вам как обычному пользователю ВК:'
@@ -382,7 +396,8 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
         print('    Итерация №', iteration, ', number of items', len(response['items']), '                    ', end='\r')
         iteration += 1
     
-        # Сменить формат представления дат, класс данных столбцов с id, создать столбец с кликабельными ссылками на контент. Здесь, а не в конце, поскольку нужна совместимость с itemS из Temporal и от пользователя
+        # Сменить формат представления дат, класс данных столбцов с id, создать столбец с кликабельными ссылками на контент
+            # Здесь, а не в конце, поскольку нужна совместимость с itemS из Temporal и от пользователя
         if len(dfAdd) > 0:
             dfAdd['date'] = dfAdd['date'].apply(lambda content: datetime.fromtimestamp(content).strftime('%Y.%m.%d'))
             dfAdd['URL'] = dfAdd['from_id'].astype(str)
@@ -578,6 +593,3 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
 #       , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
 # input()
 # sys.exit()
-
-# Хорошо бы, чтобы в имени директории и файла метод шёл через нижнее подчёркивание +
-# ... и чтобы функция files2df уведомляла об имени первого импортированного файла
