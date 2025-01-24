@@ -23,7 +23,14 @@ while True:
         check_call([sys.executable, "-m", "pip", "install", module])
 
 def calendarWithinYear(year):
-    # Календарь день-месяц для лучшей визуализации дальнейшего процесса
+    """
+    Функция "Календарь день-меся"ц для лучшей визуализации дальнейшего процесса
+    
+    Parameters
+    ----------
+    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/newsfeed.search
+    year : int
+    """
     calendar = DataFrame()
     mnth_n31 = [2, 4, 6, 9, 11] # месяцы с числом дней менее 31
     for mnth in range(1, 13):
