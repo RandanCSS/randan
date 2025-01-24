@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import os
 
 name="randan"
-version="0.3.1.9"
+version="0.3.2.0"
 slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
 
 folderS = []
@@ -41,10 +41,10 @@ setup(
         'pandas>=1.0.3',
         'pydot>=1.4.1',
         'regex>=2024.9.11',
+        'requests>=2.32.3',
         'scikit-learn>=0.23.1',
         'statsmodels>=0.11.1',
         'tqdm>=4.66.5',
-        'vk_requests>=1.2.1',
     ],
     python_requires='>=3.6',
 )
