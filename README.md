@@ -1,7 +1,7 @@
 # randan
 _A python package for gaining social and financial data and their analysis_
 
-_Current version: 0.3.1.9_
+_Current version: 0.3.2.0_
 
 _Documentation: https://randan.readthedocs.io/en/latest/_
 
@@ -193,7 +193,7 @@ from randan.scrapingYouTube import scrapingYouTube
 #### Module `scrapingVK`
 This module utilise VK API method news.search. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. You only need to call the necessary module:
 ```python
-from randan.scrapingVK import scrapingVK
+from randan.scrapingVK import scrapingVK()
 
 # with this code, you will immediately see an instruction. Just follow it for executing the default scenario, episodically pressing Enter on your keyboard
 
