@@ -266,7 +266,7 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
         print('\nВозможно, Вы располагаете файлом, в котором есть ранее выгруженные из ВК методом newsfeed.search данные, и который хотели бы дополнить?'
               , 'Или планируете первичный сбор контента?'
               , '\n--- Если планируете первичный сбор, нажмите Enter'
-              , '\n--- Если располагаете файлом, укажите полный путь, включая название файла, и нажмите Enter')
+              , '\n--- Если располагаете файлом формата XLSX, укажите полный путь, включая название файла, и нажмите Enter. Затем при необходимости сможете добавить к нему другие располагаемые файлы')
         while True:
             folderFile = input()
             if len(folderFile) == 0: break
@@ -330,14 +330,27 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
                     else: print('--- Вы ввели тире, но при этом ввели НЕ два года. Попробуйте ещё раз..')
                 else: print('--- Вы НЕ ввели тире. Попробуйте ещё раз..')
             else: break
-    elif end_time != None: year = int(datetime.fromtimestamp(end_time).strftime('%Y')) # как yearMaxByUser , но в experiencedMode
-    elif start_time != None: yearMinByUser = int(datetime.fromtimestamp(start_time).strftime('%Y')) # из experiencedMode
+    if start_time != None:
+        yearMinByUser = int(datetime.fromtimestamp(start_time).strftime('%Y')) # из experiencedMode
+        # print('elif start_time != None:', yearMinByUser) # для отладки
+    
+    if end_time != None:
+        yearMaxByUser = int(datetime.fromtimestamp(end_time).strftime('%Y')) # из experiencedMode
+        # print('elif end_time != None:', yearMaxByUser) # для отладки
+        year = yearMaxByUser
+    
+    if (yearMinByUser != None) & (yearMaxByUser == None): yearMaxByUser = int(today[:4]) # в случае отсутствия пользовательской верхней временнОй границы при наличии нижней
+    elif (yearMinByUser == None) & (yearMaxByUser != None): yearMaxByUser = 1970 # в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
+        
+    # print('yearMinByUser', yearMinByUser) # для отладки
+    # print('yearMaxByUser', yearMaxByUser) # для отладки
+
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_VK'
-    # complicatedNamePart += f'{"" if len(contentType) == 0 else "_"}{contentType}'
-    # complicatedNamePart += f'{"" if len(channelIdForSearch) == 0 else "_channelId"}{channelIdForSearch}'
-    complicatedNamePart += f'{"" if len(q) == 0 else "_"}{q}'
-    complicatedNamePart += f'{"" if len(yearsRange) == 0 else "_"}{yearMinByUser}-{yearMaxByUser}'
+    # complicatedNamePart += "" if len(contentType) == 0 else "_" + contentType
+    # complicatedNamePart += "" if len(channelIdForSearch) == 0 else "_channelId" + channelIdForSearch
+    complicatedNamePart += "" if len(q) == 0 else "_" + q
+    complicatedNamePart += "" if ((yearMinByUser == None) & (yearMaxByUser == None)) else "_" + str(yearMinByUser) + '-' + str(yearMaxByUser)
     # print('complicatedNamePart', complicatedNamePart)
 
 
