@@ -60,15 +60,15 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
 
 # 0.0.1 Некоторые базовые настройки запроса к API YouTube
     fileFormatChoice = '.xlsx' # базовый формат сохраняемых файлов; формат .json добавляется опционально через наличие columnsToJSON
-    folder = ''
-    folderFile = ''
+    folder = None
+    folderFile = None
     goS = True
     itemS = pandas.DataFrame()
     keyOrder = 0
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     stageTarget = 0 # stageTarget принимает значения [0; 3] и относится к стадиям скрипта
-    temporalName = ''
-    yearsRange = ''
+    temporalName = None
+    yearsRange = None
 
     today = date.today().strftime("%Y%m%d") # запрос сегодняшней даты в формате yyyymmdd
     print('\nТекущяя дата:', today, '-- она будет использована для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
@@ -134,7 +134,7 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
         file.close()
     
         file = open(f'{today}{complicatedNamePart}_Temporal{slash}yearsRange.txt', 'w+')
-        file.write(yearsRange) # пользовательский временнОй диапазон
+        file.write(yearsRange if yearsRange != None else '') # пользовательский временнОй диапазон
         file.close()
     
         # itemS.to_excel(f'{today}{complicatedNamePart}_Temporal{slash}{complicatedNamePart} {method}.xlsx')
@@ -236,7 +236,7 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
             # if contentType == 'video':
             #     print('- пользователь НЕ выбрал конкретный канал для выгрузки видео' if channelIdForSearch == '' else  f'- пользователь выбрал канал с id "{channelIdForSearch}" для выгрузки видео')
             print('- пользователь НЕ сформулировал запрос-фильтр' if q == '' else  f'- пользователь сформулировал запрос-фильтр как "{q}"')
-            print('- пользователь НЕ ограничил временнОй диапазон' if yearsRange == '' else  f'- пользователь ограничил временнОй диапазон границами {yearsRange}')
+            print('- пользователь НЕ ограничил временнОй диапазон' if yearsRange == None else  f'- пользователь ограничил временнОй диапазон границами {yearsRange}')
             print('--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter'
                   , '\n--- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите "R" и нажмите Enter'
                   , '\n--- Если хотите найти другие промежуточные результаты, введите любой символ, кроме "R", и нажмите Enter')
@@ -251,7 +251,7 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
                     if '.json' in temporalName: break
                 itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
                 
-                if yearsRange != '':
+                if yearsRange != None:
                     yearsRange = yearsRange.split('-')
                     yearMaxByUser, yearMinByUser, yearsRange = yearsRangeParser(yearsRange)
 # 0.1.3 Данные, сохранённые при прошлом запуске скрипта, загружены;
@@ -260,7 +260,7 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
             elif decision == 'R': shutil.rmtree(rootName, ignore_errors=True)
 
 # 0.1.4 Если такие данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
-    if os.path.exists(f'{rootName}{slash}{temporalName}') == False: # если itemsTemporal, в т.ч. пустой, не существует
+    if temporalName == None: # если itemsTemporal, в т.ч. пустой, не существует
             # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
         print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку')
         print('\nВозможно, Вы располагаете файлом, в котором есть ранее выгруженные из ВК методом newsfeed.search данные, и который хотели бы дополнить?'
@@ -269,7 +269,9 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
               , '\n--- Если располагаете файлом формата XLSX, укажите полный путь, включая название файла, и нажмите Enter. Затем при необходимости сможете добавить к нему другие располагаемые файлы')
         while True:
             folderFile = input()
-            if len(folderFile) == 0: break
+            if len(folderFile) == 0:
+                folderFile = None
+                break
             else:
                 itemS, error, folder = files2df.files2df(folderFile)
                 if error != None:
@@ -277,33 +279,12 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
                         print('Путь:', folderFile, '-- не существует; попробуйте, пожалуйста, ещё раз..')
                 else: break
             # display(itemS)
-# 0.1.5 Теперь определены объекты: folder и folderFile (оба пустые или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
+# 0.1.5 Теперь определены объекты: folder и folderFile (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
 # 0.1.6 Пользовательские настройки запроса к API ВК
-    # # Контент: канал или видео? Или вообще плейлист?
-    # while True:
-    #     print('--- Если НЕ требуется определить тип контента, нажмите Enter'
-    #           , ' \n--- Если требуется определить, введите символ: c -- channel, p -- playlist, v -- video -- и нажмите Enter')
-    #     contentType = input()
-
-    #     if contentType.lower() == '':
-    #         contentType = ''
-    #         break
-    #     elif contentType.lower() == 'c':
-    #         contentType = 'channel'
-    #         break
-    #     elif contentType.lower() == 'p':
-    #         contentType = 'playlist'
-    #         break
-    #     elif contentType.lower() == 'v':
-    #         contentType = 'video'
-    #         break
-    #     else:
-    #         print('--- Вы ввели что-то не то; попробуйте, пожалуйста, ещё раз..')
-
     if q == None:
         print('Скрипт умеет искать контент в постах открытых аккаунтов по текстовому запросу-фильтру'
               , '\n--- Введите текст запроса-фильтра, который ожидаете найти в постах, после чего нажмите Enter')
-        if len(folderFile) > 0: print('ВАЖНО! В результате исполнения текущего скрипта данные из указанного Вами файла'
+        if folderFile != None: print('ВАЖНО! В результате исполнения текущего скрипта данные из указанного Вами файла'
             , folderFile
             , 'будут дополнены актуальными данными из выдачи скрипта'
             , '(возможно появление новых объектов и новых столбцов, а также актуализация содержимого столбцов),'
@@ -311,7 +292,7 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
         q = input()
 
     # Ограничения временнОго диапазона
-    if (start_time == None) & (end_time == None):
+    if (start_time == None) & (end_time == None) & (yearsRange == None):
         while True:
             print('Если требуется конкретный временнОй диапазон, то можно использовать его не на текущем этапе выгрузки данных, а на следующем этапе -- предобработки датафрейма с выгруженными данными.'
                   , 'Проблема в том, что без назначения временнОго диапазона метод newsfeed.search выдаёт ограниченное количество объектов, причём наиболее приближенных к текущему моменту.'
@@ -455,7 +436,6 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
     pause = 0.25
     stage = 0
 
-    # if len(folderFile) == 0: # eсли НЕТ файла с id
     print(f'В скрипте используются следующие аргументы метода {method} API YouTube:'
           , 'q, start_from, start_time, end_time, expand.'
           , 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
@@ -463,7 +443,6 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
           , f'-- можете сделать это внутри метода {method} в чанке 1.1 исполняемого сейчас скрипта')
     input('--- После прочтения этой инструкции нажмите Enter')
     
-    # if (len(folderFile) == 0) & (stage >= stageTarget): # eсли НЕТ файла с id и нет временного файла stage.txt с указанием пропустить этап
     if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
         print('\nПервое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов')
         itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, start_time, end_time, latitude, longitude, fields)
@@ -498,7 +477,7 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
                     start_time = int(time.mktime(datetime(year, int(month), 1).timetuple()))
                     end_time = int(time.mktime(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timetuple()))
                     # print('\n  Period from start_time', start_time, 'to end_time', end_time) # для отладки
-                    itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, start_time, end_time)
+                    itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, start_time, end_time, latitude, longitude, fields)
                     itemsYearlyAdditional = dfsProcessing(complicatedNamePart
                                                           , fileFormatChoice
                                                           , itemsMonthlyAdditional
@@ -517,7 +496,7 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
                     while 'next_from' in response.keys():
                         start_from = response['next_from']
                         # print('    start_from', start_from) # для отладки
-                        itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time)
+                        itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time, latitude, longitude, fields)
                         itemsYearlyAdditional = dfsProcessing(complicatedNamePart
                                                               , fileFormatChoice
                                                               , itemsMonthlyAdditional
@@ -602,7 +581,6 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
     sys.exit()
 
 # warnings.filterwarnings("ignore")
-# print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
-#       , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+# print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть)
 # input()
 # sys.exit()
