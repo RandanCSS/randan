@@ -1,7 +1,7 @@
 # randan
 _A python package for gaining social and financial data and their analysis_
 
-_Current version: 0.3.2.0_
+_Current version: 0.3.2.2_
 
 _Documentation: https://randan.readthedocs.io/en/latest/_
 
@@ -197,5 +197,7 @@ from randan.scrapingVK import scrapingVK()
 
 # with this code, you will immediately see an instruction. Just follow it for executing the default scenario, episodically pressing Enter on your keyboard
 
-# however, if you want to customize the default scenario, you might both use the dialog interface and alter the module's code
+# however, if you want to customize the default scenario, there are three ways availible. The first one is to use the module's dialog interface which appears in the process of executing the module's code
+# The second one is to assign manually the function scrapingVK() arguments, which are None bt default.
+# Finally, the third way is to take the module's code manually and and alter it
 ```
