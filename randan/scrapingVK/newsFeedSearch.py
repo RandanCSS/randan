@@ -243,54 +243,56 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
             # display(itemS)
 # 0.1.5 Теперь определены объекты: folder и folderFile (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
 # 0.1.6 Пользовательские настройки запроса к API ВК
-    if q == None: # если пользователь не подал этот аргумент в рамках experiencedMode
-        print('Скрипт умеет искать контент в постах открытых аккаунтов по текстовому запросу-фильтру'
-              , '\n--- Введите текст запроса-фильтра, который ожидаете найти в постах, после чего нажмите Enter')
-        if folderFile != None: print('ВАЖНО! В результате исполнения текущего скрипта данные из указанного Вами файла'
-            , folderFile
-            , 'будут дополнены актуальными данными из выдачи скрипта'
-            , '(возможно появление новых объектов и новых столбцов, а также актуализация содержимого столбцов),'
-            , 'поэтому, вероятно, следует ввести тот же запрос-фильтр, что и при формировании указанного Вами файла')
-        q = input()
-
-    # Ограничения временнОго диапазона
-    if (start_time == None) & (end_time == None) & (yearsRange == None):
-        while True:
-            print('Если требуется конкретный временнОй диапазон, то можно использовать его не на текущем этапе выгрузки данных, а на следующем этапе -- предобработки датафрейма с выгруженными данными.'
-                  , 'Проблема в том, что без назначения временнОго диапазона метод newsfeed.search выдаёт ограниченное количество объектов, причём наиболее приближенных к текущему моменту.'
-                  , '\n--- Поэтому если всё же требуется назначить временнОй диапазон на этапе выгрузки данных, назначьте его годами (а не более мелкими единицами времени).'
-                  , 'Для назначения диапазона введите без кавычек минимальный год диапазона, тире, максимальный год диапазона (минимум и максимум могут совпадать) и нажмите Enter'
-                  , '\n--- Если НЕ требуется назначить временнОй диапазон на этапе выгрузки данных, нажмите Enter')
-            yearsRange = input()
-            if len(yearsRange) != 0:
-                yearsRange = re.sub(r' *', '', yearsRange)
-                if '-' in yearsRange:
-                    yearsRange = yearsRange.split('-')
-                    if len(yearsRange) == 2:
-                        yearMaxByUser, yearMinByUser, yearsRange = yearsRangeParser(yearsRange)
-                        year = yearMaxByUser
-                        break
-                    else: print('--- Вы ввели тире, но при этом ввели НЕ два года. Попробуйте ещё раз..')
-                else: print('--- Вы НЕ ввели тире. Попробуйте ещё раз..')
-            else: break
-    if start_time != None:
-        yearMinByUser = int(datetime.fromtimestamp(start_time).strftime('%Y')) # из experiencedMode
-        # print('elif start_time != None:', yearMinByUser) # для отладки
+        if q == None: # если пользователь не подал этот аргумент в рамках experiencedMode
+            print('Скрипт умеет искать контент в постах открытых аккаунтов по текстовому запросу-фильтру'
+                  , '\n--- Введите текст запроса-фильтра, который ожидаете найти в постах, после чего нажмите Enter')
+            if folderFile != None: print('ВАЖНО! В результате исполнения текущего скрипта данные из указанного Вами файла'
+                , folderFile
+                , 'будут дополнены актуальными данными из выдачи скрипта'
+                , '(возможно появление новых объектов и новых столбцов, а также актуализация содержимого столбцов),'
+                , 'поэтому, вероятно, следует ввести тот же запрос-фильтр, что и при формировании указанного Вами файла')
+            q = input()
     
-    if end_time != None:
-        yearMaxByUser = int(datetime.fromtimestamp(end_time).strftime('%Y')) # из experiencedMode
-        # print('elif end_time != None:', yearMaxByUser) # для отладки
-        year = yearMaxByUser
-    
-    if (yearMinByUser != None) & (yearMaxByUser == None): yearMaxByUser = int(today[:4]) # в случае отсутствия пользовательской верхней временнОй границы при наличии нижней
-    elif (yearMinByUser == None) & (yearMaxByUser != None): yearMaxByUser = 1970 # в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
+        # Ограничения временнОго диапазона
+        if (start_time == None) & (end_time == None) & (yearsRange == None): # если пользователь не подал эти аргументы в рамках experiencedMode
+            while True:
+                print('Если требуется конкретный временнОй диапазон, то можно использовать его не на текущем этапе выгрузки данных, а на следующем этапе -- предобработки датафрейма с выгруженными данными.'
+                      , 'Проблема в том, что без назначения временнОго диапазона метод newsfeed.search выдаёт ограниченное количество объектов, причём наиболее приближенных к текущему моменту.'
+                      , '\n--- Поэтому если всё же требуется назначить временнОй диапазон на этапе выгрузки данных, назначьте его годами (а не более мелкими единицами времени).'
+                      , 'Для назначения диапазона введите без кавычек минимальный год диапазона, тире, максимальный год диапазона (минимум и максимум могут совпадать) и нажмите Enter'
+                      , '\n--- Если НЕ требуется назначить временнОй диапазон на этапе выгрузки данных, нажмите Enter')
+                yearsRange = input()
+                if len(yearsRange) != 0:
+                    yearsRange = re.sub(r' *', '', yearsRange)
+                    if '-' in yearsRange:
+                        yearsRange = yearsRange.split('-')
+                        if len(yearsRange) == 2:
+                            yearMaxByUser, yearMinByUser, yearsRange = yearsRangeParser(yearsRange)
+                            year = yearMaxByUser
+                            break
+                        else: print('--- Вы ввели тире, но при этом ввели НЕ два года. Попробуйте ещё раз..')
+                    else: print('--- Вы НЕ ввели тире. Попробуйте ещё раз..')
+                else:
+                    yearsRange = None # для унификации
+                    break
+        if start_time != None:
+            yearMinByUser = int(datetime.fromtimestamp(start_time).strftime('%Y')) # из experiencedMode
+            # print('elif start_time != None:', yearMinByUser) # для отладки
         
-    # print('yearMinByUser', yearMinByUser) # для отладки
-    # print('yearMaxByUser', yearMaxByUser) # для отладки
+        if end_time != None:
+            yearMaxByUser = int(datetime.fromtimestamp(end_time).strftime('%Y')) # из experiencedMode
+            # print('elif end_time != None:', yearMaxByUser) # для отладки
+            year = yearMaxByUser
+        
+        if (yearMinByUser != None) & (yearMaxByUser == None): yearMaxByUser = int(today[:4]) # в случае отсутствия пользовательской верхней временнОй границы при наличии нижней
+        elif (yearMinByUser == None) & (yearMaxByUser != None): yearMaxByUser = 1970 # в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
+            
+        # print('yearMinByUser', yearMinByUser) # для отладки
+        # print('yearMaxByUser', yearMaxByUser) # для отладки
 
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_VK'
-    complicatedNamePart += "" if len(q) == 0 else "_" + q
+    complicatedNamePart += "" if q == None else "_" + q
     complicatedNamePart += "" if ((yearMinByUser == None) & (yearMaxByUser == None)) else "_" + str(yearMinByUser) + '-' + str(yearMaxByUser)
     # print('complicatedNamePart', complicatedNamePart)
 
