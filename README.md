@@ -1,7 +1,7 @@
 # randan
 _A python package for gaining social and financial data and their analysis_
 
-_Current version: 1.3.5_
+_Current version: 1.3.6_
 
 _Documentation: https://randan.readthedocs.io/en/latest/_
 
@@ -67,7 +67,7 @@ By now, **twelve statistical** modules have been included in the package. These 
 | regression | BinaryLogisticRegression | Analyze -> Regression -> Binary Logistic | Binary logistic regression |
 | tree | CHAIDRegressor, CHAIDClassifier | Analyze -> Classify -> Tree -> CHAID | CHAID decision tree for scale and categorical dependent variables, respectively |
 
-The module **scrapingYouTube** aims to gain data from YouTube by means of seven methods of its API. These methods are: search, videos, commentThreads & comments, channels, playlists & playlistItems. In this module, complicated iterative implementing of these methods allows to maximize output volume. The iterative implementing includes resorting the output and segmenting it by years. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. The module provides a user with a default scenario of gaining YouTube data. This scenario is arranged as a simple dialog interface. Guiding by this interface and pressing Enter on the keyboard, a user has no need for coding. Meanwhile, an advanced user might customize both the scenario and the module's code itself if needs.
+The module **scrapingYouTube** aims to gain data from YouTube by means of seven methods of its API. These methods are: search, playlists & playlistItems, videos, commentThreads & comments, channels. In this module, complicated iterative implementing of these methods allows to maximize output volume. The iterative implementing includes resorting the output and segmenting it by years. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. The module provides a user with a default scenario of gaining YouTube data. This scenario is arranged as a simple dialog interface. Guiding by this interface and pressing Enter on the keyboard, a user has no need for coding. Meanwhile, an advanced user might customize both the scenario and the module's code itself if needs.
 
 The module **scrapingVK** aims to gain data from Russian popular social medium VK by means of its API method news.search. In this module, iterative implementing of this method allows to maximize output volume. The iterative implementing includes segmenting output by years and months. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. The module provides a user with a default scenario of gaining VK data. This scenario is arranged as a simple dialog interface. Guiding by this interface and pressing Enter on the keyboard, a user has no need for coding. Meanwhile, an advanced user might customize both the scenario and the module's code itself if needs.
 
@@ -182,7 +182,7 @@ chaid = CHAIDRegressor().fit(
 predictions = chaid.predict(node=True, interaction=True)
 ```
 #### Module `scrapingYouTube`
-This module aggregates seven YouTube API methods: search, videos, commentThreads & comments, channels, playlists & playlistItems. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. You only need to call the necessary module:
+This module aggregates seven YouTube API methods: search, playlists & playlistItems, videos, commentThreads & comments, channels. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. You only need to call the necessary module:
 ```python
 from randan.scrapingYouTube import scrapingYouTube
 
