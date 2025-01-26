@@ -232,7 +232,7 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
         while True:
             folderFile = input()
             if len(folderFile) == 0:
-                folderFile = None
+                folderFile = None # для унификации
                 break
             else:
                 itemS, error, folder = files2df.files2df(folderFile)
@@ -243,7 +243,7 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
             # display(itemS)
 # 0.1.5 Теперь определены объекты: folder и folderFile (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
 # 0.1.6 Пользовательские настройки запроса к API ВК
-    if q == None:
+    if q == None: # если пользователь не подал этот аргумент в рамках experiencedMode
         print('Скрипт умеет искать контент в постах открытых аккаунтов по текстовому запросу-фильтру'
               , '\n--- Введите текст запроса-фильтра, который ожидаете найти в постах, после чего нажмите Enter')
         if folderFile != None: print('ВАЖНО! В результате исполнения текущего скрипта данные из указанного Вами файла'
