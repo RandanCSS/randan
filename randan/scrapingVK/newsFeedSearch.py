@@ -26,11 +26,11 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
     import sys
     from subprocess import check_call
     
-    # --- остальные модули и пакеты
+# --- остальные модули и пакеты
     while True:
         try:
             from datetime import date, datetime
-            from randan.tools.df2file import df2file # авторский модуль для сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
+            from randan.tools.df2file import df2fileShell() # авторский модуль для сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
             from randan.tools.calendarWithinYear import calendarWithinYear # авторский модуль для работы с календарём конкретного года
             from randan.tools import files2df # авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
             from tqdm import tqdm
@@ -85,36 +85,7 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
 
 # 0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
 # 0.1.0 Функции блока:
-# для аккуратного сохранения выгрузки текущего метода в Excel в директорию, создаваемую в текущей директории
-    def df2fileVK(complicatedNamePart, dfIn, fileFormatChoice, method, today):
-        folder = f'{today}{complicatedNamePart}'
-        print('Сохраняю выгрузку метода', method)
-        if os.path.exists(folder) == False:
-            print('Такой директории не существовало, поэтому она создана')
-            os.makedirs(folder)
-        # else:
-            # print('Эта директория существует')
-    
-        # df2file(itemS) # при такой записи имя сохранаяемого файла и директория, в которую сохранить, вводятся вручную
-        # print('При сохранении возможно появление обширного предупреждения UserWarning: Ignoring URL.'
-        #       , 'Оно вызвано слишком длинными URL-адресами в датафрейме и не является проблемой; его следует пролистать и перейти к диалоговому окну' )
-    
-        # Проверка всех столбцов на наличие в их ячейках JSON-формата
-        columnsToJSON = list(dfIn.columns) # все столбцы объекта dfIn записать в объект columnsToJSON , причём отнести класс этого объекта к списку
-        for column in dfIn.columns: # цикл для прохода по всем столбцам объекта dfIn
-            # Если в столбце не встречаются ячейки со словарями или списками, то..
-            if dfIn[column].apply(lambda content: True if (type(content) == dict) | (type(content) == list) else False).sum() == 0:
-                columnsToJSON.remove(column) # .. то этот столбец исключается из "подозреваемых"
-    
-        if len(columnsToJSON) > 0:
-            print('В выгрузке метода', method, 'есть столбцы, содержащие внутри своих ячеек JSON-объекты; Excel не поддерживает JSON-формат;'
-                  , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
-            df2file(dfIn.drop(columnsToJSON, axis=1), f'{folder}_{method}_Other_varS{fileFormatChoice}', folder)
-            columnsToJSON.append('id')
-            df2file(dfIn[columnsToJSON], f'{folder}_{method}_JSON_varS.json', folder)
-        else: df2file(dfIn, f'{folder}_{method}{fileFormatChoice}', folder)
-
-# для сохранения следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
+    # для сохранения следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
     def saveSettings(complicatedNamePart, fileFormatChoice, itemS, method, q, slash, stageTarget, targetCount, today, year, yearsRange):
         file = open(f'{today}{complicatedNamePart}_Temporal{slash}method.txt', 'w+') # открыть на запись
         file.write(method)
@@ -139,11 +110,10 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
         file = open(f'{today}{complicatedNamePart}_Temporal{slash}yearsRange.txt', 'w+')
         file.write(yearsRange if yearsRange != None else '') # пользовательский временнОй диапазон
         file.close()
-    
-        # itemS.to_excel(f'{today}{complicatedNamePart}_Temporal{slash}{complicatedNamePart} {method}.xlsx')
-        if '.' in method: df2fileVK(f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method.split('.')[0] + method.split('.')[1].capitalize(), today)
+
+        if '.' in method: df2fileShell(f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method.split('.')[0] + method.split('.')[1].capitalize(), today)
             # чтобы избавиться от лишней точки в имени файла
-        else: df2fileVK(f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method, today)
+        else: df2fileShell(f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method, today)
         
         print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
               , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
@@ -175,11 +145,11 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
                 API_keyS = input()
                 if len(API_keyS) != 0:
                     print('-- далее буд[е у]т использован[ы] эт[от и] ключ[и]')
-        
+
                     from randan.tools.textPreprocessing import multispaceCleaner # авторский модуль для предобработки нестандартизированнрого текста
                     API_keyS = multispaceCleaner(API_keyS)
                     while API_keyS[-1] == ',': API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста
-        
+
                     file = open("credentialsVK.txt", "w+") # открыть на запись
                     file.write(API_keyS)
                     file.close()
@@ -210,14 +180,6 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
             file.close()
             year = int(year)
     
-            # file = open(f'{rootName}{slash}contentType.txt')
-            # contentType = file.read()
-            # file.close()
-    
-            # file = open(f'{rootName}{slash}channelIdForSearch.txt')
-            # channelIdForSearch = file.read()
-            # file.close()
-    
             file = open(f'{rootName}{slash}q.txt') # , encoding='utf-8'
             q = file.read()
             file.close()
@@ -235,9 +197,6 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
                   # , '\n- было выявлено целевое число объектов (targetCount)', targetCount
                   , '\n- скрипт остановился на методе', method)
             if year < int(today[:4]): print('- и на годе (при сегментировани по годам)', year)
-            # print('- пользователь НЕ определил тип контента' if contentType == '' else  f'- пользователь определил тип контента как "{contentType}"')
-            # if contentType == 'video':
-            #     print('- пользователь НЕ выбрал конкретный канал для выгрузки видео' if channelIdForSearch == '' else  f'- пользователь выбрал канал с id "{channelIdForSearch}" для выгрузки видео')
             print('- пользователь НЕ сформулировал запрос-фильтр' if q == '' else  f'- пользователь сформулировал запрос-фильтр как "{q}"')
             print('- пользователь НЕ ограничил временнОй диапазон' if yearsRange == None else  f'- пользователь ограничил временнОй диапазон границами {yearsRange}')
             print('--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter'
@@ -258,7 +217,7 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
                     yearsRange = yearsRange.split('-')
                     yearMaxByUser, yearMinByUser, yearsRange = yearsRangeParser(yearsRange)
 # 0.1.3 Данные, сохранённые при прошлом запуске скрипта, загружены;
-    # их метаданные (q, contentType, yearsRange, stageTarget) будут использоваться при исполнении скрипта
+    # их метаданные (q, yearsRange, stageTarget) будут использоваться при исполнении скрипта
                 break
             elif decision == 'R': shutil.rmtree(rootName, ignore_errors=True)
 
@@ -331,8 +290,6 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
 
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_VK'
-    # complicatedNamePart += "" if len(contentType) == 0 else "_" + contentType
-    # complicatedNamePart += "" if len(channelIdForSearch) == 0 else "_channelId" + channelIdForSearch
     complicatedNamePart += "" if len(q) == 0 else "_" + q
     complicatedNamePart += "" if ((yearMinByUser == None) & (yearMaxByUser == None)) else "_" + str(yearMinByUser) + '-' + str(yearMaxByUser)
     # print('complicatedNamePart', complicatedNamePart)
@@ -565,11 +522,11 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
 #     if column not in itemS.columns: columnsToJSON.remove(column)
 # print('В выгрузке метода', method, 'есть столбцы, содержащие внутри своих ячеек JSON-объекты; Excel не поддерживает JSON-формат;'
 #       , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
-# df2fileVK(complicatedNamePart, itemS.drop(columnsToJSON, axis=1), '.xlsx', f'{method.split('.')[0] + method.split('.')[1].capitalize()} Other varS', today) # чтобы избавиться от лишней точки в имени файла
+# df2fileShell(complicatedNamePart, itemS.drop(columnsToJSON, axis=1), '.xlsx', f'{method.split('.')[0] + method.split('.')[1].capitalize()} Other varS', today) # чтобы избавиться от лишней точки в имени файла
 # columnsToJSON.append('id')
-# df2fileVK(complicatedNamePart, itemS[columnsToJSON], '.json', f'{method.split('.')[0] + method.split('.')[1].capitalize()} JSON varS', today) # чтобы избавиться от лишней точки в имени файла
+# df2fileShell(complicatedNamePart, itemS[columnsToJSON], '.json', f'{method.split('.')[0] + method.split('.')[1].capitalize()} JSON varS', today) # чтобы избавиться от лишней точки в имени файла
 
-    df2fileVK(complicatedNamePart, itemS, '.xlsx', method.split('.')[0] + method.split('.')[1].capitalize(), today) # чтобы избавиться от лишней точки в имени файла
+    df2fileShell(complicatedNamePart, itemS, '.xlsx', method.split('.')[0] + method.split('.')[1].capitalize(), today) # чтобы избавиться от лишней точки в имени файла
 
 # In[ ]:
 
