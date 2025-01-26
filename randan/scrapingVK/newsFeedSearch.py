@@ -1,4 +1,7 @@
-def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitude=None, longitude=None, fields=None):
+#!/usr/bin/env python
+# coding: utf-8
+
+def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, latitude=None, longitude=None, fields=None):
     """
     Функция для выгрузки характеристик контента ВК методом его API newsfeed.search. Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам
     
@@ -440,7 +443,7 @@ def scrapingVK(access_token=None, q=None, start_time=None, end_time=None, latitu
           , 'q, start_from, start_time, end_time, expand.'
           , 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
           , f'Если хотите добавить другие аргументы метода {method} API ВК, доступные по ссылке https://dev.vk.com/ru/method/newsfeed.search ,'
-          , f'-- можете подать их в скобки функции scrapingVK перед её запуском или скопировать код исполняемого сейчас скрипта и сделать это внутри кода внутри метода {method} в чанке 1.1')
+          , f'-- можете подать их в скобки функции newsFeedSearch перед её запуском или скопировать код исполняемого сейчас скрипта и сделать это внутри кода внутри метода {method} в чанке 1.1')
     input('--- После прочтения этой инструкции нажмите Enter')
     
     if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
