@@ -395,6 +395,7 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
     iteration = 0 # номер итерации применения текущего метода
     pause = 0.25
     stage = 0
+    q = None
 
     print(f'В скрипте используются следующие аргументы метода {method} API YouTube:'
           , 'q, start_from, start_time, end_time, expand.'
