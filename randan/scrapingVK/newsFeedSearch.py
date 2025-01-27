@@ -1,6 +1,178 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+
+# In[ ]:
+
+
+# # 0 Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
+
+
+# In[ ]:
+
+
+# sys & subprocess -- эти пакеты должны быть предустанавлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+import sys
+from subprocess import check_call
+
+# --- остальные модули и пакеты
+while True:
+    try:
+        from datetime import date, datetime
+        from randan.tools import calendarWithinYear # авторский модуль для работы с календарём конкретного года
+        from randan.tools import df2file # авторский модуль для сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
+        from randan.tools import files2df # авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
+        from tqdm import tqdm
+        import os, pandas, re, shutil, time, requests, warnings
+        break
+    except ModuleNotFoundError:
+        errorDescription = sys.exc_info()
+        module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
+        if '.' in module: module = module.split('.')[0]
+        print('Пакет', module, 'НЕ прединсталируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталирован сейчас\n')
+        check_call([sys.executable, "-m", "pip", "install", module])
+tqdm.pandas() # для визуализации прогресса функций, применяемых к датафреймам
+
+
+# In[ ]:
+
+
+# # 1 Авторские функции
+
+
+# In[ ]:
+
+
+# 1.0 для метода search из API ВК, помогающая работе с ключами
+def bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time, latitude, longitude, fields):
+    dfAdd = pandas.DataFrame()
+    while True:
+        params = {
+            'access_token': API_keyS[keyOrder] # обязательный параметр
+            , 'v': '5.199' # обязательный параметр
+            , 'q': q # опциональный параметр
+            , 'start_from': start_from # опциональный параметр
+            , 'start_time': start_time # опциональный параметр
+            , 'end_time': end_time # опциональный параметр
+            , 'latitude': latitude # опциональный параметр
+            , 'longitude': longitude # опциональный параметр
+            , 'extended': 1 # опциональный параметр
+            , 'fields': fields # опциональный параметр
+            }            
+        response = requests.get('https://api.vk.ru/method/newsfeed.search', params=params)
+        response = response.json() # отобразить выдачу метода get в виде JSON
+        # print('response', response) # для отладки
+        if 'response' in response.keys():
+            response = response['response']
+            dfAdd = pandas.json_normalize(response['items'])
+            break
+        elif 'error' in response.keys():
+            if 'Too many requests per second' in response['error']['error_msg']:
+                # print('  keyOrder до замены', '                    ') # для отладки
+                keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
+                print(f'\nПохоже, ключ попал под ограничение вследствие слишком высокой частоты обращения скрипта к API; пробую перейти к следующему ключу (№ {keyOrder}) и снизить частоту')
+                # print('  keyOrder после замены', keyOrder, '                    ') # для отладки
+                pause += 0.25
+            elif 'User authorization failed' in response['error']['error_msg']:
+                print('\nПохоже, аккаунт попал под ограничение. Оно может быть снято с аккаунта сразу или спустя какое-то время.'
+                      , 'Подождите или подготовьте новый ключ в другом аккаунте. И запустите скрипт с начала')
+                response = {'items': [], 'total_count': 0} # принудительная выдача для response
+                goS = False # нет смысла продолжать исполнение скрипта
+                break # и, следовательно, нет смысла в новых итерациях цикла                
+            else:
+                print('  Похоже, проблема НЕ в слишком высокой частоте обращения скрипта к API((')
+                print('  ', response['error']['error_msg'])
+                goS = False # нет смысла продолжать исполнение скрипта
+                break # и, следовательно, нет смысла в новых итерациях цикла                
+
+    # Для визуализации процесса
+    print('    Итерация №', iteration, ', number of items', len(response['items']), '                    ', end='\r')
+    iteration += 1
+
+    # Сменить формат представления дат, класс данных столбцов с id, создать столбец с кликабельными ссылками на контент
+        # Здесь, а не в конце, поскольку нужна совместимость с itemS из Temporal и от пользователя
+    if len(dfAdd) > 0:
+        dfAdd['date'] = dfAdd['date'].apply(lambda content: datetime.fromtimestamp(content).strftime('%Y.%m.%d'))
+        dfAdd['URL'] = dfAdd['from_id'].astype(str)
+        dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL'] = 'id' + dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL']
+        dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'] = dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'].str.replace('-', 'public')
+        dfAdd['URL'] = 'https://vk.com' + '/' + dfAdd['URL'] + '?w=' + dfAdd['inner_type'].str.split('_').str[0] + dfAdd['owner_id'].astype(str) + '_' + dfAdd['id'].astype(str)
+
+    return dfAdd, goS, iteration, keyOrder, pause, response
+
+# 1.1 для обработки выдачи любого из методов, помогающая работе с ключами
+def dfsProcessing(complicatedNamePart, fileFormatChoice, dfAdd, dfFinal, dfIn, goS, method, q, slash, stage, targetCount, today, year, yearsRange):
+    df = pandas.concat([dfIn, dfAdd])        
+    columnsForCheck = []
+    for column in df.columns: # выдача многих методов содержит столбец id, он оптимален для проверки дублирующхся строк
+        if 'id' == column:
+            columnsForCheck.append(column)
+    if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующхся строк возможна по столбцам, содержаим в имени id
+        for column in df.columns:
+            if 'id.' in column:
+                columnsForCheck.append(column)
+    # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck)
+    df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True) # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые 
+
+    if goS == False:
+        print('Поскольку исполнение скрипта натолкнулось на ошибку,'
+              , f'сохраняю выгруженный контент и текущий этап поиска в директорию "{today}{complicatedNamePart}_Temporal"')
+        if not os.path.exists(f'{today}{complicatedNamePart}_Temporal'):
+                os.makedirs(f'{today}{complicatedNamePart}_Temporal')
+                print(f'Директория "{today}{complicatedNamePart}_Temporal" создана')
+        # else:
+            # print(f'Директория "{today}{complicatedNamePart}_Temporal" существует')
+        saveSettings(complicatedNamePart, fileFormatChoice, itemS, method, q, slash, stage, targetCount, today, year, yearsRange)
+        print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit"'
+              , '\nТак и должно быть'
+              , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+        sys.exit()
+    return df
+
+# 1.2 для сохранения следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
+def saveSettings(complicatedNamePart, fileFormatChoice, itemS, method, q, slash, stageTarget, targetCount, today, year, yearsRange):
+    file = open(f'{today}{complicatedNamePart}_Temporal{slash}method.txt', 'w+') # открыть на запись
+    file.write(method)
+    file.close()
+    
+    file = open(f'{today}{complicatedNamePart}_Temporal{slash}q.txt', 'w+')
+    file.write(q)
+    file.close()
+
+    file = open(f'{today}{complicatedNamePart}_Temporal{slash}stageTarget.txt', 'w+')
+    file.write(str(stageTarget)) # stageTarget принимает значения [0; 3]
+    file.close()
+
+    file = open(f'{today}{complicatedNamePart}_Temporal{slash}targetCount.txt', 'w+')
+    file.write(str(targetCount))
+    file.close()
+
+    file = open(f'{today}{complicatedNamePart}_Temporal{slash}year.txt', 'w+')
+    file.write(str(year)) # год, на котором остановилось исполнение скрипта
+    file.close()
+
+    file = open(f'{today}{complicatedNamePart}_Temporal{slash}yearsRange.txt', 'w+')
+    file.write(yearsRange if yearsRange != None else '') # пользовательский временнОй диапазон
+    file.close()
+
+    if '.' in method: df2file.df2fileShell(f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method.split('.')[0] + method.split('.')[1].capitalize(), today)
+        # чтобы избавиться от лишней точки в имени файла
+    else: df2file.df2fileShell(f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method, today)
+    
+    print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
+          , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
+    shutil.rmtree(rootName, ignore_errors=True)
+
+
+# In[ ]:
+
+
+# # 2 Авторская функция исполнения скрипта
+
+
+# In[ ]:
+
+
 def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, latitude=None, longitude=None, fields=None):
     """
     Функция для выгрузки характеристик контента ВК методом его API newsfeed.search. Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам
@@ -21,29 +193,6 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
         expiriencedMode = False
     else: expiriencedMode = True
 
-# 0.0.0 Активировать требуемые для работы скрипта модули и пакеты
-# sys & subprocess -- эти пакеты должны быть предустанавлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
-    import sys
-    from subprocess import check_call
-    
-# --- остальные модули и пакеты
-    while True:
-        try:
-            from datetime import date, datetime
-            from randan.tools.df2file import df2fileShell() # авторский модуль для сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
-            from randan.tools.calendarWithinYear import calendarWithinYear # авторский модуль для работы с календарём конкретного года
-            from randan.tools import files2df # авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
-            from tqdm import tqdm
-            import os, pandas, re, shutil, time, requests, warnings
-            break
-        except ModuleNotFoundError:
-            errorDescription = sys.exc_info()
-            module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
-            if '.' in module: module = module.split('.')[0]
-            print('Пакет', module, 'НЕ прединсталируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталирован сейчас\n')
-            check_call([sys.executable, "-m", "pip", "install", module])
-    tqdm.pandas() # для визуализации прогресса функций, применяемых к датафреймам
-
     if expiriencedMode == False:
         print('    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрпиты и файлы с данными).'
               , 'Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию:'
@@ -61,7 +210,8 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
           , 'не требуется тщательно изучать обширную и при этом неполную документацию методов API ВК')
     input('--- После прочтения этой инструкции нажмите Enter')
 
-# 0.0.1 Некоторые базовые настройки запроса к API YouTube
+# 2.0 Настройки и авторизация
+# 2.0.0 Некоторые базовые настройки запроса к API ВК
     fileFormatChoice = '.xlsx' # базовый формат сохраняемых файлов; формат .json добавляется опционально через наличие columnsToJSON
     folder = None
     folderFile = None
@@ -83,53 +233,9 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
     yearMinByUser = None # в случае отсутствия пользовательского временнОго диапазона
     yearMaxByUser = None # в случае отсутствия пользовательского временнОго диапазона
 
-# 0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
-# 0.1.0 Функции блока:
-    # для сохранения следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
-    def saveSettings(complicatedNamePart, fileFormatChoice, itemS, method, q, slash, stageTarget, targetCount, today, year, yearsRange):
-        file = open(f'{today}{complicatedNamePart}_Temporal{slash}method.txt', 'w+') # открыть на запись
-        file.write(method)
-        file.close()
-        
-        file = open(f'{today}{complicatedNamePart}_Temporal{slash}q.txt', 'w+')
-        file.write(q)
-        file.close()
-    
-        file = open(f'{today}{complicatedNamePart}_Temporal{slash}stageTarget.txt', 'w+')
-        file.write(str(stageTarget)) # stageTarget принимает значения [0; 3]
-        file.close()
-    
-        file = open(f'{today}{complicatedNamePart}_Temporal{slash}targetCount.txt', 'w+')
-        file.write(str(targetCount))
-        file.close()
-    
-        file = open(f'{today}{complicatedNamePart}_Temporal{slash}year.txt', 'w+')
-        file.write(str(year)) # год, на котором остановилось исполнение скрипта
-        file.close()
-    
-        file = open(f'{today}{complicatedNamePart}_Temporal{slash}yearsRange.txt', 'w+')
-        file.write(yearsRange if yearsRange != None else '') # пользовательский временнОй диапазон
-        file.close()
-
-        if '.' in method: df2fileShell(f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method.split('.')[0] + method.split('.')[1].capitalize(), today)
-            # чтобы избавиться от лишней точки в имени файла
-        else: df2fileShell(f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method, today)
-        
-        print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
-              , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
-        shutil.rmtree(rootName, ignore_errors=True)
-
-# для парсинга пользовательского временнОго диапазона в случае использования сохранённого следа
-    # и в случае назначения пользовательского временнОго диапазона
-    def yearsRangeParser(yearsRange):
-        yearsRange.sort()
-        yearMinByUser = int(yearsRange[0])
-        yearMaxByUser = int(yearsRange[-1])
-        yearsRange = f'{yearMinByUser}-{yearMaxByUser}'
-        return yearMaxByUser, yearMinByUser, yearsRange
-
+# 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     rootNameS = os.listdir()
-# Поиск ключей
+    # Поиск ключей
     if access_token == None:
         print('Проверяю наличие файла credentialsVK.txt с ключ[ом ами], гипотетически сохранённым[и] при первом запуске скрипта')
         if 'credentialsVK.txt' in rootNameS:
@@ -160,8 +266,8 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
     else: API_keyS = [access_token]
     print('Количество ключей:', len(API_keyS), '\n')
 
-# 0.1.1 Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
-# 0.1.2 Поиск данных
+# 2.0.2 Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
+    # Поиск данных
     print('Проверяю наличие директории Temporal с данными и их мета-данными,'
           ,'гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
     for rootName in rootNameS:
@@ -215,13 +321,12 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
                 
                 if yearsRange != None:
                     yearsRange = yearsRange.split('-')
-                    yearMaxByUser, yearMinByUser, yearsRange = yearsRangeParser(yearsRange)
-# 0.1.3 Данные, сохранённые при прошлом запуске скрипта, загружены;
-    # их метаданные (q, yearsRange, stageTarget) будут использоваться при исполнении скрипта
+                    yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
+# Данные, сохранённые при прошлом запуске скрипта, загружены; их метаданные (q, yearsRange, stageTarget) будут использоваться при исполнении скрипта
                 break
             elif decision == 'R': shutil.rmtree(rootName, ignore_errors=True)
 
-# 0.1.4 Если такие данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
+# 2.0.3 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
     if temporalName == None: # если itemsTemporal, в т.ч. пустой, не существует
             # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
         print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку')
@@ -241,8 +346,9 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
                         print('Путь:', folderFile, '-- не существует; попробуйте, пожалуйста, ещё раз..')
                 else: break
             # display(itemS)
-# 0.1.5 Теперь определены объекты: folder и folderFile (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
-# 0.1.6 Пользовательские настройки запроса к API ВК
+# Теперь определены объекты: folder и folderFile (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
+
+# 2.0.4 Пользовательские настройки запроса к API YouTube
         if q == None: # если пользователь не подал этот аргумент в рамках experiencedMode
             print('Скрипт умеет искать контент в постах открытых аккаунтов по текстовому запросу-фильтру'
                   , '\n--- Введите текст запроса-фильтра, который ожидаете найти в постах, после чего нажмите Enter')
@@ -267,7 +373,7 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
                     if '-' in yearsRange:
                         yearsRange = yearsRange.split('-')
                         if len(yearsRange) == 2:
-                            yearMaxByUser, yearMinByUser, yearsRange = yearsRangeParser(yearsRange)
+                            yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
                             year = yearMaxByUser
                             break
                         else: print('--- Вы ввели тире, но при этом ввели НЕ два года. Попробуйте ещё раз..')
@@ -296,108 +402,12 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
     complicatedNamePart += "" if ((yearMinByUser == None) & (yearMaxByUser == None)) else "_" + str(yearMinByUser) + '-' + str(yearMaxByUser)
     # print('complicatedNamePart', complicatedNamePart)
 
-
-# In[ ]:
-
-
-# # 1. Первичный сбор контента методом search
-
-
-# In[ ]:
-
-
-# 1.1 Авторская функция для метода search из API YouTube, помогающая работе с ключами
-    def bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time, latitude, longitude, fields):
-        dfAdd = pandas.DataFrame()
-        while True:
-            params = {
-                'access_token': API_keyS[keyOrder] # обязательный параметр
-                , 'v': '5.199' # обязательный параметр
-                , 'q': q # опциональный параметр
-                , 'start_from': start_from # опциональный параметр
-                , 'start_time': start_time # опциональный параметр
-                , 'end_time': end_time # опциональный параметр
-                , 'latitude': latitude # опциональный параметр
-                , 'longitude': longitude # опциональный параметр
-                , 'extended': 1 # опциональный параметр
-                , 'fields': fields # опциональный параметр
-                }            
-            response = requests.get('https://api.vk.ru/method/newsfeed.search', params=params)
-            response = response.json() # отобразить выдачу метода get в виде JSON
-            # print('response', response) # для отладки
-            if 'response' in response.keys():
-                response = response['response']
-                dfAdd = pandas.json_normalize(response['items'])
-                break
-            elif 'error' in response.keys():
-                if 'Too many requests per second' in response['error']['error_msg']:
-                    # print('  keyOrder до замены', '                    ') # для отладки
-                    keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
-                    print(f'\nПохоже, ключ попал под ограничение вследствие слишком высокой частоты обращения скрипта к API; пробую перейти к следующему ключу (№ {keyOrder}) и снизить частоту')
-                    # print('  keyOrder после замены', keyOrder, '                    ') # для отладки
-                    pause += 0.25
-                elif 'User authorization failed' in response['error']['error_msg']:
-                    print('\nПохоже, аккаунт попал под ограничение. Оно может быть снято с аккаунта сразу или спустя какое-то время.'
-                          , 'Подождите или подготовьте новый ключ в другом аккаунте. И запустите скрипт с начала')
-                    response = {'items': [], 'total_count': 0} # принудительная выдача для response
-                    goS = False # нет смысла продолжать исполнение скрипта
-                    break # и, следовательно, нет смысла в новых итерациях цикла                
-                else:
-                    print('  Похоже, проблема НЕ в слишком высокой частоте обращения скрипта к API((')
-                    print('  ', response['error']['error_msg'])
-                    goS = False # нет смысла продолжать исполнение скрипта
-                    break # и, следовательно, нет смысла в новых итерациях цикла                
-    
-        # Для визуализации процесса
-        print('    Итерация №', iteration, ', number of items', len(response['items']), '                    ', end='\r')
-        iteration += 1
-    
-        # Сменить формат представления дат, класс данных столбцов с id, создать столбец с кликабельными ссылками на контент
-            # Здесь, а не в конце, поскольку нужна совместимость с itemS из Temporal и от пользователя
-        if len(dfAdd) > 0:
-            dfAdd['date'] = dfAdd['date'].apply(lambda content: datetime.fromtimestamp(content).strftime('%Y.%m.%d'))
-            dfAdd['URL'] = dfAdd['from_id'].astype(str)
-            dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL'] = 'id' + dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL']
-            dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'] = dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'].str.replace('-', 'public')
-            dfAdd['URL'] = 'https://vk.com' + '/' + dfAdd['URL'] + '?w=' + dfAdd['inner_type'].str.split('_').str[0] + dfAdd['owner_id'].astype(str) + '_' + dfAdd['id'].astype(str)
-    
-        return dfAdd, goS, iteration, keyOrder, pause, response
-
-# 1.2 Авторская функция для обработки выдачи любого из методов, помогающая работе с ключами
-    def dfsProcessing(complicatedNamePart, fileFormatChoice, dfAdd, dfFinal, dfIn, goS, method, q, slash, stage, targetCount, today, year, yearsRange):
-        df = pandas.concat([dfIn, dfAdd])        
-        columnsForCheck = []
-        for column in df.columns: # выдача многих методов содержит столбец id, он оптимален для проверки дублирующхся строк
-            if 'id' == column:
-                columnsForCheck.append(column)
-        if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующхся строк возможна по столбцам, содержаим в имени id
-            for column in df.columns:
-                if 'id.' in column:
-                    columnsForCheck.append(column)
-        # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck)
-        df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True) # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые 
-    
-        if goS == False:
-            print('Поскольку исполнение скрипта натолкнулось на ошибку,'
-                  , f'сохраняю выгруженный контент и текущий этап поиска в директорию "{today}{complicatedNamePart}_Temporal"')
-            if not os.path.exists(f'{today}{complicatedNamePart}_Temporal'):
-                    os.makedirs(f'{today}{complicatedNamePart}_Temporal')
-                    print(f'Директория "{today}{complicatedNamePart}_Temporal" создана')
-            # else:
-                # print(f'Директория "{today}{complicatedNamePart}_Temporal" существует')
-            saveSettings(complicatedNamePart, fileFormatChoice, itemS, method, q, slash, stage, targetCount, today, year, yearsRange)
-            print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit"'
-                  , '\nТак и должно быть'
-                  , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
-            sys.exit()
-        return df
-
-# 1.3 Первое обращение к API БЕЗ аргументов start_time, end_time (этап stage = 0)
+# 2.1 Первичный сбор контента методом search
+# 2.1.0 Первое обращение к API БЕЗ аргументов start_time, end_time (этап stage = 0)
+    stage = 0
     method = 'newsfeed.search'
     iteration = 0 # номер итерации применения текущего метода
     pause = 0.25
-    stage = 0
-    q = None
 
     print(f'В скрипте используются следующие аргументы метода {method} API YouTube:'
           , 'q, start_from, start_time, end_time, expand.'
@@ -420,7 +430,7 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
             itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, itemsAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
         print('  Искомых объектов', targetCount, ', а найденных БЕЗ сегментирования по годам и месяцам:', len(itemS))
 
-# 1.4 Этап stage = 1
+# 2.1.1 Этап сегментирования по годам и месяцам (stage = 1)
     stage = 1
     if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
         if len(itemS) < targetCount:
@@ -430,7 +440,7 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
               , 'или года с пустой выдачей')
             while True:
                 # print('Ищу текст запроса-фильтра в контенте за', year, 'год')
-                calendar = calendarWithinYear(year)
+                calendar = calendarWithinYear.calendarWithinYear(year)
                 itemsYearlyAdditional = pandas.DataFrame()
                 calendarColumnS = calendar.columns
                 if year == int(today[:4]): calendarColumnS = calendarColumnS[:int(today[4:6])] # чтобы исключить проход по будущим месяцам текущего года
@@ -459,7 +469,8 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
                     while 'next_from' in response.keys():
                         start_from = response['next_from']
                         # print('    start_from', start_from) # для отладки
-                        itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time, latitude, longitude, fields)
+                        itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time
+                                                                                                      , latitude, longitude, fields)
                         itemsYearlyAdditional = dfsProcessing(complicatedNamePart
                                                               , fileFormatChoice
                                                               , itemsMonthlyAdditional
@@ -496,13 +507,6 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
                 year -= 1
             print('Искомых объектов', targetCount, ', а найденных:', len(itemS), '          ')
     
-        # # Сменить формат представления дат, класс данных столбцов с id, создать столбец с кликабельными ссылками на контент
-        # itemS['date'] = itemS['date'].progress_apply(lambda content: datetime.fromtimestamp(content).strftime('%d.%m.%Y'))
-        # itemS['URL'] = itemS['from_id'].astype(str)
-        # itemS.loc[itemS[itemS['URL'].str.contains('-') == False].index, 'URL'] = 'id' + itemS.loc[itemS[itemS['URL'].str.contains('-') == False].index, 'URL']
-        # itemS.loc[itemS[itemS['URL'].str.contains('-')].index, 'URL'] = itemS.loc[itemS[itemS['URL'].str.contains('-')].index, 'URL'].str.replace('-', 'public')
-        # itemS['URL'] = 'https://vk.com' + '/' + itemS['URL'] + '?w=' + itemS['inner_type'].str.split('_').str[0] + itemS['owner_id'].astype(str) + '_' + itemS['id'].astype(str)
-    
         # pandas.set_option('display.max_columns', None)
         display(itemS.head())
         print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
@@ -510,29 +514,8 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
     elif stage < stageTarget:
         print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{today}{complicatedNamePart}_Temporal"')
 
-
-# In[ ]:
-
-
-# # 2. Сохранение в Excel выгрузки метода search
-
-
-# In[ ]:
-
-
-# columnsToJSON = ['attachments', 'copy_history'] # столбцы с JSON для сохранения в отдельный JSON
-# for column in columnsToJSON:
-#     if column not in itemS.columns: columnsToJSON.remove(column)
-# print('В выгрузке метода', method, 'есть столбцы, содержащие внутри своих ячеек JSON-объекты; Excel не поддерживает JSON-формат;'
-#       , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
-# df2fileShell(complicatedNamePart, itemS.drop(columnsToJSON, axis=1), '.xlsx', f'{method.split('.')[0] + method.split('.')[1].capitalize()} Other varS', today) # чтобы избавиться от лишней точки в имени файла
-# columnsToJSON.append('id')
-# df2fileShell(complicatedNamePart, itemS[columnsToJSON], '.json', f'{method.split('.')[0] + method.split('.')[1].capitalize()} JSON varS', today) # чтобы избавиться от лишней точки в имени файла
-
-    df2fileShell(complicatedNamePart, itemS, '.xlsx', method.split('.')[0] + method.split('.')[1].capitalize(), today) # чтобы избавиться от лишней точки в имени файла
-
-# In[ ]:
-
+# 2.1.2 Экспорт выгрузки метода search и финальное завершение скрипта
+    df2file.df2fileShell(complicatedNamePart, itemS, '.xlsx', method.split('.')[0] + method.split('.')[1].capitalize(), today) # чтобы избавиться от лишней точки в имени файла
 
     print('Скрипт исполнен. Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
           , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
