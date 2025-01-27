@@ -186,7 +186,8 @@ This module aggregates seven YouTube API methods: search, playlists & playlistIt
 ```python
 from randan.scrapingYouTube import scrapingYouTube
 
-# with this code, you will immediately see an instruction. Just follow it for executing the default scenario, episodically pressing Enter on your keyboard
+# with this code, you will immediately see an instruction.
+# Just follow it for executing the default scenario, episodically pressing Enter on your keyboard
 
 # however, if you want to customize the default scenario, you might both use the dialog interface and alter the module's code
 ```
@@ -196,9 +197,11 @@ This module utilise VK API method news.search. The module automatically stores i
 from randan.scrapingVK import scrapingVK
 scrapingVK.scrapingVK()
 
-# with this code, you will immediately see an instruction. Just follow it for executing the default scenario, episodically pressing Enter on your keyboard
+# with this code, you will immediately see an instruction.
+# Just follow it for executing the default scenario, episodically pressing Enter on your keyboard
 
-# however, if you want to customize the default scenario, there are three ways availible. The first one is to use the module's dialog interface which appears in the process of executing the module's code
+# however, if you want to customize the default scenario, there are three ways availible.
+# The first one is to use the module's dialog interface which appears in the process of executing the module's code.
 # The second one is to assign manually the function scrapingVK() arguments, which are None bt default.
 # Finally, the third way is to take the module's code manually and and alter it
 ```
