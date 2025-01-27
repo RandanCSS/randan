@@ -82,15 +82,45 @@ def df2file(dfIn, *arg): # арки: fileName и folder
 # ********** В зависимости от расширения сохраняемого файла выполнить сохранение
     # print('Расширение файла:', fileFormatChoice)
     if fileFormatChoice == 'xlsx':
-        # try:
-        dfIn.to_excel(folder + fileName)
-        # print(folder + fileName)
-        # except pandas.errors.IllegalCharacterError:
-        #     print(sys.exc_info()[1])
-        #     module = 'xlsxwriter'
-        #     print('Для устранения ошибки требуется пакет', {module}, 'поэтому он будет инсталирован сейчас\n')
-        #     check_call([sys.executable, "-m", "pip", "install", module])
+        while True:
+            try:
+                dfIn.to_excel(folder + fileName)
+                # print(folder + fileName)
+                break
+            except pandas.errors.IllegalCharacterError:
+                print(sys.exc_info()[1])
+                module = 'xlsxwriter'
+                print('Для устранения ошибки требуется пакет', {module}, 'поэтому он будет инсталирован сейчас\n')
+                check_call([sys.executable, "-m", "pip", "install", module])
     if fileFormatChoice == 'csv':
         dfIn.to_csv(folder + fileName)   
     if fileFormatChoice == 'json':
         dfIn.to_json(folder + fileName)
+
+def df2fileShell(complicatedNamePart, dfIn, fileFormatChoice, method, today):
+    folder = f'{today}{complicatedNamePart}'
+    print('Сохраняю выгрузку метода', method)
+    if os.path.exists(folder) == False:
+        print('Такой директории не существовало, поэтому она создана')
+        os.makedirs(folder)
+    # else:
+        # print('Эта директория существует')
+
+    # df2file(itemS) # при такой записи имя сохранаяемого файла и директория, в которую сохранить, вводятся вручную
+    # print('При сохранении возможно появление обширного предупреждения UserWarning: Ignoring URL.'
+    #       , 'Оно вызвано слишком длинными URL-адресами в датафрейме и не является проблемой; его следует пролистать и перейти к диалоговому окну' )
+
+    # Проверка всех столбцов на наличие в их ячейках JSON-формата
+    columnsToJSON = list(dfIn.columns) # все столбцы объекта dfIn записать в объект columnsToJSON , причём отнести класс этого объекта к списку
+    for column in dfIn.columns: # цикл для прохода по всем столбцам объекта dfIn
+        # Если в столбце не встречаются ячейки со словарями или списками, то..
+        if dfIn[column].apply(lambda content: True if (type(content) == dict) | (type(content) == list) else False).sum() == 0:
+            columnsToJSON.remove(column) # .. то этот столбец исключается из "подозреваемых"
+
+    if len(columnsToJSON) > 0:
+        print('В выгрузке метода', method, 'есть столбцы, содержащие внутри своих ячеек JSON-объекты; Excel не поддерживает JSON-формат;'
+              , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
+        df2file(dfIn.drop(columnsToJSON, axis=1), f'{folder}_{method}_Other_varS{fileFormatChoice}', folder)
+        columnsToJSON.append('id')
+        df2file(dfIn[columnsToJSON], f'{folder}_{method}_JSON_varS.json', folder)
+    else: df2file(dfIn, f'{folder}_{method}{fileFormatChoice}', folder)
