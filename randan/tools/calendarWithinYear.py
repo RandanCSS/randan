@@ -48,3 +48,10 @@ def calendarWithinYear(year):
                 calendar.loc[str(day) if len(str(day)) == 2 else '0' + str(day)
                              , str(mnth) if len(str(mnth)) == 2 else '0' + str(mnth)] = 1
     return calendar
+
+def yearsRangeParser(yearsRange):
+    yearsRange.sort()
+    yearMinByUser = int(yearsRange[0])
+    yearMaxByUser = int(yearsRange[-1])
+    yearsRange = f'{yearMinByUser}-{yearMaxByUser}'
+    return yearMaxByUser, yearMinByUser, yearsRange
