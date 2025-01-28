@@ -73,12 +73,21 @@ def bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_ti
                 print(f'\nПохоже, ключ попал под ограничение вследствие слишком высокой частоты обращения скрипта к API; пробую перейти к следующему ключу (№ {keyOrder}) и снизить частоту')
                 # print('  keyOrder после замены', keyOrder, '                    ') # для отладки
                 pause += 0.25
+
+            elif 'Unknown application: could not get application' in response['error']['error_msg']:
+                # print('  keyOrder до замены', '                    ') # для отладки                
+                keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
+                print('\nПохоже, Ваше ВК-приложение попало под ограничение; пробую перейти к следующему ключу (№ {keyOrder}) и снизить частоту')
+                # print('  keyOrder после замены', keyOrder, '                    ') # для отладки
+                pause += 0.25
+
             elif 'User authorization failed' in response['error']['error_msg']:
                 print('\nПохоже, аккаунт попал под ограничение. Оно может быть снято с аккаунта сразу или спустя какое-то время.'
                       , 'Подождите или подготовьте новый ключ в другом аккаунте. И запустите скрипт с начала')
                 response = {'items': [], 'total_count': 0} # принудительная выдача для response
                 goS = False # нет смысла продолжать исполнение скрипта
-                break # и, следовательно, нет смысла в новых итерациях цикла                
+                break # и, следовательно, нет смысла в новых итерациях цикла   
+            
             else:
                 print('  Похоже, проблема НЕ в слишком высокой частоте обращения скрипта к API((')
                 print('  ', response['error']['error_msg'])
@@ -362,7 +371,7 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
         # Ограничения временнОго диапазона
         if (start_time == None) & (end_time == None) & (yearsRange == None): # если пользователь не подал эти аргументы в рамках experiencedMode
             while True:
-                print('Если требуется конкретный временнОй диапазон, то можно использовать его не на текущем этапе выгрузки данных, а на следующем этапе -- предобработки датафрейма с выгруженными данными.'
+                print('\nЕсли требуется конкретный временнОй диапазон, то можно использовать его не на текущем этапе выгрузки данных, а на следующем этапе -- предобработки датафрейма с выгруженными данными.'
                       , 'Проблема в том, что без назначения временнОго диапазона метод newsfeed.search выдаёт ограниченное количество объектов, причём наиболее приближенных к текущему моменту.'
                       , '\n--- Поэтому если всё же требуется назначить временнОй диапазон на этапе выгрузки данных, назначьте его годами (а не более мелкими единицами времени).'
                       , 'Для назначения диапазона введите без кавычек минимальный год диапазона, тире, максимальный год диапазона (минимум и максимум могут совпадать) и нажмите Enter'
@@ -438,39 +447,22 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
             print('Увы, без назначения временнОго диапазона метод newsfeed.search выдаёт ограниченное количество объектов, причём наиболее приближенных к текущему моменту.'
               , 'Поэтому внутри каждого года, начиная с теущего, помесячно выгружаю контент, после чего меняю год -- вглубь веков, пока не достигну заданной пользователем левой границы временнОго диапазона,'
               , 'или года с пустой выдачей')
-            while True:
-                # print('Ищу текст запроса-фильтра в контенте за', year, 'год')
-                calendar = calendarWithinYear.calendarWithinYear(year)
-                itemsYearlyAdditional = pandas.DataFrame()
-                calendarColumnS = calendar.columns
-                if year == int(today[:4]): calendarColumnS = calendarColumnS[:int(today[4:6])] # чтобы исключить проход по будущим месяцам текущего года
-                for month in calendarColumnS:
-                    print('Ищу текст запроса-фильтра в контенте за',  month, 'месяц', year, 'года', '               ') # , end='\r'
-                    print('  Заход на первую страницу выдачи', '               ', end='\r')
-                    start_time = int(time.mktime(datetime(year, int(month), 1).timetuple()))
-                    end_time = int(time.mktime(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timetuple()))
-                    # print('\n  Period from start_time', start_time, 'to end_time', end_time) # для отладки
-                    itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, start_time, end_time, latitude, longitude, fields)
-                    itemsYearlyAdditional = dfsProcessing(complicatedNamePart
-                                                          , fileFormatChoice
-                                                          , itemsMonthlyAdditional
-                                                          , itemS
-                                                          , itemsYearlyAdditional
-                                                          , goS
-                                                          , method
-                                                          , q
-                                                          , slash
-                                                          , stage
-                                                          , targetCount
-                                                          , today
-                                                          , year
-                                                          , yearsRange)
-                    print('  Проход по всем следующим страницам с выдачей', '               ', end='\r')
-                    while 'next_from' in response.keys():
-                        start_from = response['next_from']
-                        # print('    start_from', start_from) # для отладки
-                        itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time
-                                                                                                      , latitude, longitude, fields)
+            print('--- Если хотите для поиска дополнительных объектов попробовать сегментирование по годам, просто нажмите Enter, но учтите, что поиск может занять синуты и даже часы'
+                  , '\n--- Если НЕ хотите, введите любой символ и нажмите Enter')
+            if len(input()) == 0:
+                while True:
+                    # print('Ищу текст запроса-фильтра в контенте за', year, 'год')
+                    calendar = calendarWithinYear.calendarWithinYear(year)
+                    itemsYearlyAdditional = pandas.DataFrame()
+                    calendarColumnS = calendar.columns
+                    if year == int(today[:4]): calendarColumnS = calendarColumnS[:int(today[4:6])] # чтобы исключить проход по будущим месяцам текущего года
+                    for month in calendarColumnS:
+                        print('Ищу текст запроса-фильтра в контенте за',  month, 'месяц', year, 'года', '               ') # , end='\r'
+                        print('  Заход на первую страницу выдачи', '               ', end='\r')
+                        start_time = int(time.mktime(datetime(year, int(month), 1).timetuple()))
+                        end_time = int(time.mktime(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timetuple()))
+                        # print('\n  Period from start_time', start_time, 'to end_time', end_time) # для отладки
+                        itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, start_time, end_time, latitude, longitude, fields)
                         itemsYearlyAdditional = dfsProcessing(complicatedNamePart
                                                               , fileFormatChoice
                                                               , itemsMonthlyAdditional
@@ -485,27 +477,47 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
                                                               , today
                                                               , year
                                                               , yearsRange)
-                        time.sleep(pause)
-                itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, itemsYearlyAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
-                # display(itemS.head())
-                # print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
-    
-                if len(itemsYearlyAdditional) == 0:
-                    print(f'\nВыдача для года {year} -- пуста'
-                          , '\n--- Если НЕ хотите для поиска дополнительных объектов попробовать двигаться к следующему месяцу вглубь веков, просто нажмите Enter'
-                          , '\n--- Если хотите, введите любой символ и нажмите Enter')
-                    if len(input()) == 0:
-                        # print(f'\nЗавершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser}')
-                        break
+                        print('  Проход по всем следующим страницам с выдачей', '               ', end='\r')
+                        while 'next_from' in response.keys():
+                            start_from = response['next_from']
+                            # print('    start_from', start_from) # для отладки
+                            itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time
+                                                                                                          , latitude, longitude, fields)
+                            itemsYearlyAdditional = dfsProcessing(complicatedNamePart
+                                                                  , fileFormatChoice
+                                                                  , itemsMonthlyAdditional
+                                                                  , itemS
+                                                                  , itemsYearlyAdditional
+                                                                  , goS
+                                                                  , method
+                                                                  , q
+                                                                  , slash
+                                                                  , stage
+                                                                  , targetCount
+                                                                  , today
+                                                                  , year
+                                                                  , yearsRange)
+                            time.sleep(pause)
+                    itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, itemsYearlyAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+                    # display(itemS.head())
+                    # print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
         
-                elif yearMinByUser != None: # если пользователь ограничил временнОй диапазон
-                    if year <= yearMinByUser:
-                        print(f'Завершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser}')
-                        break
-    
-                print('  Искомых объектов', targetCount, ', а найденных после добавления контента', year, 'года:', len(itemS), '                    ')
-                year -= 1
-            print('Искомых объектов', targetCount, ', а найденных:', len(itemS), '          ')
+                    if len(itemsYearlyAdditional) == 0:
+                        print(f'\nВыдача для года {year} -- пуста'
+                              , '\n--- Если НЕ хотите для поиска дополнительных объектов попробовать двигаться к следующему месяцу вглубь веков, просто нажмите Enter'
+                              , '\n--- Если хотите, введите любой символ и нажмите Enter')
+                        if len(input()) == 0:
+                            # print(f'\nЗавершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser}')
+                            break
+            
+                    elif yearMinByUser != None: # если пользователь ограничил временнОй диапазон
+                        if year <= yearMinByUser:
+                            print(f'Завершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser}')
+                            break
+        
+                    print('  Искомых объектов', targetCount, ', а найденных после добавления контента', year, 'года:', len(itemS), '                    ')
+                    year -= 1
+                print('Искомых объектов', targetCount, ', а найденных:', len(itemS), '          ')
     
         # pandas.set_option('display.max_columns', None)
         display(itemS.head())
