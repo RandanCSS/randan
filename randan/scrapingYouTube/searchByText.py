@@ -53,28 +53,43 @@ while True:
 
 
 # 1.0 для метода search из API YouTube, помогающая работе с ключами
-def bigSearch(API_keyS
+def bigSearch(
+              API_keyS
               , channelIdForSearch # согласно документации API YouTube, подать можно лишь один channelId
               , contentType
               , goS
               , iteration
               , keyOrder
-              , order
-              , pageToken
+              , q
               , publishedAfter
               , publishedBefore
-              , q
+              , order
+              , pageToken
               , year
-              , channelType, eventType, location, locationRadius, regionCode, relevanceLanguage, safeSearch, topicId
-              , videoCaption, videoCategoryId, videoDefinition, videoDimension, videoDuration, videoEmbeddable, videoLicense, videoPaidProductPlacement
-              , videoSyndicated, videoType):    
-    goC = True
+              , channelType=channelType
+              , eventType=eventType
+              , location=location
+              , locationRadius=locationRadius
+              , regionCode=regionCode
+              , relevanceLanguage=relevanceLanguage
+              , topicId=topicId
+              , safeSearch=safeSearch
+              , videoCaption=videoCaption
+              , videoCategoryId=videoCategoryId
+              , videoDefinition=videoDefinition
+              , videoDimension=videoDimension
+              , videoDuration=videoDuration
+              , videoEmbeddable=videoEmbeddable
+              , videoLicense=videoLicense
+              , videoPaidProductPlacement=videoPaidProductPlacement
+              , videoType=videoType
+              , videoSyndicated=videoSyndicated):    
     while goC:
         try:
             youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
             request = youtube.search().list(channelId=channelIdForSearch
-                                            , channelType = channelType
-                                            , eventType = eventType
+                                            , channelType=channelType
+                                            , eventType=eventType
                                             , maxResults=50
                                             , order=order
                                             , pageToken=pageToken
@@ -83,22 +98,22 @@ def bigSearch(API_keyS
                                             , publishedBefore=publishedBefore
                                             , q=q
                                             , type=contentType   
-                                            , location = location
-                                            , locationRadius = locationRadius
-                                            , regionCode = regionCode
-                                            , relevanceLanguage = relevanceLanguage
-                                            , topicId = topicId
-                                            , safeSearch = safeSearch
-                                            , videoCaption = videoCaption
-                                            , videoCategoryId = videoCategoryId
-                                            , videoDefinition = videoDefinition
-                                            , videoDimension = videoDimension
-                                            , videoDuration = videoDuration
-                                            , videoEmbeddable = videoEmbeddable
-                                            , videoLicense = videoLicense
-                                            , videoPaidProductPlacement = videoPaidProductPlacement
-                                            , videoType = videoType
-                                            , videoSyndicated = videoSyndicated)
+                                            , location=location
+                                            , locationRadius=locationRadius
+                                            , regionCode=regionCode
+                                            , relevanceLanguage=relevanceLanguage
+                                            , topicId=topicId
+                                            , safeSearch=safeSearch
+                                            , videoCaption=videoCaption
+                                            , videoCategoryId=videoCategoryId
+                                            , videoDefinition=videoDefinition
+                                            , videoDimension=videoDimension
+                                            , videoDuration=videoDuration
+                                            , videoEmbeddable=videoEmbeddable
+                                            , videoLicense=videoLicense
+                                            , videoPaidProductPlacement=videoPaidProductPlacement
+                                            , videoType=videoType
+                                            , videoSyndicated=videoSyndicated)
         # channelType="any",
         # eventType="live",
         # publishedAfter="1970-01-01T00:00:00Z",
@@ -762,21 +777,38 @@ videoPaidProductPlacement : str
 
     if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
         print('\nЗаход на первую страницу выдачи')
-        addItemS, goS, iteration, keyOrder, response = bigSearch(API_keyS
+        addItemS, goS, iteration, keyOrder, response = bigSearch(
+                                                                 API_keyS
                                                                  , channelIdForSearch
                                                                  , contentType
                                                                  , goS
                                                                  , iteration
                                                                  , keyOrder
-                                                                 , order=None
-                                                                 , pageToken=None
+                                                                 , q
                                                                  , publishedAfter
                                                                  , publishedBefore
-                                                                 , q
+                                                                 , order=None
+                                                                 , pageToken=None
                                                                  , year=None
-                                                                 , channelType, eventType, location, locationRadius, regionCode, relevanceLanguage, safeSearch, topicId
-                                                                 , videoCaption, videoCategoryId, videoDefinition, videoDimension, videoDuration, videoEmbeddable, videoLicense, videoPaidProductPlacement
-                                                                 , videoSyndicated, videoType)
+                                                                 , channelType=channelType
+                                                                 , eventType=eventType
+                                                                 , location=location
+                                                                 , locationRadius=locationRadius
+                                                                 , regionCode=regionCode
+                                                                 , relevanceLanguage=relevanceLanguage
+                                                                 , topicId=topicId
+                                                                 , safeSearch=safeSearch
+                                                                 , videoCaption=videoCaption
+                                                                 , videoCategoryId=videoCategoryId
+                                                                 , videoDefinition=videoDefinition
+                                                                 , videoDimension=videoDimension
+                                                                 , videoDuration=videoDuration
+                                                                 , videoEmbeddable=videoEmbeddable
+                                                                 , videoLicense=videoLicense
+                                                                 , videoPaidProductPlacement=videoPaidProductPlacement
+                                                                 , videoType=videoType
+                                                                 , videoSyndicated=videoSyndicated
+                                                                )
         targetCount = response['pageInfo']['totalResults']
         itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
         # display('itemS', itemS) # для отладки
@@ -784,22 +816,38 @@ videoPaidProductPlacement : str
         print('  Проход по всем следующим страницам с выдачей          ')
         while 'nextPageToken' in response.keys():
             pageToken = response['nextPageToken']
-            addItemS, goS, iteration, keyOrder, response = bigSearch(API_keyS
+            addItemS, goS, iteration, keyOrder, response = bigSearch(
+                                                                     API_keyS
                                                                      , channelIdForSearch
                                                                      , contentType
-                                                                     , iteration
                                                                      , goS
+                                                                     , iteration
                                                                      , keyOrder
-                                                                     , order
-                                                                     , pageToken
+                                                                     , q
                                                                      , publishedAfter
                                                                      , publishedBefore
-                                                                     , q
+                                                                     , order=order
+                                                                     , pageToken=pageToken
                                                                      , year=None
-                                                                     , channelType, eventType, location, locationRadius, regionCode, relevanceLanguage, safeSearch, topicId
-                                                                     , videoCaption, videoCategoryId, videoDefinition, videoDimension, videoDuration, videoEmbeddable, videoLicense
-                                                                     , videoPaidProductPlacement
-                                                                     , videoSyndicated, videoType)
+                                                                     , channelType=channelType
+                                                                     , eventType=eventType
+                                                                     , location=location
+                                                                     , locationRadius=locationRadius
+                                                                     , regionCode=regionCode
+                                                                     , relevanceLanguage=relevanceLanguage
+                                                                     , topicId=topicId
+                                                                     , safeSearch=safeSearch
+                                                                     , videoCaption=videoCaption
+                                                                     , videoCategoryId=videoCategoryId
+                                                                     , videoDefinition=videoDefinition
+                                                                     , videoDimension=videoDimension
+                                                                     , videoDuration=videoDuration
+                                                                     , videoEmbeddable=videoEmbeddable
+                                                                     , videoLicense=videoLicense
+                                                                     , videoPaidProductPlacement=videoPaidProductPlacement
+                                                                     , videoType=videoType
+                                                                     , videoSyndicated=videoSyndicated
+                                                                    )
             itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
         print('  Искомых объектов', targetCount
               , ', а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
@@ -814,22 +862,38 @@ videoPaidProductPlacement : str
         # -- для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
             print('Проход по значениям аргумента order, внутри которых проход по всем страницам выдачи')
             for order in orderS:
-                addItemS, goS, iteration, keyOrder, response = bigSearch(API_keyS
+                addItemS, goS, iteration, keyOrder, response = bigSearch(
+                                                                         API_keyS
                                                                          , channelIdForSearch
                                                                          , contentType
                                                                          , goS
                                                                          , iteration
                                                                          , keyOrder
-                                                                         , order
-                                                                         , pageToken=None
+                                                                         , q
                                                                          , publishedAfter
                                                                          , publishedBefore
-                                                                         , q
-                                                                         , year
-                                                                         , channelType, eventType, location, locationRadius, regionCode, relevanceLanguage, safeSearch, topicId
-                                                                         , videoCaption, videoCategoryId, videoDefinition, videoDimension, videoDuration, videoEmbeddable, videoLicense
-                                                                         , videoPaidProductPlacement
-                                                                         , videoSyndicated, videoType)
+                                                                         , order=order
+                                                                         , pageToken=None
+                                                                         , year=year
+                                                                         , channelType=channelType
+                                                                         , eventType=eventType
+                                                                         , location=location
+                                                                         , locationRadius=locationRadius
+                                                                         , regionCode=regionCode
+                                                                         , relevanceLanguage=relevanceLanguage
+                                                                         , topicId=topicId
+                                                                         , safeSearch=safeSearch
+                                                                         , videoCaption=videoCaption
+                                                                         , videoCategoryId=videoCategoryId
+                                                                         , videoDefinition=videoDefinition
+                                                                         , videoDimension=videoDimension
+                                                                         , videoDuration=videoDuration
+                                                                         , videoEmbeddable=videoEmbeddable
+                                                                         , videoLicense=videoLicense
+                                                                         , videoPaidProductPlacement=videoPaidProductPlacement
+                                                                         , videoType=videoType
+                                                                         , videoSyndicated=videoSyndicated
+                                                                        )
                 itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
     
                 print('  Проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order, '          ')
@@ -840,22 +904,38 @@ videoPaidProductPlacement : str
     
                     pageToken = response['nextPageToken']
                     # print('pageToken', pageToken)
-                    addItemS, goS, iteration, keyOrder, response = bigSearch(API_keyS
+                    addItemS, goS, iteration, keyOrder, response = bigSearch(
+                                                                             API_keyS
                                                                              , channelIdForSearch
                                                                              , contentType
                                                                              , goS
                                                                              , iteration
                                                                              , keyOrder
-                                                                             , order
-                                                                             , pageToken
+                                                                             , q
                                                                              , publishedAfter
                                                                              , publishedBefore
-                                                                             , q
+                                                                             , order=order
+                                                                             , pageToken=pageToken
                                                                              , year=None
-                                                                             , channelType, eventType, location, locationRadius, regionCode, relevanceLanguage, safeSearch, topicId
-                                                                             , videoCaption, videoCategoryId, videoDefinition, videoDimension, videoDuration, videoEmbeddable, videoLicense
-                                                                             , videoPaidProductPlacement
-                                                                             , videoSyndicated, videoType)
+                                                                             , channelType=channelType
+                                                                             , eventType=eventType
+                                                                             , location=location
+                                                                             , locationRadius=locationRadius
+                                                                             , regionCode=regionCode
+                                                                             , relevanceLanguage=relevanceLanguage
+                                                                             , topicId=topicId
+                                                                             , safeSearch=safeSearch
+                                                                             , videoCaption=videoCaption
+                                                                             , videoCategoryId=videoCategoryId
+                                                                             , videoDefinition=videoDefinition
+                                                                             , videoDimension=videoDimension
+                                                                             , videoDuration=videoDuration
+                                                                             , videoEmbeddable=videoEmbeddable
+                                                                             , videoLicense=videoLicense
+                                                                             , videoPaidProductPlacement=videoPaidProductPlacement
+                                                                             , videoType=videoType
+                                                                             , videoSyndicated=videoSyndicated
+                                                                            )
                     itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
             print('  Искомых объектов', targetCount, ', а найденных С включением аргумента order:', len(itemS))
         else:
@@ -878,22 +958,38 @@ videoPaidProductPlacement : str
 # ********** из фрагмента 2.1.0 + условие для goC
                 while (len(itemS) < targetCount) & (goC):
                     print(f'  Для года {year - 1} заход на первую страницу выдачи БЕЗ аргумента order')
-                    addItemS, goS, iteration, keyOrder, response = bigSearch(API_keyS
+                    addItemS, goS, iteration, keyOrder, response = bigSearch(
+                                                                             API_keyS
                                                                              , channelIdForSearch
                                                                              , contentType
                                                                              , goS
                                                                              , iteration
                                                                              , keyOrder
+                                                                             , q
+                                                                             , publishedAfter = f'{year - 1}-01-01T00:00:00Z'
+                                                                             , publishedBefore = f'{year}-01-01T00:00:00Z'
                                                                              , order=None
                                                                              , pageToken=None
-                                                                             , f'{year - 1}-01-01T00:00:00Z'
-                                                                             , f'{year}-01-01T00:00:00Z'
-                                                                             , q
-                                                                             , year
-                                                                             , channelType, eventType, location, locationRadius, regionCode, relevanceLanguage, safeSearch, topicId
-                                                                             , videoCaption, videoCategoryId, videoDefinition, videoDimension, videoDuration, videoEmbeddable, videoLicense
-                                                                             , videoPaidProductPlacement
-                                                                             , videoSyndicated, videoType)
+                                                                             , year=year
+                                                                             , channelType=channelType
+                                                                             , eventType=eventType
+                                                                             , location=location
+                                                                             , locationRadius=locationRadius
+                                                                             , regionCode=regionCode
+                                                                             , relevanceLanguage=relevanceLanguage
+                                                                             , topicId=topicId
+                                                                             , safeSearch=safeSearch
+                                                                             , videoCaption=videoCaption
+                                                                             , videoCategoryId=videoCategoryId
+                                                                             , videoDefinition=videoDefinition
+                                                                             , videoDimension=videoDimension
+                                                                             , videoDuration=videoDuration
+                                                                             , videoEmbeddable=videoEmbeddable
+                                                                             , videoLicense=videoLicense
+                                                                             , videoPaidProductPlacement=videoPaidProductPlacement
+                                                                             , videoType=videoType
+                                                                             , videoSyndicated=videoSyndicated
+                                                                            )
                     if len(addItemS) == 0:
                         print(f'\n--- Первая страница выдачи БЕЗ аргумента order для года {year - 1} -- пуста'
                               , '\n--- Если НЕ хотите для поиска дополнительных объектов попробовать предыдущий год, просто нажмите Enter'
@@ -906,22 +1002,38 @@ videoPaidProductPlacement : str
                     print(f'    Проход по всем следующим страницам с выдачей для года {year - 1} БЕЗ аргумента order')
                     while 'nextPageToken' in response.keys():
                         pageToken = response['nextPageToken']
-                        addItemS, goS, iteration, keyOrder, response = bigSearch(API_keyS
+                        addItemS, goS, iteration, keyOrder, response = bigSearch(
+                                                                                 API_keyS
                                                                                  , channelIdForSearch
                                                                                  , contentType
                                                                                  , goS
                                                                                  , iteration
                                                                                  , keyOrder
-                                                                                 , order
-                                                                                 , pageToken
-                                                                                 , publishedAfter
-                                                                                 , publishedBefore
                                                                                  , q
-                                                                                 , year
-                                                                                 , channelType, eventType, location, locationRadius, regionCode, relevanceLanguage, safeSearch, topicId
-                                                                                 , videoCaption, videoCategoryId, videoDefinition, videoDimension, videoDuration, videoEmbeddable, videoLicense
-                                                                                 , videoPaidProductPlacement
-                                                                                 , videoSyndicated, videoType)
+                                                                                 , publishedAfter = f'{year - 1}-01-01T00:00:00Z'
+                                                                                 , publishedBefore = f'{year}-01-01T00:00:00Z'
+                                                                                 , order=None
+                                                                                 , pageToken=pageToken
+                                                                                 , year=year
+                                                                                 , channelType=channelType
+                                                                                 , eventType=eventType
+                                                                                 , location=location
+                                                                                 , locationRadius=locationRadius
+                                                                                 , regionCode=regionCode
+                                                                                 , relevanceLanguage=relevanceLanguage
+                                                                                 , topicId=topicId
+                                                                                 , safeSearch=safeSearch
+                                                                                 , videoCaption=videoCaption
+                                                                                 , videoCategoryId=videoCategoryId
+                                                                                 , videoDefinition=videoDefinition
+                                                                                 , videoDimension=videoDimension
+                                                                                 , videoDuration=videoDuration
+                                                                                 , videoEmbeddable=videoEmbeddable
+                                                                                 , videoLicense=videoLicense
+                                                                                 , videoPaidProductPlacement=videoPaidProductPlacement
+                                                                                 , videoType=videoType
+                                                                                 , videoSyndicated=videoSyndicated
+                                                                                )
                         itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
     
                     print(f'    Искомых объектов в году {year - 1}: {targetCount},'
@@ -931,44 +1043,76 @@ videoPaidProductPlacement : str
                         print(f'  Для года {year - 1} проход по значениям аргумента order,'
                               , 'внутри которых проход по всем страницам выдачи')
                         for order in orderS:
-                            addItemS, goS, iteration, keyOrder, response = bigSearch(API_keyS
+                            addItemS, goS, iteration, keyOrder, response = bigSearch(
+                                                                                     API_keyS
                                                                                      , channelIdForSearch
                                                                                      , contentType
                                                                                      , goS
                                                                                      , iteration
                                                                                      , keyOrder
-                                                                                     , order
-                                                                                     , pageToken=None
-                                                                                     , publishedAfter
-                                                                                     , publishedBefore
                                                                                      , q
-                                                                                     , year
-                                                                                     , channelType, eventType, location, locationRadius, regionCode, relevanceLanguage, safeSearch, topicId
-                                                                                     , videoCaption, videoCategoryId, videoDefinition, videoDimension, videoDuration, videoEmbeddable, videoLicense
-                                                                                     , videoPaidProductPlacement
-                                                                                     , videoSyndicated, videoType)
+                                                                                     , publishedAfter = f'{year - 1}-01-01T00:00:00Z'
+                                                                                     , publishedBefore = f'{year}-01-01T00:00:00Z'
+                                                                                     , order=order
+                                                                                     , pageToken=None
+                                                                                     , year=year
+                                                                                     , channelType=channelType
+                                                                                     , eventType=eventType
+                                                                                     , location=location
+                                                                                     , locationRadius=locationRadius
+                                                                                     , regionCode=regionCode
+                                                                                     , relevanceLanguage=relevanceLanguage
+                                                                                     , topicId=topicId
+                                                                                     , safeSearch=safeSearch
+                                                                                     , videoCaption=videoCaption
+                                                                                     , videoCategoryId=videoCategoryId
+                                                                                     , videoDefinition=videoDefinition
+                                                                                     , videoDimension=videoDimension
+                                                                                     , videoDuration=videoDuration
+                                                                                     , videoEmbeddable=videoEmbeddable
+                                                                                     , videoLicense=videoLicense
+                                                                                     , videoPaidProductPlacement=videoPaidProductPlacement
+                                                                                     , videoType=videoType
+                                                                                     , videoSyndicated=videoSyndicated
+                                                                                    )
                             itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
     
                             print(f'    Для года {year - 1} проход по всем следующим страницам с выдачей'
                                   , f'с тем же значением аргумента order:', order)
                             while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0):
                                 pageToken = response['nextPageToken']
-                                addItemS, goS, iteration, keyOrder, response = bigSearch(API_keyS
+                                addItemS, goS, iteration, keyOrder, response = bigSearch(
+                                                                                         API_keyS
                                                                                          , channelIdForSearch
                                                                                          , contentType
                                                                                          , goS
                                                                                          , iteration
                                                                                          , keyOrder
-                                                                                         , order
-                                                                                         , pageToken
-                                                                                         , publishedAfter
-                                                                                         , publishedBefore
                                                                                          , q
-                                                                                         , year
-                                                                                         , channelType, eventType, location, locationRadius, regionCode, relevanceLanguage, safeSearch, topicId
-                                                                                         , videoCaption, videoCategoryId, videoDefinition, videoDimension, videoDuration, videoEmbeddable, videoLicense
-                                                                                         , videoPaidProductPlacement
-                                                                                         , videoSyndicated, videoType)
+                                                                                         , publishedAfter = f'{year - 1}-01-01T00:00:00Z'
+                                                                                         , publishedBefore = f'{year}-01-01T00:00:00Z'
+                                                                                         , order=order
+                                                                                         , pageToken=pageToken
+                                                                                         , year=year
+                                                                                         , channelType=channelType
+                                                                                         , eventType=eventType
+                                                                                         , location=location
+                                                                                         , locationRadius=locationRadius
+                                                                                         , regionCode=regionCode
+                                                                                         , relevanceLanguage=relevanceLanguage
+                                                                                         , topicId=topicId
+                                                                                         , safeSearch=safeSearch
+                                                                                         , videoCaption=videoCaption
+                                                                                         , videoCategoryId=videoCategoryId
+                                                                                         , videoDefinition=videoDefinition
+                                                                                         , videoDimension=videoDimension
+                                                                                         , videoDuration=videoDuration
+                                                                                         , videoEmbeddable=videoEmbeddable
+                                                                                         , videoLicense=videoLicense
+                                                                                         , videoPaidProductPlacement=videoPaidProductPlacement
+                                                                                         , videoType=videoType
+                                                                                         , videoSyndicated=videoSyndicated
+                                                                                        )
                                 itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
                         print('    Искомых объектов', targetCount
                               , ', а найденных с добавлением сегментирования по году (год'
