@@ -443,7 +443,7 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
     
     if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
         print('\nПервое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов')
-        itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, start_time, end_time, latitude, longitude, fields, params)
+        itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from=None, start_time, end_time, latitude, longitude, fields, params)
         targetCount = response['total_count']
         # if len(itemS) < targetCount: # на случай достаточности
         itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, itemsAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
@@ -478,7 +478,7 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
                         start_time = int(time.mktime(datetime(year, int(month), 1).timetuple()))
                         end_time = int(time.mktime(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timetuple()))
                         # print('\n  Period from start_time', start_time, 'to end_time', end_time) # для отладки
-                        itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, None, start_time, end_time, latitude, longitude, fields, params)
+                        itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from=None, start_time, end_time, latitude, longitude, fields, params)
                         itemsYearlyAdditional = dfsProcessing(complicatedNamePart
                                                               , fileFormatChoice
                                                               , itemsMonthlyAdditional
