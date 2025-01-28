@@ -768,12 +768,12 @@ videoPaidProductPlacement : str
                                                                  , goS
                                                                  , iteration
                                                                  , keyOrder
-                                                                 , order = None
-                                                                 , pageToken = None
+                                                                 , order=None
+                                                                 , pageToken=None
                                                                  , publishedAfter
                                                                  , publishedBefore
                                                                  , q
-                                                                 , year = None
+                                                                 , year=None
                                                                  , channelType, eventType, location, locationRadius, regionCode, relevanceLanguage, safeSearch, topicId
                                                                  , videoCaption, videoCategoryId, videoDefinition, videoDimension, videoDuration, videoEmbeddable, videoLicense, videoPaidProductPlacement
                                                                  , videoSyndicated, videoType)
@@ -795,7 +795,7 @@ videoPaidProductPlacement : str
                                                                      , publishedAfter
                                                                      , publishedBefore
                                                                      , q
-                                                                     , year = None
+                                                                     , year=None
                                                                      , channelType, eventType, location, locationRadius, regionCode, relevanceLanguage, safeSearch, topicId
                                                                      , videoCaption, videoCategoryId, videoDefinition, videoDimension, videoDuration, videoEmbeddable, videoLicense
                                                                      , videoPaidProductPlacement
@@ -821,7 +821,7 @@ videoPaidProductPlacement : str
                                                                          , iteration
                                                                          , keyOrder
                                                                          , order
-                                                                         , pageToken = None
+                                                                         , pageToken=None
                                                                          , publishedAfter
                                                                          , publishedBefore
                                                                          , q
@@ -851,7 +851,7 @@ videoPaidProductPlacement : str
                                                                              , publishedAfter
                                                                              , publishedBefore
                                                                              , q
-                                                                             , year = None
+                                                                             , year=None
                                                                              , channelType, eventType, location, locationRadius, regionCode, relevanceLanguage, safeSearch, topicId
                                                                              , videoCaption, videoCategoryId, videoDefinition, videoDimension, videoDuration, videoEmbeddable, videoLicense
                                                                              , videoPaidProductPlacement
@@ -884,8 +884,8 @@ videoPaidProductPlacement : str
                                                                              , goS
                                                                              , iteration
                                                                              , keyOrder
-                                                                             , order = None
-                                                                             , pageToken = None
+                                                                             , order=None
+                                                                             , pageToken=None
                                                                              , f'{year - 1}-01-01T00:00:00Z'
                                                                              , f'{year}-01-01T00:00:00Z'
                                                                              , q
@@ -938,7 +938,7 @@ videoPaidProductPlacement : str
                                                                                      , iteration
                                                                                      , keyOrder
                                                                                      , order
-                                                                                     , pageToken = None
+                                                                                     , pageToken=None
                                                                                      , publishedAfter
                                                                                      , publishedBefore
                                                                                      , q
