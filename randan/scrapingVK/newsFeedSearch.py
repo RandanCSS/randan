@@ -16,6 +16,7 @@ import sys
 from subprocess import check_call
 
 # --- остальные модули и пакеты
+attempt = 0
 while True:
     try:
         from datetime import date, datetime
@@ -29,7 +30,7 @@ while True:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
         if '.' in module: module = module.split('.')[0]
-        print('Пакет', module, 'НЕ прединсталируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталирован сейчас\n')
+        print('Пакет', module, 'НЕ прединсталлируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталлирован сейчас\n')
         check_call([sys.executable, "-m", "pip", "install", module])
 tqdm.pandas() # для визуализации прогресса функций, применяемых к датафреймам
 
