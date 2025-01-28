@@ -169,5 +169,5 @@ def googleDriver2local(file_id, dest_path):
         display(df.head())
         print('Число столбцов:', df.shape[1], ', число строк', df.shape[0], '\n')
     else:
-#         df = None
-#     return df, error
+        df = None
+    return df, error
