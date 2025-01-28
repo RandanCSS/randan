@@ -12,6 +12,7 @@ import sys
 from subprocess import check_call
 
 # --- остальные модули и пакеты
+attempt = 0
 while True:
     try:
         from pandas import DataFrame
@@ -19,8 +20,14 @@ while True:
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
-        print('Пакет', module, 'НЕ прединсталируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталирован сейчас\n')
+        print('Пакет', module, 'НЕ прединсталлируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталлирован сейчас\n')
         check_call([sys.executable, "-m", "pip", "install", module])
+        attempt += 1
+        if  attempt == 10:
+            print('Пакет', module
+                  , 'НЕ прединсталлируется с установкой Анаконды, для работы скрипта требуется этот пакет,'
+                  , 'но инсталлировать его не удаётся, попробуйте инсталлировать его вручную, после чего снова запустите требуемый скрипт пакета\n')
+            break
 
 def calendarWithinYear(year):
     """
