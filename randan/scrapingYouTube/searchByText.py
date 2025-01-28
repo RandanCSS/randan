@@ -66,24 +66,25 @@ def bigSearch(
               , order
               , pageToken
               , year
-              , channelType=channelType
-              , eventType=eventType
-              , location=location
-              , locationRadius=locationRadius
-              , regionCode=regionCode
-              , relevanceLanguage=relevanceLanguage
-              , topicId=topicId
-              , safeSearch=safeSearch
-              , videoCaption=videoCaption
-              , videoCategoryId=videoCategoryId
-              , videoDefinition=videoDefinition
-              , videoDimension=videoDimension
-              , videoDuration=videoDuration
-              , videoEmbeddable=videoEmbeddable
-              , videoLicense=videoLicense
-              , videoPaidProductPlacement=videoPaidProductPlacement
-              , videoType=videoType
-              , videoSyndicated=videoSyndicated):    
+              , channelType
+              , eventType
+              , location
+              , locationRadius
+              , regionCode
+              , relevanceLanguage
+              , topicId
+              , safeSearch
+              , videoCaption
+              , videoCategoryId
+              , videoDefinition
+              , videoDimension
+              , videoDuration
+              , videoEmbeddable
+              , videoLicense
+              , videoPaidProductPlacement
+              , videoType
+              , videoSyndicated
+              ):
     while goC:
         try:
             youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
