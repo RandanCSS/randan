@@ -9,6 +9,7 @@ import sys
 from subprocess import check_call
 
 # --- остальные модули и пакеты
+attempt = 0
 while True:
     try:
         # from google_drive_downloader import GoogleDriveDownloader
@@ -18,9 +19,16 @@ while True:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '').replace('_', '')
         if '.' in module: module = module.split('.')[1] 
-        print('Пакет', module,
-              'НЕ прединсталируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталирован сейчас\n')
+        print('Пакет', module
+              , 'НЕ прединсталлируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталлирован сейчас\n'
+              , 'Попытка №', attempt, 'из 10')
         check_call([sys.executable, "-m", "pip", "install", module])
+        attempt += 1
+        if  attempt == 10:
+            print('Пакет', module
+                  , 'НЕ прединсталлируется с установкой Анаконды, для работы скрипта требуется этот пакет,'
+                  , 'но инсталлировать его не удаётся, попробуйте инсталлировать его вручную, после чего снова запустите требуемый скрипт пакета\n')
+            break
 
 def getFolder():
     folder = input('--- С какой директорией хотите работать? Укажите полный путь к ней, включая её саму:')
@@ -147,19 +155,19 @@ def files2df(*arg):
         df = None
     return df, error, folder
 
-# def googleDriver2local(file_id, dest_path):
-#     GoogleDriveDownloader.download_file_from_google_drive(file_id=file_id, dest_path=dest_path)
-#     error = None
-#     try:
-#         df = pandas.read_excel(dest_path, index_col=0)
-#     except FileNotFoundError:
-#         errorDescription = sys.exc_info()
-#         error = str(errorDescription[1]).replace("No module named '", '').replace("'", '').replace('_', '')
-#         print('error:', error) 
+def googleDriver2local(file_id, dest_path):
+    GoogleDriveDownloader.download_file_from_google_drive(file_id=file_id, dest_path=dest_path)
+    error = None
+    try:
+        df = pandas.read_excel(dest_path, index_col=0)
+    except FileNotFoundError:
+        errorDescription = sys.exc_info()
+        error = str(errorDescription[1]).replace("No module named '", '').replace("'", '').replace('_', '')
+        print('error:', error) 
         
-#     if error == None:
-#         display(df.head())
-#         print('Число столбцов:', df.shape[1], ', число строк', df.shape[0], '\n')
-#     else:
+    if error == None:
+        display(df.head())
+        print('Число столбцов:', df.shape[1], ', число строк', df.shape[0], '\n')
+    else:
 #         df = None
 #     return df, error
