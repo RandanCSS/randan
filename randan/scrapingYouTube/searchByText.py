@@ -85,6 +85,7 @@ def bigSearch(
               , videoType
               , videoSyndicated
               ):
+    goC = True
     while goC:
         try:
             youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
@@ -134,7 +135,7 @@ def bigSearch(
 
             # Для визуализации процесса
             print('      Итерация №', iteration, ', number of items', len(response['items'])
-                  , '' if year == None else f', year {year - 1}'
+                  , '' if year == None else f', year {year}'
                   , '' if order == None else f', order {order}'
                   , '          ', end='\r')
             iteration += 1
@@ -958,7 +959,7 @@ videoPaidProductPlacement : str
                 goC = True
 # ********** из фрагмента 2.1.0 + условие для goC
                 while (len(itemS) < targetCount) & (goC):
-                    print(f'  Для года {year - 1} заход на первую страницу выдачи БЕЗ аргумента order')
+                    print(f'  Для года {year} заход на первую страницу выдачи БЕЗ аргумента order')
                     addItemS, goS, iteration, keyOrder, response = bigSearch(
                                                                              API_keyS
                                                                              , channelIdForSearch
@@ -967,8 +968,8 @@ videoPaidProductPlacement : str
                                                                              , iteration
                                                                              , keyOrder
                                                                              , q
-                                                                             , publishedAfter = f'{year - 1}-01-01T00:00:00Z'
-                                                                             , publishedBefore = f'{year}-01-01T00:00:00Z'
+                                                                             , publishedAfter = f'{year}-01-01T00:00:00Z'
+                                                                             , publishedBefore = f'{year + 1}-01-01T00:00:00Z'
                                                                              , order=None
                                                                              , pageToken=None
                                                                              , year=year
@@ -992,7 +993,7 @@ videoPaidProductPlacement : str
                                                                              , videoSyndicated=videoSyndicated
                                                                             )
                     if len(addItemS) == 0:
-                        print(f'\n--- Первая страница выдачи БЕЗ аргумента order для года {year - 1} -- пуста'
+                        print(f'\n--- Первая страница выдачи БЕЗ аргумента order для года {year} -- пуста'
                               , '\n--- Если НЕ хотите для поиска дополнительных объектов попробовать предыдущий год, просто нажмите Enter'
                               , '\n--- Если хотите, введите любой символ и нажмите Enter')
                         if len(input()) == 0:
@@ -1000,7 +1001,7 @@ videoPaidProductPlacement : str
                             break
                     itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
     
-                    print(f'    Проход по всем следующим страницам с выдачей для года {year - 1} БЕЗ аргумента order')
+                    print(f'    Проход по всем следующим страницам с выдачей для года {year} БЕЗ аргумента order')
                     while 'nextPageToken' in response.keys():
                         pageToken = response['nextPageToken']
                         addItemS, goS, iteration, keyOrder, response = bigSearch(
@@ -1011,8 +1012,8 @@ videoPaidProductPlacement : str
                                                                                  , iteration
                                                                                  , keyOrder
                                                                                  , q
-                                                                                 , publishedAfter = f'{year - 1}-01-01T00:00:00Z'
-                                                                                 , publishedBefore = f'{year}-01-01T00:00:00Z'
+                                                                                 , publishedAfter = f'{year}-01-01T00:00:00Z'
+                                                                                 , publishedBefore = f'{year + 1}-01-01T00:00:00Z'
                                                                                  , order=None
                                                                                  , pageToken=pageToken
                                                                                  , year=year
@@ -1037,11 +1038,11 @@ videoPaidProductPlacement : str
                                                                                 )
                         itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
     
-                    print(f'    Искомых объектов в году {year - 1}: {targetCount},'
+                    print(f'    Искомых объектов в году {year}: {targetCount},'
                           , 'а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))      
 # ********** из фрагмента 2.1.1
                     if len(itemS) < targetCount:
-                        print(f'  Для года {year - 1} проход по значениям аргумента order,'
+                        print(f'  Для года {year} проход по значениям аргумента order,'
                               , 'внутри которых проход по всем страницам выдачи')
                         for order in orderS:
                             addItemS, goS, iteration, keyOrder, response = bigSearch(
@@ -1052,8 +1053,8 @@ videoPaidProductPlacement : str
                                                                                      , iteration
                                                                                      , keyOrder
                                                                                      , q
-                                                                                     , publishedAfter = f'{year - 1}-01-01T00:00:00Z'
-                                                                                     , publishedBefore = f'{year}-01-01T00:00:00Z'
+                                                                                     , publishedAfter = f'{year}-01-01T00:00:00Z'
+                                                                                     , publishedBefore = f'{year + 1}-01-01T00:00:00Z'
                                                                                      , order=order
                                                                                      , pageToken=None
                                                                                      , year=year
@@ -1078,7 +1079,7 @@ videoPaidProductPlacement : str
                                                                                     )
                             itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
     
-                            print(f'    Для года {year - 1} проход по всем следующим страницам с выдачей'
+                            print(f'    Для года {year} проход по всем следующим страницам с выдачей'
                                   , f'с тем же значением аргумента order:', order)
                             while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0):
                                 pageToken = response['nextPageToken']
@@ -1090,8 +1091,8 @@ videoPaidProductPlacement : str
                                                                                          , iteration
                                                                                          , keyOrder
                                                                                          , q
-                                                                                         , publishedAfter = f'{year - 1}-01-01T00:00:00Z'
-                                                                                         , publishedBefore = f'{year}-01-01T00:00:00Z'
+                                                                                         , publishedAfter = f'{year}-01-01T00:00:00Z'
+                                                                                         , publishedBefore = f'{year + 1}-01-01T00:00:00Z'
                                                                                          , order=order
                                                                                          , pageToken=pageToken
                                                                                          , year=year
@@ -1117,13 +1118,13 @@ videoPaidProductPlacement : str
                                 itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
                         print('    Искомых объектов', targetCount
                               , ', а найденных с добавлением сегментирования по году (год'
-                              , year - 1
+                              , year
                               , ') и включением аргумента order:', len(itemS))
                     else:
-                        print('  Все искомые объекты в году', year - 1, 'найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
+                        print('  Все искомые объекты в году', year, 'найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
                     year -= 1
                     if yearMinByUser != None: # если пользователь ограничил временнОй диапазон            
-                        if (year - 1) <= yearMinByUser:
+                        if (year) <= yearMinByUser:
                             goC = False
                             print(f'\nЗавершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser} (с точностью до года)')
     elif stage < stageTarget:
