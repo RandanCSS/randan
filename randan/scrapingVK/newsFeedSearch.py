@@ -51,21 +51,22 @@ tqdm.pandas() # для визуализации прогресса функци�
 
 
 # 1.0 для метода search из API ВК, помогающая работе с ключами
-def bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time, latitude, longitude, fields):
+def bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time, latitude, longitude, fields, params):
     dfAdd = pandas.DataFrame()
     while True:
-        params = {
-            'access_token': API_keyS[keyOrder] # обязательный параметр
-            , 'v': '5.199' # обязательный параметр
-            , 'q': q # опциональный параметр
-            , 'start_from': start_from # опциональный параметр
-            , 'start_time': start_time # опциональный параметр
-            , 'end_time': end_time # опциональный параметр
-            , 'latitude': latitude # опциональный параметр
-            , 'longitude': longitude # опциональный параметр
-            , 'extended': 1 # опциональный параметр
-            , 'fields': fields # опциональный параметр
-            }            
+        if params == None:
+            params = {
+                'access_token': API_keyS[keyOrder] # обязательный параметр
+                , 'v': '5.199' # обязательный параметр
+                , 'q': q # опциональный параметр
+                , 'start_from': start_from # опциональный параметр
+                , 'start_time': start_time # опциональный параметр
+                , 'end_time': end_time # опциональный параметр
+                , 'latitude': latitude # опциональный параметр
+                , 'longitude': longitude # опциональный параметр
+                , 'extended': 1 # опциональный параметр
+                , 'fields': fields # опциональный параметр
+                }            
         response = requests.get('https://api.vk.ru/method/newsfeed.search', params=params)
         response = response.json() # отобразить выдачу метода get в виде JSON
         # print('response', response) # для отладки
@@ -189,13 +190,14 @@ def saveSettings(complicatedNamePart, fileFormatChoice, itemS, method, q, slash,
 # In[ ]:
 
 
-def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, latitude=None, longitude=None, fields=None):
+def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, latitude=None, longitude=None, fields=None, params=None):
     """
     Функция для выгрузки характеристик контента ВК методом его API newsfeed.search. Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам
     
     Parameters
     ----------
     Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/newsfeed.search
+    Причём они могут быть поданы и в качестве самостоятельных аргументов функции, и в качестве словаря params , который обычно подаётся в метод get пакета requests
     access_token : str
                q : str
       start_time : int
@@ -203,11 +205,18 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
         latitude : int
        longitude : int
           fields : list
+          params : dict
     """
-    if (access_token == None) & (q == None) & (start_time == None) & (end_time == None) & (latitude == None) & (longitude == None) & (fields == None):
+    if (access_token == None) & (q == None) & (start_time == None) & (end_time == None) & (latitude == None) & (longitude == None) & (fields == None) & (params == None):
         # print('Пользователь не подал аргументы')
         expiriencedMode = False
-    else: expiriencedMode = True
+    else:
+        expiriencedMode = True
+        if params != None:
+            access_token = params['access_tokenq'] if 'access_token' in params.keys() else None
+            q = params['q'] if 'q' in params.keys() else None
+            start_time = params['start_time'] if 'start_time' in params.keys() else None
+            end_time = params['end_time'] if 'end_time' in params.keys() else None
 
     if expiriencedMode == False:
         print('    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрпиты и файлы с данными).'
