@@ -753,8 +753,6 @@ videoPaidProductPlacement : str
     stage = 0
     iteration = 0 # номер итерации применения текущего метода
     method = 'search'
-    order = None
-    pageToken = None
     print(f'\nВ скрипте используются следующие аргументы метода {method} API YouTube:'
           , 'channelId, maxResults, order, pageToken, part, publishedAfter, publishedBefore, q, type.'
           , 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
@@ -770,12 +768,12 @@ videoPaidProductPlacement : str
                                                                  , goS
                                                                  , iteration
                                                                  , keyOrder
-                                                                 , order
-                                                                 , pageToken
+                                                                 , order = None
+                                                                 , pageToken = None
                                                                  , publishedAfter
                                                                  , publishedBefore
                                                                  , q
-                                                                 , year
+                                                                 , year = None
                                                                  , channelType, eventType, location, locationRadius, regionCode, relevanceLanguage, safeSearch, topicId
                                                                  , videoCaption, videoCategoryId, videoDefinition, videoDimension, videoDuration, videoEmbeddable, videoLicense, videoPaidProductPlacement
                                                                  , videoSyndicated, videoType)
@@ -797,7 +795,7 @@ videoPaidProductPlacement : str
                                                                      , publishedAfter
                                                                      , publishedBefore
                                                                      , q
-                                                                     , year
+                                                                     , year = None
                                                                      , channelType, eventType, location, locationRadius, regionCode, relevanceLanguage, safeSearch, topicId
                                                                      , videoCaption, videoCategoryId, videoDefinition, videoDimension, videoDuration, videoEmbeddable, videoLicense
                                                                      , videoPaidProductPlacement
@@ -811,7 +809,6 @@ videoPaidProductPlacement : str
 # 2.1.1 Цикл для прохода по значениям аргумента order, внутри которых проход по всем страницам выдачи (этап stage = 1)
     stage = 1
     orderS = ['date', 'rating', 'title', 'videoCount', 'viewCount']
-    pageToken = None
     if stage >= stageTarget: # eсли НЕТ файла с id и нет временного файла stage.txt с указанием пропустить этап
         if len(itemS) < targetCount:
         # -- для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
@@ -824,7 +821,7 @@ videoPaidProductPlacement : str
                                                                          , iteration
                                                                          , keyOrder
                                                                          , order
-                                                                         , pageToken
+                                                                         , pageToken = None
                                                                          , publishedAfter
                                                                          , publishedBefore
                                                                          , q
@@ -854,7 +851,7 @@ videoPaidProductPlacement : str
                                                                              , publishedAfter
                                                                              , publishedBefore
                                                                              , q
-                                                                             , year
+                                                                             , year = None
                                                                              , channelType, eventType, location, locationRadius, regionCode, relevanceLanguage, safeSearch, topicId
                                                                              , videoCaption, videoCategoryId, videoDefinition, videoDimension, videoDuration, videoEmbeddable, videoLicense
                                                                              , videoPaidProductPlacement
@@ -867,9 +864,7 @@ videoPaidProductPlacement : str
         print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{rootName}"')
 
 # 2.1.2 Этап сегментирования по годам (stage = 2)
-    stage = 2
-    order = None
-    pageToken = None    
+    stage = 2 
     if stage >= stageTarget: # eсли НЕТ файла с id и нет временного файла stage.txt с указанием пропустить этап
         if len(itemS) < targetCount:
         # для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
@@ -889,8 +884,8 @@ videoPaidProductPlacement : str
                                                                              , goS
                                                                              , iteration
                                                                              , keyOrder
-                                                                             , order
-                                                                             , pageToken
+                                                                             , order = None
+                                                                             , pageToken = None
                                                                              , f'{year - 1}-01-01T00:00:00Z'
                                                                              , f'{year}-01-01T00:00:00Z'
                                                                              , q
@@ -936,7 +931,6 @@ videoPaidProductPlacement : str
                         print(f'  Для года {year - 1} проход по значениям аргумента order,'
                               , 'внутри которых проход по всем страницам выдачи')
                         for order in orderS:
-                            pageToken = None
                             addItemS, goS, iteration, keyOrder, response = bigSearch(API_keyS
                                                                                      , channelIdForSearch
                                                                                      , contentType
@@ -944,7 +938,7 @@ videoPaidProductPlacement : str
                                                                                      , iteration
                                                                                      , keyOrder
                                                                                      , order
-                                                                                     , pageToken
+                                                                                     , pageToken = None
                                                                                      , publishedAfter
                                                                                      , publishedBefore
                                                                                      , q
