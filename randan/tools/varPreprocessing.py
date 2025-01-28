@@ -10,6 +10,7 @@ import sys
 from subprocess import check_call
 
 # --- остальные модули и пакеты
+attempt = 0
 while True:
     try:
         import matplotlib.pyplot as plt, pandas
@@ -19,7 +20,7 @@ while True:
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
         if '.' in module: module = module.split('.')[1] 
         print('Пакет', module,
-              'НЕ прединсталируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталирован сейчас\n')
+              'НЕ прединсталлируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталлирован сейчас\n')
         check_call([sys.executable, "-m", "pip", "install", module])
 
 def varHist(dfIn, var):
