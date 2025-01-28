@@ -11,7 +11,7 @@ from subprocess import check_call
 # --- остальные модули и пакеты
 while True:
     try:
-        from google_drive_downloader import GoogleDriveDownloader
+        # from google_drive_downloader import GoogleDriveDownloader
         import os, pandas
         break
     except ModuleNotFoundError:
@@ -147,19 +147,19 @@ def files2df(*arg):
         df = None
     return df, error, folder
 
-def googleDriver2local(file_id, dest_path):
-    GoogleDriveDownloader.download_file_from_google_drive(file_id=file_id, dest_path=dest_path)
-    error = None
-    try:
-        df = pandas.read_excel(dest_path, index_col=0)
-    except FileNotFoundError:
-        errorDescription = sys.exc_info()
-        error = str(errorDescription[1]).replace("No module named '", '').replace("'", '').replace('_', '')
-        print('error:', error) 
+# def googleDriver2local(file_id, dest_path):
+#     GoogleDriveDownloader.download_file_from_google_drive(file_id=file_id, dest_path=dest_path)
+#     error = None
+#     try:
+#         df = pandas.read_excel(dest_path, index_col=0)
+#     except FileNotFoundError:
+#         errorDescription = sys.exc_info()
+#         error = str(errorDescription[1]).replace("No module named '", '').replace("'", '').replace('_', '')
+#         print('error:', error) 
         
-    if error == None:
-        display(df.head())
-        print('Число столбцов:', df.shape[1], ', число строк', df.shape[0], '\n')
-    else:
-        df = None
-    return df, error
+#     if error == None:
+#         display(df.head())
+#         print('Число столбцов:', df.shape[1], ', число строк', df.shape[0], '\n')
+#     else:
+#         df = None
+#     return df, error
