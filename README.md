@@ -184,12 +184,16 @@ predictions = chaid.predict(node=True, interaction=True)
 #### Module `scrapingYouTube`
 This module aggregates seven YouTube API methods: search, playlists & playlistItems, videos, commentThreads & comments, channels. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. You only need to call the necessary module:
 ```python
-from randan.scrapingYouTube import scrapingYouTube
+from randan.scrapingYouTube import searchByText
+searchByText.searchByText()
 
 # with this code, you will immediately see an instruction.
 # Just follow it for executing the default scenario, episodically pressing Enter on your keyboard
 
-# however, if you want to customize the default scenario, you might both use the dialog interface and alter the module's code
+# however, if you want to customize the default scenario, there are three ways availible.
+# The first one is to use the module's dialog interface which appears in the process of executing the module's code.
+# The second one is to assign manually the function scrapingVK() arguments, which are None bt default.
+# Finally, the third way is to take the module's code manually and and alter it
 ```
 #### Module `scrapingVK`
 This module utilise VK API method news.search. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. You only need to call the necessary module:
