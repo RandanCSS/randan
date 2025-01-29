@@ -11,7 +11,7 @@
 # In[ ]:
 
 
-# sys & subprocess -- эти пакеты должны быть предустанавлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+# sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
 import sys
 from subprocess import check_call
 
@@ -158,10 +158,10 @@ def bigSearch(
 def dfsProcessing(complicatedNamePart, fileFormatChoice, dfAdd, dfFinal, dfIn, goS, method, q, slash, stage, targetCount, today, year, yearsRange):
     df = pandas.concat([dfIn, dfAdd])        
     columnsForCheck = []
-    for column in df.columns: # выдача многих методов содержит столбец id, он оптимален для проверки дублирующхся строк
+    for column in df.columns: # выдача многих методов содержит столбец id, он оптимален для проверки дублирующихся строк
         if 'id' == column:
             columnsForCheck.append(column)
-    if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующхся строк возможна по столбцам, содержаим в имени id
+    if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся строк возможна по столбцам, содержащим в имени id
         for column in df.columns:
             if 'id.' in column:
                 columnsForCheck.append(column)
@@ -476,7 +476,7 @@ videoPaidProductPlacement : str
     else: expiriencedMode = True
 
     if expiriencedMode == False:
-        print('    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрпиты и файлы с данными).'
+        print('    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными).'
               , 'Но от пользователя требуется предварительно получить API key для авторизации в API YouTube по ключу (см. примерную видео-инструкцию: https://www.youtube.com/watch?v=EXysYgWeapI&t=490s ).'
               , 'Для получения API key следует создать проект, авторизовать его, подключить к нему API нужного сервиса Google.'
               , 'Проект -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому сервисов Google'
@@ -487,7 +487,7 @@ videoPaidProductPlacement : str
               , 'посмотреть видео, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления видео, то Вам придётся пройти полную авторизацию.'
               , 'Далее разные API как бы подключаются к проектам (кнопка Enable APIs and servises), используются, затем отключаются (кнопка Disable APIs).'
               , '\n    Квоты одного ключа может не хватить (quota is exceeded) для выгрузки всего предоставляемого ЮТьюбом по запросу пользователя контента.'
-              , 'К счастью, использованный ключ ежесуточно восстанавливается ЮТьюбом. Скрпит позволяет сохранить промежуточную выгрузку и после восстановления ключа автоматически продолжит её дополнять'
+              , 'К счастью, использованный ключ ежесуточно восстанавливается ЮТьюбом. скрипт позволяет сохранить промежуточную выгрузку и после восстановления ключа автоматически продолжит её дополнять'
               , 'с момента остановки. В момент остановки появится надпись: "Поскольку ключи закончились, исполнение скрипта завершаю. Подождите сутки для восстановления ключей или подготовьте новый ключ'
               , '-- и запустите скрипт с начала", а исполнение скрипта прервётся. Не пугайтесь, нажмите OK и следуйте этой инструкции.')
     print('    Скрипт нацелен на выгрузку характеристик контента YouTube семью методами его API: search, videos, commentThreads и comments, channels, playlists и playlistItems.'
@@ -541,7 +541,7 @@ videoPaidProductPlacement : str
                 if len(API_keyS) != 0:
                     print('-- далее буд[е у]т использован[ы] эт[от и] ключ[и]')
                 
-                    from randan.tools.textPreprocessing import multispaceCleaner # авторский модуль для предобработки нестандартизированнрого текста
+                    from randan.tools.textPreprocessing import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
                     API_keyS = multispaceCleaner(API_keyS)
                     while API_keyS[-1] == ',': API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста
                 
@@ -761,7 +761,7 @@ videoPaidProductPlacement : str
     complicatedNamePart = '_YouTube'
     complicatedNamePart += "" if contentType == None else "_" + contentType
     complicatedNamePart += "" if channelIdForSearch == None else "_channelId" + channelIdForSearch
-    complicatedNamePart += "" if q == None else "_" + q
+    complicatedNamePart += "" if q == None else "_" + q[50]
     complicatedNamePart += "" if ((yearMinByUser == None) & (yearMaxByUser == None)) else "_" + str(yearMinByUser) + '-' + str(yearMaxByUser)
 # print('complicatedNamePart', complicatedNamePart)
 
