@@ -5,7 +5,7 @@
 A module for processing two (semi)standardized text variables: snippet.tags, topic Details.topic Categories. They are variables from the output of the YouTube API method `videos`. As well the module creates a column with a video's absolute link
 '''
 
-# sys & subprocess -- эти пакеты должны быть предустанавлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+# sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
 import sys
 from subprocess import check_call
 
