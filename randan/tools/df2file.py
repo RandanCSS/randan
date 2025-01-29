@@ -53,14 +53,13 @@ def df2file(dfIn, *arg): # арки: fileName и folder
         fileName = input('--- Впишите имя сохраняемого файла и нажмите Enter:')
     
     if folder != '':
-        print('Директория, в которую сохраняю файл:', folder)
+        print('Директория, в которую сохраняю файл:', os.getcwd() + slash + folder)
     elif slash in fileName: # если директория содерджится в fileName
         folder = slash.join(fileName.split(slash)[:-1])
-        print('Директория, в которую сохраняю файл:', folder)
+        print('Директория, в которую сохраняю файл:', os.getcwd() + slash + folder)
         fileName = fileName.split(slash)[-1]
     else:
         folder = input('--- Впишите директорию, в которую сохранить файл (если имя файла уже содержит путь к нему, то не вписывайте ничего) и нажмите Enter:')
-
 
     if slash != folder[-1]:
         folder += slash
@@ -89,6 +88,7 @@ def df2file(dfIn, *arg): # арки: fileName и folder
 # ********** В зависимости от расширения сохраняемого файла выполнить сохранение
     # print('Расширение файла:', fileFormatChoice)
     if fileFormatChoice == 'xlsx':
+        attempt = 0
         while True:
             try:
                 dfIn.to_excel(folder + fileName)
@@ -99,6 +99,12 @@ def df2file(dfIn, *arg): # арки: fileName и folder
                 module = 'xlsxwriter'
                 print('Для устранения ошибки требуется пакет', {module}, 'поэтому он будет инсталирован сейчас\n')
                 check_call([sys.executable, "-m", "pip", "install", module])
+                attempt += 1
+                if  attempt == 10:
+                    print('Пакет', module
+                          , 'НЕ прединсталлируется с установкой Анаконды, для работы скрипта требуется этот пакет,'
+                          , 'но инсталлировать его не удаётся, попробуйте инсталлировать его вручную, после чего снова запустите требуемый скрипт пакета\n')
+                    break                
     if fileFormatChoice == 'csv':
         dfIn.to_csv(folder + fileName)   
     if fileFormatChoice == 'json':
