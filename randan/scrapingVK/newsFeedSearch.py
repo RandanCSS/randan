@@ -189,10 +189,10 @@ def saveSettings(complicatedNamePart, fileFormatChoice, itemS, method, q, slash,
     if '.' in method: df2file.df2fileShell(f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method.split('.')[0] + method.split('.')[1].capitalize(), today)
         # чтобы избавиться от лишней точки в имени файла
     else: df2file.df2fileShell(f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method, today)
-    
-    print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
-          , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
-    shutil.rmtree(rootName, ignore_errors=True)
+    if os.path.exists(rootName):
+        print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
+              , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
+        shutil.rmtree(rootName, ignore_errors=True)
 
 
 # In[ ]:
@@ -614,9 +614,11 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
 # 2.1.2 Экспорт выгрузки метода search и финальное завершение скрипта
     df2file.df2fileShell(complicatedNamePart, itemS, '.xlsx', method.split('.')[0] + method.split('.')[1].capitalize(), today) # чтобы избавиться от лишней точки в имени файла
 
-    print('Скрипт исполнен. Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
-          , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
-    shutil.rmtree(rootName, ignore_errors=True)
+    print('Скрипт исполнен')
+    if os.path.exists(rootName):
+        print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
+              , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
+        shutil.rmtree(rootName, ignore_errors=True)
     
     warnings.filterwarnings("ignore")
     print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
