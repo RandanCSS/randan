@@ -5,7 +5,7 @@
 A module for creating a matrix `documents-tokens` from a corpus of documents using the methods of the CountVectorizer and TfidfVectorizer classes
 '''
 
-# sys & subprocess -- эти пакеты должны быть предустанавлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+# sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
 import sys
 from subprocess import check_call
 
