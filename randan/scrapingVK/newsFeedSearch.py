@@ -204,7 +204,16 @@ def saveSettings(complicatedNamePart, fileFormatChoice, itemS, method, q, slash,
 # In[ ]:
 
 
-def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, latitude=None, longitude=None, fields=None, params=None):
+def newsFeedSearch(
+                   params=None
+                   , access_token=None
+                   , q=None
+                   , start_time=None
+                   , end_time=None
+                   , latitude=None
+                   , longitude=None
+                   , fields=None
+                   ):
     """
     Функция для выгрузки характеристик контента ВК методом его API newsfeed.search. Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам
     
