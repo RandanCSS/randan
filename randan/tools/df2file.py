@@ -53,11 +53,11 @@ def df2file(dfIn, *arg): # арки: fileName и folder
         fileName = input('--- Впишите имя сохраняемого файла и нажмите Enter:')
     
     if folder != '':
-        print('Директория, в которую сохраняю файл:', os.getcwd() + slash + folder)
+        print(f'Директория, в которую сохраняю файл "{fileName}":', os.getcwd() + slash + folder)
     elif slash in fileName: # если директория содерджится в fileName
         folder = slash.join(fileName.split(slash)[:-1])
-        print('Директория, в которую сохраняю файл:', os.getcwd() + slash + folder)
         fileName = fileName.split(slash)[-1]
+        print(f'Директория, в которую сохраняю файл "{fileName}":', os.getcwd() + slash + folder)
     else:
         folder = input('--- Впишите директорию, в которую сохранить файл (если имя файла уже содержит путь к нему, то не вписывайте ничего) и нажмите Enter:')
 
