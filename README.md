@@ -222,7 +222,7 @@ newsFeedSearch.newsFeedSearch(
 
 # The function's arguments are analoguous to those of the method https://dev.vk.com/ru/method/newsfeed.search
 # Moreover, the arguments might be inputed in the function brackets both as stay alone entities, and as params parts
-( params belongs to dictionary class and is an argument of the method get of the module requests )
+#( params belongs to dictionary class and is an argument of the method get of the module requests )
 
 # Finally, the third way is to take the module's code manually and and alter it
 ```
