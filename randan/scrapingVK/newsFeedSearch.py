@@ -11,7 +11,7 @@
 # In[ ]:
 
 
-# sys & subprocess -- эти пакеты должны быть предустанавлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+# sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
 import sys
 from subprocess import check_call
 
@@ -135,10 +135,10 @@ def bigSearch(
 def dfsProcessing(complicatedNamePart, fileFormatChoice, dfAdd, dfFinal, dfIn, goS, method, q, slash, stage, targetCount, today, year, yearsRange):
     df = pandas.concat([dfIn, dfAdd])        
     columnsForCheck = []
-    for column in df.columns: # выдача многих методов содержит столбец id, он оптимален для проверки дублирующхся строк
+    for column in df.columns: # выдача многих методов содержит столбец id, он оптимален для проверки дублирующихся  строк
         if 'id' == column:
             columnsForCheck.append(column)
-    if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующхся строк возможна по столбцам, содержаим в имени id
+    if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
         for column in df.columns:
             if 'id.' in column:
                 columnsForCheck.append(column)
@@ -233,7 +233,7 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
             end_time = params['end_time'] if 'end_time' in params.keys() else None
 
     if expiriencedMode == False:
-        print('    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрпиты и файлы с данными).'
+        print('    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными).'
               , 'Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию:'
               , 'https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ). Для получения API key следует создать приложение и из него скопировать сервисный ключ.'
               , 'Приложение -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому ВК.'
@@ -291,7 +291,7 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
                 if len(API_keyS) != 0:
                     print('-- далее буд[е у]т использован[ы] эт[от и] ключ[и]')
 
-                    from randan.tools.textPreprocessing import multispaceCleaner # авторский модуль для предобработки нестандартизированнрого текста
+                    from randan.tools.textPreprocessing import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
                     API_keyS = multispaceCleaner(API_keyS)
                     while API_keyS[-1] == ',': API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста
 
@@ -387,7 +387,7 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
             # display(itemS)
 # Теперь определены объекты: folder и folderFile (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
 
-# 2.0.4 Пользовательские настройки запроса к API YouTube
+# 2.0.4 Пользовательские настройки запроса к API ВК
         if q == None: # если пользователь не подал этот аргумент в рамках experiencedMode
             print('Скрипт умеет искать контент в постах открытых аккаунтов по текстовому запросу-фильтру'
                   , '\n--- Введите текст запроса-фильтра, который ожидаете найти в постах, после чего нажмите Enter')
@@ -448,7 +448,7 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
     iteration = 0 # номер итерации применения текущего метода
     pause = 0.25
 
-    print(f'В скрипте используются следующие аргументы метода {method} API YouTube:'
+    print(f'В скрипте используются следующие аргументы метода {method} API ВК:'
           , 'q, start_from, start_time, end_time, expand.'
           , 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
           , f'Если хотите добавить другие аргументы метода {method} API ВК, доступные по ссылке https://dev.vk.com/ru/method/newsfeed.search ,'
@@ -503,7 +503,7 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
         if len(itemS) < targetCount:
         # -- для остановки алгоритма, если все искомые объекты найдены БЕЗ сегментирования по годам и месяцам
             print('Увы, без назначения временнОго диапазона метод newsfeed.search выдаёт ограниченное количество объектов, причём наиболее приближенных к текущему моменту.'
-              , 'Поэтому внутри каждого года, начиная с теущего, помесячно выгружаю контент, после чего меняю год -- вглубь веков, пока не достигну заданной пользователем левой границы временнОго диапазона,'
+              , 'Поэтому внутри каждого года, начиная с текущего, помесячно выгружаю контент, после чего меняю год -- вглубь веков, пока не достигну заданной пользователем левой границы временнОго диапазона,'
               , 'или года с пустой выдачей')
             print('--- Если хотите для поиска дополнительных объектов попробовать сегментирование по годам, просто нажмите Enter, но учтите, что поиск может занять минуты и даже часы'
                   , '\n--- Если НЕ хотите, введите любой символ и нажмите Enter')
