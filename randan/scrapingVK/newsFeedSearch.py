@@ -437,7 +437,7 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
 
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_VK'
-    complicatedNamePart += "" if q == None else "_" + q
+    complicatedNamePart += "" if q == None else "_" + q[:50]
     complicatedNamePart += "" if ((yearMinByUser == None) & (yearMaxByUser == None)) else "_" + str(yearMinByUser) + '-' + str(yearMaxByUser)
     # print('complicatedNamePart', complicatedNamePart)
 
@@ -517,8 +517,8 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
                     for month in calendarColumnS:
                         print('Ищу текст запроса-фильтра в контенте за',  month, 'месяц', year, 'года', '               ') # , end='\r'
                         print('  Заход на первую страницу выдачи', '               ', end='\r')
-                        start_time = int(time.mktime(datetime(year, int(month), 1).timetuple()))
-                        end_time = int(time.mktime(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timetuple()))
+                        start_time = int(datetime(year, int(month), 1).timestamp()) # int(time.mktime(datetime(year, int(month), 1).timetuple()))
+                        end_time = int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()) # int(time.mktime(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timetuple()))
                         # print('\n  Period from start_time', start_time, 'to end_time', end_time) # для отладки
                         itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
                                                                                                       params
