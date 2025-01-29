@@ -206,8 +206,9 @@ newsFeedSearch.newsFeedSearch()
 ```
 ```python
 # However, if you want to customize the default scenario, there are three ways availible.
-# The first one is to use the module's dialog interface which appears in the process of executing the module's code
-# The second one is to assign manually the function scrapingVK() arguments, which are None by default:
+# The first one is to use the module's dialog interface, which appears in the process of executing the module's code.
+# The second one is to assign manually the function **scrapingVK()** arguments, which are None by default:
+
 newsFeedSearch.newsFeedSearch(
                               params=None
                               , access_token=None
@@ -218,9 +219,10 @@ newsFeedSearch.newsFeedSearch(
                               , longitude=None
                               , fields=None
                               )
+
 # The function's arguments are analoguous to those of the method https://dev.vk.com/ru/method/newsfeed.search
 # Moreover, the arguments might be inputed in the function brackets both as stay alone entities, and as params parts
-# (`params` belongs to dictionary class and is an argument of the method `get` of the module `requests`)
+# ( **params** belongs to dictionary class and is an argument of the method **get** of the module **requests** )
 
 # Finally, the third way is to take the module's code manually and and alter it
 ```
