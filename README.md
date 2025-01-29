@@ -77,7 +77,7 @@ Although statistical modules of `randan` are built to be similar to SPSS, they r
 > 2. If the method you use belongs to the *supervised methods* (i.e., you *have* a dependent variable in your data), you can then use `predict` function to get values of the given dependent variable. 
 > 3. If the method does not assume to estimate new values for your data (such methods are crosstabs, t-tests etc.), then it does not require to use `fit` and `transform` / `predict` functions. 
 
-If you want to see the full list of the availiable functions associated with some class, please visit our [documentation page](https://randan.readthedocs.io/en/latest/) or literally ask for help:
+If you want to see the full list of the availiable functions associated with some class, please visit our [documentation page](https://randareadthedocs.io/en/latest/) or literally ask for help:
 ```python
 from randan.bivariate_association import Crosstab
 help(Crosstab)
@@ -222,7 +222,7 @@ newsFeedSearch.newsFeedSearch(
 
 # The function's arguments are analoguous to those of the method https://dev.vk.com/ru/method/newsfeed.search
 # Moreover, the arguments might be inputed in the function brackets both as stay alone entities, and as params parts
-# ( **params** belongs to dictionary class and is an argument of the method **get** of the module **requests** )
+( **params** belongs to dictionary class and is an argument of the method **get** of the module **requests** )
 
 # Finally, the third way is to take the module's code manually and and alter it
 ```
