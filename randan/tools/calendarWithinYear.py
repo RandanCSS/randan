@@ -7,7 +7,7 @@ A module for working on a calendar within a specific year
 # import sys
 # sys.path.append(r"C:\Users\Alexey\Dropbox\Мои\RAnDan\myModules")
 
-# sys & subprocess -- эти пакеты должны быть предустанавлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+# sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
 import sys
 from subprocess import check_call
 
