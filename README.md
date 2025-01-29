@@ -1,7 +1,7 @@
 # randan
 _A python package for gaining social and financial data and their analysis_
 
-_Current version: 1.3.10_
+_Current version: 1.3.11_
 
 _Documentation: https://randan.readthedocs.io/en/latest/_
 
@@ -206,6 +206,8 @@ newsFeedSearch.newsFeedSearch()
 
 # however, if you want to customize the default scenario, there are three ways availible.
 # The first one is to use the module's dialog interface which appears in the process of executing the module's code.
-# The second one is to assign manually the function scrapingVK() arguments, which are None bt default.
+# The second one is to assign manually the function scrapingVK() arguments, which are None by default:
+newsFeedSearch.newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, latitude=None, longitude=None, fields=None, params=None)
+
 # Finally, the third way is to take the module's code manually and and alter it
 ```
