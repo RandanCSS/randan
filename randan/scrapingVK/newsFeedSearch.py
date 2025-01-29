@@ -51,7 +51,21 @@ tqdm.pandas() # для визуализации прогресса функци�
 
 
 # 1.0 для метода search из API ВК, помогающая работе с ключами
-def bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time, latitude, longitude, fields, params):
+def bigSearch(
+              params
+              , API_keyS
+              , goS
+              , iteration
+              , keyOrder
+              , pause
+              , q
+              , start_time
+              , end_time
+              , latitude
+              , longitude
+              , fields
+              , start_from
+              ):
     dfAdd = pandas.DataFrame()
     while True:
         if params == None:
@@ -443,7 +457,21 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
     
     if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
         print('\nПервое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов')
-        itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from=None, start_time, end_time, latitude, longitude, fields, params)
+        itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
+                                                                               params
+                                                                               , API_keyS
+                                                                               , goS
+                                                                               , iteration
+                                                                               , keyOrder
+                                                                               , pause
+                                                                               , q
+                                                                               , start_time
+                                                                               , end_time
+                                                                               , latitude
+                                                                               , longitude
+                                                                               , fields
+                                                                               , start_from=None
+                                                                              )
         targetCount = response['total_count']
         # if len(itemS) < targetCount: # на случай достаточности
         itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, itemsAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
@@ -451,7 +479,21 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
         while 'next_from' in response.keys():
             start_from = response['next_from']
             # print('    start_from', start_from) # для отладки
-            itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time, latitude, longitude, fields, params)
+            itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
+                                                                                   params
+                                                                                   , API_keyS
+                                                                                   , goS
+                                                                                   , iteration
+                                                                                   , keyOrder
+                                                                                   , pause
+                                                                                   , q
+                                                                                   , start_time
+                                                                                   , end_time
+                                                                                   , latitude
+                                                                                   , longitude
+                                                                                   , fields
+                                                                                   , start_from
+                                                                                  )
             itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, itemsAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
         print('  Искомых объектов', targetCount, ', а найденных БЕЗ сегментирования по годам и месяцам:', len(itemS))
 
@@ -478,7 +520,21 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
                         start_time = int(time.mktime(datetime(year, int(month), 1).timetuple()))
                         end_time = int(time.mktime(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timetuple()))
                         # print('\n  Period from start_time', start_time, 'to end_time', end_time) # для отладки
-                        itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from=None, start_time, end_time, latitude, longitude, fields, params)
+                        itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
+                                                                                                      params
+                                                                                                      , API_keyS
+                                                                                                      , goS
+                                                                                                      , iteration
+                                                                                                      , keyOrder
+                                                                                                      , pause
+                                                                                                      , q
+                                                                                                      , start_time
+                                                                                                      , end_time
+                                                                                                      , latitude
+                                                                                                      , longitude
+                                                                                                      , fields
+                                                                                                      , start_from=None
+                                                                                                      )
                         itemsYearlyAdditional = dfsProcessing(complicatedNamePart
                                                               , fileFormatChoice
                                                               , itemsMonthlyAdditional
@@ -497,8 +553,21 @@ def newsFeedSearch(access_token=None, q=None, start_time=None, end_time=None, la
                         while 'next_from' in response.keys():
                             start_from = response['next_from']
                             # print('    start_from', start_from) # для отладки
-                            itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS, goS, iteration, keyOrder, pause, q, start_from, start_time, end_time
-                                                                                                          , latitude, longitude, fields, params)
+                            itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
+                                                                                                          params
+                                                                                                          , API_keyS
+                                                                                                          , goS
+                                                                                                          , iteration
+                                                                                                          , keyOrder
+                                                                                                          , pause
+                                                                                                          , q
+                                                                                                          , start_time
+                                                                                                          , end_time
+                                                                                                          , latitude
+                                                                                                          , longitude
+                                                                                                          , fields
+                                                                                                          , start_from
+                                                                                                          )
                             itemsYearlyAdditional = dfsProcessing(complicatedNamePart
                                                                   , fileFormatChoice
                                                                   , itemsMonthlyAdditional
