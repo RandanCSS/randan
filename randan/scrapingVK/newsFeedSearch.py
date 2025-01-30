@@ -73,13 +73,14 @@ def bigSearch(
                 'access_token': API_keyS[keyOrder] # обязательный параметр
                 , 'v': '5.199' # обязательный параметр
                 , 'q': q # опциональный параметр
-                , 'start_from': start_from # опциональный параметр
+                , 'count': 100 # опциональный параметр
                 , 'start_time': start_time # опциональный параметр
                 , 'end_time': end_time # опциональный параметр
                 , 'latitude': latitude # опциональный параметр
                 , 'longitude': longitude # опциональный параметр
                 , 'extended': 1 # опциональный параметр
                 , 'fields': fields # опциональный параметр
+                , 'start_from': start_from # опциональный параметр
                 }            
         response = requests.get('https://api.vk.ru/method/newsfeed.search', params=params)
         response = response.json() # отобразить выдачу метода get в виде JSON
