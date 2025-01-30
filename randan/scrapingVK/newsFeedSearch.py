@@ -135,12 +135,9 @@ def bigSearch(
 def dfsProcessing(complicatedNamePart, fileFormatChoice, dfAdd, dfFinal, dfIn, goS, method, q, slash, stage, targetCount, today, year, yearsRange):
     df = pandas.concat([dfIn, dfAdd])        
     columnsForCheck = []
-    for column in df.columns: # выдача многих методов содержит столбец id, он оптимален для проверки дублирующихся  строк
-        if 'id' == column:
-            columnsForCheck.append(column)
     if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
         for column in df.columns:
-            if 'id.' in column:
+            if 'id' in column:
                 columnsForCheck.append(column)
     # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck)
     df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True) # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые 
