@@ -497,7 +497,7 @@ videoPaidProductPlacement : str
     , 'Преимущества скрипта перед выгрузкой контента через непосредственно API YouTube: гораздо быстрее, гораздо большее количество контента с одним и тем же ключом,'
     , 'не требуется тщательно изучать обширную документацию семи методов API YouTube (search, videos, commentThreads и comments, channels, playlists и playlistItems),'
     , 'выстроена логика обрашения к этим методам')
-    input('--- После прочтения этой инструкции нажмите Enter')
+    if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
 
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API YouTube
@@ -775,7 +775,7 @@ videoPaidProductPlacement : str
           , 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
           , f'Если хотите добавить другие аргументы метода {method} API YouTube, доступные по ссылке https://developers.google.com/youtube/v3/docs/search ,'
           , f'-- можете сделать это внутри метода {method} в чанке 1.1 исполняемого сейчас скрипта')
-    input('--- После прочтения этой инструкции нажмите Enter')
+    if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
 
     if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
         print('\nЗаход на первую страницу выдачи')
@@ -1168,7 +1168,7 @@ videoPaidProductPlacement : str
               , 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
               , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
               , 'https://developers.google.com/youtube/v3/docs/playlists')
-        input('--- После прочтения этой инструкции нажмите Enter')
+        if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
         bound = 0
         goC = True
         iteration = 0 # номер итерации применения текущего метода
@@ -1204,7 +1204,7 @@ videoPaidProductPlacement : str
               , 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
               , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
               , 'https://developers.google.com/youtube/v3/docs/playlists')
-        input('--- После прочтения этой инструкции нажмите Enter')
+        if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
         goC = True
         iteration = 0 # номер итерации применения текущего метода
         playlistVideoChannelS = pandas.DataFrame()
@@ -1251,7 +1251,7 @@ videoPaidProductPlacement : str
               , 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
               , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
               , 'https://developers.google.com/youtube/v3/docs/videos')
-        input('--- После прочтения этой инструкции нажмите Enter')
+        if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
     
         videoIdS = itemS[itemS['id.kind'] == f'youtube#{snippetContentType}']
         videoIdS = videoIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in videoIdS.columns else videoIdS['id'].to_list()
@@ -1378,7 +1378,7 @@ videoPaidProductPlacement : str
                   , 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
                   , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
                   , 'https://developers.google.com/youtube/v3/docs/commentThreads')
-            input('--- После прочтения этой инструкции нажмите Enter')
+            if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
         
             # Переназначить объект videoIdS для целей текущего чанка
             videoIdS = videoS[videoS['statistics.commentCount'].notna()]
@@ -1442,7 +1442,7 @@ videoPaidProductPlacement : str
                   , 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
                   , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
                   , 'https://developers.google.com/youtube/v3/docs/commentThreads')
-            input('--- После прочтения этой инструкции нажмите Enter')
+            if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
             print('Проход по id всех родительских (topLevel) комментариев с недостачей ответов для выгрузки этих ответов')
             commentIdS = commentReplieS['id'][commentReplieS['Недостача_ответов'] > 0]
             for commentId in tqdm(commentIdS):
@@ -1480,7 +1480,7 @@ videoPaidProductPlacement : str
               , 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
               , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
               , 'https://developers.google.com/youtube/v3/docs/channels')
-        input('--- После прочтения этой инструкции нажмите Enter')
+        if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
     
         channelIdS = itemS[itemS['id.kind'] == f'youtube#{snippetContentType}']
         channelIdS =\
