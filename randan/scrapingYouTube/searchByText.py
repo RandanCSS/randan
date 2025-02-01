@@ -757,6 +757,9 @@ videoPaidProductPlacement : str
         # print('yearMinByUser', yearMinByUser) # для отладки
         # print('yearMaxByUser', yearMaxByUser) # для отладки
 
+        if (publishedAfter == None) & (yearMinByUser != None): publishedAfter = datetime.datetime(yearMinByUser, 1, 1).isoformat() + 'Z'
+        if (publishedBefore == None) & (yearMaxByUser != None): publishedBefore = datetime.datetime(yearMaxByUser, 12, 31).isoformat() + 'Z'
+
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_YouTube'
     complicatedNamePart += "" if contentType == None else "_" + contentType
@@ -787,8 +790,8 @@ videoPaidProductPlacement : str
                                                                  , iteration
                                                                  , keyOrder
                                                                  , q
-                                                                 , publishedAfter
-                                                                 , publishedBefore
+                                                                 , publishedAfter=publishedAfter
+                                                                 , publishedBefore=publishedBefore
                                                                  , order=None
                                                                  , pageToken=None
                                                                  , year=None
@@ -826,8 +829,8 @@ videoPaidProductPlacement : str
                                                                      , iteration
                                                                      , keyOrder
                                                                      , q
-                                                                     , publishedAfter
-                                                                     , publishedBefore
+                                                                     , publishedAfter=publishedAfter
+                                                                     , publishedBefore=publishedBefore
                                                                      , order=order
                                                                      , pageToken=pageToken
                                                                      , year=None
@@ -872,8 +875,8 @@ videoPaidProductPlacement : str
                                                                          , iteration
                                                                          , keyOrder
                                                                          , q
-                                                                         , publishedAfter
-                                                                         , publishedBefore
+                                                                         , publishedAfter=publishedAfter
+                                                                         , publishedBefore=publishedBefore
                                                                          , order=order
                                                                          , pageToken=None
                                                                          , year=year
@@ -914,8 +917,8 @@ videoPaidProductPlacement : str
                                                                              , iteration
                                                                              , keyOrder
                                                                              , q
-                                                                             , publishedAfter
-                                                                             , publishedBefore
+                                                                             , publishedAfter=publishedAfter
+                                                                             , publishedBefore=publishedBefore
                                                                              , order=order
                                                                              , pageToken=pageToken
                                                                              , year=None
