@@ -59,12 +59,12 @@ def bigSearch(
               , keyOrder
               , pause
               , q
-              , start_time
-              , end_time
               , latitude
               , longitude
               , fields
               , start_from
+              , start_time
+              , end_time
               ):
     dfAdd = pandas.DataFrame()
     while True:
@@ -475,12 +475,12 @@ def newsFeedSearch(
                                                                                , keyOrder
                                                                                , pause
                                                                                , q
-                                                                               , start_time=start_time
-                                                                               , end_time=end_time
                                                                                , latitude
                                                                                , longitude
                                                                                , fields
                                                                                , start_from=None
+                                                                               , start_time=start_time
+                                                                               , end_time=end_time
                                                                               )
         targetCount = response['total_count']
         # if len(itemS) < targetCount: # на случай достаточности
@@ -497,12 +497,12 @@ def newsFeedSearch(
                                                                                    , keyOrder
                                                                                    , pause
                                                                                    , q
-                                                                                   , start_time=start_time
-                                                                                   , end_time=end_time
                                                                                    , latitude
                                                                                    , longitude
                                                                                    , fields
                                                                                    , start_from
+                                                                                   , start_time=start_time
+                                                                                   , end_time=end_time
                                                                                   )
             itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, itemsAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
         print('  Искомых объектов', targetCount, ', а найденных БЕЗ сегментирования по годам и месяцам:', len(itemS))
@@ -535,12 +535,12 @@ def newsFeedSearch(
                                                                                                       , keyOrder
                                                                                                       , pause
                                                                                                       , q
-                                                                                                      , start_time=int(datetime(year, int(month), 1).timestamp())
-                                                                                                      , end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp())
                                                                                                       , latitude
                                                                                                       , longitude
                                                                                                       , fields
                                                                                                       , start_from=None
+                                                                                                      , start_time=int(datetime(year, int(month), 1).timestamp())
+                                                                                                      , end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp())
                                                                                                       )
                         itemsYearlyAdditional = dfsProcessing(complicatedNamePart
                                                               , fileFormatChoice
@@ -568,12 +568,12 @@ def newsFeedSearch(
                                                                                                           , keyOrder
                                                                                                           , pause
                                                                                                           , q
-                                                                                                          , start_time=start_time
-                                                                                                          , end_time=end_time
                                                                                                           , latitude
                                                                                                           , longitude
                                                                                                           , fields
                                                                                                           , start_from
+                                                                                                          , start_time=start_time
+                                                                                                          , end_time=end_time
                                                                                                           )
                             itemsYearlyAdditional = dfsProcessing(complicatedNamePart
                                                                   , fileFormatChoice
