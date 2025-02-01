@@ -475,8 +475,8 @@ def newsFeedSearch(
                                                                                , keyOrder
                                                                                , pause
                                                                                , q
-                                                                               , start_time
-                                                                               , end_time
+                                                                               , start_time=start_time
+                                                                               , end_time=end_time
                                                                                , latitude
                                                                                , longitude
                                                                                , fields
@@ -497,8 +497,8 @@ def newsFeedSearch(
                                                                                    , keyOrder
                                                                                    , pause
                                                                                    , q
-                                                                                   , start_time
-                                                                                   , end_time
+                                                                                   , start_time=start_time
+                                                                                   , end_time=end_time
                                                                                    , latitude
                                                                                    , longitude
                                                                                    , fields
@@ -568,8 +568,8 @@ def newsFeedSearch(
                                                                                                           , keyOrder
                                                                                                           , pause
                                                                                                           , q
-                                                                                                          , start_time
-                                                                                                          , end_time
+                                                                                                          , start_time=start_time
+                                                                                                          , end_time=end_time
                                                                                                           , latitude
                                                                                                           , longitude
                                                                                                           , fields
