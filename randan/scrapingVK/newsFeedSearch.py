@@ -442,6 +442,9 @@ def newsFeedSearch(
         # print('yearMinByUser', yearMinByUser) # для отладки
         # print('yearMaxByUser', yearMaxByUser) # для отладки
 
+        if (start_time == None) & (yearMinByUser != None): start_time = int(datetime(yearMinByUser, 1, 1).timestamp()) # int(time.mktime(datetime(yearMinByUser, 1, 1).timetuple()))
+        if (end_time == None) & (yearMaxByUser != None): end_time = int(datetime(yearMaxByUser, 12, 31).timestamp())  
+
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_VK'
     complicatedNamePart += "" if q == None else "_" + q[:50]
@@ -463,7 +466,7 @@ def newsFeedSearch(
     if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
     
     if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
-        print('\nПервое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов')
+        print('\nПервое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов')      
         itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
                                                                                params
                                                                                , API_keyS
@@ -524,9 +527,6 @@ def newsFeedSearch(
                     for month in calendarColumnS:
                         print('Ищу текст запроса-фильтра в контенте за',  month, 'месяц', year, 'года', '               ') # , end='\r'
                         print('  Заход на первую страницу выдачи', '               ', end='\r')
-                        start_time = int(datetime(year, int(month), 1).timestamp()) # int(time.mktime(datetime(year, int(month), 1).timetuple()))
-                        end_time = int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()) # int(time.mktime(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timetuple()))
-                        # print('\n  Period from start_time', start_time, 'to end_time', end_time) # для отладки
                         itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
                                                                                                       params
                                                                                                       , API_keyS
@@ -535,8 +535,8 @@ def newsFeedSearch(
                                                                                                       , keyOrder
                                                                                                       , pause
                                                                                                       , q
-                                                                                                      , start_time
-                                                                                                      , end_time
+                                                                                                      , start_time=int(datetime(year, int(month), 1).timestamp())
+                                                                                                      , end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp())
                                                                                                       , latitude
                                                                                                       , longitude
                                                                                                       , fields
