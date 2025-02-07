@@ -240,7 +240,7 @@ def newsFeedSearch(
     else:
         expiriencedMode = True
         if params != None:
-            access_token = params['access_tokenq'] if 'access_token' in params.keys() else None
+            access_token = params['access_token'] if 'access_token' in params.keys() else None
             q = params['q'] if 'q' in params.keys() else None
             start_time = params['start_time'] if 'start_time' in params.keys() else None
             end_time = params['end_time'] if 'end_time' in params.keys() else None
