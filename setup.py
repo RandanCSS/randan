@@ -35,6 +35,7 @@ setup(
     install_requires=[
         'factor_analyzer',
         'google-api-python-client>=2.154.0',
+        'googledrivedownloader>=0.4',
         'graphviz>=0.14',
         'matplotlib>=3.1.1',
         'numpy>=1.18.4',
