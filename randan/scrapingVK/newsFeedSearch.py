@@ -244,6 +244,10 @@ def newsFeedSearch(
             q = params['q'] if 'q' in params.keys() else None
             start_time = params['start_time'] if 'start_time' in params.keys() else None
             end_time = params['end_time'] if 'end_time' in params.keys() else None
+        if type(start_time) == str: start_time = int(start_time)
+        if type(end_time) == str: end_time = int(end_time)
+        if type(latitude) == str: latitude = int(latitude)
+        if type(longitude) == str: longitude = int(longitude)
 
     if expiriencedMode == False:
         print('    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными).'
