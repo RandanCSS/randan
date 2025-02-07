@@ -19,6 +19,7 @@ while True:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '').replace('_', '')
         if '.' in module: module = module.split('.')[1] 
+        # if 'google_drive_downloader' in module: module = 'googledrivedownloader'
         print('Пакет', module
               , 'НЕ прединсталлируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталлирован сейчас\n'
               , 'Попытка №', attempt, 'из 10')
