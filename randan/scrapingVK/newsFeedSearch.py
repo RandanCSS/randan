@@ -73,7 +73,7 @@ def bigSearch(
                 'access_token': API_keyS[keyOrder] # обязательный параметр
                 , 'v': '5.199' # обязательный параметр
                 , 'q': q # опциональный параметр
-                , 'count': 100 # опциональный параметр
+                , 'count': '100' # опциональный параметр
                 , 'start_time': start_time # опциональный параметр
                 , 'end_time': end_time # опциональный параметр
                 , 'latitude': latitude # опциональный параметр
@@ -81,7 +81,7 @@ def bigSearch(
                 , 'extended': 1 # опциональный параметр
                 , 'fields': fields # опциональный параметр
                 , 'start_from': start_from # опциональный параметр
-                }            
+                }
         response = requests.get('https://api.vk.ru/method/newsfeed.search', params=params)
         response = response.json() # отобразить выдачу метода get в виде JSON
         # print('response', response) # для отладки
@@ -98,7 +98,7 @@ def bigSearch(
                 pause += 0.25
 
             elif 'Unknown application: could not get application' in response['error']['error_msg']:
-                # print('  keyOrder до замены', '                    ') # для отладки                
+                # print('  keyOrder до замены', '                    ') # для отладки
                 keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
                 print('\nПохоже, Ваше ВК-приложение попало под ограничение; пробую перейти к следующему ключу (№ {keyOrder}) и снизить частоту')
                 # print('  keyOrder после замены', keyOrder, '                    ') # для отладки
@@ -108,20 +108,20 @@ def bigSearch(
                 print('\nПохоже, ошибка на сервере ВК; подождите и запустите скрипт с начала')
                 response = {'items': [], 'total_count': 0} # принудительная выдача для response
                 goS = False # нет смысла продолжать исполнение скрипта
-                break # и, следовательно, нет смысла в новых итерациях цикла   
+                break # и, следовательно, нет смысла в новых итерациях цикла
 
             elif 'User authorization failed' in response['error']['error_msg']:
                 print('\nПохоже, аккаунт попал под ограничение. Оно может быть снято с аккаунта сразу или спустя какое-то время.'
                       , 'Подождите или подготовьте новый ключ в другом аккаунте. И запустите скрипт с начала')
                 response = {'items': [], 'total_count': 0} # принудительная выдача для response
                 goS = False # нет смысла продолжать исполнение скрипта
-                break # и, следовательно, нет смысла в новых итерациях цикла   
+                break # и, следовательно, нет смысла в новых итерациях цикла
 
             else:
                 print('  Похоже, проблема НЕ в слишком высокой частоте обращения скрипта к API((')
                 print('  ', response['error']['error_msg'])
                 goS = False # нет смысла продолжать исполнение скрипта
-                break # и, следовательно, нет смысла в новых итерациях цикла                
+                break # и, следовательно, нет смысла в новых итерациях цикла
 
     # Для визуализации процесса
     print('    Итерация №', iteration, ', number of items', len(response['items']), '                    ', end='\r')
@@ -140,14 +140,14 @@ def bigSearch(
 
 # 1.1 для обработки выдачи любого из методов, помогающая работе с ключами
 def dfsProcessing(complicatedNamePart, fileFormatChoice, dfAdd, dfFinal, dfIn, goS, method, q, slash, stage, targetCount, today, year, yearsRange):
-    df = pandas.concat([dfIn, dfAdd])        
+    df = pandas.concat([dfIn, dfAdd])
     columnsForCheck = []
     if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
         for column in df.columns:
             if 'id' in column:
                 columnsForCheck.append(column)
     # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck)
-    df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True) # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые 
+    df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True) # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
 
     if goS == False:
         print('Поскольку исполнение скрипта натолкнулось на ошибку,'
@@ -169,7 +169,7 @@ def saveSettings(complicatedNamePart, fileFormatChoice, itemS, method, q, slash,
     file = open(f'{today}{complicatedNamePart}_Temporal{slash}method.txt', 'w+') # открыть на запись
     file.write(method)
     file.close()
-    
+
     file = open(f'{today}{complicatedNamePart}_Temporal{slash}q.txt', 'w+')
     file.write(q)
     file.close()
@@ -220,11 +220,12 @@ def newsFeedSearch(
                    ):
     """
     Функция для выгрузки характеристик контента ВК методом его API newsfeed.search. Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам
-    
+
     Parameters
     ----------
     Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/newsfeed.search
     Причём они могут быть поданы и в качестве самостоятельных аргументов функции, и в качестве словаря params , который обычно подаётся в метод get пакета requests
+          params : dict
     access_token : str
                q : str
       start_time : int
@@ -232,7 +233,6 @@ def newsFeedSearch(
         latitude : int
        longitude : int
           fields : list
-          params : dict
     """
     if (access_token == None) & (q == None) & (start_time == None) & (end_time == None) & (latitude == None) & (longitude == None) & (fields == None) & (params == None):
         # print('Пользователь не подал аргументы')
@@ -333,29 +333,29 @@ def newsFeedSearch(
             targetCount = file.read()
             file.close()
             targetCount = int(targetCount)
-    
+
             file = open(f'{rootName}{slash}method.txt')
             method = file.read()
             file.close()
-    
+
             file = open(f'{rootName}{slash}year.txt')
             year = file.read()
             file.close()
             year = int(year)
-    
+
             file = open(f'{rootName}{slash}q.txt') # , encoding='utf-8'
             q = file.read()
             file.close()
-    
+
             file = open(f'{rootName}{slash}yearsRange.txt')
             yearsRange = file.read()
             file.close()
-    
+
             file = open(f'{rootName}{slash}stageTarget.txt')
             stageTarget = file.read()
             file.close()
             stageTarget = int(stageTarget)
-    
+
             print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:'
                   # , '\n- было выявлено целевое число объектов (targetCount)', targetCount
                   , '\n- скрипт остановился на методе', method)
@@ -371,11 +371,11 @@ def newsFeedSearch(
                 for temporalName in temporalNameS:
                     if '.xlsx' in temporalName: break
                 itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
-                
+
                 for temporalName in temporalNameS:
                     if '.json' in temporalName: break
                 itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
-                
+
                 if yearsRange != None:
                     yearsRange = yearsRange.split('-')
                     yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
@@ -415,7 +415,7 @@ def newsFeedSearch(
                 , '(возможно появление новых объектов и новых столбцов, а также актуализация содержимого столбцов),'
                 , 'поэтому, вероятно, следует ввести тот же запрос-фильтр, что и при формировании указанного Вами файла')
             q = input()
-    
+
         # Ограничения временнОго диапазона
         if (start_time == None) & (end_time == None) & (yearsRange == None): # если пользователь не подал эти аргументы в рамках experiencedMode
             while True:
@@ -442,20 +442,20 @@ def newsFeedSearch(
         if start_time != None:
             yearMinByUser = int(datetime.fromtimestamp(start_time).strftime('%Y')) # из experiencedMode
             # print('elif start_time != None:', yearMinByUser) # для отладки
-        
+
         if end_time != None:
             yearMaxByUser = int(datetime.fromtimestamp(end_time).strftime('%Y')) # из experiencedMode
             # print('elif end_time != None:', yearMaxByUser) # для отладки
             year = yearMaxByUser
-        
+
         if (yearMinByUser != None) & (yearMaxByUser == None): yearMaxByUser = int(today[:4]) # в случае отсутствия пользовательской верхней временнОй границы при наличии нижней
         elif (yearMinByUser == None) & (yearMaxByUser != None): yearMaxByUser = 1970 # в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
-            
+
         # print('yearMinByUser', yearMinByUser) # для отладки
         # print('yearMaxByUser', yearMaxByUser) # для отладки
 
         if (start_time == None) & (yearMinByUser != None): start_time = int(datetime(yearMinByUser, 1, 1).timestamp()) # int(time.mktime(datetime(yearMinByUser, 1, 1).timetuple()))
-        if (end_time == None) & (yearMaxByUser != None): end_time = int(datetime(yearMaxByUser, 12, 31).timestamp())  
+        if (end_time == None) & (yearMaxByUser != None): end_time = int(datetime(yearMaxByUser, 12, 31).timestamp())
 
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_VK'
@@ -476,9 +476,9 @@ def newsFeedSearch(
           , f'Если хотите добавить другие аргументы метода {method} API ВК, доступные по ссылке https://dev.vk.com/ru/method/newsfeed.search ,'
           , f'-- можете подать их в скобки функции newsFeedSearch перед её запуском или скопировать код исполняемого сейчас скрипта и сделать это внутри кода внутри метода {method} в чанке 1.1')
     if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-    
+
     if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
-        print('\nПервое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов')      
+        print('\nПервое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов')
         itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
                                                                                params
                                                                                , API_keyS
@@ -605,7 +605,7 @@ def newsFeedSearch(
                     itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, itemsYearlyAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
                     # display(itemS.head())
                     # print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
-        
+
                     if len(itemsYearlyAdditional) == 0:
                         print(f'\nВыдача для года {year} -- пуста'
                               , '\n--- Если НЕ хотите для поиска дополнительных объектов попробовать двигаться к следующему месяцу вглубь веков, просто нажмите Enter'
@@ -613,20 +613,20 @@ def newsFeedSearch(
                         if len(input()) == 0:
                             # print(f'\nЗавершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser}')
                             break
-            
+
                     elif yearMinByUser != None: # если пользователь ограничил временнОй диапазон
                         if year <= yearMinByUser:
                             print(f'Завершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser}')
                             break
-        
+
                     print('  Искомых объектов', targetCount, ', а найденных после добавления контента', year, 'года:', len(itemS), '                    ')
                     year -= 1
                 print('Искомых объектов', targetCount, ', а найденных:', len(itemS), '          ')
-    
+
         # pandas.set_option('display.max_columns', None)
         display(itemS.head())
         print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
-    
+
     elif stage < stageTarget:
         print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{today}{complicatedNamePart}_Temporal"')
 
@@ -638,7 +638,7 @@ def newsFeedSearch(
         print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
               , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
         shutil.rmtree(rootName, ignore_errors=True)
-    
+
     warnings.filterwarnings("ignore")
     print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
           , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
