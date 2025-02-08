@@ -777,7 +777,7 @@ videoPaidProductPlacement : str
           , 'channelId, maxResults, order, pageToken, part, publishedAfter, publishedBefore, q, type.'
           , 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
           , f'Если хотите добавить другие аргументы метода {method} API YouTube, доступные по ссылке https://developers.google.com/youtube/v3/docs/search ,'
-          , f'-- можете сделать это внутри метода {method} в чанке 1.1 исполняемого сейчас скрипта')
+          , f'-- можете сделать это внутри метода {method} в разделе 2 исполняемого сейчас скрипта')
     if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
 
     if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
