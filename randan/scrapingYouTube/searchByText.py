@@ -1630,7 +1630,7 @@ videoPaidProductPlacement : str
             method = 'commentThreads'
             part = 'id, replies, snippet'
             problemVideoIdS = pandas.DataFrame()
-            print('\nВ скрипте используются следующие аргументы метода', method, 'API YouTube:'
+            print('В скрипте используются следующие аргументы метода', method, 'API YouTube:'
                   , 'part=["snippet", "id", "replies"], maxResults, videoId .'
                   , 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
                   , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
