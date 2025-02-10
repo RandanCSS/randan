@@ -488,10 +488,32 @@ def saveSettings(
 # In[ ]:
 
 
-def searchByText(access_token=None, channelIdForSearch=None, contentType=None, publishedAfter=None, publishedBefore=None, q=None
-                 , channelType=None, eventType=None, location=None, locationRadius=None, regionCode=None, relevanceLanguage=None, safeSearch=None, topicId=None
-                 , videoCaption=None, videoCategoryId=None, videoDefinition=None, videoDimension=None, videoDuration=None, videoEmbeddable=None, videoLicense=None, videoPaidProductPlacement=None
-                 , videoSyndicated=None, videoType=None):
+def searchByText(
+                 access_token=None,
+                 channelIdForSearch=None,
+                 contentType=None,
+                 publishedAfter=None,
+                 publishedBefore=None,
+                 q=None,
+                 channelType=None,
+                 eventType=None,
+                 location=None,
+                 locationRadius=None,
+                 regionCode=None,
+                 relevanceLanguage=None,
+                 safeSearch=None,
+                 topicId=None,
+                 videoCaption=None,
+                 videoCategoryId=None,
+                 videoDefinition=None,
+                 videoDimension=None,
+                 videoDuration=None,
+                 videoEmbeddable=None,
+                 videoLicense=None,
+                 videoPaidProductPlacement=None,
+                 videoSyndicated=None,
+                 videoType=None
+                 ):
     """
     Функция для выгрузки характеристик контента YouTube методами его API: search, playlists & playlistItems, videos, commentThreads & comments, channels -- ключевым из которых выступает search
     Причём количество объектов выгрузки максимизируется путём её пересортировки аргументом order и сегментирования по годам
