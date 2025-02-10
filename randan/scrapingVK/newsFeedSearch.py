@@ -38,7 +38,7 @@ while True:
                   , 'НЕ прединсталлируется с установкой Анаконды, для работы скрипта требуется этот пакет,'
                   , 'но инсталлировать его не удаётся, попробуйте инсталлировать его вручную, после чего снова запустите требуемый скрипт пакета\n')
             break
-tqdm.pandas() # для визуализации прогресса функций, применяемых к датафреймам
+# tqdm.pandas() # для визуализации прогресса функций, применяемых к датафреймам
 
 
 # In[ ]:
@@ -52,8 +52,7 @@ tqdm.pandas() # для визуализации прогресса функци�
 
 # 1.0 для метода search из API ВК, помогающая работе с ключами
 def bigSearch(
-              params
-              , API_keyS
+              API_keyS
               , goS
               , iteration
               , keyOrder
@@ -66,28 +65,43 @@ def bigSearch(
               , start_time
               , end_time
               ):
+    # print('    start_from', start_from) # для отладки
     dfAdd = pandas.DataFrame()
     while True:
-        if params == None:
-            params = {
-                'access_token': API_keyS[keyOrder] # обязательный параметр
-                , 'v': '5.199' # обязательный параметр
-                , 'q': q # опциональный параметр
-                , 'count': 100 # опциональный параметр
-                , 'start_time': start_time # опциональный параметр
-                , 'end_time': end_time # опциональный параметр
-                , 'latitude': latitude # опциональный параметр
-                , 'longitude': longitude # опциональный параметр
-                , 'extended': 1 # опциональный параметр
-                , 'fields': fields # опциональный параметр
-                , 'start_from': start_from # опциональный параметр
-                }
+        params = {
+            'access_token': API_keyS[keyOrder] # обязательный параметр
+            , 'v': '5.199' # обязательный параметр
+            , 'q': q # опциональный параметр
+            , 'count': 100 # опциональный параметр
+            , 'start_time': start_time # опциональный параметр
+            , 'end_time': end_time # опциональный параметр
+            , 'latitude': latitude # опциональный параметр
+            , 'longitude': longitude # опциональный параметр
+            , 'extended': 1 # опциональный параметр
+            , 'fields': fields # опциональный параметр
+            , 'start_from': start_from # опциональный параметр
+            }
+        # if params == None:
+        #     params = {
+        #         'access_token': API_keyS[keyOrder] # обязательный параметр
+        #         , 'v': '5.199' # обязательный параметр
+        #         , 'q': q # опциональный параметр
+        #         , 'count': 100 # опциональный параметр
+        #         , 'start_time': start_time # опциональный параметр
+        #         , 'end_time': end_time # опциональный параметр
+        #         , 'latitude': latitude # опциональный параметр
+        #         , 'longitude': longitude # опциональный параметр
+        #         , 'extended': 1 # опциональный параметр
+        #         , 'fields': fields # опциональный параметр
+        #         , 'start_from': start_from # опциональный параметр
+        #         }
         response = requests.get('https://api.vk.ru/method/newsfeed.search', params=params)
         response = response.json() # отобразить выдачу метода get в виде JSON
         # print('response', response) # для отладки
         if 'response' in response.keys():
             response = response['response']
-            dfAdd = pandas.json_normalize(response['items'])
+            # print('''    response.keys() внутри bigSearch''', response.keys()) # для отладки
+            dfAdd = pandas.json_normalize(response)
             break
         elif 'error' in response.keys():
             if 'Too many requests per second' in response['error']['error_msg']:
@@ -139,7 +153,29 @@ def bigSearch(
     return dfAdd, goS, iteration, keyOrder, pause, response
 
 # 1.1 для обработки выдачи любого из методов, помогающая работе с ключами
-def dfsProcessing(complicatedNamePart, fileFormatChoice, dfAdd, dfFinal, dfIn, goS, method, q, slash, stage, targetCount, today, year, yearsRange):
+def dfsProcessing(
+                  complicatedNamePart,
+                  fileFormatChoice,
+                  dfAdd, 
+				  dfFinal, 
+				  dfIn,
+                  goS,
+                  method,
+                  q,
+                  slash,
+                  stage,
+                  targetCount,
+                  momentCurrent,
+                  year,
+                  yearsRange
+                  ):
+    response['items']
+    
+    
+    
+    
+    
+    
     df = pandas.concat([dfIn, dfAdd])
     columnsForCheck = []
     if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
@@ -151,13 +187,25 @@ def dfsProcessing(complicatedNamePart, fileFormatChoice, dfAdd, dfFinal, dfIn, g
 
     if goS == False:
         print('Поскольку исполнение скрипта натолкнулось на ошибку,'
-              , f'сохраняю выгруженный контент и текущий этап поиска в директорию "{today}{complicatedNamePart}_Temporal"')
-        if not os.path.exists(f'{today}{complicatedNamePart}_Temporal'):
-                os.makedirs(f'{today}{complicatedNamePart}_Temporal')
-                print(f'Директория "{today}{complicatedNamePart}_Temporal" создана')
+              , f'сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"')
+        if not os.path.exists(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal'):
+                os.makedirs(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal')
+                print(f'Директория "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal" создана')
         # else:
-            # print(f'Директория "{today}{complicatedNamePart}_Temporal" существует')
-        saveSettings(complicatedNamePart, fileFormatChoice, itemS, method, q, slash, stage, targetCount, today, year, yearsRange)
+            # print(f'Директория "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal" существует')
+        saveSettings(
+                     complicatedNamePart,
+                     fileFormatChoice,
+                     itemS,
+                     method,
+                     q,
+                     slash,
+                     stage,
+                     targetCount,
+                     momentCurrent.strftime("%Y%m%d"),
+                     year,
+                     yearsRange
+                     )
         print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit"'
               , '\nТак и должно быть'
               , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
@@ -165,34 +213,53 @@ def dfsProcessing(complicatedNamePart, fileFormatChoice, dfAdd, dfFinal, dfIn, g
     return df
 
 # 1.2 для сохранения следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
-def saveSettings(complicatedNamePart, fileFormatChoice, itemS, method, q, slash, stageTarget, targetCount, today, year, yearsRange):
-    file = open(f'{today}{complicatedNamePart}_Temporal{slash}method.txt', 'w+') # открыть на запись
+def saveSettings(
+                 complicatedNamePart,
+                 fileFormatChoice,
+                 itemS,
+                 method,
+                 q,
+                 slash,
+                 stageTarget,
+                 targetCount,
+                 momentCurrent,
+                 year,
+                 yearsRange
+                 ):
+    file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}method.txt', 'w+') # открыть на запись
     file.write(method)
     file.close()
 
-    file = open(f'{today}{complicatedNamePart}_Temporal{slash}q.txt', 'w+')
+    file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}q.txt', 'w+')
     file.write(q)
     file.close()
+    if q == '': q = None # для единообразия
 
-    file = open(f'{today}{complicatedNamePart}_Temporal{slash}stageTarget.txt', 'w+')
+    file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}stageTarget.txt', 'w+')
     file.write(str(stageTarget)) # stageTarget принимает значения [0; 3]
     file.close()
 
-    file = open(f'{today}{complicatedNamePart}_Temporal{slash}targetCount.txt', 'w+')
+    file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}targetCount.txt', 'w+')
     file.write(str(targetCount))
     file.close()
 
-    file = open(f'{today}{complicatedNamePart}_Temporal{slash}year.txt', 'w+')
+    file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}year.txt', 'w+')
     file.write(str(year)) # год, на котором остановилось исполнение скрипта
     file.close()
 
-    file = open(f'{today}{complicatedNamePart}_Temporal{slash}yearsRange.txt', 'w+')
+    file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}yearsRange.txt', 'w+')
     file.write(yearsRange if yearsRange != None else '') # пользовательский временнОй диапазон
     file.close()
+    if yearsRange == '': yearsRange = None # для единообразия
 
-    if '.' in method: df2file.df2fileShell(f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method.split('.')[0] + method.split('.')[1].capitalize(), today)
-        # чтобы избавиться от лишней точки в имени файла
-    else: df2file.df2fileShell(f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method, today)
+    df2file.df2fileShell(
+                         f'{complicatedNamePart}_Temporal',
+                         itemS,
+                         fileFormatChoice,
+                         method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                         momentCurrent.strftime("%Y%m%d")
+                         )
+
     if os.path.exists(rootName):
         print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
               , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
@@ -209,14 +276,14 @@ def saveSettings(complicatedNamePart, fileFormatChoice, itemS, method, q, slash,
 
 
 def newsFeedSearch(
-                   params=None
-                   , access_token=None
-                   , q=None
-                   , start_time=None
-                   , end_time=None
-                   , latitude=None
-                   , longitude=None
-                   , fields=None
+                   params=None,
+                   access_token=None,
+                   q=None,
+                   start_time=None,
+                   end_time=None,
+                   latitude=None,
+                   longitude=None,
+                   fields=None
                    ):
     """
     Функция для выгрузки характеристик контента ВК методом его API newsfeed.search. Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам
@@ -234,7 +301,7 @@ def newsFeedSearch(
        longitude : int
           fields : list
     """
-    if (access_token == None) & (q == None) & (start_time == None) & (end_time == None) & (latitude == None) & (longitude == None) & (fields == None) & (params == None):
+    if (params == None) & (access_token == None) & (q == None) & (start_time == None) & (end_time == None) & (latitude == None) & (longitude == None) & (fields == None):
         # print('Пользователь не подал аргументы')
         expiriencedMode = False
     else:
@@ -242,12 +309,28 @@ def newsFeedSearch(
         if params != None:
             access_token = params['access_token'] if 'access_token' in params.keys() else None
             q = params['q'] if 'q' in params.keys() else None
-            start_time = params['start_time'] if 'start_time' in params.keys() else None
-            end_time = params['end_time'] if 'end_time' in params.keys() else None
-        if type(start_time) == str: start_time = int(start_time)
-        if type(end_time) == str: end_time = int(end_time)
-        if type(latitude) == str: latitude = int(latitude)
-        if type(longitude) == str: longitude = int(longitude)
+            
+            if 'start_time' in params.keys():
+                start_time = params['start_time']
+                if type(start_time) == str: start_time = int(start_time)
+            else: start_time = None
+
+            if 'end_time' in params.keys():
+                end_time = params['end_time']
+                if type(end_time) == str: end_time = int(end_time)
+            else: end_time = None
+
+            if 'latitude' in params.keys():
+                latitude = params['latitude']
+                if type(latitude) == str: latitude = int(latitude)
+            else: latitude = None
+
+            if 'longitude' in params.keys():
+                longitude = params['longitude']
+                if type(longitude) == str: longitude = int(longitude)
+            else: longitude = None
+
+            fields = params['fields'] if 'fields' in params.keys() else None
 
     if expiriencedMode == False:
         print('    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными).'
@@ -280,12 +363,9 @@ def newsFeedSearch(
     temporalName = None
     yearsRange = None
 
-    today = date.today().strftime("%Y%m%d") # запрос сегодняшней даты в формате yyyymmdd
-    print('\nТекущяя дата:', today, '-- она будет использована для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
-    # print('Сегодня год:', today[:4])
-    # print('Сегодня месяц:', today[4:6])
-    # print('Сегодня день:', today[6:])
-    year = int(today[:4]) # в случае отсутствия пользовательского временнОго диапазона
+    momentCurrent = datetime.now() # запрос текущего момента
+    print('\nТекущий момент:', momentCurrent.strftime("%Y%m%d_%H%M"), '-- он будет использована для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
+    year = int(momentCurrent.strftime("%Y")) # в случае отсутствия пользовательского временнОго диапазона
         # с этого года возможно сегментирование по годам вглубь веков (пока выдача не пустая)
     yearMinByUser = None # в случае отсутствия пользовательского временнОго диапазона
     yearMaxByUser = None # в случае отсутствия пользовательского временнОго диапазона
@@ -346,6 +426,7 @@ def newsFeedSearch(
             file = open(f'{rootName}{slash}q.txt') # , encoding='utf-8'
             q = file.read()
             file.close()
+            if q == '': q = None # для единообразия
 
             file = open(f'{rootName}{slash}yearsRange.txt')
             yearsRange = file.read()
@@ -359,8 +440,8 @@ def newsFeedSearch(
             print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:'
                   # , '\n- было выявлено целевое число объектов (targetCount)', targetCount
                   , '\n- скрипт остановился на методе', method)
-            if year < int(today[:4]): print('- и на годе (при сегментировани по годам)', year)
-            print('- пользователь НЕ сформулировал запрос-фильтр' if q == '' else  f'- пользователь сформулировал запрос-фильтр как "{q}"')
+            if year < int(momentCurrent.strftime("%Y")): print('- и на годе (при сегментировани по годам)', year)
+            print('- пользователь НЕ сформулировал запрос-фильтр' if q == None else  f'- пользователь сформулировал запрос-фильтр как "{q}"')
             print('- пользователь НЕ ограничил временнОй диапазон' if yearsRange == None else  f'- пользователь ограничил временнОй диапазон границами {yearsRange}')
             print('--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter'
                   , '\n--- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите "R" и нажмите Enter'
@@ -373,8 +454,9 @@ def newsFeedSearch(
                 itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
 
                 for temporalName in temporalNameS:
-                    if '.json' in temporalName: break
-                itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
+                    if '.json' in temporalName: 
+                        itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
+                        break
 
                 if yearsRange != None:
                     yearsRange = yearsRange.split('-')
@@ -415,11 +497,13 @@ def newsFeedSearch(
                 , '(возможно появление новых объектов и новых столбцов, а также актуализация содержимого столбцов),'
                 , 'поэтому, вероятно, следует ввести тот же запрос-фильтр, что и при формировании указанного Вами файла')
             q = input()
+            if q == '': q = None # для единообразия
 
         # Ограничения временнОго диапазона
         if (start_time == None) & (end_time == None) & (yearsRange == None): # если пользователь не подал эти аргументы в рамках experiencedMode
             while True:
-                print('\nЕсли требуется конкретный временнОй диапазон, то можно использовать его не на текущем этапе выгрузки данных, а на следующем этапе -- предобработки датафрейма с выгруженными данными.'
+                if folderFile != None: print('') # если пользователь не подал этот аргумент
+                print('Если требуется конкретный временнОй диапазон, то можно использовать его не на текущем этапе выгрузки данных, а на следующем этапе -- предобработки датафрейма с выгруженными данными.'
                       , 'Проблема в том, что без назначения временнОго диапазона метод newsfeed.search выдаёт ограниченное количество объектов, причём наиболее приближенных к текущему моменту.'
                       , '\n--- Поэтому если всё же требуется назначить временнОй диапазон на этапе выгрузки данных, назначьте его годами (а не более мелкими единицами времени).'
                       , 'Для назначения диапазона введите без кавычек минимальный год диапазона, тире, максимальный год диапазона (минимум и максимум могут совпадать в такой записи: "год-тот же год") и нажмите Enter'
@@ -448,7 +532,7 @@ def newsFeedSearch(
             # print('elif end_time != None:', yearMaxByUser) # для отладки
             year = yearMaxByUser
 
-        if (yearMinByUser != None) & (yearMaxByUser == None): yearMaxByUser = int(today[:4]) # в случае отсутствия пользовательской верхней временнОй границы при наличии нижней
+        if (yearMinByUser != None) & (yearMaxByUser == None): yearMaxByUser = int(momentCurrent.strftime("%Y")) # в случае отсутствия пользовательской верхней временнОй границы при наличии нижней
         elif (yearMinByUser == None) & (yearMaxByUser != None): yearMaxByUser = 1970 # в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
 
         # print('yearMinByUser', yearMinByUser) # для отладки
@@ -459,7 +543,7 @@ def newsFeedSearch(
 
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_VK'
-    complicatedNamePart += "" if q == None else "_" + q[:50]
+    if q != None: complicatedNamePart += "_" + q if len(q) < 50 else "_" + q[:50]
     complicatedNamePart += "" if ((yearMinByUser == None) & (yearMaxByUser == None)) else "_" + str(yearMinByUser) + '-' + str(yearMaxByUser)
     # print('complicatedNamePart', complicatedNamePart)
 
@@ -474,13 +558,14 @@ def newsFeedSearch(
           , 'q, start_from, start_time, end_time, expand.'
           , 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
           , f'Если хотите добавить другие аргументы метода {method} API ВК, доступные по ссылке https://dev.vk.com/ru/method/newsfeed.search ,'
+          , f'-- можете подать их в скобки функции newsFeedSearch перед её запуском или скопировать код исполняемого сейчас скрипта и сделать это внутри кода внутри метода {method} в разделе 2')
     if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
 
     if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
         print('\nПервое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов')
+        # print('    start_from', start_from) # для отладки
         itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
-                                                                               params
-                                                                               , API_keyS
+                                                                               API_keyS
                                                                                , goS
                                                                                , iteration
                                                                                , keyOrder
@@ -495,14 +580,28 @@ def newsFeedSearch(
                                                                               )
         targetCount = response['total_count']
         # if len(itemS) < targetCount: # на случай достаточности
-        itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, itemsAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+        itemS = dfsProcessing(
+                              complicatedNamePart,
+                              fileFormatChoice,
+                              itemsAdditional,
+                              itemS,
+                              itemS,
+                              goS,
+                              method,
+                              q,
+                              slash,
+                              stage,
+                              targetCount,
+                              momentCurrent.strftime("%Y%m%d"),
+                              year,
+                              yearsRange
+                              )
         print('  Проход по всем следующим страницам с выдачей          ')
         while 'next_from' in response.keys():
             start_from = response['next_from']
             # print('    start_from', start_from) # для отладки
             itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
-                                                                                   params
-                                                                                   , API_keyS
+                                                                                   API_keyS
                                                                                    , goS
                                                                                    , iteration
                                                                                    , keyOrder
@@ -515,7 +614,25 @@ def newsFeedSearch(
                                                                                    , start_time=start_time
                                                                                    , end_time=end_time
                                                                                   )
-            itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, itemsAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+
+            # print('''    response['next_from'] после bigSearch''', response['next_from']) # для отладки
+
+            itemS = dfsProcessing(
+                                  complicatedNamePart,
+                                  fileFormatChoice,
+                                  itemsAdditional,
+                                  itemS,
+                                  itemS,
+                                  goS,
+                                  method,
+                                  q,
+                                  slash,
+                                  stage,
+                                  targetCount,
+                                  momentCurrent.strftime("%Y%m%d"),
+                                  year,
+                                  yearsRange
+                                  )
         print('  Искомых объектов', targetCount, ', а найденных БЕЗ сегментирования по годам и месяцам:', len(itemS))
 
 # 2.1.1 Этап сегментирования по годам и месяцам (stage = 1)
@@ -534,74 +651,92 @@ def newsFeedSearch(
                     calendar = calendarWithinYear.calendarWithinYear(year)
                     itemsYearlyAdditional = pandas.DataFrame()
                     calendarColumnS = calendar.columns
-                    if year == int(today[:4]): calendarColumnS = calendarColumnS[:int(today[4:6])] # чтобы исключить проход по будущим месяцам текущего года
+                    if year == int(momentCurrent.strftime("%Y")): calendarColumnS = calendarColumnS[:int(momentCurrent.strftime("%m"))]
+                            # чтобы исключить проход по будущим месяцам текущего года
                     for month in calendarColumnS:
                         print('Ищу текст запроса-фильтра в контенте за',  month, 'месяц', year, 'года', '               ') # , end='\r'
                         print('  Заход на первую страницу выдачи', '               ', end='\r')
                         itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
-                                                                                                      params
-                                                                                                      , API_keyS
-                                                                                                      , goS
-                                                                                                      , iteration
-                                                                                                      , keyOrder
-                                                                                                      , pause
-                                                                                                      , q
-                                                                                                      , latitude
-                                                                                                      , longitude
-                                                                                                      , fields
-                                                                                                      , start_from=None
-                                                                                                      , start_time=int(datetime(year, int(month), 1).timestamp())
-                                                                                                      , end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp())
+                                                                                                      API_keyS,
+                                                                                                      goS,
+                                                                                                      iteration,
+                                                                                                      keyOrder,
+                                                                                                      pause,
+                                                                                                      q,
+                                                                                                      latitude,
+                                                                                                      longitude,
+                                                                                                      fields,
+                                                                                                      start_from=None,
+                                                                                                      start_time=int(datetime(year, int(month), 1).timestamp()),
+                                                                                                      end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp())
                                                                                                       )
-                        itemsYearlyAdditional = dfsProcessing(complicatedNamePart
-                                                              , fileFormatChoice
-                                                              , itemsMonthlyAdditional
-                                                              , itemS
-                                                              , itemsYearlyAdditional
-                                                              , goS
-                                                              , method
-                                                              , q
-                                                              , slash
-                                                              , stage
-                                                              , targetCount
-                                                              , today
-                                                              , year
-                                                              , yearsRange)
+                        itemsYearlyAdditional = dfsProcessing(
+                                                              complicatedNamePart,
+                                                              fileFormatChoice,
+                                                              itemsMonthlyAdditional,
+                                                              itemS,
+                                                              itemsYearlyAdditional,
+                                                              goS,
+                                                              method,
+                                                              q,
+                                                              slash,
+                                                              stage,
+                                                              targetCount,
+                                                              momentCurrent.strftime("%Y%m%d"),
+                                                              year,
+                                                              yearsRange
+                                                              )
                         print('  Проход по всем следующим страницам с выдачей', '               ', end='\r')
                         while 'next_from' in response.keys():
                             start_from = response['next_from']
                             # print('    start_from', start_from) # для отладки
                             itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
-                                                                                                          params
-                                                                                                          , API_keyS
-                                                                                                          , goS
-                                                                                                          , iteration
-                                                                                                          , keyOrder
-                                                                                                          , pause
-                                                                                                          , q
-                                                                                                          , latitude
-                                                                                                          , longitude
-                                                                                                          , fields
-                                                                                                          , start_from
-                                                                                                          , start_time=start_time
-                                                                                                          , end_time=end_time
+                                                                                                          API_keyS,
+                                                                                                          goS,
+                                                                                                          iteration,
+                                                                                                          keyOrder,
+                                                                                                          pause,
+                                                                                                          q,
+                                                                                                          latitude,
+                                                                                                          longitude,
+                                                                                                          fields,
+                                                                                                          start_from,
+                                                                                                          start_time=start_time,
+                                                                                                          end_time=end_time
                                                                                                           )
-                            itemsYearlyAdditional = dfsProcessing(complicatedNamePart
-                                                                  , fileFormatChoice
-                                                                  , itemsMonthlyAdditional
-                                                                  , itemS
-                                                                  , itemsYearlyAdditional
-                                                                  , goS
-                                                                  , method
-                                                                  , q
-                                                                  , slash
-                                                                  , stage
-                                                                  , targetCount
-                                                                  , today
-                                                                  , year
-                                                                  , yearsRange)
+                            itemsYearlyAdditional = dfsProcessing(
+                                                                  complicatedNamePart,
+                                                                  fileFormatChoice,
+                                                                  itemsMonthlyAdditional,
+                                                                  itemS,
+                                                                  itemsYearlyAdditional,
+                                                                  goS,
+                                                                  method,
+                                                                  q,
+                                                                  slash,
+                                                                  stage,
+                                                                  targetCount,
+                                                                  momentCurrent.strftime("%Y%m%d"),
+                                                                  year,
+                                                                  yearsRange
+                                                                  )
                             time.sleep(pause)
-                    itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, itemsYearlyAdditional, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+                    itemS = dfsProcessing(
+                                          complicatedNamePart,
+                                          fileFormatChoice,
+                                          itemsYearlyAdditional,
+                                          itemS,
+                                          itemS,
+                                          goS,
+                                          method,
+                                          q,
+                                          slash,
+                                          stage,
+                                          targetCount,
+                                          momentCurrent.strftime("%Y%m%d"),
+                                          year,
+                                          yearsRange
+                                         )
                     # display(itemS.head())
                     # print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
 
@@ -627,10 +762,16 @@ def newsFeedSearch(
         print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
 
     elif stage < stageTarget:
-        print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{today}{complicatedNamePart}_Temporal"')
+        print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"')
 
 # 2.1.2 Экспорт выгрузки метода search и финальное завершение скрипта
-    df2file.df2fileShell(complicatedNamePart, itemS, '.xlsx', method.split('.')[0] + method.split('.')[1].capitalize(), today) # чтобы избавиться от лишней точки в имени файла
+    df2file.df2fileShell(
+                         complicatedNamePart,
+                         itemS,
+                         '.xlsx', 
+                         method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                         momentCurrent.strftime("%Y%m%d_%H%M")
+                         )
 
     print('Скрипт исполнен')
     if os.path.exists(rootName):
