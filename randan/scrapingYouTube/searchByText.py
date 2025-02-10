@@ -272,7 +272,7 @@ def downloadComments(API_keyS, goS, sourceId, idS, keyOrder, maxResults, method,
     return addCommentS, errorDescription, goS, keyOrder, page, pageToken, problemItemId
 
 # 1.3 для обработки ошибок
-def googleapiclientError(errorDescription, keyOrder, *arg): # арки: id
+def googleapiclientError(errorDescription, keyOrder, *arg): # арки: sourceId
     # print('\n    ', errorDescription[1])
     if 'quotaExceeded' in str(errorDescription[1]):
         print('\nПохоже, квота текущего ключа закончилась; пробую перейти к следующему ключу')
@@ -282,10 +282,10 @@ def googleapiclientError(errorDescription, keyOrder, *arg): # арки: id
         goC = True # для повторного обращения к API с новым ключом
     else:
         if len(arg) == 1:
-            print('  Проблема может быть связана с обрабатываемым объектом, поэтому фиксирую его id:', id)
+            print('  Проблема может быть связана с обрабатываемым объектом, поэтому фиксирую его id:', sourceId)
             problemItemId = arg[0]
         if 'comment' in str(errorDescription[1]):
-            print('  Ограничение выгрузки комментари[ев я] для id', id)
+            print('  Ограничение выгрузки комментари[ев я] для id', sourceId)
         else:
             print('  Похоже, проблема не в огрничении выгрузки комментари[ев я] и не в истечении квоты текущего ключа((')
         goC = False # нет смысла повторного обращения к API ни с этим id, ни пока не ясна суть ошибки
