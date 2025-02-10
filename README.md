@@ -189,10 +189,43 @@ searchByText.searchByText()
 
 # with this code, you will immediately see an instruction.
 # Just follow it for executing the default scenario, episodically pressing Enter on your keyboard
+```
+```python
+# However, if you want to customize the default scenario, there are three ways availible.
+# The first one is to use the module's dialog interface, which appears in the process of executing the module's code.
+# The second one is to assign manually the function scrapingVK() arguments, which are None by default:
 
-# however, if you want to customize the default scenario, there are three ways availible.
-# The first one is to use the module's dialog interface which appears in the process of executing the module's code.
-# The second one is to assign manually the function scrapingVK() arguments, which are None bt default.
+searchByText(
+             access_token=None,
+             channelIdForSearch=None,
+             contentType=None,
+             publishedAfter=None,
+             publishedBefore=None,
+             q=None,
+             channelType=None,
+             eventType=None,
+             location=None,
+             locationRadius=None,
+             regionCode=None,
+             relevanceLanguage=None,
+             safeSearch=None,
+             topicId=None,
+             videoCaption=None,
+             videoCategoryId=None,
+             videoDefinition=None,
+             videoDimension=None,
+             videoDuration=None,
+             videoEmbeddable=None,
+             videoLicense=None,
+             videoPaidProductPlacement=None,
+             videoSyndicated=None,
+             videoType=None
+             )
+
+# The function's arguments are analoguous to those of the method https://dev.vk.com/ru/method/newsfeed.search .
+# The arguments might be inputed in the function brackets as stay alone entities.
+# This way is names 'expiriencedMode'
+
 # Finally, the third way is to take the module's code manually and and alter it
 ```
 #### Module `scrapingVK`
