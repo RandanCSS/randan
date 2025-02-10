@@ -1619,7 +1619,7 @@ videoPaidProductPlacement : str
     if len(videoS) > 0:
         print('\n--- Если хотите выгрузить комментарии к видео (в отдельный файл),'
               , f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart} {method}.xlsx" директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}",'
-              , 'просто нажмите Enter'
+              , 'просто нажмите Enter, но учтите, что поиск может занять минуты и даже часы'
               , '\n--- Если НЕ хотите выгрузить комментарии, нажмите пробел и затем Enter')
         if len(input()) == 0:
         
