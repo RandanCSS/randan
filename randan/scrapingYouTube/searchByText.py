@@ -54,68 +54,70 @@ while True:
 
 # 1.0 для метода search из API YouTube, помогающая работе с ключами
 def bigSearch(
-              API_keyS
-              , channelIdForSearch # согласно документации API YouTube, подать можно лишь один channelId
-              , contentType
-              , goS
-              , iteration
-              , keyOrder
-              , q
-              , publishedAfter
-              , publishedBefore
-              , order
-              , pageToken
-              , year
-              , channelType
-              , eventType
-              , location
-              , locationRadius
-              , regionCode
-              , relevanceLanguage
-              , topicId
-              , safeSearch
-              , videoCaption
-              , videoCategoryId
-              , videoDefinition
-              , videoDimension
-              , videoDuration
-              , videoEmbeddable
-              , videoLicense
-              , videoPaidProductPlacement
-              , videoType
-              , videoSyndicated
+              API_keyS,
+              channelIdForSearch, # согласно документации API YouTube, подать можно лишь один channelId
+              contentType,
+              goS,
+              iteration,
+              keyOrder,
+              q,
+              publishedAfter,
+              publishedBefore,
+              order,
+              pageToken,
+              year,
+              channelType,
+              eventType,
+              location,
+              locationRadius,
+              regionCode,
+              relevanceLanguage,
+              topicId,
+              safeSearch,
+              videoCaption,
+              videoCategoryId,
+              videoDefinition,
+              videoDimension,
+              videoDuration,
+              videoEmbeddable,
+              videoLicense,
+              videoPaidProductPlacement,
+              videoType,
+              videoSyndicated
               ):
     goC = True
     while goC:
         try:
             youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
-            request = youtube.search().list(channelId=channelIdForSearch
-                                            , channelType=channelType
-                                            , eventType=eventType
-                                            , maxResults=50
-                                            , order=order
-                                            , pageToken=pageToken
-                                            , part="snippet"
-                                            , publishedAfter=publishedAfter
-                                            , publishedBefore=publishedBefore
-                                            , q=q
-                                            , type=contentType   
-                                            , location=location
-                                            , locationRadius=locationRadius
-                                            , regionCode=regionCode
-                                            , relevanceLanguage=relevanceLanguage
-                                            , topicId=topicId
-                                            , safeSearch=safeSearch
-                                            , videoCaption=videoCaption
-                                            , videoCategoryId=videoCategoryId
-                                            , videoDefinition=videoDefinition
-                                            , videoDimension=videoDimension
-                                            , videoDuration=videoDuration
-                                            , videoEmbeddable=videoEmbeddable
-                                            , videoLicense=videoLicense
-                                            , videoPaidProductPlacement=videoPaidProductPlacement
-                                            , videoType=videoType
-                                            , videoSyndicated=videoSyndicated)
+            request = youtube.search().list(
+                                            channelId=channelIdForSearch,
+                                            channelType=channelType,
+                                            eventType=eventType,
+                                            maxResults=50,
+                                            order=order,
+                                            pageToken=pageToken,
+                                            part="snippet",
+                                            publishedAfter=publishedAfter,
+                                            publishedBefore=publishedBefore,
+                                            q=q,
+                                            type=contentType,
+                                            location=location,
+                                            locationRadius=locationRadius,
+                                            regionCode=regionCode,
+                                            relevanceLanguage=relevanceLanguage,
+                                            topicId=topicId,
+                                            safeSearch=safeSearch,
+                                            videoCaption=videoCaption,
+                                            videoCategoryId=videoCategoryId,
+                                            videoDefinition=videoDefinition,
+                                            videoDimension=videoDimension,
+                                            videoDuration=videoDuration,
+                                            videoEmbeddable=videoEmbeddable,
+                                            videoLicense=videoLicense,
+                                            videoPaidProductPlacement=videoPaidProductPlacement,
+                                            videoType=videoType,
+                                            videoSyndicated=videoSyndicated
+                                            )
         # channelType="any",
         # eventType="live",
         # publishedAfter="1970-01-01T00:00:00Z",
@@ -155,7 +157,22 @@ def bigSearch(
     return addItemS, goS, iteration, keyOrder, response # от response отказаться нельзя, т.к. в нём много важных ключей, даже если их знчения нули
 
 # 1.1 для обработки выдачи любого из методов, помогающая работе с ключами
-def dfsProcessing(complicatedNamePart, fileFormatChoice, dfAdd, dfFinal, dfIn, goS, method, q, slash, stage, targetCount, today, year, yearsRange):
+def dfsProcessing(
+                  complicatedNamePart,
+                  fileFormatChoice,
+                  dfAdd,
+                  dfFinal,
+                  dfIn,
+                  goS,
+                  method,
+                  q,
+                  slash,
+                  stage,
+                  targetCount,
+                  momentCurrent,
+                  year,
+                  yearsRange
+                  ):
     df = pandas.concat([dfIn, dfAdd])        
     columnsForCheck = []
     for column in df.columns: # выдача многих методов содержит столбец id, он оптимален для проверки дублирующихся строк
@@ -170,13 +187,25 @@ def dfsProcessing(complicatedNamePart, fileFormatChoice, dfAdd, dfFinal, dfIn, g
 
     if goS == False:
         print('Поскольку исполнение скрипта натолкнулось на ошибку,'
-              , f'сохраняю выгруженный контент и текущий этап поиска в директорию "{today}{complicatedNamePart}_Temporal"')
-        if not os.path.exists(f'{today}{complicatedNamePart}_Temporal'):
-                os.makedirs(f'{today}{complicatedNamePart}_Temporal')
-                print(f'Директория "{today}{complicatedNamePart}_Temporal" создана')
+              , f'сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"')
+        if not os.path.exists(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal'):
+                os.makedirs(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal')
+                print(f'Директория "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal" создана')
         # else:
-            # print(f'Директория "{today}{complicatedNamePart}_Temporal" существует')
-        saveSettings(complicatedNamePart, fileFormatChoice, itemS, method, q, slash, stage, targetCount, today, year, yearsRange)
+            # print(f'Директория "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal" существует')
+        saveSettings(
+                     complicatedNamePart,
+                     fileFormatChoice,
+                     itemS,
+                     method,
+                     q,
+                     slash,
+                     stage,
+                     targetCount,
+                     momentCurrent.strftime("%Y%m%d"),
+                     year,
+                     yearsRange
+                     )
         print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit"'
               , '\nТак и должно быть'
               , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
@@ -343,7 +372,22 @@ def portionProcessing(complicatedNamePart, goS, idS, keyOrder, method, q, slash,
             iteration += 1
 
             addChplviS = pandas.json_normalize(response['items'])
-            chplviS = dfsProcessing(complicatedNamePart, fileFormatChoice, addChplviS, chplviS, chplviS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+            chplviS = dfsProcessing(
+                                    complicatedNamePart,
+                                    fileFormatChoice,
+                                    addChplviS,
+                                    chplviS,
+                                    chplviS,
+                                    goS,
+                                    method,
+                                    q,
+                                    slash,
+                                    stage,
+                                    targetCount,
+                                    momentCurrent.strftime("%Y%m%d"),
+                                    year,
+                                    yearsRange
+                                    )
         except googleapiclient.errors.HttpError:
             errorDescription = sys.exc_info()
             # print('\nПохоже, квота текущего ключа закончилась; пробую перейти к следующему ключу')
@@ -375,42 +419,60 @@ def prefixDropper(df):
         return df
 
 # 1.8 для сохранения следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
-def saveSettings(channelIdForSearch, complicatedNamePart, contentType, fileFormatChoice, itemS, method, q, slash, stageTarget, targetCount, today, year, yearsRange):
-    file = open(f'{today}{complicatedNamePart}_Temporal{slash}channelIdForSearch.txt', 'w+') # открыть на запись
+def saveSettings(
+                 channelIdForSearch,
+                 complicatedNamePart,
+                 contentType,
+                 fileFormatChoice,
+                 itemS,
+                 method,
+                 q,
+                 slash,
+                 stageTarget,
+                 targetCount,
+                 momentCurrent,
+                 year,
+                 yearsRange
+                 ):
+    file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}channelIdForSearch.txt', 'w+') # открыть на запись
     file.write(channelIdsForSearch if channelIdsForSearch != None else '')
     file.close()
 
-    file = open(f'{today}{complicatedNamePart}_Temporal{slash}contentType.txt', 'w+') # открыть на запись
+    file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}contentType.txt', 'w+') # открыть на запись
     file.write(contentType if contentType != None else '')
     file.close()
 
-    file = open(f'{today}{complicatedNamePart}_Temporal{slash}method.txt', 'w+') # открыть на запись
+    file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}method.txt', 'w+') # открыть на запись
     file.write(method)
     file.close()
 
-    file = open(f'{today}{complicatedNamePart}_Temporal{slash}q.txt', 'w+') # открыть на запись
+    file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}q.txt', 'w+') # открыть на запись
     file.write(q if q != None else '')
     file.close()
 
-    file = open(f'{today}{complicatedNamePart}_Temporal{slash}stageTarget.txt', 'w+')
+    file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}stageTarget.txt', 'w+')
     file.write(str(stageTarget)) # stageTarget принимает значения [0; 3]
     file.close()
 
-    file = open(f'{today}{complicatedNamePart}_Temporal{slash}targetCount.txt', 'w+')
+    file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}targetCount.txt', 'w+')
     file.write(str(targetCount))
     file.close()
 
-    file = open(f'{today}{complicatedNamePart}_Temporal{slash}year.txt', 'w+')
+    file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}year.txt', 'w+')
     file.write(str(year)) # год, на котором остановилось исполнение скрипта
     file.close()
 
-    file = open(f'{today}{complicatedNamePart}_Temporal{slash}yearsRange.txt', 'w+')
+    file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}yearsRange.txt', 'w+')
     file.write(yearsRange if yearsRange != None else '') # пользовательский временнОй диапазон
     file.close()
 
-    if '.' in method: df2file.df2fileShell(f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method.split('.')[0] + method.split('.')[1].capitalize(), today)
-        # чтобы избавиться от лишней точки в имени файла
-    else: df2file.df2fileShell(f'{complicatedNamePart}_Temporal', itemS, fileFormatChoice, method, today)
+    df2file.df2fileShell(f'{complicatedNamePart}_Temporal',
+                         itemS,
+                         fileFormatChoice,
+                         method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                         momentCurrent.strftime("%Y%m%d")
+                         )
+
     if os.path.exists(rootName):
         print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
               , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
@@ -512,12 +574,9 @@ videoPaidProductPlacement : str
     temporalName = None
     yearsRange = None
     
-    today = date.today().strftime("%Y%m%d") # запрос сегодняшней даты в формате yyyymmdd
-    print('\nТекущяя дата:', today, '-- она будет использована для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
-    # print('Сегодня год:', today[:4])
-    # print('Сегодня месяц:', today[4:6])
-    # print('Сегодня день:', today[6:])
-    year = int(today[:4]) # в случае отсутствия пользовательского временнОго диапазона
+    momentCurrent = datetime.now() # запрос текущего момента
+    print('\nТекущий момент:', momentCurrent.strftime("%Y%m%d_%H%M"), '-- он будет использована для формирования имён создаваемых директорий и файлов')
+    year = int(momentCurrent.strftime("%Y")) # в случае отсутствия пользовательского временнОго диапазона
         # с этого года возможно сегментирование по годам вглубь веков (пока выдача не пустая)
     yearMinByUser = None # в случае отсутствия пользовательского временнОго диапазона
     yearMaxByUser = None # в случае отсутствия пользовательского временнОго диапазона
@@ -578,18 +637,22 @@ videoPaidProductPlacement : str
             file = open(f'{rootName}{slash}contentType.txt')
             contentType = file.read()
             file.close()
+            if contentType == '': contentType = None # для единообразия
     
             file = open(f'{rootName}{slash}channelIdForSearch.txt')
             channelIdForSearch = file.read()
             file.close()
+            if channelIdForSearch == '': channelIdForSearch = None # для единообразия
     
             file = open(f'{rootName}{slash}q.txt', encoding='utf-8')
             q = file.read()
             file.close()
+            if q == '': q = None # для единообразия
     
             file = open(f'{rootName}{slash}yearsRange.txt')
             yearsRange = file.read()
             file.close()
+            if yearsRange == '': yearsRange = None # для единообразия
         
             file = open(f'{rootName}{slash}stageTarget.txt')
             stageTarget = file.read()
@@ -599,11 +662,11 @@ videoPaidProductPlacement : str
             print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:'
                   , '\n- было выявлено целевое число записей (totalResults)', targetCount
                   , '\n- скрипт остановился на методе', method)
-            if year < int(today[:4]): print('- и на годе (при сегментировани по годам)', year)
+            if year < int(momentCurrent.strftime("%Y")): print('- и на годе (при сегментировани по годам)', year)
             print('- пользователь НЕ определил тип контента' if contentType == '' else  f'- пользователь определил тип контента как "{contentType}"')
             if contentType == 'video':
                 print('- пользователь НЕ выбрал конкретный канал для выгрузки видео' if channelIdForSearch == '' else  f'- пользователь выбрал канал с id "{channelIdForSearch}" для выгрузки видео')
-            print('- пользователь НЕ сформулировал запрос-фильтр' if q == '' else  f'- пользователь сформулировал запрос-фильтр как "{q}"')
+            print('- пользователь НЕ сформулировал запрос-фильтр' if q == None else  f'- пользователь сформулировал запрос-фильтр как "{q}"')
             print('- пользователь НЕ ограничил временнОй диапазон' if yearsRange == '' else  f'- пользователь ограничил временнОй диапазон границами {yearsRange}')
             print('--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter'
                   , '\n--- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите "R" и нажмите Enter'
@@ -616,8 +679,9 @@ videoPaidProductPlacement : str
                 itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
                 
                 for temporalName in temporalNameS:
-                    if '.json' in temporalName: break
-                itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
+                    if '.json' in temporalName:
+                        itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
+                        break
                 
                 if yearsRange != None:
                     yearsRange = yearsRange.split('-')
@@ -652,7 +716,7 @@ videoPaidProductPlacement : str
     # Контент: канал или видео? Или вообще плейлист?
         if contentType == None: # если пользователь не подал этот аргумент в рамках experiencedMode
             while True:
-                print('--- Если НЕ требуется определить тип контента, нажмите Enter'
+                print('--- Если НЕ требуется определить тип искомого контента, нажмите Enter'
                       , ' \n--- Если требуется определить, введите символ: c -- channel, p -- playlist, v -- video -- и нажмите Enter')
                 contentType = input()
                 if contentType.lower() == '':
@@ -717,10 +781,12 @@ videoPaidProductPlacement : str
                 , 'будут дополнены актуальными данными из выдачи скрипта (возможно появление новых записей и новых столбцов, а также актуализация содержимого столбцов),'
                 , 'поэтому, вероятно, следует ввести тот же запрос-фильтр, что и при формировании указанного Вами файла')
             q = input()
+            if q == '': q = None # для единообразия
 
     # Ограничения временнОго диапазона
         if (publishedAfter == None) & (publishedBefore == None) & (yearsRange == None): # если пользователь не подал эти аргументы в рамках experiencedMode
-            print('\nАлгоритм API Youtube для ограничения временнОго диапазона выдаваемого контента работает со странностями.'
+            if q != None: print('') # если пользователь не подал этот аргумент
+            print('Алгоритм API Youtube для ограничения временнОго диапазона выдаваемого контента работает со странностями.'
                   , 'Поэтому если требуется конкретный временнОй диапазон, то лучше использовать его НЕ на текущем этапе выгрузки данных,'
                   , 'а на следующем этапе -- предобработки датафрейма с выгруженными данными')
             print('--- Если НЕ требуется задать временнОй диапазон на этапе выгрузки данных, нажмите Enter'
@@ -751,20 +817,20 @@ videoPaidProductPlacement : str
             # print('elif end_time != None:', yearMaxByUser) # для отладки
             year = yearMaxByUser
         
-        if (yearMinByUser != None) & (yearMaxByUser == None): yearMaxByUser = int(today[:4]) # в случае отсутствия пользовательской верхней временнОй границы при наличии нижней
+        if (yearMinByUser != None) & (yearMaxByUser == None): yearMaxByUser = int(momentCurrent.strftime("%Y")) # в случае отсутствия пользовательской верхней временнОй границы при наличии нижней
         elif (yearMinByUser == None) & (yearMaxByUser != None): yearMaxByUser = 1970 # в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
             
         # print('yearMinByUser', yearMinByUser) # для отладки
         # print('yearMaxByUser', yearMaxByUser) # для отладки
 
-        if (publishedAfter == None) & (yearMinByUser != None): publishedAfter = datetime.datetime(yearMinByUser, 1, 1).isoformat() + 'Z'
-        if (publishedBefore == None) & (yearMaxByUser != None): publishedBefore = datetime.datetime(yearMaxByUser, 12, 31).isoformat() + 'Z'
+        if (publishedAfter == None) & (yearMinByUser != None): publishedAfter = datetime(yearMinByUser, 1, 1).isoformat() + 'Z'
+        if (publishedBefore == None) & (yearMaxByUser != None): publishedBefore = datetime(yearMaxByUser, 12, 31).isoformat() + 'Z'
 
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_YouTube'
     complicatedNamePart += "" if contentType == None else "_" + contentType
     complicatedNamePart += "" if channelIdForSearch == None else "_channelId" + channelIdForSearch
-    complicatedNamePart += "" if q == None else "_" + q[50]
+    if q != None: complicatedNamePart += "_" + q if len(q) < 50 else "_" + q[:50]            
     complicatedNamePart += "" if ((yearMinByUser == None) & (yearMaxByUser == None)) else "_" + str(yearMinByUser) + '-' + str(yearMaxByUser)
 # print('complicatedNamePart', complicatedNamePart)
 
@@ -773,7 +839,9 @@ videoPaidProductPlacement : str
     stage = 0
     iteration = 0 # номер итерации применения текущего метода
     method = 'search'
-    print(f'\nВ скрипте используются следующие аргументы метода {method} API YouTube:'
+    if yearsRange != None: # если пользователь не подал этот аргумент в рамках experiencedMode
+        print('')
+    print(f'В скрипте используются следующие аргументы метода {method} API YouTube:'
           , 'channelId, maxResults, order, pageToken, part, publishedAfter, publishedBefore, q, type.'
           , 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
           , f'Если хотите добавить другие аргументы метода {method} API YouTube, доступные по ссылке https://developers.google.com/youtube/v3/docs/search ,'
@@ -813,9 +881,24 @@ videoPaidProductPlacement : str
                                                                  , videoPaidProductPlacement=videoPaidProductPlacement
                                                                  , videoType=videoType
                                                                  , videoSyndicated=videoSyndicated
-                                                                )
+                                                                 )
         targetCount = response['pageInfo']['totalResults']
-        itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+        itemS = dfsProcessing(
+                              complicatedNamePart,
+                              fileFormatChoice,
+                              addItemS,
+                              itemS,
+                              itemS,
+                              goS,
+                              method,
+                              q,
+                              slash,
+                              stage,
+                              targetCount,
+                              momentCurrent.strftime("%Y%m%d"),
+                              year,
+                              yearsRange
+                              )
         # display('itemS', itemS) # для отладки
     
         print('  Проход по всем следующим страницам с выдачей          ')
@@ -831,7 +914,7 @@ videoPaidProductPlacement : str
                                                                      , q
                                                                      , publishedAfter=publishedAfter
                                                                      , publishedBefore=publishedBefore
-                                                                     , order=order
+                                                                     , order=None
                                                                      , pageToken=pageToken
                                                                      , year=None
                                                                      , channelType=channelType
@@ -852,8 +935,23 @@ videoPaidProductPlacement : str
                                                                      , videoPaidProductPlacement=videoPaidProductPlacement
                                                                      , videoType=videoType
                                                                      , videoSyndicated=videoSyndicated
-                                                                    )
-            itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+                                                                     )
+            itemS = dfsProcessing(
+                                  complicatedNamePart,
+                                  fileFormatChoice,
+                                  addItemS,
+                                  itemS,
+                                  itemS,
+                                  goS,
+                                  method,
+                                  q,
+                                  slash,
+                                  stage,
+                                  targetCount,
+                                  momentCurrent.strftime("%Y%m%d"),
+                                  year,
+                                  yearsRange
+                                  )
         print('  Искомых объектов', targetCount
               , ', а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
     elif stage < stageTarget:
@@ -898,8 +996,23 @@ videoPaidProductPlacement : str
                                                                          , videoPaidProductPlacement=videoPaidProductPlacement
                                                                          , videoType=videoType
                                                                          , videoSyndicated=videoSyndicated
-                                                                        )
-                itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+                                                                         )
+                itemS = dfsProcessing(
+                                      complicatedNamePart,
+                                      fileFormatChoice,
+                                      addItemS,
+                                      itemS,
+                                      itemS,
+                                      goS,
+                                      method,
+                                      q,
+                                      slash,
+                                      stage,
+                                      targetCount,
+                                      momentCurrent.strftime("%Y%m%d"),
+                                      year,
+                                      yearsRange
+                                      )
     
                 print('  Проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order, '          ')
                 while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0):
@@ -940,8 +1053,23 @@ videoPaidProductPlacement : str
                                                                              , videoPaidProductPlacement=videoPaidProductPlacement
                                                                              , videoType=videoType
                                                                              , videoSyndicated=videoSyndicated
-                                                                            )
-                    itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+                                                                             )
+                    itemS = dfsProcessing(
+                                          complicatedNamePart,
+                                          fileFormatChoice,
+                                          addItemS,
+                                          itemS,
+                                          itemS,
+                                          goS,
+                                          method,
+                                          q,
+                                          slash,
+                                          stage,
+                                          targetCount,
+                                          momentCurrent.strftime("%Y%m%d"),
+                                          year,
+                                          yearsRange
+                                          )
             print('  Искомых объектов', targetCount, ', а найденных С включением аргумента order:', len(itemS))
         else:
             print('Все искомые объекты найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
@@ -1002,7 +1130,22 @@ videoPaidProductPlacement : str
                         if len(input()) == 0:
                             goC = False
                             break
-                    itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+                    itemS = dfsProcessing(
+                                          complicatedNamePart,
+                                          fileFormatChoice,
+                                          addItemS,
+                                          itemS,
+                                          itemS,
+                                          goS,
+                                          method,
+                                          q,
+                                          slash,
+                                          stage,
+                                          targetCount,
+                                          momentCurrent.strftime("%Y%m%d"),
+                                          year,
+                                          yearsRange
+                                          )
     
                     print(f'    Проход по всем следующим страницам с выдачей для года {year} БЕЗ аргумента order')
                     while 'nextPageToken' in response.keys():
@@ -1039,7 +1182,22 @@ videoPaidProductPlacement : str
                                                                                  , videoType=videoType
                                                                                  , videoSyndicated=videoSyndicated
                                                                                 )
-                        itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+                        itemS = dfsProcessing(
+                                              complicatedNamePart,
+                                              fileFormatChoice,
+                                              addItemS,
+                                              itemS,
+                                              itemS,
+                                              goS,
+                                              method,
+                                              q,
+                                              slash,
+                                              stage,
+                                              targetCount,
+                                              momentCurrent.strftime("%Y%m%d"),
+                                              year,
+                                              yearsRange
+                                              )
     
                     print(f'    Искомых объектов в году {year}: {targetCount},'
                           , 'а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))      
@@ -1079,8 +1237,23 @@ videoPaidProductPlacement : str
                                                                                      , videoPaidProductPlacement=videoPaidProductPlacement
                                                                                      , videoType=videoType
                                                                                      , videoSyndicated=videoSyndicated
-                                                                                    )
-                            itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+                                                                                     )
+                            itemS = dfsProcessing(
+                                                  complicatedNamePart,
+                                                  fileFormatChoice,
+                                                  addItemS,
+                                                  itemS,
+                                                  itemS,
+                                                  goS,
+                                                  method,
+                                                  q,
+                                                  slash,
+                                                  stage,
+                                                  targetCount,
+                                                  momentCurrent.strftime("%Y%m%d"),
+                                                  year,
+                                                  yearsRange
+                                                  )
     
                             print(f'    Для года {year} проход по всем следующим страницам с выдачей'
                                   , f'с тем же значением аргумента order:', order)
@@ -1118,7 +1291,22 @@ videoPaidProductPlacement : str
                                                                                          , videoType=videoType
                                                                                          , videoSyndicated=videoSyndicated
                                                                                         )
-                                itemS = dfsProcessing(complicatedNamePart, fileFormatChoice, addItemS, itemS, itemS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+                                itemS = dfsProcessing(
+                                                      complicatedNamePart,
+                                                      fileFormatChoice,
+                                                      addItemS,
+                                                      itemS,
+                                                      itemS,
+                                                      goS,
+                                                      method,
+                                                      q,
+                                                      slash,
+                                                      stage,
+                                                      targetCount,
+                                                      momentCurrent.strftime("%Y%m%d"),
+                                                      year,
+                                                      yearsRange
+                                                      )
                         print('    Искомых объектов', targetCount
                               , ', а найденных с добавлением сегментирования по году (год'
                               , year
@@ -1131,10 +1319,10 @@ videoPaidProductPlacement : str
                             goC = False
                             print(f'\nЗавершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser} (с точностью до года)')
     elif stage < stageTarget:
-        print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{today}{complicatedNamePart}_Temporal"')
+        print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"')
 
 # 2.1.3 Экспорт выгрузки метода search и опциональное завершение скрипта
-    df2file.df2fileShell(complicatedNamePart, itemS, fileFormatChoice, method, today)
+    df2file.df2fileShell(complicatedNamePart, itemS, fileFormatChoice, method, momentCurrent.strftime("%Y%m%d_%H%M"))
 
     print('Выгрузка метода search содержит НЕ ВСЕ доступные для выгрузки из API YouTube характеристки контента'
           , '\n--- Если хотите выгрузить дополнительные характеристики (ссылки для ознакомления с ними появятся ниже), нажмите Enter'
@@ -1191,7 +1379,22 @@ videoPaidProductPlacement : str
                 bound += 50
                 iteration += 1
                 addPlaylistS = pandas.json_normalize(response['items'])
-                playlistS = dfsProcessing(complicatedNamePart, fileFormatChoice, addPlaylistS, playlistS, playlistS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+                playlistS = dfsProcessing(
+                                          complicatedNamePart,
+                                          fileFormatChoice,
+                                          addPlaylistS,
+                                          playlistS,
+                                          playlistS,
+                                          goS,
+                                          method,
+                                          q,
+                                          slash,
+                                          stage,
+                                          targetCount,
+                                          momentCurrent.strftime("%Y%m%d"),
+                                          year,
+                                          yearsRange
+                                          )
     
             except googleapiclient.errors.HttpError:
                 errorDescription = sys.exc_info()
@@ -1222,8 +1425,22 @@ videoPaidProductPlacement : str
                 iterationVisualization(playlistIdS, portion) # для визуализации процесса через итерации
                 iteration += 1
                 addPlaylistVideoChannelS = pandas.json_normalize(response['items'])
-                playlistVideoChannelS = dfsProcessing(complicatedNamePart, fileFormatChoice, addPlaylistVideoChannelS, playlistVideoChannelS, playlistVideoChannelS
-                                                      , goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+                playlistVideoChannelS = dfsProcessing(
+                                                      complicatedNamePart,
+                                                      fileFormatChoice,
+                                                      addPlaylistVideoChannelS,
+                                                      playlistVideoChannelS,
+                                                      playlistVideoChannelS,
+                                                      goS,
+                                                      method,
+                                                      q,
+                                                      slash,
+                                                      stage,
+                                                      targetCount,
+                                                      momentCurrent.strftime("%Y%m%d"),
+                                                      year,
+                                                      yearsRange
+                                                      )
             except googleapiclient.errors.HttpError:
                 errorDescription = sys.exc_info()
                 goC, keyOrder, problemItemId = googleapiclientError(errorDescription, keyOrder)
@@ -1241,7 +1458,7 @@ videoPaidProductPlacement : str
                 playlistS.loc[playlistS[playlistS['id'] == playlistId].index[0], column] =\
                     ', '.join(playlistVideoChannelS_snippet[playlistVideoChannelS_snippet['snippet.playlistId'] == playlistId][column].to_list())
         # display(playlistS)
-        df2file.df2fileShell(complicatedNamePart, playlistS, fileFormatChoice, method, today)
+        df2file.df2fileShell(complicatedNamePart, playlistS, fileFormatChoice, method, momentCurrent.strftime("%Y%m%d_%H%M"))
 
 # 2.2.2 Выгрузка дополнительных характеристик видео
     snippetContentType = 'video'
@@ -1301,7 +1518,22 @@ videoPaidProductPlacement : str
                 iteration += 1
     
                 addVideoS = pandas.json_normalize(response['items'])
-                videoS = dfsProcessing(complicatedNamePart, fileFormatChoice, addVideoS, videoS, videoS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+                videoS = dfsProcessing(
+                                       complicatedNamePart,
+                                       fileFormatChoice,
+                                       addVideoS,
+                                       videoS,
+                                       videoS,
+                                       goS,
+                                       method,
+                                       q,
+                                       slash,
+                                       stage,
+                                       targetCount,
+                                       momentCurrent.strftime("%Y%m%d"),
+                                       year,
+                                       yearsRange
+                                       )
     
             except googleapiclient.googleapiclient.errors.HttpError:
                 errorDescription = sys.exc_info()
@@ -1358,13 +1590,13 @@ videoPaidProductPlacement : str
         for row in categoryNameS.index:
             videoS.loc[videoS['snippet.categoryId'] == row, 'categoryName'] = categoryNameS['snippet.title'][row]
     
-        df2file.df2fileShell(complicatedNamePart, videoS, fileFormatChoice, method, today)
+        df2file.df2fileShell(complicatedNamePart, videoS, fileFormatChoice, method, momentCurrent.strftime("%Y%m%d_%H%M"))
         commentS = pandas.DataFrame() # не в следующем ченке, чтобы иметь возможность перезапускать его, не затирая промежуточный результат выгрузки
 
 # 2.2.3 Выгрузка комментариев к видео
     if len(videoS) > 0:
         print('\n--- Если хотите выгрузить комментарии к видео (в отдельный файл),'
-              , f'содержащимся в файле "{today}{complicatedNamePart} {method}.xlsx" директории "{today}{complicatedNamePart}",'
+              , f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart} {method}.xlsx" директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}",'
               , 'просто нажмите Enter'
               , '\n--- Если НЕ хотите выгрузить комментарии, введите любой символ и нажмите Enter')
         if len(input()) == 0:
@@ -1396,16 +1628,46 @@ videoPaidProductPlacement : str
                 page = 0 # номер страницы выдачи
                 addCommentS, errorDescription, goS, keyOrder, page, pageToken, problemVideoId =\
                     downloadComments(API_keyS, goS, videoId, videoIdS, keyOrder, maxResults, method, page, None, part)
-                commentS = dfsProcessing(complicatedNamePart, fileFormatChoice, addCommentS, commentS, commentS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+                commentS = dfsProcessing(
+                                         complicatedNamePart,
+                                         fileFormatChoice,
+                                         addCommentS,
+                                         commentS,
+                                         commentS,
+                                         goS,
+                                         method,
+                                         q,
+                                         slash,
+                                         stage,
+                                         targetCount,
+                                         momentCurrent.strftime("%Y%m%d"),
+                                         year,
+                                         yearsRange
+                                         )
                 if errorDescription != None: problemVideoIdS.loc[problemVideoId, 'errorDescription'] = errorDescription
                 while pageToken != None:
                     addCommentS, errorDescription, goS, keyOrder, page, pageToken, problemItemId =\
                         downloadComments(API_keyS, goS, videoId, videoIdS, keyOrder, maxResults, method, page, pageToken, part)
-                    commentS = dfsProcessing(complicatedNamePart, fileFormatChoice, addCommentS, commentS, commentS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+                    commentS = dfsProcessing(
+                                             complicatedNamePart,
+                                             fileFormatChoice,
+                                             addCommentS,
+                                             commentS,
+                                             commentS,
+                                             goS,
+                                             method,
+                                             q,
+                                             slash,
+                                             stage,
+                                             targetCount,
+                                             momentCurrent.strftime("%Y%m%d"),
+                                             year,
+                                             yearsRange
+                                             )
                     if errorDescription != None: problemVideoIdS.loc[problemVideoId, 'errorDescription'] = errorDescription
             commentS = commentS.drop(['kind', 'etag', 'id', 'snippet.channelId', 'snippet.videoId'], axis=1) # т.к. дублируются содержательно
             commentS = prefixDropper(commentS)
-            df2file.df2fileShell(complicatedNamePart, commentS, fileFormatChoice, 'commentS', today)
+            df2file.df2fileShell(complicatedNamePart, commentS, fileFormatChoice, 'commentS', momentCurrent.strftime("%Y%m%d_%H%M"))
 
 # ********** replieS
             print('\nПроход по строкам всех родительских (topLevel) комментариев, имеющих ответы')
@@ -1421,7 +1683,7 @@ videoPaidProductPlacement : str
             replieS.loc[:, 'snippet.totalReplyCount'] = 0
             replieS.loc[:, 'Недостача_ответов'] = 0
             replieS = prefixDropper(replieS)
-            df2file.df2fileShell(complicatedNamePart, replieS, fileFormatChoice, 'replieS', today)
+            df2file.df2fileShell(complicatedNamePart, replieS, fileFormatChoice, 'replieS', momentCurrent.strftime("%Y%m%d_%H%M"))
         
             commentReplieS = commentS.copy() # копия датафрейма c родительскими (topLevel) комментариями -- основа будущего общего датафрейма
             # Найти столбцы, совпадающие для датафреймов c родительскими (topLevel) комментариями и с комментариями-ответами
@@ -1434,7 +1696,22 @@ videoPaidProductPlacement : str
             # Оставить только совпадающие столбцы датафреймов с родительскими (topLevel) комментариями и с комментариями-ответами
             commentReplieS = commentReplieS[mutualColumns]
             replieS = replieS[mutualColumns]
-            commentReplieS = dfsProcessing(complicatedNamePart, fileFormatChoice, replieS, commentReplieS, commentReplieS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+            commentReplieS = dfsProcessing(
+                                           complicatedNamePart,
+                                           fileFormatChoice,
+                                           replieS,
+                                           commentReplieS,
+                                           commentReplieS,
+                                           goS,
+                                           method,
+                                           q,
+                                           slash,
+                                           stage,
+                                           targetCount,
+                                           momentCurrent.strftime("%Y%m%d"),
+                                           year,
+                                           yearsRange
+                                           )
             method = 'comments'
             part = 'id, snippet'
             textFormat = 'plainText' # = 'html' по умолчанию
@@ -1453,12 +1730,42 @@ videoPaidProductPlacement : str
                 addReplieS, errorDescription, goS, keyOrder, page, pageToken, problemCommentId =\
                     downloadComments(API_keyS, goS, commentId, commentIdS, keyOrder, maxResults, method, '', None, part)
                 if errorDescription != None: problemCommentIdS.loc[problemCommentId, 'errorDescription'] = errorDescription
-                replieS = dfsProcessing(complicatedNamePart, fileFormatChoice, addReplieS, replieS, replieS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+                replieS = dfsProcessing(
+                                        complicatedNamePart,
+                                        fileFormatChoice,
+                                        addReplieS,
+                                        replieS,
+                                        replieS,
+                                        goS,
+                                        method,
+                                        q,
+                                        slash,
+                                        stage,
+                                        targetCount,
+                                        momentCurrent.strftime("%Y%m%d"),
+                                        year,
+                                        yearsRange
+                                        )
                 while pageToken != None:
                     addReplieS, errorDescription, goS, keyOrder, page, pageToken, problemCommentId =\
                         downloadComments(API_keyS, goS, commentId, commentIdS, keyOrder, maxResults, method, '', pageToken, part)
                     if errorDescription != None: problemCommentIdS.loc[problemCommentId, 'errorDescription'] = errorDescription
-                    replieS = dfsProcessing(complicatedNamePart, fileFormatChoice, addReplieS, replieS, replieS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+                    replieS = dfsProcessing(
+                                            complicatedNamePart,
+                                            fileFormatChoice,
+                                            addReplieS,
+                                            replieS,
+                                            replieS,
+                                            goS,
+                                            method,
+                                            q,
+                                            slash,
+                                            stage,
+                                            targetCount,
+                                            momentCurrent.strftime("%Y%m%d"),
+                                            year,
+                                            yearsRange
+                                            )
             print('Ответов выгружено', len(replieS)
                   , '; проблемные родительские (topLevel) комментарии:', problemCommentIdS if len(problemCommentIdS) > 0  else 'отсутствуют')
         
@@ -1469,8 +1776,22 @@ videoPaidProductPlacement : str
             # Удалить столбец `snippet.parentId`, т.к. и из столбца `id` всё ясно
             replieS = replieS.drop('snippet.parentId', axis=1)
         
-            commentReplieS = dfsProcessing(complicatedNamePart, fileFormatChoice, replieS, commentReplieS, commentReplieS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
-            df2file.df2fileShell(complicatedNamePart, commentReplieS, fileFormatChoice, 'commentReplieS', today)
+            commentReplieS = dfsProcessing(
+                                           complicatedNamePart,
+                                           fileFormatChoice,
+                                           replieS,
+                                           commentReplieS,
+                                           commentReplieS,
+                                           goS,
+                                           method,
+                                           q,
+                                           slash,
+                                           stage,
+                                           targetCount,
+                                           momentCurrent.strftime("%Y%m%d"),
+                                           year,
+                                           yearsRange)
+            df2file.df2fileShell(complicatedNamePart, commentReplieS, fileFormatChoice, 'commentReplieS', momentCurrent.strftime("%Y%m%d_%H%M"))
 
 # 2.2.4 Выгрузка дополнительных характеристик каналов
     snippetContentType = 'channel'
@@ -1540,7 +1861,22 @@ videoPaidProductPlacement : str
                 iteration += 1
     
                 addСhannelS = pandas.json_normalize(response['items'])
-                channelS = dfsProcessing(complicatedNamePart, fileFormatChoice, addСhannelS, channelS, channelS, goS, method, q, slash, stage, targetCount, today, year, yearsRange)
+                channelS = dfsProcessing(
+                                         complicatedNamePart,
+                                         fileFormatChoice,
+                                         addСhannelS,
+                                         channelS,
+                                         channelS,
+                                         goS,
+                                         method,
+                                         q,
+                                         slash,
+                                         stage,
+                                         targetCount,
+                                         momentCurrent.strftime("%Y%m%d"),
+                                         year,
+                                         yearsRange
+                                         )
             except googleapiclient.errors.HttpError:
                 errorDescription = sys.exc_info()
                 print(errorDescription[1])
@@ -1559,7 +1895,7 @@ videoPaidProductPlacement : str
                     print(f'Директория "{complicatedNamePart} Temporal" существует')
                 saveSettings(channelIdForSearch, complicatedNamePart, contentType, itemS, method, q, slash, stage, targetCount, year, yearsRange)
                 goC = False
-        df2file.df2fileShell(complicatedNamePart, channelS, fileFormatChoice, method, today)
+        df2file.df2fileShell(complicatedNamePart, channelS, fileFormatChoice, method, momentCurrent.strftime("%Y%m%d_%H%M"))
 
 # 2.2.5 Экспорт выгрузки метода search и финальное завершение скрипта
     print('Скрипт исполнен')
