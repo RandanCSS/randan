@@ -300,7 +300,7 @@ def indexError(errorDescription):
     return goC, goS
 
 # 1.5 для визуализации процесса через итерации
-def iterationVisualization(idS, iteration, portion):
+def iterationVisualization(idS, iteration, portion, response):
     iterationUpperBound = len(idS)
 
     # Дробная часть после деления числа idS должна увеличить iterationUpperBound на единицу
@@ -1397,7 +1397,7 @@ videoPaidProductPlacement : str
                                                          , "status"]
                                                     , id=playlistIdS[bound:bound + 50]
                                                     ).execute()
-                iterationVisualization(playlistIdS, iteration, portion) # для визуализации процесса через итерации
+                iterationVisualization(playlistIdS, iteration, portion, response) # для визуализации процесса через итерации
                 bound += 50
                 iteration += 1
                 addPlaylistS = pandas.json_normalize(response['items'])
@@ -1444,7 +1444,7 @@ videoPaidProductPlacement : str
                 response = youtube.playlistItems().list(part=["snippet"]
                                                         , playlistId=playlistId
                                                         ).execute()
-                iterationVisualization(playlistIdS, iteration, portion) # для визуализации процесса через итерации
+                iterationVisualization(playlistIdS, iteration, portion, response) # для визуализации процесса через итерации
                 iteration += 1
                 addPlaylistVideoChannelS = pandas.json_normalize(response['items'])
                 playlistVideoChannelS = dfsProcessing(
