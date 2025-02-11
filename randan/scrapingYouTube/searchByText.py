@@ -213,7 +213,18 @@ def dfsProcessing(
     return df
 
 # 1.2 для выгрузки комментариев
-def downloadComments(API_keyS, goS, sourceId, idS, keyOrder, maxResults, method, page, pageToken, part): # id видео или комментария
+def downloadComments(
+                     API_keyS,
+                     goS,
+                     sourceId,
+                     part,
+                     idS,
+                     keyOrder,
+                     maxResults,
+                     method,
+                     page,
+                     pageToken
+                     ):
     goC_0 = True
     while goC_0: # этот цикл позволяет возвращяться со следующим keyOrder к прежнему id при истечении квоты текущего ключа
         try:
@@ -224,7 +235,7 @@ def downloadComments(API_keyS, goS, sourceId, idS, keyOrder, maxResults, method,
             youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
             while goC_1:
                 if method == 'comments':
-                    response = youtube.comments().list(maxResults=maxResults, pageToken=pageToken, part=part, parentId=sourceId).execute()
+                    response = youtube.comments().list(part=part, parentId=sourceId, maxResults=maxResults, pageToken=pageToken).execute()
                     goC_1 = False
                 elif method == 'commentThreads':
                     response = youtube.commentThreads().list(maxResults=maxResults, pageToken=pageToken, part=part, videoId=sourceId).execute()
@@ -282,6 +293,8 @@ def googleapiclientError(errorDescription, keyOrder, *arg): # арки: sourceId
         goC = True # для повторного обращения к API с новым ключом
     else:
         if len(arg) == 1:
+            # print('arg[0]', arg[0]) # для отладки
+            sourceId = arg[0]
             print('  Проблема может быть связана с обрабатываемым объектом, поэтому фиксирую его id:', sourceId)
             problemItemId = arg[0]
         if 'comment' in str(errorDescription[1]):
@@ -1648,8 +1661,18 @@ videoPaidProductPlacement : str
             # for videoId in videoS['id'][4576:]: # для отладки
                 # print('videoId', videoId)
                 page = 0 # номер страницы выдачи
-                addCommentS, errorDescription, goS, keyOrder, page, pageToken, problemVideoId =\
-                    downloadComments(API_keyS, goS, videoId, videoIdS, keyOrder, maxResults, method, page, None, part)
+                addCommentS, errorDescription, goS, keyOrder, page, pageToken, problemVideoId = downloadComments(
+                                                                                                                 API_keyS=API_keyS,
+                                                                                                                 goS=goS,
+                                                                                                                 sourceId=videoId,
+                                                                                                                 part=part,
+                                                                                                                 idS=videoIdS,
+                                                                                                                 keyOrder=keyOrder,
+                                                                                                                 maxResults=maxResults,
+                                                                                                                 method=method,
+                                                                                                                 page=page,
+                                                                                                                 pageToken=None
+                                                                                                                 )
                 commentS = dfsProcessing(
                                          complicatedNamePart,
                                          fileFormatChoice,
@@ -1668,8 +1691,18 @@ videoPaidProductPlacement : str
                                          )
                 if errorDescription != None: problemVideoIdS.loc[problemVideoId, 'errorDescription'] = errorDescription
                 while pageToken != None:
-                    addCommentS, errorDescription, goS, keyOrder, page, pageToken, problemItemId =\
-                        downloadComments(API_keyS, goS, videoId, videoIdS, keyOrder, maxResults, method, page, pageToken, part)
+                    addCommentS, errorDescription, goS, keyOrder, page, pageToken, problemItemId = downloadComments(
+                                                                                                                    API_keyS=API_keyS,
+                                                                                                                    goS=goS,
+                                                                                                                    sourceId=videoId,
+                                                                                                                    part=part,
+                                                                                                                    idS=videoIdS,
+                                                                                                                    keyOrder=keyOrder,
+                                                                                                                    maxResults=maxResults,
+                                                                                                                    method=method,
+                                                                                                                    page=page,
+                                                                                                                    pageToken=pageToken
+                                                                                                                    )
                     commentS = dfsProcessing(
                                              complicatedNamePart,
                                              fileFormatChoice,
