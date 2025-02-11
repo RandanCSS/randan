@@ -11,6 +11,7 @@
 # In[ ]:
 
 
+# 0.0 В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
 # sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
 import sys
 from subprocess import check_call
@@ -40,6 +41,25 @@ while True:
             print('Пакет', module
                   , 'НЕ прединсталлируется с установкой Анаконды, для работы скрипта требуется этот пакет,'
                   , 'но инсталлировать его не удаётся, попробуйте инсталлировать его вручную, после чего снова запустите требуемый скрипт пакета\n')
+            break
+
+# 0.1 В случае работы в CoLab требуется особенный код
+attempt = 0
+colabMode = False
+import sys
+while True:
+    try:
+        from google.colab import drive
+        print('Похоже, я исполняюсь в CoLab\n')
+        colabMode = True
+        from google.colab import drive
+        drive.mount('/content/drive')
+        break
+    except ModuleNotFoundError:
+        errorDescription = sys.exc_info()
+        attempt += 1
+        if  attempt == 2:
+            print('Похоже, я исполняюсь не в CoLab\n')
             break
 
 
@@ -645,6 +665,8 @@ videoPaidProductPlacement : str
                     break
                 else:
                     print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
+        API_keyS = API_keyS.replace(' ', '') # контроль пробелов
+        API_keyS = API_keyS.replace(',', ', ') # контроль пробелов
         API_keyS = API_keyS.split(', ')
     else: API_keyS = [access_token]
     print('Количество ключей:', len(API_keyS), '\n')
@@ -1444,7 +1466,7 @@ videoPaidProductPlacement : str
               , 'part=["snippet"], playlistId, maxResults .'
               , 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
               , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
-              , 'https://developers.google.com/youtube/v3/docs/playlists')
+              , 'https://developers.google.com/youtube/v3/docs/playlistitems')
         if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
         goC = True
         iteration = 0 # номер итерации применения текущего метода
@@ -1783,8 +1805,20 @@ videoPaidProductPlacement : str
             for commentId in tqdm(commentIdS):
                 page = 0 # номер страницы выдачи
                 addReplieS, errorDescription, goS, keyOrder, page, pageToken, problemCommentId =\
-                    downloadComments(API_keyS, goS, commentId, commentIdS, keyOrder, maxResults, method, '', None, part)
-                if errorDescription != None: problemCommentIdS.loc[problemCommentId, 'errorDescription'] = errorDescription
+                    downloadComments(
+                                     API_keyS=API_keyS,
+                                     goS=goS,
+                                     sourceId=commentId,
+                                     part=part,
+                                     idS=commentIdS,
+                                     keyOrder=keyOrder,
+                                     maxResults=maxResults,
+                                     method=method,
+                                     page=page,
+                                     pageToken=None
+                                     )
+                if (errorDescription != None) & (problemCommentId != None):
+                    problemCommentIdS.loc[problemCommentId, 'errorDescription'] = errorDescription
                 replieS = dfsProcessing(
                                         complicatedNamePart,
                                         fileFormatChoice,
@@ -1803,8 +1837,20 @@ videoPaidProductPlacement : str
                                         )
                 while pageToken != None:
                     addReplieS, errorDescription, goS, keyOrder, page, pageToken, problemCommentId =\
-                        downloadComments(API_keyS, goS, commentId, commentIdS, keyOrder, maxResults, method, '', pageToken, part)
-                    if errorDescription != None: problemCommentIdS.loc[problemCommentId, 'errorDescription'] = errorDescription
+                        downloadComments(
+                                         API_keyS=API_keyS,
+                                         goS=goS,
+                                         sourceId=commentId,
+                                         part=part,
+                                         idS=commentIdS,
+                                         keyOrder=keyOrder,
+                                         maxResults=maxResults,
+                                         method=method,
+                                         page=page,
+                                         pageToken=pageToken
+                                         )
+                    if (errorDescription != None) & (problemCommentId != None):
+                        problemCommentIdS.loc[problemCommentId, 'errorDescription'] = errorDescription
                     replieS = dfsProcessing(
                                             complicatedNamePart,
                                             fileFormatChoice,
