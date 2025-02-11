@@ -399,7 +399,9 @@ def newsFeedSearch(
                     break
                 else:
                     print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
-        API_keyS = API_keyS.split(', ')
+        API_keyS = API_keyS.replace(' ', '') # контроль пробелов
+        API_keyS = API_keyS.replace(',', ', ') # контроль пробелов
+    	API_keyS = API_keyS.split(', ')
     else: API_keyS = [access_token]
     print('Количество ключей:', len(API_keyS), '\n')
 
