@@ -110,8 +110,8 @@ def df2file(dfIn, *arg): # арки: fileName и folder
     if fileFormatChoice == 'json':
         dfIn.to_json(folder + fileName)
 
-def df2fileShell(complicatedNamePart, dfIn, fileFormatChoice, method, today):
-    folder = f'{today}{complicatedNamePart}'
+def df2fileShell(complicatedNamePart, dfIn, fileFormatChoice, method, currentMoment):
+    folder = f'{currentMoment}{complicatedNamePart}'
     print('Сохраняю выгрузку метода', method)
     if os.path.exists(folder) == False:
         print('Такой директории не существовало, поэтому она создана')
