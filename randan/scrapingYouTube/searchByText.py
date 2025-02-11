@@ -722,7 +722,7 @@ videoPaidProductPlacement : str
             if yearTemporal != None: print('- и на годе (при сегментировани по годам)', yearTemporal)
             print('- пользователь НЕ определил тип контента' if contentTypeTemporal == None else  f'- пользователь определил тип контента как "{contentTypeTemporal}"')
             if contentTypeTemporal == 'video':
-                print('- пользователь НЕ выбрал конкретный канал для выгрузки видео' if channelIdForSearchTemporal == '' else  f'- пользователь выбрал канал с id "{channelIdForSearchTemporal}" для выгрузки видео')
+                print('- пользователь НЕ выбрал конкретный канал для выгрузки видео' if channelIdForSearchTemporal == None else  f'- пользователь выбрал канал с id "{channelIdForSearchTemporal}" для выгрузки видео')
             print('- пользователь НЕ сформулировал запрос-фильтр' if qTemporal == None else  f'- пользователь сформулировал запрос-фильтр как "{qTemporal}"')
             print('- пользователь НЕ ограничил временнОй диапазон' if yearsRangeTemporal == '' else  f'- пользователь ограничил временнОй диапазон границами {yearsRangeTemporal}')
             print('--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter'
