@@ -685,7 +685,7 @@ videoPaidProductPlacement : str
                   , '\n- было выявлено целевое число записей (totalResults)', targetCount
                   , '\n- скрипт остановился на методе', method)
             if year < int(momentCurrent.strftime("%Y")): print('- и на годе (при сегментировани по годам)', year)
-            print('- пользователь НЕ определил тип контента' if contentType == '' else  f'- пользователь определил тип контента как "{contentType}"')
+            print('- пользователь НЕ определил тип контента' if contentType == None else  f'- пользователь определил тип контента как "{contentType}"')
             if contentType == 'video':
                 print('- пользователь НЕ выбрал конкретный канал для выгрузки видео' if channelIdForSearch == '' else  f'- пользователь выбрал канал с id "{channelIdForSearch}" для выгрузки видео')
             print('- пользователь НЕ сформулировал запрос-фильтр' if q == None else  f'- пользователь сформулировал запрос-фильтр как "{q}"')
