@@ -832,7 +832,7 @@ videoPaidProductPlacement : str
                     from randan.tools.textPreprocessing import multispaceCleaner
                     channelIdForSearch = multispaceCleaner(channelIdForSearch)
                     while channelIdForSearch[-1] == ',': channelIdForSearch = channelIdForSearch[:-1] # избавиться от запятых в конце текста
-                    channelIdForSearch = channelIdForSearch.split(', ')
+                    # channelIdForSearch = channelIdForSearch.split(', ')
                     print('Количество id каналов:', len(channelIdForSearch), '\n')
                     if len(channelIdForSearch) > 1:
                         channelIdForSearch = channelIdForSearch[0]
