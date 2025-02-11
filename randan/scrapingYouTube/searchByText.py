@@ -709,7 +709,7 @@ videoPaidProductPlacement : str
             file = open(f'{rootName}{slash}yearsRange.txt')
             yearsRangeTemporal = file.read()
             file.close()
-            if yearsRangTemporal == '': yearsRangeTemporal = None # для единообразия
+            if yearsRangeTemporal == '': yearsRangeTemporal = None # для единообразия
         
             file = open(f'{rootName}{slash}stageTarget.txt')
             stageTargetTemporal = file.read()
