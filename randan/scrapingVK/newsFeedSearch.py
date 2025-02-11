@@ -11,6 +11,7 @@
 # In[ ]:
 
 
+# 0.0 В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
 # sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
 import sys
 from subprocess import check_call
@@ -39,6 +40,25 @@ while True:
                   , 'но инсталлировать его не удаётся, попробуйте инсталлировать его вручную, после чего снова запустите требуемый скрипт пакета\n')
             break
 # tqdm.pandas() # для визуализации прогресса функций, применяемых к датафреймам
+
+# 0.1 В случае работы в CoLab требуется особенный код
+attempt = 0
+colabMode = False
+import sys
+while True:
+    try:
+        from google.colab import drive
+        print('Похоже, я исполняюсь в CoLab\n')
+        colabMode = True
+        from google.colab import drive
+        drive.mount('/content/drive')
+        break
+    except ModuleNotFoundError:
+        errorDescription = sys.exc_info()
+        attempt += 1
+        if  attempt == 2:
+            print('Похоже, я исполняюсь не в CoLab\n')
+            break
 
 
 # In[ ]:
