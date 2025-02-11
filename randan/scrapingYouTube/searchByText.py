@@ -678,58 +678,67 @@ videoPaidProductPlacement : str
     for rootName in rootNameS:
         if 'Temporal' in rootName:
             file = open(f'{rootName}{slash}targetCount.txt')
-            targetCount = file.read()
+            targetCountTemporal = file.read()
             file.close()
-            targetCount = int(targetCount)
+            targetCountTemporal = int(targetCountTemporal)
         
             file = open(f'{rootName}{slash}method.txt')
-            method = file.read()
+            methodTemporal = file.read()
             file.close()
         
             file = open(f'{rootName}{slash}year.txt')
-            year = file.read()
+            yearTemporal = file.read()
             file.close()
-            year = int(year)
+            yearTemporal = int(yearTemporal)
         
             file = open(f'{rootName}{slash}contentType.txt')
-            contentType = file.read()
+            contentTypeTemporal = file.read()
             file.close()
-            if contentType == '': contentType = None # для единообразия
+            if contentTypeTemporal == '': contentTypeTemporal = None # для единообразия
     
             file = open(f'{rootName}{slash}channelIdForSearch.txt')
-            channelIdForSearch = file.read()
+            channelIdForSearchTemporal = file.read()
             file.close()
-            if channelIdForSearch == '': channelIdForSearch = None # для единообразия
+            if channelIdForSearchTemporal == '': channelIdForSearchTemporal = None # для единообразия
     
             file = open(f'{rootName}{slash}q.txt', encoding='utf-8')
-            q = file.read()
+            qTemporal = file.read()
             file.close()
-            if q == '': q = None # для единообразия
+            if qTemporal == '': qTemporal = None # для единообразия
     
             file = open(f'{rootName}{slash}yearsRange.txt')
-            yearsRange = file.read()
+            yearsRangeTemporal = file.read()
             file.close()
-            if yearsRange == '': yearsRange = None # для единообразия
+            if yearsRangTemporale == '': yearsRangeTemporal = None # для единообразия
         
             file = open(f'{rootName}{slash}stageTarget.txt')
-            stageTarget = file.read()
+            stageTargetTemporal = file.read()
             file.close()
-            stageTarget = int(stageTarget)
+            stageTargetTemporal = int(stageTargetTemporal)
         
             print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:'
-                  , '\n- было выявлено целевое число записей (totalResults)', targetCount
-                  , '\n- скрипт остановился на методе', method)
-            if year < int(momentCurrent.strftime("%Y")): print('- и на годе (при сегментировани по годам)', year)
-            print('- пользователь НЕ определил тип контента' if contentType == None else  f'- пользователь определил тип контента как "{contentType}"')
-            if contentType == 'video':
-                print('- пользователь НЕ выбрал конкретный канал для выгрузки видео' if channelIdForSearch == '' else  f'- пользователь выбрал канал с id "{channelIdForSearch}" для выгрузки видео')
-            print('- пользователь НЕ сформулировал запрос-фильтр' if q == None else  f'- пользователь сформулировал запрос-фильтр как "{q}"')
-            print('- пользователь НЕ ограничил временнОй диапазон' if yearsRange == '' else  f'- пользователь ограничил временнОй диапазон границами {yearsRange}')
+                  , '\n- было выявлено целевое число записей (totalResults)', targetCountTemporal
+                  , '\n- скрипт остановился на методе', methodTemporal)
+            if yearTemporal != None: print('- и на годе (при сегментировани по годам)', yearTemporal)
+            print('- пользователь НЕ определил тип контента' if contentTypeTemporal == None else  f'- пользователь определил тип контента как "{contentTypeTemporal}"')
+            if contentTypeTemporal == 'video':
+                print('- пользователь НЕ выбрал конкретный канал для выгрузки видео' if channelIdForSearchTemporal == '' else  f'- пользователь выбрал канал с id "{channelIdForSearchTemporal}" для выгрузки видео')
+            print('- пользователь НЕ сформулировал запрос-фильтр' if qTemporal == None else  f'- пользователь сформулировал запрос-фильтр как "{qTemporal}"')
+            print('- пользователь НЕ ограничил временнОй диапазон' if yearsRangeTemporal == '' else  f'- пользователь ограничил временнОй диапазон границами {yearsRangeTemporal}')
             print('--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter'
                   , '\n--- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите "R" и нажмите Enter'
                   , '\n--- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter')
             decision = input()
-            if len(decision) == 0:
+            if len(decision) == 0: # Temporal-значения обретают статус постоянных
+                targetCount = targetCountTemporal
+                method = methodTemporal
+                year = yearTemporal
+                contentType = contentTypeTemporal
+                channelIdForSearch = channelIdForSearchTemporal
+                q = qTemporal
+                yearsRange = yearsRangeTemporal
+                stageTarget = stageTargetTemporal
+
                 temporalNameS = os.listdir(rootName)
                 for temporalName in temporalNameS:
                     if '.xlsx' in temporalName: break
