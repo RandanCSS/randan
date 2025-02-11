@@ -50,7 +50,7 @@ import sys
 while True:
     try:
         from google.colab import drive
-        # print('Похоже, я исполняюсь в CoLab\n')
+        print('Похоже, я исполняюсь в CoLab\n')
         colabMode = True
         from google.colab import drive
         drive.mount('/content/drive')
@@ -59,7 +59,7 @@ while True:
         errorDescription = sys.exc_info()
         attempt += 1
         if  attempt == 2:
-            print('Похоже, я исполняюсь не в CoLab\n')
+            # print('Похоже, я исполняюсь не в CoLab\n')
             break
 
 
