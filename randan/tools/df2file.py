@@ -133,8 +133,15 @@ def df2fileShell(complicatedNamePart, dfIn, fileFormatChoice, method, today):
     if len(columnsToJSON) > 0:
         print('В выгрузке метода', method, 'есть столбцы, содержащие внутри своих ячеек JSON-объекты; Excel не поддерживает JSON-формат;'
               , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
+
         columnsToJSON.append('id')
+        if 'from_id' in dfIn.columns: columnsToJSON.append('from_id')
+        if 'owner_id' in dfIn.columns: columnsToJSON.append('owner_id')
+
         df2file(dfIn[columnsToJSON], f'{folder}_{method}_JSON_varS.json', folder)
         columnsToJSON.remove('id')
+        if 'from_id' in columnsToJSON: columnsToJSON.remove('from_id')
+        if 'owner_id' in columnsToJSON: columnsToJSON.remove('owner_id')
+
         df2file(dfIn.drop(columnsToJSON, axis=1), f'{folder}_{method}_Other_varS{fileFormatChoice}', folder)
     else: df2file(dfIn, f'{folder}_{method}{fileFormatChoice}', folder)
