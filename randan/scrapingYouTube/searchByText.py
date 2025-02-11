@@ -105,6 +105,12 @@ def bigSearch(
               videoType,
               videoSyndicated
               ):
+    response = {
+                'kind': 'youtube#searchListResponse',
+                'pageInfo': {'totalResults': 0, 'resultsPerPage': 0},
+                'items': []
+                } # принудительная выдача для response на случай неуспеха request.execute()
+    addItemS = pandas.DataFrame() # принудительная выдача для response на случай неуспеха request.execute()
     goC = True
     while goC:
         try:
@@ -138,22 +144,8 @@ def bigSearch(
                                             videoType=videoType,
                                             videoSyndicated=videoSyndicated
                                             )
-        # channelType="any",
-        # eventType="live",
-        # publishedAfter="1970-01-01T00:00:00Z",
-        # q="мусорная+реформа",
-        # safeSearch="moderate",
-        # type="video",
-        # videoCaption="any",
-        # videoDefinition="any",
-        # videoDimension="any",
-        # videoDuration="any",
-        # videoEmbeddable="any",
-        # videoLicense="any",
-        # videoPaidProductPlacement="any",
-        # videoSyndicated="any",
-        # videoType="any"
             response = request.execute()
+            addItemS = pandas.json_normalize(response['items'])
 
             # Для визуализации процесса
             print('      Итерация №', iteration, ', number of items', len(response['items'])
@@ -166,14 +158,9 @@ def bigSearch(
         except googleapiclient.errors.HttpError:
             errorDescription = sys.exc_info()
             goC, keyOrder, problemItemId = googleapiclientError(errorDescription, keyOrder)
-
         except IndexError:
             errorDescription = sys.exc_info()
-            response = {'kind': 'youtube#searchListResponse'
-                        , 'pageInfo': {'totalResults': 0, 'resultsPerPage': 0}
-                        , 'items': []} # принудительная выдача для response без request.execute()
             goC, goS = indexError(errorDescription)
-    addItemS = pandas.json_normalize(response['items'])
     return addItemS, goS, iteration, keyOrder, response # от response отказаться нельзя, т.к. в нём много важных ключей, даже если их знчения нули
 
 # 1.1 для обработки выдачи любого из методов, помогающая работе с ключами
@@ -284,7 +271,7 @@ def downloadComments(
             #     print('\nПохоже, квота текущего ключа закончилась; пробую перейти к следующему ключу')
             #     keyOrder += 1                    
             # else:
-            #     print('Похоже, проблема не в огрничении выгрузки комментари[ев я] и не в истечении квоты текущего ключа((')       
+            #     print('Похоже, проблема не в ограничении выгрузки комментари[ев я] и не в истечении квоты текущего ключа((')       
             #     problemItemId = id
             #     goC_0 = False
             #     break
@@ -304,12 +291,12 @@ def downloadComments(
 
 # 1.3 для обработки ошибок
 def googleapiclientError(errorDescription, keyOrder, *arg): # арки: sourceId
-    # print('\n    ', errorDescription[1])
+    print('\n    ', errorDescription[1])
+    problemItemId = None # для унификации с рядом следующим блоков условий
     if 'quotaExceeded' in str(errorDescription[1]):
         print('\nПохоже, квота текущего ключа закончилась; пробую перейти к следующему ключу')
         keyOrder += 1 # смена ключа
         # print('  keyOrder', keyOrder)
-        problemItemId = None # для унификации со следующим блоком условий
         goC = True # для повторного обращения к API с новым ключом
     else:
         if len(arg) == 1:
@@ -320,7 +307,7 @@ def googleapiclientError(errorDescription, keyOrder, *arg): # арки: sourceId
         if 'comment' in str(errorDescription[1]):
             print('  Ограничение выгрузки комментари[ев я] для id', sourceId)
         else:
-            print('  Похоже, проблема не в огрничении выгрузки комментари[ев я] и не в истечении квоты текущего ключа((')
+            print('  Похоже, проблема не в ограничении выгрузки комментари[ев я] и не в истечении квоты текущего ключа((')
         goC = False # нет смысла повторного обращения к API ни с этим id, ни пока не ясна суть ошибки
     return goC, keyOrder, problemItemId
 
@@ -754,7 +741,9 @@ videoPaidProductPlacement : str
                     yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
 # Данные, сохранённые при прошлом запуске скрипта, загружены; их метаданные (q, contentType, yearsRange, stageTarget) будут использоваться при исполнении скрипта
                 break
-            elif decision == 'R': shutil.rmtree(rootName, ignore_errors=True)
+            elif decision.upper() == 'R':
+                shutil.rmtree(rootName, ignore_errors=True)
+                print('')
 
 # 2.0.3 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
     if temporalName == None: # если itemsTemporal, в т.ч. пустой, не существует
@@ -790,18 +779,21 @@ videoPaidProductPlacement : str
                     break
                 elif contentType.lower() == 'c':
                     contentType = 'channel'
+                    print('')
                     break
                 elif contentType.lower() == 'p':
                     contentType = 'playlist'
                     break
+                    print('')
                 elif contentType.lower() == 'v':
                     contentType = 'video'
+                    print('')
                     break
                 else:
                     print('--- Вы ввели что-то не то; попробуйте, пожалуйста, ещё раз..')
     
         if (channelIdForSearch == None) & (contentType == 'video'): # если пользователь не подал аргумент channelIdForSearch в рамках experiencedMode
-            print('\n--- Вы выбрали тип контента video'
+            print('--- Вы выбрали тип контента video'
                   , '\n--- Если НЕ предполагается поиск видео в пределах конкретного канала, нажмите Enter'
                   , '\n--- Если предполагается такой поиск, введите id канала, после чего нажмите Enter.'
                   , 'Этот id можете найти либо в URL-адресе интересующего канала,'
@@ -833,10 +825,10 @@ videoPaidProductPlacement : str
                     channelIdForSearch = multispaceCleaner(channelIdForSearch)
                     while channelIdForSearch[-1] == ',': channelIdForSearch = channelIdForSearch[:-1] # избавиться от запятых в конце текста
                     # channelIdForSearch = channelIdForSearch.split(', ')
-                    print('Количество id каналов:', len(channelIdForSearch), '\n')
-                    if len(channelIdForSearch) > 1:
-                        channelIdForSearch = channelIdForSearch[0]
-                        print('В качестве аргумента метода search будет использован ТОЛЬКО первый из id\n')
+                    # print('Количество id каналов:', len(channelIdForSearch), '\n')
+                    # if len(channelIdForSearch) > 1:
+                        # channelIdForSearch = channelIdForSearch[0]
+                        # print('В качестве аргумента метода search будет использован ТОЛЬКО первый из id\n')
                     break
         if q == None: # если пользователь не подал этот аргумент в рамках experiencedMode
             print('--- Если НЕ предполагается поиск контента по текстовому запросу-фильтру, нажмите Enter'
@@ -848,10 +840,10 @@ videoPaidProductPlacement : str
                 , 'поэтому, вероятно, следует ввести тот же запрос-фильтр, что и при формировании указанного Вами файла')
             q = input()
             if q == '': q = None # для единообразия
+            else: print('')
 
     # Ограничения временнОго диапазона
         if (publishedAfter == None) & (publishedBefore == None) & (yearsRange == None): # если пользователь не подал эти аргументы в рамках experiencedMode
-            if q != None: print('') # если пользователь не подал этот аргумент
             print('Алгоритм API Youtube для ограничения временнОго диапазона выдаваемого контента работает со странностями.'
                   , 'Поэтому если требуется конкретный временнОй диапазон, то лучше использовать его НЕ на текущем этапе выгрузки данных,'
                   , 'а на следующем этапе -- предобработки датафрейма с выгруженными данными')
@@ -915,7 +907,8 @@ videoPaidProductPlacement : str
     if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
 
     if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
-        print('\nЗаход на первую страницу выдачи')
+        print('Заход на первую страницу выдачи')
+        # print('publishedAfter', publishedAfter) # для отладки
         addItemS, goS, iteration, keyOrder, response = bigSearch(
                                                                  API_keyS
                                                                  , channelIdForSearch
@@ -1877,7 +1870,7 @@ videoPaidProductPlacement : str
                                             yearsRange
                                             )
             print('Ответов выгружено', len(replieS)
-                  , '; проблемные родительские (topLevel) комментарии:', problemCommentIdS if len(problemCommentIdS) > 0  else 'отсутствуют')
+                  , '; проблемные родительские (topLevel) комментарии:', problemCommentIdS if len(problemCommentIdS) > 0  else 'отсутствуют\n')
         
             # Для совместимости датафреймов добавить столбцы`snippet.totalReplyCount` и `Недостача_ответов`
             replieS.loc[:, 'snippet.totalReplyCount'] = 0
@@ -1909,7 +1902,7 @@ videoPaidProductPlacement : str
         channelS = pandas.DataFrame()
         iteration = 0 # номер итерации применения текущего метода
         method = 'channels'
-        print('\nВ скрипте используются следующие аргументы метода', method, 'API YouTube:'
+        print('В скрипте используются следующие аргументы метода', method, 'API YouTube:'
               , 'part=["snippet", "brandingSettings", "contentDetails", "id", "localizations", "statistics", "status", "topicDetails"], id, maxResults .'
               , 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
               , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
