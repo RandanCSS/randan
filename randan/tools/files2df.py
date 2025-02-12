@@ -18,7 +18,7 @@ while True:
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '').replace('_', '')
-        if '.' in module: module = module.split('.')[1] 
+        if '.' in module: module = module.split('.')[1]
         # if 'google_drive_downloader' in module: module = 'googledrivedownloader'
         print('Пакет', module
               , 'НЕ прединсталлируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталлирован сейчас\n'
@@ -82,29 +82,29 @@ def excel2df(*arg):
     except FileNotFoundError:
         errorDescription = sys.exc_info()
         error = str(errorDescription[1]).replace("No module named '", '').replace("'", '').replace('_', '')
-        print('error:', error)     
-    
+        print('error:', error)
+
     if error == None:
         display(df.head())
         print('Число столбцов:', df.shape[1], ', число строк', df.shape[0], '\n')
     else:
         df = None
-    return df, error, fileName, folder, slash    
+    return df, error, fileName, folder, slash
 
 def files2df(*arg):
     """
     Функция для оформления в датафрейм таблицы из файла формата Excel и присоединения к ней связанных ключом (id) таблиц из файлов форматов CSV, Excel и JSON, расположенных в той же директории
-    
+
     Parameters
     ----------
 
-    """    
+    """
     # print(*arg)
     print('Эта функция предназначена для оформления в датафрейм таблицы из файла формата Excel'
           , 'и присоединения к ней связанных ключом (id) таблиц из файлов форматов CSV, Excel и JSON,'
           , 'расположенных в той же директории')
     df, error, fileName, folder, slash = excel2df(*arg)
-    
+
     # print('fileName', fileName) # для отладки
     # print('folder', folder) # для отладки
     if len(folder) == 0: # значит, из excel2df полный путь передан в fileName
@@ -113,12 +113,12 @@ def files2df(*arg):
 
     fileNameS = os.listdir(folder)
     print(fileNameS)
-    fileNameS.remove(fileName)      
-    
+    fileNameS.remove(fileName)
+
     formatS = ['XLSX', 'CSV', 'JSON']
     for frmt in formatS:
         print('\n--- Если требуется найти ещё файл формата', frmt, 'для присоединения, то нажмите Enter'
-              , '\n--- Если НЕ требуется, то введите любой символ и нажмите Enter')    
+              , '\n--- Если НЕ требуется, то введите любой символ и нажмите Enter')
         if len(input()) == 0:
             fileNamesForImport = []
             for fileName in fileNameS:
@@ -146,7 +146,7 @@ def files2df(*arg):
                 except FileNotFoundError:
                     errorDescription = sys.exc_info()
                     error = str(errorDescription[1])
-                    print('error:', error) 
+                    print('error:', error)
             else:
                 print('Файлы форматов', formatS, 'не найдены в директории\n')
     if error == None:
@@ -164,8 +164,8 @@ def files2df(*arg):
 #     except FileNotFoundError:
 #         errorDescription = sys.exc_info()
 #         error = str(errorDescription[1]).replace("No module named '", '').replace("'", '').replace('_', '')
-#         print('error:', error) 
-        
+#         print('error:', error)
+
 #     if error == None:
 #         display(df.head())
 #         print('Число столбцов:', df.shape[1], ', число строк', df.shape[0], '\n')
