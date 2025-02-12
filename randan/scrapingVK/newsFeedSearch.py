@@ -72,55 +72,41 @@ while True:
 
 # 1.0 для метода search из API ВК, помогающая работе с ключами
 def bigSearch(
-              API_keyS
-              , goS
-              , iteration
-              , keyOrder
-              , pause
-              , q
-              , latitude
-              , longitude
-              , fields
-              , start_from
-              , start_time
-              , end_time
+              API_keyS,
+              goS,
+              iteration,
+              keyOrder,
+              pause,
+              q,
+              latitude,
+              longitude,
+              fields,
+              start_from,
+              start_time,
+              end_time
               ):
     # print('    start_from', start_from) # для отладки
     dfAdd = pandas.DataFrame()
+    params = {
+              'access_token': API_keyS[keyOrder], # обязательный параметр,
+              'v': '5.199', # обязательный параметр,
+              'q': q, # опциональный параметр,
+              'count': 100, # опциональный параметр,
+              'start_time': start_time, # опциональный параметр,
+              'end_time': end_time, # опциональный параметр,
+              'latitude': latitude, # опциональный параметр,
+              'longitude': longitude, # опциональный параметр,
+              'extended': 1, # опциональный параметр,
+              'fields': fields, # опциональный параметр,
+              'start_from': start_from # опциональный параметр
+              }
     while True:
-        params = {
-            'access_token': API_keyS[keyOrder] # обязательный параметр
-            , 'v': '5.199' # обязательный параметр
-            , 'q': q # опциональный параметр
-            , 'count': 100 # опциональный параметр
-            , 'start_time': start_time # опциональный параметр
-            , 'end_time': end_time # опциональный параметр
-            , 'latitude': latitude # опциональный параметр
-            , 'longitude': longitude # опциональный параметр
-            , 'extended': 1 # опциональный параметр
-            , 'fields': fields # опциональный параметр
-            , 'start_from': start_from # опциональный параметр
-            }
-        # if params == None:
-        #     params = {
-        #         'access_token': API_keyS[keyOrder] # обязательный параметр
-        #         , 'v': '5.199' # обязательный параметр
-        #         , 'q': q # опциональный параметр
-        #         , 'count': 100 # опциональный параметр
-        #         , 'start_time': start_time # опциональный параметр
-        #         , 'end_time': end_time # опциональный параметр
-        #         , 'latitude': latitude # опциональный параметр
-        #         , 'longitude': longitude # опциональный параметр
-        #         , 'extended': 1 # опциональный параметр
-        #         , 'fields': fields # опциональный параметр
-        #         , 'start_from': start_from # опциональный параметр
-        #         }
         response = requests.get('https://api.vk.ru/method/newsfeed.search', params=params)
         response = response.json() # отобразить выдачу метода get в виде JSON
         # print('response', response) # для отладки
         if 'response' in response.keys():
             response = response['response']
-            # print('''    response.keys() внутри bigSearch''', response.keys()) # для отладки
+            # print('    response.keys() внутри bigSearch', response.keys()) # для отладки
             dfAdd = pandas.json_normalize(response)
             break
         elif 'error' in response.keys():
@@ -177,8 +163,8 @@ def dfsProcessing(
                   complicatedNamePart,
                   fileFormatChoice,
                   dfAdd, 
-				  dfFinal, 
-				  dfIn,
+		  dfFinal, 
+		  dfIn,
                   goS,
                   method,
                   q,
@@ -190,12 +176,7 @@ def dfsProcessing(
                   yearsRange
                   ):
     response['items']
-    
-    
-    
-    
-    
-    
+
     df = pandas.concat([dfIn, dfAdd])
     columnsForCheck = []
     if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
@@ -758,7 +739,7 @@ def newsFeedSearch(
                                           momentCurrent.strftime("%Y%m%d"),
                                           year,
                                           yearsRange
-                                         )
+                                          )
                     # display(itemS.head())
                     # print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
 
