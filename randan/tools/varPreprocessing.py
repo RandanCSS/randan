@@ -18,7 +18,7 @@ while True:
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
-        if '.' in module: module = module.split('.')[1] 
+        if '.' in module: module = module.split('.')[1]
         print('Пакет', module,
               'НЕ прединсталлируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталлирован сейчас\n')
         check_call([sys.executable, "-m", "pip", "install", module])
@@ -36,7 +36,7 @@ def varHist(dfIn, var):
     plt.xlabel(f'{var}')
     plt.xticks(dfIn[var].unique(), minor=True)
     plt.ylabel('Frequency')
-    plt.show();    
+    plt.show();
 
 def valuesDropper(dfIn, var):
     df = dfIn.copy()
@@ -70,7 +70,7 @@ def valuesDropper(dfIn, var):
                 # Исключить из рассмотрения диапазон
                 valueS_ForRemoving.sort()
                 df = df[(df[var] < float(valueS_ForRemoving[0])) | (df[var] > float(valueS_ForRemoving[-1]))]
-    
+
         print('\nДля дальнейшего рассмотрения остались следующие значения игрека и их частоты:')
         varHist(df, var)
     return df
