@@ -176,13 +176,13 @@ def dfsProcessing(
                   q,
                   rootName,
                   slash,
-                  stage,
+                  stageTarget,
                   targetCount,
                   momentCurrent,
                   year,
                   yearsRange
                   ):
-    df = pandas.concat([dfIn, dfAdd])        
+    df = pandas.concat([dfIn, dfAdd])
     columnsForCheck = []
     for column in df.columns: # выдача многих методов содержит столбец id, он оптимален для проверки дублирующихся строк
         if 'id' == column:
@@ -192,7 +192,7 @@ def dfsProcessing(
             if 'id.' in column:
                 columnsForCheck.append(column)
     # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck)
-    df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True) # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые 
+    df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True) # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
 
     if goS == False:
         print('Поскольку исполнение скрипта натолкнулось на непреодолимую ошибку,'
@@ -202,56 +202,51 @@ def dfsProcessing(
                 print(f'Директория "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal" создана')
         # else:
             # print(f'Директория "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal" существует')
-        
+
         file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}channelIdForSearch.txt', 'w+') # открыть на запись
         file.write(channelIdForSearch if channelIdForSearch != None else '')
         file.close()
-        
+
         file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}contentType.txt', 'w+') # открыть на запись
         file.write(contentType if contentType != None else '')
         file.close()
-        
+
         file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}method.txt', 'w+') # открыть на запись
         file.write(method)
         file.close()
-        
+
         file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}q.txt', 'w+') # открыть на запись
         file.write(q if q != None else '')
         file.close()
-        
+
         file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}stageTarget.txt', 'w+')
         file.write(str(stageTarget)) # stageTarget принимает значения [0; 3]
         file.close()
-        
+
         file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}targetCount.txt', 'w+')
         file.write(str(targetCount))
         file.close()
-        
+
         file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}year.txt', 'w+')
         file.write(str(year)) # год, на котором остановилось исполнение скрипта
         file.close()
-        
+
         file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}yearsRange.txt', 'w+')
         file.write(yearsRange if yearsRange != None else '') # пользовательский временнОй диапазон
         file.close()
-        
+
         df2file.df2fileShell(
                              f'{complicatedNamePart}_Temporal',
-                             itemS,
+                             df,
                              fileFormatChoice,
                              method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
                              momentCurrent.strftime("%Y%m%d")
                              )
-        
-        if os.path.exists(rootName):
-            print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
-                  , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
-            shutil.rmtree(rootName, ignore_errors=True)
-
-        print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit"'
-              , '\nТак и должно быть'
+        warnings.filterwarnings("ignore")
+        print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
               , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
         sys.exit()
+
     return df
 
 # 1.2 для выгрузки комментариев
@@ -296,7 +291,7 @@ def downloadComments(
             pageToken = response['nextPageToken']
             # print('nextPageToken', pageToken) # для отладки
         else: break
-    
+
     return commentS, goS, keyOrder, problemItemId
 
 # 1.3 для обработки ошибок
@@ -317,7 +312,7 @@ def errorProcessing(errorDescription, keyOrder, sourceId):
         # print('  keyOrder ПОСЛЕ смены ключа', keyOrder) # для отладки
     elif 'index out of range' in str(errorDescription[1]):
         print('!!! Похоже, ключи закончились. Что делать? (а) Подождите сутки для восстановления ключей или',
-              ' (б) подготовьте новый ключ, найдите и удадите файл credentialsYouTube.txt -- и запустите скрипт с начала')
+              '(б) подготовьте новый ключ, найдите и удадите файл credentialsYouTube.txt -- и запустите скрипт с начала')
         goS = False # нет смысла продолжать исполнение скрипта
         goC = False # и, следовательно, нет смысла в новых итерациях цикла (вовне этой функции)
     elif ('channel' in str(errorDescription[1]).lower()) | ('comment' in str(errorDescription[1]).lower()) | ('playlist' in str(errorDescription[1]).lower()) | ('video' in str(errorDescription[1]).lower()):
@@ -340,12 +335,12 @@ def iterationVisualization(idS, iteration, portion, response):
         if (portion > 1) & (iterationUpperBound % portion == 0)\
         else str(round(len(idS) / portion, 0) + 1)
 
-    # И `.0` лишние                      
+    # И `.0` лишние
     if '.' in iterationUpperBound: iterationUpperBound = iterationUpperBound.split('.')[0]
 
     print('  Порция №', iteration + 1, 'из', iterationUpperBound, end='\r')
     if portion > 1: print('   Сколько в порции наблюдений?', len(response['items']), end='\r')
-        
+
 # 1.5 для порционной выгрузки, когда метод предполагает подачу ему id порциями
 def portionProcessing(API_keyS, complicatedNamePart, fileFormatChoice, goS, idS, keyOrder, method, momentCurrent, slash, stage, stageTarget, targetCount, year, yearsRange, q):
     # print('method', method) # для отладки
@@ -399,18 +394,18 @@ def portionProcessing(API_keyS, complicatedNamePart, fileFormatChoice, goS, idS,
                                                       ]
                                                  , id=idS[bound:bound + 50]
                                                  , maxResults=50
-                                                 ).execute()        
+                                                 ).execute()
             # Для визуализации процесса через итерации
             iterationUpperBound = len(idS)
-        
+
             # Дробная часть после деления числа idS должна увеличить iterationUpperBound на единицу
             iterationUpperBound = str(round(len(idS) / 50, 0)) if iterationUpperBound % 50 == 0 else str(round(len(idS) / 50, 0) + 1)
-        
-            # И `.0` лишние                      
+
+            # И `.0` лишние
             if '.' in iterationUpperBound: iterationUpperBound = iterationUpperBound.split('.')[0]
-        
+
             print('  Порция №', iteration + 1, 'из', iterationUpperBound, '; сколько в порции наблюдений?', len(response['items']), end='\r')
-        
+
             bound += 50
             iteration += 1
 
@@ -427,7 +422,7 @@ def portionProcessing(API_keyS, complicatedNamePart, fileFormatChoice, goS, idS,
                                     q=q,
                                     rootName=rootName,
                                     slash=slash,
-                                    stage=stage,
+                                    stageTarget=stage,
                                     targetCount=targetCount,
                                     momentCurrent=momentCurrent,
                                     year=year,
@@ -492,7 +487,7 @@ def searchByText(
     """
     Функция для выгрузки характеристик контента YouTube методами его API: search, playlists & playlistItems, videos, commentThreads & comments, channels -- ключевым из которых выступает search
     Причём количество объектов выгрузки максимизируется путём её пересортировки аргументом order и сегментирования по годам
-    
+
     Parameters
     ----------
     Аргументы этой функции аналогичны аргументам метода https://developers.google.com/youtube/v3/docs/search/list
@@ -502,7 +497,7 @@ def searchByText(
 
               contentType : str
                   -- это аналог type
-  
+
            publishedAfter : str, readable by datetime
           publishedBefore : str, readable by datetime
                         q : str
@@ -572,7 +567,7 @@ videoPaidProductPlacement : str
     temporalName = None
     videoS = None # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     yearsRange = None
-    
+
     momentCurrent = datetime.now() # запрос текущего момента
     print('\nТекущий момент:', momentCurrent.strftime("%Y%m%d_%H%M"), '-- он будет использована для формирования имён создаваемых директорий и файлов')
     year = int(momentCurrent.strftime("%Y")) # в случае отсутствия пользовательского временнОго диапазона
@@ -598,11 +593,11 @@ videoPaidProductPlacement : str
                 API_keyS = input()
                 if len(API_keyS) != 0:
                     print('-- далее буд[е у]т использован[ы] эт[от и] ключ[и]')
-                
+
                     from randan.tools.textPreprocessing import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
                     API_keyS = multispaceCleaner(API_keyS)
                     while API_keyS[-1] == ',': API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста
-                
+
                     file = open("credentialsYouTube.txt", "w+") # открыть на запись
                     file.write(API_keyS)
                     file.close()
@@ -625,41 +620,41 @@ videoPaidProductPlacement : str
             targetCountTemporal = file.read()
             file.close()
             targetCountTemporal = int(targetCountTemporal)
-        
+
             file = open(f'{rootName}{slash}method.txt')
             methodTemporal = file.read()
             file.close()
-        
+
             file = open(f'{rootName}{slash}year.txt')
             yearTemporal = file.read()
             file.close()
             yearTemporal = int(yearTemporal)
-        
+
             file = open(f'{rootName}{slash}contentType.txt')
             contentTypeTemporal = file.read()
             file.close()
             if contentTypeTemporal == '': contentTypeTemporal = None # для единообразия
-    
+
             file = open(f'{rootName}{slash}channelIdForSearch.txt')
             channelIdForSearchTemporal = file.read()
             file.close()
             if channelIdForSearchTemporal == '': channelIdForSearchTemporal = None # для единообразия
-    
+
             file = open(f'{rootName}{slash}q.txt', encoding='utf-8')
             qTemporal = file.read()
             file.close()
             if qTemporal == '': qTemporal = None # для единообразия
-    
+
             file = open(f'{rootName}{slash}yearsRange.txt')
             yearsRangeTemporal = file.read()
             file.close()
             if yearsRangeTemporal == '': yearsRangeTemporal = None # для единообразия
-        
+
             file = open(f'{rootName}{slash}stageTarget.txt')
             stageTargetTemporal = file.read()
             file.close()
             stageTargetTemporal = int(stageTargetTemporal)
-        
+
             print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:'
                   , '\n- было выявлено целевое число записей (totalResults)', targetCountTemporal
                   , '\n- скрипт остановился на методе', methodTemporal)
@@ -748,7 +743,7 @@ videoPaidProductPlacement : str
                     break
                 else:
                     print('--- Вы ввели что-то не то; попробуйте, пожалуйста, ещё раз..')
-    
+
         if (channelIdForSearch == None) & (contentType == 'video'): # если пользователь не подал аргумент channelIdForSearch в рамках experiencedMode
             print('--- Вы выбрали тип контента video'
                   , '\n--- Если НЕ предполагается поиск видео в пределах конкретного канала, нажмите Enter'
@@ -828,15 +823,15 @@ videoPaidProductPlacement : str
         if publishedAfter != None:
             yearMinByUser = int(datetime.strptime(publishedAfter,"%Y-%m-%dT%H:%M:%SZ").strftime('%Y')) # из experiencedMode
             # print('elif start_time != None:', yearMinByUser) # для отладки
-        
+
         if publishedBefore != None:
             yearMaxByUser = int(datetime.strptime(publishedBefore,"%Y-%m-%dT%H:%M:%SZ").strftime('%Y')) # из experiencedMode
             # print('elif end_time != None:', yearMaxByUser) # для отладки
             year = yearMaxByUser
-        
+
         if (yearMinByUser != None) & (yearMaxByUser == None): yearMaxByUser = int(momentCurrent.strftime("%Y")) # в случае отсутствия пользовательской верхней временнОй границы при наличии нижней
         elif (yearMinByUser == None) & (yearMaxByUser != None): yearMaxByUser = 1970 # в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
-            
+
         # print('yearMinByUser', yearMinByUser) # для отладки
         # print('yearMaxByUser', yearMaxByUser) # для отладки
 
@@ -847,7 +842,7 @@ videoPaidProductPlacement : str
     complicatedNamePart = '_YT'
     complicatedNamePart += "" if contentType == None else "_" + contentType
     complicatedNamePart += "" if channelIdForSearch == None else "_channelId_" + channelIdForSearch
-    if q != None: complicatedNamePart += "_" + q if len(q) < 50 else "_" + q[:50]            
+    if q != None: complicatedNamePart += "_" + q if len(q) < 50 else "_" + q[:50]
     complicatedNamePart += "" if ((yearMinByUser == None) & (yearMaxByUser == None)) else "_" + str(yearMinByUser) + '-' + str(yearMaxByUser)
 # print('complicatedNamePart', complicatedNamePart)
 
@@ -913,14 +908,14 @@ videoPaidProductPlacement : str
                               q=q,
                               rootName=rootName,
                               slash=slash,
-                              stage=stage,
+                              stageTarget=stage,
                               targetCount=targetCount,
                               momentCurrent=momentCurrent,
                               year=year,
                               yearsRange=yearsRange
                               )
         # display('itemS', itemS) # для отладки
-    
+
         print('  Проход по всем следующим страницам с выдачей          ')
         while 'nextPageToken' in response.keys():
             pageToken = response['nextPageToken']
@@ -968,7 +963,7 @@ videoPaidProductPlacement : str
                                   q=q,
                                   rootName=rootName,
                                   slash=slash,
-                                  stage=stage,
+                                  stageTarget=stage,
                                   targetCount=targetCount,
                                   momentCurrent=momentCurrent,
                                   year=year,
@@ -1031,19 +1026,19 @@ videoPaidProductPlacement : str
                                       q=q,
                                       rootName=rootName,
                                       slash=slash,
-                                      stage=stage,
+                                      stageTarget=stage,
                                       targetCount=targetCount,
                                       momentCurrent=momentCurrent,
                                       year=year,
                                       yearsRange=yearsRange
                                       )
-    
+
                 print('  Проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order, '          ')
                 while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0):
                 # -- второе условие -- для остановки алгоритма, если все искомые объекты найдены
                     # БЕЗ какой-то из следующих страниц (в т.ч. вообще БЕЗ них)
                     # третье условие -- для остановки алгоритма, если предыдущая страница выдачи содержит 0 объектов
-    
+
                     pageToken = response['nextPageToken']
                     # print('pageToken', pageToken)
                     addItemS, goS, iteration, keyOrder, response = bigSearch(
@@ -1090,7 +1085,7 @@ videoPaidProductPlacement : str
                                           q=q,
                                           rootName=rootName,
                                           slash=slash,
-                                          stage=stage,
+                                          stageTarget=stage,
                                           targetCount=targetCount,
                                           momentCurrent=momentCurrent,
                                           year=year,
@@ -1103,7 +1098,7 @@ videoPaidProductPlacement : str
         print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{rootName}"')
 
 # 2.1.2 Этап сегментирования по годам (stage = 2)
-    stage = 2 
+    stage = 2
     if stage >= stageTarget: # eсли НЕТ файла с id и нет временного файла stage.txt с указанием пропустить этап
         if len(itemS) < targetCount:
         # для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
@@ -1168,13 +1163,13 @@ videoPaidProductPlacement : str
                                           q=q,
                                           rootName=rootName,
                                           slash=slash,
-                                          stage=stage,
+                                          stageTarget=stage,
                                           targetCount=targetCount,
                                           momentCurrent=momentCurrent,
                                           year=year,
                                           yearsRange=yearsRange
                                           )
-    
+
                     print(f'    Проход по всем следующим страницам с выдачей для года {year} БЕЗ аргумента order')
                     while 'nextPageToken' in response.keys():
                         pageToken = response['nextPageToken']
@@ -1222,15 +1217,15 @@ videoPaidProductPlacement : str
                                               q=q,
                                               rootName=rootName,
                                               slash=slash,
-                                              stage=stage,
+                                              stageTarget=stage,
                                               targetCount=targetCount,
                                               momentCurrent=momentCurrent,
                                               year=year,
                                               yearsRange=yearsRange
                                               )
-    
+
                     print(f'    Искомых объектов в году {year}: {targetCount},'
-                          , 'а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))      
+                          , 'а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
 # ********** из фрагмента 2.1.1
                     if len(itemS) < targetCount:
                         print(f'  Для года {year} проход по значениям аргумента order,'
@@ -1280,13 +1275,13 @@ videoPaidProductPlacement : str
                                                   q=q,
                                                   rootName=rootName,
                                                   slash=slash,
-                                                  stage=stage,
+                                                  stageTarget=stage,
                                                   targetCount=targetCount,
                                                   momentCurrent=momentCurrent,
                                                   year=year,
                                                   yearsRange=yearsRange
                                                   )
-    
+
                             print(f'    Для года {year} проход по всем следующим страницам с выдачей'
                                   , f'с тем же значением аргумента order:', order)
                             while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0):
@@ -1335,7 +1330,7 @@ videoPaidProductPlacement : str
                                                       q=q,
                                                       rootName=rootName,
                                                       slash=slash,
-                                                      stage=stage,
+                                                      stageTarget=stage,
                                                       targetCount=targetCount,
                                                       momentCurrent=momentCurrent,
                                                       year=year,
@@ -1348,7 +1343,7 @@ videoPaidProductPlacement : str
                     else:
                         print('  Все искомые объекты в году', year, 'найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
                     year -= 1
-                    if yearMinByUser != None: # если пользователь ограничил временнОй диапазон            
+                    if yearMinByUser != None: # если пользователь ограничил временнОй диапазон
                         if (year) <= yearMinByUser:
                             goC = False
                             print(f'\nЗавершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser} (с точностью до года)')
@@ -1368,7 +1363,7 @@ videoPaidProductPlacement : str
             print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
                   , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
             shutil.rmtree(rootName, ignore_errors=True)
-    
+
         warnings.filterwarnings("ignore")
         print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
               , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
@@ -1386,7 +1381,7 @@ videoPaidProductPlacement : str
             playlistIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in playlistIdS.columns else playlistIdS['id'].to_list()
         # playlistIdS = playlistIdS[:5] # для отладки
         # print(playlistIdS)
-    
+
         method = 'playlists'
         print('В скрипте используются следующие аргументы метода', method, 'API YouTube:'
               , 'part=["snippet", "contentDetails", "localizations", "status"], id, maxResults .'
@@ -1431,7 +1426,7 @@ videoPaidProductPlacement : str
                                                       q=q,
                                                       rootName=rootName,
                                                       slash=slash,
-                                                      stage=stage,
+                                                      stageTarget=stage,
                                                       targetCount=targetCount,
                                                       momentCurrent=momentCurrent,
                                                       year=year,
@@ -1465,7 +1460,7 @@ videoPaidProductPlacement : str
               , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
               , 'https://developers.google.com/youtube/v3/docs/videos')
         if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-    
+
         videoIdS = itemS[itemS['id.kind'] == f'youtube#{snippetContentType}']
         videoIdS = videoIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in videoIdS.columns else videoIdS['id'].to_list()
         # videoIdS = videoIdS[:5] # для отладки
@@ -1478,18 +1473,18 @@ videoPaidProductPlacement : str
                       , 'просто нажмите Enter (это увеличит совокупность изучаемых видео)'
                       , '\n--- Если НЕ хотите дополнить спискок, нажмите пробел и затем Enter')
                 if len(input()) == 0:
-                
+
                     # Список списков, каждый из которых соответствует одному плейлисту
                     playlistVideoId_list = playlistS['snippet.resourceId.videoId'].str.split(', ').to_list()
                     # print('playlistVideoId_list:', playlistVideoId_list) # для отладки
-                
+
                     playlistVideoIdS = []
                     for playlistVideoIdSnippet in playlistVideoId_list:
                         playlistVideoIdS.extend(playlistVideoIdSnippet)
-                
+
                     videoIdS.extend(playlistVideoIdS)
                     videoIdS = list(dict.fromkeys(videoIdS))
-    
+
         print('Проход порциями по 50 видео')
         videoS = portionProcessing(API_keyS, complicatedNamePart, fileFormatChoice, goS, videoIdS, keyOrder, method, momentCurrent, slash, stage, stageTarget, targetCount, year, yearsRange, q=None)
 
@@ -1505,17 +1500,17 @@ videoPaidProductPlacement : str
                                                                     errorDescription=sys.exc_info(),
                                                                     keyOrder=keyOrder,
                                                                     sourceId=None
-                                                                    )    
+                                                                    )
         # Оформить как датафрейм id категорий из списка uniqueCategorieS и их расшифровки
         categoryNameS = pandas.json_normalize(response['items'])
-    
+
         # Заменить индексы датафрейма с расшифровками значениями столбца id
         categoryNameS.index = categoryNameS['id'].to_list()
-    
+
         # Добавить расшифровки категорий в новый столбец categoryName датафрейма с видео
         for row in categoryNameS.index:
             videoS.loc[videoS['snippet.categoryId'] == row, 'categoryName'] = categoryNameS['snippet.title'][row]
-    
+
         df2file.df2fileShell(complicatedNamePart, videoS, fileFormatChoice, method, momentCurrent.strftime("%Y%m%d_%H%M"))
         commentS = pandas.DataFrame() # не в следующем ченке, чтобы иметь возможность перезапускать его, не затирая промежуточный результат выгрузки
 
@@ -1526,10 +1521,10 @@ videoPaidProductPlacement : str
               , 'просто нажмите Enter, но учтите, что поиск может занять минуты и даже часы'
               , '\n--- Если НЕ хотите выгрузить комментарии, нажмите пробел и затем Enter')
         if len(input()) == 0:
-        
+
 # ********** commentS
             # commentS = pandas.DataFrame() # фрагмент вынесен в предыдущий ченк, чтобы иметь возможность перезапускать этот чанк,
-            # не затирая промежуточный результат выгрузки    
+            # не затирая промежуточный результат выгрузки
             maxResults = 100
             method = 'commentThreads'
             part = 'id, replies, snippet'
@@ -1540,13 +1535,13 @@ videoPaidProductPlacement : str
                   , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
                   , 'https://developers.google.com/youtube/v3/docs/commentThreads')
             if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-        
+
             # Переназначить объект videoIdS для целей текущего чанка
             videoIdS = videoS[videoS['statistics.commentCount'].notna()]
             videoIdS = videoIdS[videoIdS['statistics.commentCount'].astype(int) > 0]
             videoIdS = videoIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in videoIdS.columns else videoIdS['id'].to_list()
             print('Число видео с комментариями:', len(videoIdS))
-        
+
             print('\nВыгрузка родительских (topLevel) комментариев')
             commentS = pandas.DataFrame()
             for videoId in videoIdS:
@@ -1576,7 +1571,7 @@ videoPaidProductPlacement : str
                                          q=q,
                                          rootName=rootName,
                                          slash=slash,
-                                         stage=stage,
+                                         stageTarget=stage,
                                          targetCount=targetCount,
                                          momentCurrent=momentCurrent,
                                          year=year,
@@ -1591,24 +1586,24 @@ videoPaidProductPlacement : str
             replieS = pandas.DataFrame()
             for row in tqdm(commentS[commentS['snippet.totalReplyCount'] > 0].index):
                 addReplieS = pandas.json_normalize(commentS['replies.comments'][row])
-        
+
                 # Записать разницу между ожданиями и реальностью в новый столбец `Недостача_ответов`
                 commentS.loc[row, 'Недостача_ответов'] = commentS['snippet.totalReplyCount'][row] - len(addReplieS)
-            
+
                 replieS = pandas.concat([replieS, addReplieS]).reset_index(drop=True)
-        
+
             replieS.loc[:, 'snippet.totalReplyCount'] = 0
             replieS.loc[:, 'Недостача_ответов'] = 0
             replieS = prefixDropper(replieS)
             df2file.df2fileShell(complicatedNamePart, replieS, fileFormatChoice, 'replieS', momentCurrent.strftime("%Y%m%d_%H%M"))
-        
+
             commentReplieS = commentS.copy() # копия датафрейма c родительскими (topLevel) комментариями -- основа будущего общего датафрейма
             # Найти столбцы, совпадающие для датафреймов c родительскими (topLevel) комментариями и с комментариями-ответами
             mutualColumns = []
             for column in commentReplieS.columns:
                 if column in replieS.columns:
                     mutualColumns.append(column)
-    
+
 # ********** commentReplieS
             # Оставить только совпадающие столбцы датафреймов с родительскими (topLevel) комментариями и с комментариями-ответами
             commentReplieS = commentReplieS[mutualColumns]
@@ -1625,7 +1620,7 @@ videoPaidProductPlacement : str
                                            q=q,
                                            rootName=rootName,
                                            slash=slash,
-                                           stage=stage,
+                                           stageTarget=stage,
                                            targetCount=targetCount,
                                            momentCurrent=momentCurrent,
                                            year=year,
@@ -1669,7 +1664,7 @@ videoPaidProductPlacement : str
                                         q=q,
                                         rootName=rootName,
                                         slash=slash,
-                                        stage=stage,
+                                        stageTarget=stage,
                                         targetCount=targetCount,
                                         momentCurrent=momentCurrent,
                                         year=year,
@@ -1677,14 +1672,14 @@ videoPaidProductPlacement : str
                                         )
             print('Ответов выгружено', len(replieS)
                   , '; проблемные родительские (topLevel) комментарии:', problemCommentIdS if len(problemCommentIdS) > 0  else 'отсутствуют\n')
-        
+
             # Для совместимости датафреймов добавить столбцы`snippet.totalReplyCount` и `Недостача_ответов`
             replieS.loc[:, 'snippet.totalReplyCount'] = 0
             replieS.loc[:, 'Недостача_ответов'] = 0
-        
+
             # Удалить столбец `snippet.parentId`, т.к. и из столбца `id` всё ясно
             replieS = replieS.drop('snippet.parentId', axis=1)
-        
+
             commentReplieS = dfsProcessing(
                                            channelIdForSearch=channelIdForSearch,
                                            complicatedNamePart=complicatedNamePart,
@@ -1697,7 +1692,7 @@ videoPaidProductPlacement : str
                                            q=q,
                                            rootName=rootName,
                                            slash=slash,
-                                           stage=stage,
+                                           stageTarget=stage,
                                            targetCount=targetCount,
                                            momentCurrent=momentCurrent,
                                            year=year,
@@ -1717,7 +1712,7 @@ videoPaidProductPlacement : str
               , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
               , 'https://developers.google.com/youtube/v3/docs/channels')
         if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-    
+
         channelIdS = itemS[itemS['id.kind'] == f'youtube#{snippetContentType}']
         channelIdS =\
             channelIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in channelIdS.columns else channelIdS['id'].to_list()
@@ -1741,10 +1736,10 @@ videoPaidProductPlacement : str
                       , 'просто нажмите Enter (это тоже увеличит совокупность изучаемых каналов)'
                       , '\n--- Если НЕ хотите дополнить спискок, нажмите пробел и затем Enter')
                 if len(input()) == 0:
-                
+
                     # Список списков, каждый из которых соответствует одному плейлисту
                     playlistChannelId_list = playlistS['snippet.videoOwnerChannelId'].str.split(', ').to_list()
-                
+
                     playlistChannelIdS = []
                     for snippet in playlistChannelId_list:
                         playlistChannelIdS.extend(snipet)
@@ -1760,7 +1755,7 @@ videoPaidProductPlacement : str
         print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
               , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
         shutil.rmtree(rootName, ignore_errors=True)
-    
+
     warnings.filterwarnings("ignore")
     print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
           , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
