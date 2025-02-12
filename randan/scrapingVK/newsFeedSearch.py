@@ -162,8 +162,8 @@ def bigSearch(
 def dfsProcessing(
                   complicatedNamePart,
                   fileFormatChoice,
-                  dfAdd, 
-		  dfFinal, 
+                  dfAdd,
+		  dfFinal,
 		  dfIn,
                   goS,
                   method,
@@ -310,7 +310,7 @@ def newsFeedSearch(
         if params != None:
             access_token = params['access_token'] if 'access_token' in params.keys() else None
             q = params['q'] if 'q' in params.keys() else None
-            
+
             if 'start_time' in params.keys():
                 start_time = params['start_time']
                 if type(start_time) == str: start_time = int(start_time)
@@ -457,7 +457,7 @@ def newsFeedSearch(
                 itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
 
                 for temporalName in temporalNameS:
-                    if '.json' in temporalName: 
+                    if '.json' in temporalName:
                         itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
                         break
 
@@ -771,7 +771,7 @@ def newsFeedSearch(
     df2file.df2fileShell(
                          complicatedNamePart,
                          itemS,
-                         '.xlsx', 
+                         '.xlsx',
                          method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
                          momentCurrent.strftime("%Y%m%d_%H%M")
                          )
