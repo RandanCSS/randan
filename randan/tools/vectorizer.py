@@ -19,7 +19,7 @@ while True:
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
-        if '.' in module: module = module.split('.')[1] 
+        if '.' in module: module = module.split('.')[1]
         print('Пакет', module,
               'НЕ прединсталлируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталлирован сейчас\n')
         check_call([sys.executable, "-m", "pip", "install", module])
@@ -42,9 +42,9 @@ def vectProcess(frequencyMetric, column, df, min_df):
     matrix_df = pandas.DataFrame(matrix.toarray(), columns=vect.get_feature_names_out(), index=df.index) # .. у которого
         # по столбцам слова из столбца column, а по строкам -- индексы строк исходного датафрейма df
     # # Показалось, что требуются строки с ненулевой суммой частот
-    # matrix_df_T_Sum = matrix_df.T.sum() 
+    # matrix_df_T_Sum = matrix_df.T.sum()
     # df = df[matrix_df_T_Sum == 0]
-    matrix_df = pandas.DataFrame(matrix.toarray(), columns=vect.get_feature_names_out(), index=df.index)         
+    matrix_df = pandas.DataFrame(matrix.toarray(), columns=vect.get_feature_names_out(), index=df.index)
     print('Абсолютные частоты' if frequencyMetric == 'c' else 'Относительные частоты TF-IDF')
     display(matrix_df.head())
     print('Число столбцов:', matrix_df.shape[1], ', число строк', matrix_df.shape[0])
@@ -56,14 +56,14 @@ def vectProcess(frequencyMetric, column, df, min_df):
 def vectSettings(column, df):
     vectProcess('c', column, df, 1)
     vectProcess('t', column, df, 1)
-    
+
     print('--- Выше представлены наиболее и наименее характерные токены с т.з. абсолютных частот и TF-IDF')
     goC_0 = True
     while goC_0:
         print('--- Если хотите отсеять менее частотные токены, впишите предпочитаемую границу как дробное число -- минимальная доля встречаемости'
             , '\n--- Или как целое число -- минимальная частота (абсолютная или относительная) встречаемости; после этого нажмите Enter'
             , '\n--- Если НЕ хотите отсеять, просто нажмите Enter')
-        
+
         goC_1 = True
         while goC_1:
             try:
@@ -74,13 +74,13 @@ def vectSettings(column, df):
             except ValueError:
                 print('--- Вы вписали что-то не то'
                       , '\n--- Впишите, пожалуйста, сторого дробное или целое число и нажмите Enter: ')
-            
+
         print('--- В результате векторизации можно получить абсолютные или относительные частоты токенов в документах (TF-IDF)'
             , '\n--- Выше представлены наиболее и наименее характерные токены с т.з. абсолютных частот и TF-IDF'
             , '\n--- Опираясь на них, впишите предпочитаемый вариант векторизаци: "c" -- абсолютные частоты, "t" -- TF-IDF'
             , '\n--- После этого нажмите Enter')
         frequencyMetric = input()
-    
+
         goC_2 = True
         while goC_2:
             if frequencyMetric == 'c':
@@ -94,7 +94,7 @@ def vectSettings(column, df):
                       , '\n--- Впишите, пожалуйста, сторого следуя инструкции: "c" -- абсолютные частоты, "t" -- TF-IDF'
                       , '\n--- После этого нажмите Enter: ')
                 frequencyMetric = input()
-        
+
         matrix_df = vectProcess(frequencyMetric, column, df, min_df)
         print('--- Если результат Вас устраивает, нажмите Enter'
               , '\n--- Если НЕ устраивает и хотите заново вписать предпочитаемые границу и вариант векторизаци, введите любой символ и нажмите Enter')
