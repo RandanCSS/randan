@@ -32,7 +32,7 @@ while True:
 def calendarWithinYear(year):
     """
     Функция "Календарь день-месяц" для лучшей визуализации дальнейшего процесса
-    
+
     Parameters
     ----------
     Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/newsfeed.search
