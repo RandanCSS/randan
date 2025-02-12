@@ -18,7 +18,7 @@ while True:
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '').replace('_', '')
-        if '.' in module: module = module.split('.')[1] 
+        if '.' in module: module = module.split('.')[1]
         print('Пакет', module,
               'НЕ прединсталлируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталлирован сейчас\n')
         check_call([sys.executable, "-m", "pip", "install", module])
@@ -32,11 +32,11 @@ while True:
 def tag_topic_URL(videoS):
     """
     Функция для обработки двух (полу)стандартизированных текстовых переменных выгрузки метода videos: snippet.tags, topicDetails.topicCategories, а также создания столбца с абсолютной ссылкой
-    
+
     Parameters
     ----------
     videoS : DataFrame
-    """    
+    """
     warnings.filterwarnings("ignore")
     varS = ['snippet.tags', 'topicDetails.topicCategories']
     for var in varS:
@@ -48,9 +48,9 @@ def tag_topic_URL(videoS):
         if var == 'topicDetails.topicCategories':
             notNanVideoS['https://en.wikipedia.org/wiki/'] = notNanVideoS[var].str.replace('https://en.wikipedia.org/wiki/', '')
         videoS = pandas.concat([nanVideoS, notNanVideoS])
-    
+
     videoS['URL'] = 'https://www.youtube.com/video/' + videoS['id'] # столбец с абсолютной ссылкой
-    
+
     display(videoS[['snippet.tags', 'https://en.wikipedia.org/wiki/', 'URL']].tail())
     print('Число строк', videoS.shape[0])
     return videoS
