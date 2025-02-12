@@ -1527,7 +1527,7 @@ videoPaidProductPlacement : str
             maxResults = 100
             method = 'commentThreads'
             part = 'id, replies, snippet'
-            problemVideoIdS = pandas.DataFrame()
+            problemVideoIdS = []
             print('В скрипте используются следующие аргументы метода', method, 'API YouTube:'
                   , 'part=["snippet", "id", "replies"], maxResults, videoId .'
                   , 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
@@ -1547,18 +1547,18 @@ videoPaidProductPlacement : str
             # for videoId in videoS['id'][4576:]: # для отладки
                 # print('videoId', videoId) # для отладки
                 page = 0 # номер страницы выдачи
-                commentsAdditional, goS, keyOrder, page, pageToken, problemVideoId = downloadComments(
-                                                                                                      API_keyS=API_keyS,
-                                                                                                      goS=goS,
-                                                                                                      sourceId=videoId,
-                                                                                                      part=part,
-                                                                                                      idS=videoIdS,
-                                                                                                      keyOrder=keyOrder,
-                                                                                                      maxResults=maxResults,
-                                                                                                      method=method,
-                                                                                                      page=page,
-                                                                                                      )
-                if problemCommentId != None: problemCommentIdS.append(problemCommentId)
+                commentsAdditional, goS, keyOrder, page, problemVideoId = downloadComments(
+                                                                                           API_keyS=API_keyS,
+                                                                                           goS=goS,
+                                                                                           sourceId=videoId,
+                                                                                           part=part,
+                                                                                           idS=videoIdS,
+                                                                                           keyOrder=keyOrder,
+                                                                                           maxResults=maxResults,
+                                                                                           method=method,
+                                                                                           page=page,
+                                                                                           )
+                if problemVideoId != None: problemVideoId.append(problemVideoId)
                 commentS = dfsProcessing(
                                          complicatedNamePart,
                                          fileFormatChoice,
@@ -1637,17 +1637,17 @@ videoPaidProductPlacement : str
             commentIdS = commentReplieS['id'][commentReplieS['Недостача_ответов'] > 0]
             for commentId in tqdm(commentIdS):
                 page = 0 # номер страницы выдачи
-                repliesAdditional, goS, keyOrder, page, pageToken, problemCommentId = downloadComments(
-                                                                                                       API_keyS=API_keyS,
-                                                                                                       goS=goS,
-                                                                                                       sourceId=commentId,
-                                                                                                       part=part,
-                                                                                                       idS=commentIdS,
-                                                                                                       keyOrder=keyOrder,
-                                                                                                       maxResults=maxResults,
-                                                                                                       method=method,
-                                                                                                       page=page,
-                                                                                                       )
+                repliesAdditional, goS, keyOrder, page, problemCommentId = downloadComments(
+                                                                                            API_keyS=API_keyS,
+                                                                                            goS=goS,
+                                                                                            sourceId=commentId,
+                                                                                            part=part,
+                                                                                            idS=commentIdS,
+                                                                                            keyOrder=keyOrder,
+                                                                                            maxResults=maxResults,
+                                                                                            method=method,
+                                                                                            page=page,
+                                                                                            )
                 if problemCommentId != None: problemCommentIdS.append(problemCommentId)
                 replieS = dfsProcessing(
                                         complicatedNamePart,
