@@ -611,9 +611,11 @@ videoPaidProductPlacement : str
     goS = True
     itemS = pandas.DataFrame()
     keyOrder = 0
+    playlistS = None # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     stageTarget = 0 # stageTarget принимает значения [0; 3] и относится к стадиям скрипта
     temporalName = None
+    videoS = None # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     yearsRange = None
     
     momentCurrent = datetime.now() # запрос текущего момента
@@ -730,12 +732,12 @@ videoPaidProductPlacement : str
                 for temporalName in temporalNameS:
                     if '.xlsx' in temporalName: break
                 itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
-                
+
                 for temporalName in temporalNameS:
                     if '.json' in temporalName:
                         itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
                         break
-                
+
                 if yearsRange != None:
                     yearsRange = yearsRange.split('-')
                     yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
@@ -829,6 +831,7 @@ videoPaidProductPlacement : str
                     # if len(channelIdForSearch) > 1:
                         # channelIdForSearch = channelIdForSearch[0]
                         # print('В качестве аргумента метода search будет использован ТОЛЬКО первый из id\n')
+                    print('')
                     break
         if q == None: # если пользователь не подал этот аргумент в рамках experiencedMode
             print('--- Если НЕ предполагается поиск контента по текстовому запросу-фильтру, нажмите Enter'
@@ -887,7 +890,7 @@ videoPaidProductPlacement : str
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_YouTube'
     complicatedNamePart += "" if contentType == None else "_" + contentType
-    complicatedNamePart += "" if channelIdForSearch == None else "_channelId" + channelIdForSearch
+    complicatedNamePart += "" if channelIdForSearch == None else "_channelId_" + channelIdForSearch
     if q != None: complicatedNamePart += "_" + q if len(q) < 50 else "_" + q[:50]            
     complicatedNamePart += "" if ((yearMinByUser == None) & (yearMaxByUser == None)) else "_" + str(yearMinByUser) + '-' + str(yearMaxByUser)
 # print('complicatedNamePart', complicatedNamePart)
@@ -1538,22 +1541,23 @@ videoPaidProductPlacement : str
         # print(videoIdS)
 
 # ********** Дополнение списка id видео из itemS списком id видео из playlistS
-        if len(playlistS) > 0:
-            print('\n--- Если хотите дополнить спискок id видео, выгруженных методом search, списком id видео, составляющих выгруженные плейлисты'
-                  , 'просто нажмите Enter (это увеличит совокупность изучаемых видео)'
-                  , '\n--- Если НЕ хотите дополнить спискок, нажмите пробел и затем Enter')
-            if len(input()) == 0:
-            
-                # Список списков, каждый из которых соответствует одному плейлисту
-                playlistVideoId_list = playlistS['snippet.resourceId.videoId'].str.split(', ').to_list()
-                # print('playlistVideoId_list:', playlistVideoId_list) # для отладки
-            
-                playlistVideoIdS = []
-                for playlistVideoIdSnippet in playlistVideoId_list:
-                    playlistVideoIdS.extend(playlistVideoIdSnippet)
-            
-                videoIdS.extend(playlistVideoIdS)
-                videoIdS = list(dict.fromkeys(videoIdS))
+        if playlistS != None:
+            if len(playlistS) > 0:
+                print('\n--- Если хотите дополнить спискок id видео, выгруженных методом search, списком id видео, составляющих выгруженные плейлисты'
+                      , 'просто нажмите Enter (это увеличит совокупность изучаемых видео)'
+                      , '\n--- Если НЕ хотите дополнить спискок, нажмите пробел и затем Enter')
+                if len(input()) == 0:
+                
+                    # Список списков, каждый из которых соответствует одному плейлисту
+                    playlistVideoId_list = playlistS['snippet.resourceId.videoId'].str.split(', ').to_list()
+                    # print('playlistVideoId_list:', playlistVideoId_list) # для отладки
+                
+                    playlistVideoIdS = []
+                    for playlistVideoIdSnippet in playlistVideoId_list:
+                        playlistVideoIdS.extend(playlistVideoIdSnippet)
+                
+                    videoIdS.extend(playlistVideoIdS)
+                    videoIdS = list(dict.fromkeys(videoIdS))
     
         print('Проход порциями по 50 видео')
         bound = 0
@@ -1916,29 +1920,31 @@ videoPaidProductPlacement : str
         # print(channelIdS)
 
 # ********** Дополнение списка id каналов из itemS списком id каналов из videoS
-        if len(videoS) > 0:
-            print('--- Если хотите дополнить спискок id каналов, выгруженных методом search, списком id каналов, к которым относятся выгруженные видео'
-                  , 'просто нажмите Enter (это увеличит совокупность изучаемых каналов)'
-                  , '\n--- Если НЕ хотите дополнить спискок, нажмите пробел и затем Enter')
-            if len(input()) == 0:
-                channelIdS.extend(videoS['snippet.channelId'].to_list())
-                channelIdS = list(dict.fromkeys(channelIdS))
+        if videoS != None:
+            if len(videoS) > 0:
+                print('--- Если хотите дополнить спискок id каналов, выгруженных методом search, списком id каналов, к которым относятся выгруженные видео'
+                      , 'просто нажмите Enter (это увеличит совокупность изучаемых каналов)'
+                      , '\n--- Если НЕ хотите дополнить спискок, нажмите пробел и затем Enter')
+                if len(input()) == 0:
+                    channelIdS.extend(videoS['snippet.channelId'].to_list())
+                    channelIdS = list(dict.fromkeys(channelIdS))
 
 # ********** Дополнение списка id каналов из itemS списком id каналов из playlistS
-        if len(playlistS) > 0:
-            print('--- Если хотите дополнить спискок id видео, выгруженных методом search, списком id видео, составляющих выгруженные плейлисты'
-                  , 'просто нажмите Enter (это тоже увеличит совокупность изучаемых каналов)'
-                  , '\n--- Если НЕ хотите дополнить спискок, нажмите пробел и затем Enter')
-            if len(input()) == 0:
-            
-                # Список списков, каждый из которых соответствует одному плейлисту
-                playlistChannelId_list = playlistS['snippet.videoOwnerChannelId'].str.split(', ').to_list()
-            
-                playlistChannelIdS = []
-                for snippet in playlistChannelId_list:
-                    playlistChannelIdS.extend(snippet)
-                channelIdS.extend(playlistChannelIdS)
-                channelIdS = list(dict.fromkeys(channelIdS))
+        if playlistS != None:
+            if len(playlistS) > 0:
+                print('--- Если хотите дополнить спискок id видео, выгруженных методом search, списком id видео, составляющих выгруженные плейлисты'
+                      , 'просто нажмите Enter (это тоже увеличит совокупность изучаемых каналов)'
+                      , '\n--- Если НЕ хотите дополнить спискок, нажмите пробел и затем Enter')
+                if len(input()) == 0:
+                
+                    # Список списков, каждый из которых соответствует одному плейлисту
+                    playlistChannelId_list = playlistS['snippet.videoOwnerChannelId'].str.split(', ').to_list()
+                
+                    playlistChannelIdS = []
+                    for snippet in playlistChannelId_list:
+                        playlistChannelIdS.extend(snippet)
+                    channelIdS.extend(playlistChannelIdS)
+                    channelIdS = list(dict.fromkeys(channelIdS))
         print('Проход порциями по 50 каналов')
         bound = 0
         goC = True
