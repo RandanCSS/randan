@@ -254,7 +254,7 @@ def downloadComments(
             pageToken = response['nextPageToken'] if 'nextPageToken' in response.keys() else None
             # print('nextPageToken', pageToken)
             if page != '':
-                print('  Видео №', idS.index(sourceId) + 1, 'из', len(idS), '. Страница выдачи №', page, '          ', end='\r')
+                print('  Страница выдачи №', page, '          ', end='\r')
                 page += 1
             goC_0 = False
             break
