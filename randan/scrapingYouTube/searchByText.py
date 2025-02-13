@@ -1614,8 +1614,9 @@ videoPaidProductPlacement : str
                                  )
 
 # ********** replieS
+            print('')
             if len(commentS[commentS['snippet.totalReplyCount'] > 0]) > 0: # есть ли хотя бы один отвеченный родительский (topLevel) комментарий?
-                print('\nПроход по строкам всех родительских (topLevel) комментариев, имеющих ответы')
+                print('Проход по строкам всех родительских (topLevel) комментариев, имеющих ответы')
                 replieS = pandas.DataFrame()
                 for row in tqdm(commentS[commentS['snippet.totalReplyCount'] > 0].index):
                     addReplieS = pandas.json_normalize(commentS['replies.comments'][row])
