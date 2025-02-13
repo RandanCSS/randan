@@ -555,7 +555,7 @@ videoPaidProductPlacement : str
     if access_token == None:
         print('Проверяю наличие файла credentialsYouTube.txt с ключ[ом ами], гипотетически сохранённым[и] при первом запуске скрипта')
         if 'credentialsYouTube.txt' in rootNameS:
-            file = open('credentialsYouTube.txt')
+            file = open('credentialsYouTube.txt' if coLabFolder == None else coLabFolder + slash + "credentialsYouTube.txt")
             API_keyS = file.read()
             print('Нашёл файл credentialsYouTube.txt; далее буду использовать ключ[и] из него:', API_keyS)
         else:
@@ -572,7 +572,7 @@ videoPaidProductPlacement : str
                     API_keyS = multispaceCleaner(API_keyS)
                     while API_keyS[-1] == ',': API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста
 
-                    file = open("credentialsYouTube.txt", "w+") # открыть на запись
+                    file = open("credentialsYouTube.txt" if coLabFolder == None else coLabFolder + slash + "credentialsYouTube.txt", "w+") # открыть на запись
                     file.write(API_keyS)
                     file.close()
                     break
