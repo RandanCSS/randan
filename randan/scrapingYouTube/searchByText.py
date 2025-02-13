@@ -54,7 +54,7 @@ while True:
         colabMode = True
         from google.colab import drive
         drive.mount('/content/drive')
-        coLabFolder = '/content/drive/MyDrive/Colab Notebooks'
+        coLabFolder = 'drive/MyDrive/Colab Notebooks'
         break
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
