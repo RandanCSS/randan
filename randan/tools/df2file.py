@@ -114,9 +114,9 @@ def df2file(dfIn, *arg): # арки: fileName и folder
 
 def df2fileShell(complicatedNamePart, dfIn, fileFormatChoice, method, coLabFolder, currentMoment):
     folder = f'{currentMoment}{complicatedNamePart}'
-    print('Сохраняю выгрузку метода', method, f'в директорию "{folder}"')
+    print('Сохраняю выгрузку метода', method, '                              ') # f'в директорию "{folder}"'
     if os.path.exists(folder) == False:
-        print('Такой директории не существовало, поэтому она создана')
+        # print('Такой директории не существовало, поэтому она создана')
         os.makedirs(folder)
     # else:
         # print('Эта директория существует')
