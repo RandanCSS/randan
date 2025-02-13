@@ -77,24 +77,22 @@ while True:
 def bigSearch(
               API_keyS,
               channelIdForSearch, # согласно документации API YouTube, подать можно лишь один channelId
+              channelType,
               contentType,
-              goS,
+              eventType,
               iteration,
               keyOrder,
-              q,
-              publishedAfter,
-              publishedBefore,
-              order,
-              pageToken,
-              year,
-              channelType,
-              eventType,
               location,
               locationRadius,
+              order,
+              pageToken,
+              publishedAfter,
+              publishedBefore,
+              q,
               regionCode,
               relevanceLanguage,
-              topicId,
               safeSearch,
+              topicId,
               videoCaption,
               videoCategoryId,
               videoDefinition,
@@ -104,8 +102,10 @@ def bigSearch(
               videoLicense,
               videoPaidProductPlacement,
               videoType,
-              videoSyndicated
+              videoSyndicated,
+              year
               ):
+    goS = True
     response = {
                 'kind': 'youtube#searchListResponse',
                 'pageInfo': {'totalResults': 0, 'resultsPerPage': 0},
@@ -120,6 +120,8 @@ def bigSearch(
                                             channelId=channelIdForSearch,
                                             channelType=channelType,
                                             eventType=eventType,
+                                            location=location,
+                                            locationRadius=locationRadius,
                                             maxResults=50,
                                             order=order,
                                             pageToken=pageToken,
@@ -127,13 +129,11 @@ def bigSearch(
                                             publishedAfter=publishedAfter,
                                             publishedBefore=publishedBefore,
                                             q=q,
-                                            type=contentType,
-                                            location=location,
-                                            locationRadius=locationRadius,
                                             regionCode=regionCode,
                                             relevanceLanguage=relevanceLanguage,
-                                            topicId=topicId,
                                             safeSearch=safeSearch,
+                                            topicId=topicId,
+                                            type=contentType,
                                             videoCaption=videoCaption,
                                             videoCategoryId=videoCategoryId,
                                             videoDefinition=videoDefinition,
@@ -174,7 +174,7 @@ def dfsProcessing(
                   dfAdd,
                   dfFinal, # на обработке какой бы ни было выгрузки не возникла бы непреодолима ошибка, сохранить следует выгрузку метода search
                   dfIn,
-                  goS,
+                  goS, # единственная из функций, принимающая этот аргумент
                   method,
                   q,
                   rootName,
@@ -256,28 +256,24 @@ def dfsProcessing(
 # 1.2 для выгрузки комментариев
 def downloadComments(
                      API_keyS,
-                     goS,
                      sourceId,
-                     part,
-                     idS,
                      keyOrder,
-                     maxResults,
                      method
                      ):
+    goS = True
     commentS = pandas.DataFrame()
-    page = 0
     pageToken = None
     problemItemId = None
     youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
-    while True:
+    while True: # прерывается командой break при отсутствии nextPageToken
         goC = True
         while goC: # этот цикл позволяет возвращяться со следующим keyOrder к прежнему id при истечении квоты текущего ключа
             try:
                 if method == 'comments':
-                    response = youtube.comments().list(part=part, parentId=sourceId, maxResults=maxResults, pageToken=pageToken).execute()
+                    response = youtube.comments().list(part='id, snippet', parentId=sourceId, maxResults=100, pageToken=pageToken).execute()
 
                 if method == 'commentThreads':
-                    response = youtube.commentThreads().list(maxResults=maxResults, pageToken=pageToken, part=part, videoId=sourceId).execute()
+                    response = youtube.commentThreads().list(maxResults=100, pageToken=pageToken, part='id, replies, snippet', videoId=sourceId).execute()
 
                 goC = False
 
@@ -289,8 +285,6 @@ def downloadComments(
                                                                     sourceId=sourceId
                                                                     )
         commentS = pandas.concat([commentS, pandas.json_normalize(response['items'])])
-        page += 1
-        print('  Страница выдачи №', page, '                                                  ')#, end='\r'
         if 'nextPageToken' in response.keys():
             pageToken = response['nextPageToken']
             # print('nextPageToken', pageToken) # для отладки
@@ -346,11 +340,12 @@ def iterationVisualization(idS, iteration, portion, response):
     if portion > 1: print('   Сколько в порции наблюдений?', len(response['items']), end='\r')
 
 # 1.5 для порционной выгрузки, когда метод предполагает подачу ему id порциями
-def portionProcessing(API_keyS, channelIdForSearch, complicatedNamePart, fileFormatChoice, goS, idS, keyOrder, method, momentCurrent, slash, stage, stageTarget, targetCount, year, yearsRange, q):
+def portionProcessing(API_keyS, channelIdForSearch, complicatedNamePart, contentType, dfFinal, fileFormatChoice, idS, keyOrder, method, momentCurrent, q, rootName, slash, stage, targetCount, year, yearsRange):
     # print('method', method) # для отладки
     bound = 0
     chplviS = pandas.DataFrame()
     goC = True
+    goS = True
     iteration = 0 # номер итерации применения текущего метода
     while (bound < len(idS)) & goC:
     # while (bound < 100) & goC: # для отладки
@@ -358,44 +353,23 @@ def portionProcessing(API_keyS, channelIdForSearch, complicatedNamePart, fileFor
             youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
             if method == 'channels':
                 response = youtube.channels().list(
-                                                   part=[
-                                                         "snippet"
-                                                         , "brandingSettings"
-                                                         , "contentDetails"
-                                                         , "id"
-                                                         , "localizations"
-                                                         , "statistics"
-                                                         , "status"
-                                                         , "topicDetails"
-                                                         ]
+                                                   part='snippet, brandingSettings, contentDetails, id, localizations, statistics, status, topicDetails'
                                                    , id=idS[bound:bound + 50]
                                                    , maxResults=50
                                                    ).execute()
             if method == 'playlists':
                 response = youtube.playlists().list(
-                                                    part=[
-                                                          "snippet"
-                                                          , "contentDetails"
-                                                          , "localizations"
-                                                          , "status"
-                                                          ]
+                                                    part='snippet, contentDetails, localizations, status'
                                                     , id=idS[bound:bound + 50]
                                                     ).execute()
             if method == 'playlistItems':
                 response = youtube.playlistItems().list(
-                                                        part=["snippet"]
+                                                        part='snippet'
                                                         , playlistId=idS[bound:bound + 50]
                                                         ).execute()
             if method == 'videos':
                 response = youtube.videos().list(
-                                                 part=[
-                                                       "snippet"
-                                                      , "contentDetails"
-                                                      , "localizations"
-                                                      , "statistics"
-                                                      , "status"
-                                                      , "topicDetails"
-                                                      ]
+                                                 part='snippet, contentDetails, localizations, statistics, status, topicDetails'
                                                  , id=idS[bound:bound + 50]
                                                  , maxResults=50
                                                  ).execute()
@@ -420,16 +394,16 @@ def portionProcessing(API_keyS, channelIdForSearch, complicatedNamePart, fileFor
                                     contentType=contentType,
                                     fileFormatChoice=fileFormatChoice,
                                     dfAdd=addChplviS,
-                                    dfFinal=itemS,
+                                    dfFinal=dfFinal, # itemS подаются как значение аргумента оборачивающей функции
                                     dfIn=chplviS,
                                     goS=goS,
                                     method=method,
+                                    momentCurrent=momentCurrent,
                                     q=q,
                                     rootName=rootName,
                                     slash=slash,
                                     stageTarget=stage,
                                     targetCount=targetCount,
-                                    momentCurrent=momentCurrent,
                                     year=year,
                                     yearsRange=yearsRange
                                     )
@@ -869,26 +843,24 @@ videoPaidProductPlacement : str
         print('Заход на первую страницу выдачи')
         # print('publishedAfter', publishedAfter) # для отладки
         addItemS, goS, iteration, keyOrder, response = bigSearch(
-                                                                 API_keyS,
-                                                                 channelIdForSearch,
-                                                                 contentType,
-                                                                 goS,
-                                                                 iteration,
-                                                                 keyOrder,
-                                                                 q,
+                                                                 API_keyS=API_keyS,
+                                                                 channelIdForSearch=channelIdForSearch,
+                                                                 channelType=channelType,
+                                                                 contentType=contentType,
+                                                                 iteration=iteration,
+                                                                 keyOrder=keyOrder,
+                                                                 order=None,
                                                                  publishedAfter=publishedAfter,
                                                                  publishedBefore=publishedBefore,
-                                                                 order=None,
                                                                  pageToken=None,
-                                                                 year=None,
-                                                                 channelType=channelType,
+                                                                 q=q,
                                                                  eventType=eventType,
                                                                  location=location,
                                                                  locationRadius=locationRadius,
                                                                  regionCode=regionCode,
                                                                  relevanceLanguage=relevanceLanguage,
-                                                                 topicId=topicId,
                                                                  safeSearch=safeSearch,
+                                                                 topicId=topicId,
                                                                  videoCaption=videoCaption,
                                                                  videoCategoryId=videoCategoryId,
                                                                  videoDefinition=videoDefinition,
@@ -898,7 +870,8 @@ videoPaidProductPlacement : str
                                                                  videoLicense=videoLicense,
                                                                  videoPaidProductPlacement=videoPaidProductPlacement,
                                                                  videoType=videoType,
-                                                                 videoSyndicated=videoSyndicated
+                                                                 videoSyndicated=videoSyndicated,
+                                                                 year=None
                                                                  )
         targetCount = response['pageInfo']['totalResults']
         itemS = dfsProcessing(
@@ -926,26 +899,24 @@ videoPaidProductPlacement : str
         while 'nextPageToken' in response.keys():
             pageToken = response['nextPageToken']
             addItemS, goS, iteration, keyOrder, response = bigSearch(
-                                                                     API_keyS,
-                                                                     channelIdForSearch,
-                                                                     contentType,
-                                                                     goS,
-                                                                     iteration,
-                                                                     keyOrder,
-                                                                     q,
-                                                                     publishedAfter=publishedAfter,
-                                                                     publishedBefore=publishedBefore,
-                                                                     order=None,
-                                                                     pageToken=pageToken,
-                                                                     year=None,
+                                                                     API_keyS=API_keyS,
+                                                                     channelIdForSearch=channelIdForSearch,
                                                                      channelType=channelType,
+                                                                     contentType=contentType,
                                                                      eventType=eventType,
+                                                                     iteration=iteration,
+                                                                     keyOrder=keyOrder,
+                                                                     order=None,
                                                                      location=location,
                                                                      locationRadius=locationRadius,
+                                                                     publishedAfter=publishedAfter,
+                                                                     publishedBefore=publishedBefore,
+                                                                     pageToken=pageToken,
+                                                                     q=q,
                                                                      regionCode=regionCode,
                                                                      relevanceLanguage=relevanceLanguage,
-                                                                     topicId=topicId,
                                                                      safeSearch=safeSearch,
+                                                                     topicId=topicId,
                                                                      videoCaption=videoCaption,
                                                                      videoCategoryId=videoCategoryId,
                                                                      videoDefinition=videoDefinition,
@@ -955,7 +926,8 @@ videoPaidProductPlacement : str
                                                                      videoLicense=videoLicense,
                                                                      videoPaidProductPlacement=videoPaidProductPlacement,
                                                                      videoType=videoType,
-                                                                     videoSyndicated=videoSyndicated
+                                                                     videoSyndicated=videoSyndicated,
+                                                                     year=None
                                                                      )
             itemS = dfsProcessing(
                                   channelIdForSearch=channelIdForSearch,
@@ -990,26 +962,24 @@ videoPaidProductPlacement : str
             print('Проход по значениям аргумента order, внутри которых проход по всем страницам выдачи')
             for order in orderS:
                 addItemS, goS, iteration, keyOrder, response = bigSearch(
-                                                                         API_keyS,
-                                                                         channelIdForSearch,
-                                                                         contentType,
-                                                                         goS,
-                                                                         iteration,
-                                                                         keyOrder,
-                                                                         q,
-                                                                         publishedAfter=publishedAfter,
-                                                                         publishedBefore=publishedBefore,
-                                                                         order=order,
-                                                                         pageToken=None,
-                                                                         year=year,
+                                                                         API_keyS=API_keyS,
+                                                                         channelIdForSearch=channelIdForSearch,
                                                                          channelType=channelType,
+                                                                         contentType=contentType,
                                                                          eventType=eventType,
+                                                                         iteration=iteration,
+                                                                         keyOrder=keyOrder,
                                                                          location=location,
                                                                          locationRadius=locationRadius,
+                                                                         order=order,
+                                                                         publishedAfter=publishedAfter,
+                                                                         publishedBefore=publishedBefore,
+                                                                         pageToken=None,
+                                                                         q=q,
                                                                          regionCode=regionCode,
                                                                          relevanceLanguage=relevanceLanguage,
-                                                                         topicId=topicId,
                                                                          safeSearch=safeSearch,
+                                                                         topicId=topicId,
                                                                          videoCaption=videoCaption,
                                                                          videoCategoryId=videoCategoryId,
                                                                          videoDefinition=videoDefinition,
@@ -1019,7 +989,8 @@ videoPaidProductPlacement : str
                                                                          videoLicense=videoLicense,
                                                                          videoPaidProductPlacement=videoPaidProductPlacement,
                                                                          videoType=videoType,
-                                                                         videoSyndicated=videoSyndicated
+                                                                         videoSyndicated=videoSyndicated,
+                                                                         year=None
                                                                          )
                 itemS = dfsProcessing(
                                       channelIdForSearch=channelIdForSearch,
@@ -1050,26 +1021,24 @@ videoPaidProductPlacement : str
                     pageToken = response['nextPageToken']
                     # print('pageToken', pageToken)
                     addItemS, goS, iteration, keyOrder, response = bigSearch(
-                                                                             API_keyS,
-                                                                             channelIdForSearch,
-                                                                             contentType,
-                                                                             goS,
-                                                                             iteration,
-                                                                             keyOrder,
-                                                                             q,
-                                                                             publishedAfter=publishedAfter,
-                                                                             publishedBefore=publishedBefore,
-                                                                             order=order,
-                                                                             pageToken=pageToken,
-                                                                             year=None,
+                                                                             API_keyS=API_keyS,
+                                                                             channelIdForSearch=channelIdForSearch,
                                                                              channelType=channelType,
+                                                                             contentType=contentType,
                                                                              eventType=eventType,
+                                                                             iteration=iteration,
+                                                                             keyOrder=keyOrder,
                                                                              location=location,
                                                                              locationRadius=locationRadius,
+                                                                             order=order,
+                                                                             publishedAfter=publishedAfter,
+                                                                             publishedBefore=publishedBefore,
+                                                                             pageToken=pageToken,
+                                                                             q=q,
                                                                              regionCode=regionCode,
                                                                              relevanceLanguage=relevanceLanguage,
-                                                                             topicId=topicId,
                                                                              safeSearch=safeSearch,
+                                                                             topicId=topicId,
                                                                              videoCaption=videoCaption,
                                                                              videoCategoryId=videoCategoryId,
                                                                              videoDefinition=videoDefinition,
@@ -1079,7 +1048,8 @@ videoPaidProductPlacement : str
                                                                              videoLicense=videoLicense,
                                                                              videoPaidProductPlacement=videoPaidProductPlacement,
                                                                              videoType=videoType,
-                                                                             videoSyndicated=videoSyndicated
+                                                                             videoSyndicated=videoSyndicated,
+                                                                             year=None
                                                                              )
                     itemS = dfsProcessing(
                                           channelIdForSearch=channelIdForSearch,
@@ -1122,26 +1092,24 @@ videoPaidProductPlacement : str
                 while (len(itemS) < targetCount) & (goC):
                     print(f'  Для года {year} заход на первую страницу выдачи БЕЗ аргумента order')
                     addItemS, goS, iteration, keyOrder, response = bigSearch(
-                                                                             API_keyS,
-                                                                             channelIdForSearch,
-                                                                             contentType,
-                                                                             goS,
-                                                                             iteration,
-                                                                             keyOrder,
-                                                                             q,
-                                                                             publishedAfter = f'{year}-01-01T00:00:00Z',
-                                                                             publishedBefore = f'{year + 1}-01-01T00:00:00Z',
-                                                                             order=None,
-                                                                             pageToken=None,
-                                                                             year=year,
+                                                                             API_keyS=API_keyS,
+                                                                             channelIdForSearch=channelIdForSearch,
                                                                              channelType=channelType,
+                                                                             contentType=contentType,
                                                                              eventType=eventType,
+                                                                             iteration=iteration,
+                                                                             keyOrder=keyOrder,
                                                                              location=location,
                                                                              locationRadius=locationRadius,
+                                                                             order=None,
+                                                                             publishedAfter = f'{year}-01-01T00:00:00Z',
+                                                                             publishedBefore = f'{year + 1}-01-01T00:00:00Z',
+                                                                             pageToken=None,
+                                                                             q=q,
                                                                              regionCode=regionCode,
                                                                              relevanceLanguage=relevanceLanguage,
-                                                                             topicId=topicId,
                                                                              safeSearch=safeSearch,
+                                                                             topicId=topicId,
                                                                              videoCaption=videoCaption,
                                                                              videoCategoryId=videoCategoryId,
                                                                              videoDefinition=videoDefinition,
@@ -1151,7 +1119,8 @@ videoPaidProductPlacement : str
                                                                              videoLicense=videoLicense,
                                                                              videoPaidProductPlacement=videoPaidProductPlacement,
                                                                              videoType=videoType,
-                                                                             videoSyndicated=videoSyndicated
+                                                                             videoSyndicated=videoSyndicated,
+                                                                             year=year
                                                                              )
                     if len(addItemS) == 0:
                         print(f'\n--- Первая страница выдачи БЕЗ аргумента order для года {year} -- пуста'
@@ -1184,26 +1153,24 @@ videoPaidProductPlacement : str
                     while 'nextPageToken' in response.keys():
                         pageToken = response['nextPageToken']
                         addItemS, goS, iteration, keyOrder, response = bigSearch(
-                                                                                 API_keyS,
-                                                                                 channelIdForSearch,
-                                                                                 contentType,
-                                                                                 goS,
-                                                                                 iteration,
-                                                                                 keyOrder,
-                                                                                 q,
-                                                                                 publishedAfter = f'{year}-01-01T00:00:00Z',
-                                                                                 publishedBefore = f'{year + 1}-01-01T00:00:00Z',
-                                                                                 order=None,
-                                                                                 pageToken=pageToken,
-                                                                                 year=year,
+                                                                                 API_keyS=API_keyS,
+                                                                                 channelIdForSearch=channelIdForSearch,
                                                                                  channelType=channelType,
+                                                                                 contentType=contentType,
                                                                                  eventType=eventType,
+                                                                                 iteration=iteration,
+                                                                                 keyOrder=keyOrder,
                                                                                  location=location,
                                                                                  locationRadius=locationRadius,
+                                                                                 order=None,
+                                                                                 publishedAfter = f'{year}-01-01T00:00:00Z',
+                                                                                 publishedBefore = f'{year + 1}-01-01T00:00:00Z',
+                                                                                 pageToken=pageToken,
+                                                                                 q=q,
                                                                                  regionCode=regionCode,
                                                                                  relevanceLanguage=relevanceLanguage,
-                                                                                 topicId=topicId,
                                                                                  safeSearch=safeSearch,
+                                                                                 topicId=topicId,
                                                                                  videoCaption=videoCaption,
                                                                                  videoCategoryId=videoCategoryId,
                                                                                  videoDefinition=videoDefinition,
@@ -1213,8 +1180,10 @@ videoPaidProductPlacement : str
                                                                                  videoLicense=videoLicense,
                                                                                  videoPaidProductPlacement=videoPaidProductPlacement,
                                                                                  videoType=videoType,
-                                                                                 videoSyndicated=videoSyndicated
+                                                                                 videoSyndicated=videoSyndicated,
+                                                                                 year=year
                                                                                  )
+                    if len(addItemS) == 0:
                         itemS = dfsProcessing(
                                               channelIdForSearch=channelIdForSearch,
                                               complicatedNamePart=complicatedNamePart,
@@ -1243,26 +1212,24 @@ videoPaidProductPlacement : str
                               , 'внутри которых проход по всем страницам выдачи')
                         for order in orderS:
                             addItemS, goS, iteration, keyOrder, response = bigSearch(
-                                                                                     API_keyS,
-                                                                                     channelIdForSearch,
-                                                                                     contentType,
-                                                                                     goS,
-                                                                                     iteration,
-                                                                                     keyOrder,
-                                                                                     q,
-                                                                                     publishedAfter = f'{year}-01-01T00:00:00Z',
-                                                                                     publishedBefore = f'{year + 1}-01-01T00:00:00Z',
-                                                                                     order=order,
-                                                                                     pageToken=None,
-                                                                                     year=year,
+                                                                                     API_keyS=API_keyS,
+                                                                                     channelIdForSearch=channelIdForSearch,
                                                                                      channelType=channelType,
+                                                                                     contentType=contentType,
                                                                                      eventType=eventType,
+                                                                                     iteration=iteration,
+                                                                                     keyOrder=keyOrder,
                                                                                      location=location,
                                                                                      locationRadius=locationRadius,
+                                                                                     order=order,
+                                                                                     publishedAfter = f'{year}-01-01T00:00:00Z',
+                                                                                     publishedBefore = f'{year + 1}-01-01T00:00:00Z',
+                                                                                     pageToken=None,
+                                                                                     q=q,
                                                                                      regionCode=regionCode,
                                                                                      relevanceLanguage=relevanceLanguage,
-                                                                                     topicId=topicId,
                                                                                      safeSearch=safeSearch,
+                                                                                     topicId=topicId,
                                                                                      videoCaption=videoCaption,
                                                                                      videoCategoryId=videoCategoryId,
                                                                                      videoDefinition=videoDefinition,
@@ -1272,7 +1239,8 @@ videoPaidProductPlacement : str
                                                                                      videoLicense=videoLicense,
                                                                                      videoPaidProductPlacement=videoPaidProductPlacement,
                                                                                      videoType=videoType,
-                                                                                     videoSyndicated=videoSyndicated
+                                                                                     videoSyndicated=videoSyndicated,
+                                                                                     year=year
                                                                                      )
                             itemS = dfsProcessing(
                                                   channelIdForSearch=channelIdForSearch,
@@ -1299,26 +1267,24 @@ videoPaidProductPlacement : str
                             while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0):
                                 pageToken = response['nextPageToken']
                                 addItemS, goS, iteration, keyOrder, response = bigSearch(
-                                                                                         API_keyS,
-                                                                                         channelIdForSearch,
-                                                                                         contentType,
-                                                                                         goS,
-                                                                                         iteration,
-                                                                                         keyOrder,
-                                                                                         q,
-                                                                                         publishedAfter = f'{year}-01-01T00:00:00Z',
-                                                                                         publishedBefore = f'{year + 1}-01-01T00:00:00Z',
-                                                                                         order=order,
-                                                                                         pageToken=pageToken,
-                                                                                         year=year,
+                                                                                         API_keyS=API_keyS,
+                                                                                         channelIdForSearch=channelIdForSearch,
                                                                                          channelType=channelType,
+                                                                                         contentType=contentType,
                                                                                          eventType=eventType,
+                                                                                         iteration=iteration,
+                                                                                         keyOrder=keyOrder,
                                                                                          location=location,
                                                                                          locationRadius=locationRadius,
+                                                                                         order=order,
+                                                                                         publishedAfter = f'{year}-01-01T00:00:00Z',
+                                                                                         publishedBefore = f'{year + 1}-01-01T00:00:00Z',
+                                                                                         pageToken=pageToken,
+                                                                                         q=q,
                                                                                          regionCode=regionCode,
                                                                                          relevanceLanguage=relevanceLanguage,
-                                                                                         topicId=topicId,
                                                                                          safeSearch=safeSearch,
+                                                                                         topicId=topicId,
                                                                                          videoCaption=videoCaption,
                                                                                          videoCategoryId=videoCategoryId,
                                                                                          videoDefinition=videoDefinition,
@@ -1328,7 +1294,8 @@ videoPaidProductPlacement : str
                                                                                          videoLicense=videoLicense,
                                                                                          videoPaidProductPlacement=videoPaidProductPlacement,
                                                                                          videoType=videoType,
-                                                                                         videoSyndicated=videoSyndicated
+                                                                                         videoSyndicated=videoSyndicated,
+                                                                                         year=year
                                                                                          )
                                 itemS = dfsProcessing(
                                                       channelIdForSearch=channelIdForSearch,
@@ -1365,7 +1332,7 @@ videoPaidProductPlacement : str
 
 # 2.1.3 Экспорт выгрузки метода search и опциональное завершение скрипта
     df2file.df2fileShell(
-                         complicatedNamePart=f'{complicatedNamePart}_Temporal',
+                         complicatedNamePart=complicatedNamePart,
                          dfIn=itemS,
                          fileFormatChoice=fileFormatChoice,
                          method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
@@ -1414,19 +1381,20 @@ videoPaidProductPlacement : str
                                       API_keyS=API_keyS,
                                       channelIdForSearch=channelIdForSearch,
                                       complicatedNamePart=complicatedNamePart,
+                                      contentType=contentType,
+                                      dfFinal=itemS,
                                       fileFormatChoice=fileFormatChoice,
-                                      goS=goS,
                                       idS=playlistIdS,
                                       keyOrder=keyOrder,
                                       method=method,
                                       momentCurrent=momentCurrent,
+                                      q=q,
+                                      rootName=rootName,
                                       slash=slash,
                                       stage=stage,
-                                      stageTarget=stageTarget,
                                       targetCount=targetCount,
                                       year=year,
-                                      yearsRange=yearsRange,
-                                      q=None
+                                      yearsRange=yearsRange
                                       )
 
         method = 'playlistItems'
@@ -1444,9 +1412,7 @@ videoPaidProductPlacement : str
         for playlistId in playlistIdS:
             try:
                 youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
-                response = youtube.playlistItems().list(part=["snippet"]
-                                                        , playlistId=playlistId
-                                                        ).execute()
+                response = youtube.playlistItems().list(part='snippet', playlistId=playlistId).execute()
                 iterationVisualization(playlistIdS, iteration, portion, response) # для визуализации процесса через итерации
                 iteration += 1
                 addPlaylistVideoChannelS = pandas.json_normalize(response['items'])
@@ -1484,8 +1450,8 @@ videoPaidProductPlacement : str
                     ', '.join(playlistVideoChannelS_snippet[playlistVideoChannelS_snippet['snippet.playlistId'] == playlistId][column].to_list())
         # display(playlistS)
         df2file.df2fileShell(
-                             complicatedNamePart=f'{complicatedNamePart}_Temporal',
-                             dfIn=itemS,
+                             complicatedNamePart=complicatedNamePart,
+                             dfIn=playlistVideoChannelS,
                              fileFormatChoice=fileFormatChoice,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
                              coLabFolder=(coLabFolder + slash) if coLabFolder != None else None, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
@@ -1534,19 +1500,20 @@ videoPaidProductPlacement : str
                                    API_keyS=API_keyS,
                                    channelIdForSearch=channelIdForSearch,
                                    complicatedNamePart=complicatedNamePart,
+                                   contentType=contentType,
                                    fileFormatChoice=fileFormatChoice,
-                                   goS=goS,
+                                   dfFinal=itemS,
                                    idS=videoIdS,
                                    keyOrder=keyOrder,
                                    method=method,
                                    momentCurrent=momentCurrent,
+                                   q=q,
+                                   rootName=rootName,
                                    slash=slash,
                                    stage=stage,
-                                   stageTarget=stageTarget,
                                    targetCount=targetCount,
                                    year=year,
-                                   yearsRange=yearsRange,
-                                   q=None
+                                   yearsRange=yearsRange
                                    )
 
 # ********** categoryId
@@ -1573,8 +1540,8 @@ videoPaidProductPlacement : str
             videoS.loc[videoS['snippet.categoryId'] == row, 'categoryName'] = categoryNameS['snippet.title'][row]
 
         df2file.df2fileShell(
-                             complicatedNamePart=f'{complicatedNamePart}_Temporal',
-                             dfIn=itemS,
+                             complicatedNamePart=complicatedNamePart,
+                             dfIn=videoS,
                              fileFormatChoice=fileFormatChoice,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
                              coLabFolder=(coLabFolder + slash) if coLabFolder != None else None, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
@@ -1612,18 +1579,13 @@ videoPaidProductPlacement : str
 
             print('\nВыгрузка родительских (topLevel) комментариев')
             commentS = pandas.DataFrame()
-            for videoId in videoIdS:
+            for videoId in tqdm(videoIdS):
             # for videoId in videoS['id'][4576:]: # для отладки
                 # print('videoId', videoId) # для отладки
-                page = 0 # номер страницы выдачи
                 commentsAdditional, goS, keyOrder, problemVideoId = downloadComments(
                                                                                      API_keyS=API_keyS,
-                                                                                     goS=goS,
                                                                                      sourceId=videoId,
-                                                                                     part=part,
-                                                                                     idS=videoIdS,
                                                                                      keyOrder=keyOrder,
-                                                                                     maxResults=maxResults,
                                                                                      method=method
                                                                                      )
                 if problemVideoId != None: problemVideoId.append(problemVideoId)
@@ -1649,8 +1611,8 @@ videoPaidProductPlacement : str
             commentS = commentS.drop(['kind', 'etag', 'id', 'snippet.channelId', 'snippet.videoId'], axis=1) # т.к. дублируются содержательно
             commentS = prefixDropper(commentS)
             df2file.df2fileShell(
-                                 complicatedNamePart=f'{complicatedNamePart}_Temporal',
-                                 dfIn=itemS,
+                                 complicatedNamePart=complicatedNamePart,
+                                 dfIn=commentS,
                                  fileFormatChoice=fileFormatChoice,
                                  method='commentS',
                                  coLabFolder=(coLabFolder + slash) if coLabFolder != None else None, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
@@ -1672,8 +1634,8 @@ videoPaidProductPlacement : str
             replieS.loc[:, 'Недостача_ответов'] = 0
             replieS = prefixDropper(replieS)
             df2file.df2fileShell(
-                                 complicatedNamePart=f'{complicatedNamePart}_Temporal',
-                                 dfIn=itemS,
+                                 complicatedNamePart=complicatedNamePart,
+                                 dfIn=replieS,
                                  fileFormatChoice=fileFormatChoice,
                                  method='replieS',
                                  coLabFolder=(coLabFolder + slash) if coLabFolder != None else None, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
@@ -1726,12 +1688,8 @@ videoPaidProductPlacement : str
                 page = 0 # номер страницы выдачи
                 repliesAdditional, goS, keyOrder, problemCommentId = downloadComments(
                                                                                       API_keyS=API_keyS,
-                                                                                      goS=goS,
                                                                                       sourceId=commentId,
-                                                                                      part=part,
-                                                                                      idS=commentIdS,
                                                                                       keyOrder=keyOrder,
-                                                                                      maxResults=maxResults,
                                                                                       method=method
                                                                                       )
                 if problemCommentId != None: problemCommentIdS.append(problemCommentId)
@@ -1784,8 +1742,8 @@ videoPaidProductPlacement : str
                                            yearsRange=yearsRange
                                            )
             df2file.df2fileShell(
-                                 complicatedNamePart=f'{complicatedNamePart}_Temporal',
-                                 dfIn=itemS,
+                                 complicatedNamePart=complicatedNamePart,
+                                 dfIn=commentReplieS,
                                  fileFormatChoice=fileFormatChoice,
                                  method='commentReplieS',
                                  coLabFolder=(coLabFolder + slash) if coLabFolder != None else None, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
@@ -1842,23 +1800,24 @@ videoPaidProductPlacement : str
                                      API_keyS=API_keyS,
                                      channelIdForSearch=channelIdForSearch,
                                      complicatedNamePart=complicatedNamePart,
+                                     contentType=contentType,
+                                     dfFinal=itemS,
                                      fileFormatChoice=fileFormatChoice,
-                                     goS=goS,
                                      idS=channelIdS,
                                      keyOrder=keyOrder,
                                      method=method,
                                      momentCurrent=momentCurrent,
+                                     q=q,
+                                     rootName=rootName,
                                      slash=slash,
                                      stage=stage,
-                                     stageTarget=stageTarget,
                                      targetCount=targetCount,
                                      year=year,
-                                     yearsRange=yearsRange,
-                                     q=None
+                                     yearsRange=yearsRange
                                      )
         df2file.df2fileShell(
-                             complicatedNamePart=f'{complicatedNamePart}_Temporal',
-                             dfIn=itemS,
+                             complicatedNamePart=complicatedNamePart,
+                             dfIn=channelS,
                              fileFormatChoice=fileFormatChoice,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
                              coLabFolder=(coLabFolder + slash) if coLabFolder != None else None, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
