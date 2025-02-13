@@ -97,7 +97,7 @@ def df2file(dfIn, *arg): # арки: fileName и folder
             except:
                 errorDescription = sys.exc_info()
                 print(errorDescription[1])
-                if 'IllegalCharacterError' in errorDescription[0]:
+                if 'IllegalCharacterError' in str(errorDescription[0]):
                     module = 'xlsxwriter'
                     print('Для устранения ошибки требуется пакет', {module}, 'поэтому он будет инсталирован сейчас\n')
                     check_call([sys.executable, "-m", "pip", "install", module])
