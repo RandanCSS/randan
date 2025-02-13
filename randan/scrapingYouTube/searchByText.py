@@ -242,7 +242,7 @@ def dfsProcessing(
                              dfIn=df,
                              fileFormatChoice=fileFormatChoice,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                             coLabFolder=(coLabFolder + slash) if coLabFolder != None else None, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
+                             coLabFolder=coLabFolder,
                              currentMoment=momentCurrent.strftime("%Y%m%d") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              )
         warnings.filterwarnings("ignore")
@@ -1330,7 +1330,7 @@ videoPaidProductPlacement : str
                          dfIn=itemS,
                          fileFormatChoice=fileFormatChoice,
                          method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                         coLabFolder=(coLabFolder + slash) if coLabFolder != None else None, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
+                         coLabFolder=coLabFolder,
                          currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                          )
     print('\nВыгрузка метода search содержит НЕ ВСЕ доступные для выгрузки из API YouTube характеристки контента'
@@ -1448,7 +1448,7 @@ videoPaidProductPlacement : str
                              dfIn=playlistVideoChannelS,
                              fileFormatChoice=fileFormatChoice,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                             coLabFolder=(coLabFolder + slash) if coLabFolder != None else None, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
+                             coLabFolder=coLabFolder,
                              currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              )
 
@@ -1538,7 +1538,7 @@ videoPaidProductPlacement : str
                              dfIn=videoS,
                              fileFormatChoice=fileFormatChoice,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                             coLabFolder=(coLabFolder + slash) if coLabFolder != None else None, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
+                             coLabFolder=coLabFolder,
                              currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              )
         commentS = pandas.DataFrame() # не в следующем ченке, чтобы иметь возможность перезапускать его, не затирая промежуточный результат выгрузки
@@ -1609,7 +1609,7 @@ videoPaidProductPlacement : str
                                  dfIn=commentS,
                                  fileFormatChoice=fileFormatChoice,
                                  method='commentS',
-                                 coLabFolder=(coLabFolder + slash) if coLabFolder != None else None, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
+                                 coLabFolder=coLabFolder,
                                  currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                  )
 
@@ -1632,7 +1632,7 @@ videoPaidProductPlacement : str
                                  dfIn=replieS,
                                  fileFormatChoice=fileFormatChoice,
                                  method='replieS',
-                                 coLabFolder=(coLabFolder + slash) if coLabFolder != None else None, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
+                                 coLabFolder=coLabFolder,
                                  currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                  )
             commentReplieS = commentS.copy() # копия датафрейма c родительскими (topLevel) комментариями -- основа будущего общего датафрейма
@@ -1740,7 +1740,7 @@ videoPaidProductPlacement : str
                                  dfIn=commentReplieS,
                                  fileFormatChoice=fileFormatChoice,
                                  method='commentReplieS',
-                                 coLabFolder=(coLabFolder + slash) if coLabFolder != None else None, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
+                                 coLabFolder=coLabFolder,
                                  currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                  )
 
@@ -1814,7 +1814,7 @@ videoPaidProductPlacement : str
                              dfIn=channelS,
                              fileFormatChoice=fileFormatChoice,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                             coLabFolder=(coLabFolder + slash) if coLabFolder != None else None, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
+                             coLabFolder=coLabFolder,
                              currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              )
 
