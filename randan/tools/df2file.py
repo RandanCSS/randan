@@ -18,7 +18,7 @@ while True:
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
-        if '.' in module: module = module.split('.')[1]
+        if '.' in module: module = module.split('.')[1] 
         print('Пакет', module,
               'НЕ прединсталлируется с установкой Анаконды, но для работы скрипта требуется этот пакет, поэтому он будет инсталлирован сейчас\n')
         check_call([sys.executable, "-m", "pip", "install", module])
@@ -51,7 +51,7 @@ def df2file(dfIn, *arg): # арки: fileName и folder
 
     if fileName == '':
         fileName = input('--- Впишите имя сохраняемого файла и нажмите Enter:')
-
+    
     if folder != '':
         print(f'Директория, в которую сохраняю файл "{fileName}":', os.getcwd() + slash + folder)
     elif slash in fileName: # если директория содерджится в fileName
@@ -104,13 +104,13 @@ def df2file(dfIn, *arg): # арки: fileName и folder
                     print('Пакет', module
                           , 'НЕ прединсталлируется с установкой Анаконды, для работы скрипта требуется этот пакет,'
                           , 'но инсталлировать его не удаётся, попробуйте инсталлировать его вручную, после чего снова запустите требуемый скрипт пакета\n')
-                    break
+                    break                
     if fileFormatChoice == 'csv':
-        dfIn.to_csv(folder + fileName)
+        dfIn.to_csv(folder + fileName)   
     if fileFormatChoice == 'json':
         dfIn.to_json(folder + fileName)
 
-def df2fileShell(complicatedNamePart, dfIn, fileFormatChoice, method, currentMoment):
+def df2fileShell(complicatedNamePart, dfIn, fileFormatChoice, method, coLabFolder, currentMoment):
     folder = f'{currentMoment}{complicatedNamePart}'
     print('Сохраняю выгрузку метода', method, '                              ')
     if os.path.exists(folder) == False:
@@ -138,10 +138,10 @@ def df2fileShell(complicatedNamePart, dfIn, fileFormatChoice, method, currentMom
         if 'from_id' in dfIn.columns: columnsToJSON.append('from_id')
         if 'owner_id' in dfIn.columns: columnsToJSON.append('owner_id')
 
-        df2file(dfIn[columnsToJSON], f'{folder}_{method}_JSON_varS.json', folder)
+        df2file(dfIn[columnsToJSON], f'{folder}_{method}_JSON_varS.json', folder if coLabFolder == None else coLabFolder + folder)
         columnsToJSON.remove('id')
         if 'from_id' in columnsToJSON: columnsToJSON.remove('from_id')
         if 'owner_id' in columnsToJSON: columnsToJSON.remove('owner_id')
 
-        df2file(dfIn.drop(columnsToJSON, axis=1), f'{folder}_{method}_Other_varS{fileFormatChoice}', folder)
-    else: df2file(dfIn, f'{folder}_{method}{fileFormatChoice}', folder)
+        df2file(dfIn.drop(columnsToJSON, axis=1), f'{folder}_{method}_Other_varS{fileFormatChoice}', folder if coLabFolder == None else coLabFolder + folder)
+    else: df2file(dfIn, f'{folder}_{method}{fileFormatChoice}', folder if coLabFolder == None else coLabFolder + folder)
