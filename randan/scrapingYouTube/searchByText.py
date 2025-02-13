@@ -57,7 +57,6 @@ while True:
         coLabFolder = 'drive/MyDrive/Colab Notebooks'
         break
     except ModuleNotFoundError:
-        errorDescription = sys.exc_info()
         attempt += 1
         if attempt == 2:
             # print('Похоже, я исполняюсь не в CoLab\n')
