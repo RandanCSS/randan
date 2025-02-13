@@ -550,7 +550,7 @@ videoPaidProductPlacement : str
     yearMaxByUser = None # в случае отсутствия пользовательского временнОго диапазона
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
-    rootNameS = os.listdir()
+    rootNameS = os.listdir() if coLabFolder == None else os.listdir(coLabFolder)
     # Поиск ключей
     if access_token == None:
         print('Проверяю наличие файла credentialsYouTube.txt с ключ[ом ами], гипотетически сохранённым[и] при первом запуске скрипта')
