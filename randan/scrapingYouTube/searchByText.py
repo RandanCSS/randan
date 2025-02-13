@@ -49,10 +49,11 @@ import sys
 while True:
     try:
         from google.colab import drive
-        print('Похоже, я исполняюсь в CoLab\n')
+        print('Похоже, я исполняюсь в CoLab, поэтому сейчас появится окно с просьбой открыть доступ для сохранения результатов работы на Ваш Google Drive\n')
         colabMode = True
         from google.colab import drive
         drive.mount('/content/drive')
+        coLabFolder = '/content/drive/MyDrive/Colab Notebooks'
         break
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
@@ -170,6 +171,7 @@ def dfsProcessing(
                   contentType,
                   fileFormatChoice,
                   dfAdd,
+                  dfFinal, # на обработке какой бы ни было выгрузки не возникла бы непреодолима ошибка, сохранить следует выгрузку метода search
                   dfIn,
                   goS,
                   method,
@@ -236,11 +238,12 @@ def dfsProcessing(
         file.close()
 
         df2file.df2fileShell(
-                             f'{complicatedNamePart}_Temporal',
-                             df,
-                             fileFormatChoice,
-                             method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                             momentCurrent.strftime("%Y%m%d")
+                             complicatedNamePart=f'{complicatedNamePart}_Temporal',
+                             dfIn=df,
+                             fileFormatChoice=fileFormatChoice,
+                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                             coLabFolder=coLabFolder + slash, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
+                             currentMoment=momentCurrent.strftime("%Y%m%d") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              )
         warnings.filterwarnings("ignore")
         print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
@@ -416,6 +419,7 @@ def portionProcessing(API_keyS, complicatedNamePart, fileFormatChoice, goS, idS,
                                     contentType=contentType,
                                     fileFormatChoice=fileFormatChoice,
                                     dfAdd=addChplviS,
+                                    dfFinal=itemS,
                                     dfIn=chplviS,
                                     goS=goS,
                                     method=method,
@@ -902,6 +906,7 @@ videoPaidProductPlacement : str
                               contentType=contentType,
                               fileFormatChoice=fileFormatChoice,
                               dfAdd=addItemS,
+                              dfFinal=itemS,
                               dfIn=itemS,
                               goS=goS,
                               method=method,
@@ -957,6 +962,7 @@ videoPaidProductPlacement : str
                                   contentType=contentType,
                                   fileFormatChoice=fileFormatChoice,
                                   dfAdd=addItemS,
+                                  dfFinal=itemS,
                                   dfIn=itemS,
                                   goS=goS,
                                   method=method,
@@ -1020,6 +1026,7 @@ videoPaidProductPlacement : str
                                       contentType=contentType,
                                       fileFormatChoice=fileFormatChoice,
                                       dfAdd=addItemS,
+                                      dfFinal=itemS,
                                       dfIn=itemS,
                                       goS=goS,
                                       method=method,
@@ -1079,6 +1086,7 @@ videoPaidProductPlacement : str
                                           contentType=contentType,
                                           fileFormatChoice=fileFormatChoice,
                                           dfAdd=addItemS,
+                                          dfFinal=itemS,
                                           dfIn=itemS,
                                           goS=goS,
                                           method=method,
@@ -1157,6 +1165,7 @@ videoPaidProductPlacement : str
                                           contentType=contentType,
                                           fileFormatChoice=fileFormatChoice,
                                           dfAdd=addItemS,
+                                          dfFinal=itemS,
                                           dfIn=itemS,
                                           goS=goS,
                                           method=method,
@@ -1211,6 +1220,7 @@ videoPaidProductPlacement : str
                                               contentType=contentType,
                                               fileFormatChoice=fileFormatChoice,
                                               dfAdd=addItemS,
+                                              dfFinal=itemS,
                                               dfIn=itemS,
                                               goS=goS,
                                               method=method,
@@ -1269,6 +1279,7 @@ videoPaidProductPlacement : str
                                                   contentType=contentType,
                                                   fileFormatChoice=fileFormatChoice,
                                                   dfAdd=addItemS,
+                                                  dfFinal=itemS,
                                                   dfIn=itemS,
                                                   goS=goS,
                                                   method=method,
@@ -1324,6 +1335,7 @@ videoPaidProductPlacement : str
                                                       contentType=contentType,
                                                       fileFormatChoice=fileFormatChoice,
                                                       dfAdd=addItemS,
+                                                      dfFinal=itemS,
                                                       dfIn=itemS,
                                                       goS=goS,
                                                       method=method,
@@ -1351,8 +1363,14 @@ videoPaidProductPlacement : str
         print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"')
 
 # 2.1.3 Экспорт выгрузки метода search и опциональное завершение скрипта
-    df2file.df2fileShell(complicatedNamePart, itemS, fileFormatChoice, method, momentCurrent.strftime("%Y%m%d_%H%M"))
-
+    df2file.df2fileShell(
+                         complicatedNamePart=f'{complicatedNamePart}_Temporal',
+                         dfIn=itemS,
+                         fileFormatChoice=fileFormatChoice,
+                         method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                         coLabFolder=coLabFolder + slash, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
+                         currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                         )
     print('Выгрузка метода search содержит НЕ ВСЕ доступные для выгрузки из API YouTube характеристки контента'
           , '\n--- Если хотите выгрузить дополнительные характеристики (ссылки для ознакомления с ними появятся ниже), нажмите Enter'
           , '\n--- Если НЕ хотите их выгрузить, нажмите пробел и затем Enter. Тогда исполнение скрипта завершится')
@@ -1420,6 +1438,7 @@ videoPaidProductPlacement : str
                                                       contentType=contentType,
                                                       fileFormatChoice=fileFormatChoice,
                                                       dfAdd=addPlaylistVideoChannelS,
+                                                      dfFinal=itemS,
                                                       dfIn=playlistVideoChannelS,
                                                       goS=goS,
                                                       method=method,
@@ -1446,7 +1465,14 @@ videoPaidProductPlacement : str
                 playlistS.loc[playlistS[playlistS['id'] == playlistId].index[0], column] =\
                     ', '.join(playlistVideoChannelS_snippet[playlistVideoChannelS_snippet['snippet.playlistId'] == playlistId][column].to_list())
         # display(playlistS)
-        df2file.df2fileShell(complicatedNamePart, playlistS, fileFormatChoice, method, momentCurrent.strftime("%Y%m%d_%H%M"))
+        df2file.df2fileShell(
+                             complicatedNamePart=f'{complicatedNamePart}_Temporal',
+                             dfIn=itemS,
+                             fileFormatChoice=fileFormatChoice,
+                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                             coLabFolder=coLabFolder + slash, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
+                             currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                             )
 
 # 2.2.2 Выгрузка дополнительных характеристик видео
     snippetContentType = 'video'
@@ -1511,7 +1537,14 @@ videoPaidProductPlacement : str
         for row in categoryNameS.index:
             videoS.loc[videoS['snippet.categoryId'] == row, 'categoryName'] = categoryNameS['snippet.title'][row]
 
-        df2file.df2fileShell(complicatedNamePart, videoS, fileFormatChoice, method, momentCurrent.strftime("%Y%m%d_%H%M"))
+        df2file.df2fileShell(
+                             complicatedNamePart=f'{complicatedNamePart}_Temporal',
+                             dfIn=itemS,
+                             fileFormatChoice=fileFormatChoice,
+                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                             coLabFolder=coLabFolder + slash, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
+                             currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                             )
         commentS = pandas.DataFrame() # не в следующем ченке, чтобы иметь возможность перезапускать его, не затирая промежуточный результат выгрузки
 
 # 2.2.3 Выгрузка комментариев к видео
@@ -1565,6 +1598,7 @@ videoPaidProductPlacement : str
                                          contentType=contentType,
                                          fileFormatChoice=fileFormatChoice,
                                          dfAdd=commentsAdditional,
+                                         dfFinal=itemS,
                                          dfIn=commentS,
                                          goS=goS,
                                          method=method,
@@ -1579,7 +1613,14 @@ videoPaidProductPlacement : str
                                          )
             commentS = commentS.drop(['kind', 'etag', 'id', 'snippet.channelId', 'snippet.videoId'], axis=1) # т.к. дублируются содержательно
             commentS = prefixDropper(commentS)
-            df2file.df2fileShell(complicatedNamePart, commentS, fileFormatChoice, 'commentS', momentCurrent.strftime("%Y%m%d_%H%M"))
+            df2file.df2fileShell(
+                                 complicatedNamePart=f'{complicatedNamePart}_Temporal',
+                                 dfIn=itemS,
+                                 fileFormatChoice=fileFormatChoice,
+                                 method='commentS',
+                                 coLabFolder=coLabFolder + slash, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
+                                 currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                 )
 
 # ********** replieS
             print('\nПроход по строкам всех родительских (topLevel) комментариев, имеющих ответы')
@@ -1595,8 +1636,14 @@ videoPaidProductPlacement : str
             replieS.loc[:, 'snippet.totalReplyCount'] = 0
             replieS.loc[:, 'Недостача_ответов'] = 0
             replieS = prefixDropper(replieS)
-            df2file.df2fileShell(complicatedNamePart, replieS, fileFormatChoice, 'replieS', momentCurrent.strftime("%Y%m%d_%H%M"))
-
+            df2file.df2fileShell(
+                                 complicatedNamePart=f'{complicatedNamePart}_Temporal',
+                                 dfIn=itemS,
+                                 fileFormatChoice=fileFormatChoice,
+                                 method='replieS',
+                                 coLabFolder=coLabFolder + slash, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
+                                 currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                 )
             commentReplieS = commentS.copy() # копия датафрейма c родительскими (topLevel) комментариями -- основа будущего общего датафрейма
             # Найти столбцы, совпадающие для датафреймов c родительскими (topLevel) комментариями и с комментариями-ответами
             mutualColumns = []
@@ -1614,6 +1661,7 @@ videoPaidProductPlacement : str
                                            contentType=contentType,
                                            fileFormatChoice=fileFormatChoice,
                                            dfAdd=replieS,
+                                           dfFinal=itemS,
                                            dfIn=commentReplieS,
                                            goS=goS,
                                            method=method,
@@ -1658,6 +1706,7 @@ videoPaidProductPlacement : str
                                         contentType=contentType,
                                         fileFormatChoice=fileFormatChoice,
                                         dfAdd=repliesAdditional,
+                                        dfFinal=itemS,
                                         dfIn=replieS,
                                         goS=goS,
                                         method=method,
@@ -1686,6 +1735,7 @@ videoPaidProductPlacement : str
                                            contentType=contentType,
                                            fileFormatChoice=fileFormatChoice,
                                            dfAdd=replieS,
+                                           dfFinal=itemS,
                                            dfIn=commentReplieS,
                                            goS=goS,
                                            method=method,
@@ -1698,7 +1748,14 @@ videoPaidProductPlacement : str
                                            year=year,
                                            yearsRange=yearsRange
                                            )
-            df2file.df2fileShell(complicatedNamePart, commentReplieS, fileFormatChoice, 'commentReplieS', momentCurrent.strftime("%Y%m%d_%H%M"))
+            df2file.df2fileShell(
+                                 complicatedNamePart=f'{complicatedNamePart}_Temporal',
+                                 dfIn=itemS,
+                                 fileFormatChoice=fileFormatChoice,
+                                 method='commentReplieS',
+                                 coLabFolder=coLabFolder + slash, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
+                                 currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                 )
 
 # 2.2.4 Выгрузка дополнительных характеристик каналов
     snippetContentType = 'channel'
@@ -1747,7 +1804,14 @@ videoPaidProductPlacement : str
                     channelIdS = list(dict.fromkeys(channelIdS))
         print('Проход порциями по 50 каналов')
         channelS = portionProcessing(API_keyS, complicatedNamePart, fileFormatChoice, goS, channelIdS, keyOrder, method, momentCurrent, slash, stage, stageTarget, targetCount, year, yearsRange, q=None)
-        df2file.df2fileShell(complicatedNamePart, channelS, fileFormatChoice, method, momentCurrent.strftime("%Y%m%d_%H%M"))
+        df2file.df2fileShell(
+                             complicatedNamePart=f'{complicatedNamePart}_Temporal',
+                             dfIn=itemS,
+                             fileFormatChoice=fileFormatChoice,
+                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                             coLabFolder=coLabFolder + slash, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
+                             currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                             )
 
 # 2.2.5 Экспорт выгрузки метода search и финальное завершение скрипта
     print('Скрипт исполнен')
