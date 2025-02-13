@@ -109,7 +109,7 @@ def df2file(dfIn, *arg): # арки: fileName и folder
                               , 'НЕ прединсталлируется с установкой Анаконды, для работы скрипта требуется этот пакет,'
                               , 'но инсталлировать его не удаётся, попробуйте инсталлировать его вручную, после чего снова запустите требуемый скрипт пакета\n')
                         break
-                break # для отладки
+                else: break
     if fileFormatChoice == 'csv':
         dfIn.to_csv(folder + fileName)   
     if fileFormatChoice == 'json':
