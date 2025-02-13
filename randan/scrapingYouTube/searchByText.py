@@ -1614,135 +1614,137 @@ videoPaidProductPlacement : str
                                  )
 
 # ********** replieS
-            print('\nПроход по строкам всех родительских (topLevel) комментариев, имеющих ответы')
-            replieS = pandas.DataFrame()
-            for row in tqdm(commentS[commentS['snippet.totalReplyCount'] > 0].index):
-                addReplieS = pandas.json_normalize(commentS['replies.comments'][row])
-
-                # Записать разницу между ожданиями и реальностью в новый столбец `Недостача_ответов`
-                commentS.loc[row, 'Недостача_ответов'] = commentS['snippet.totalReplyCount'][row] - len(addReplieS)
-
-                replieS = pandas.concat([replieS, addReplieS]).reset_index(drop=True)
-
-            replieS.loc[:, 'snippet.totalReplyCount'] = 0
-            replieS.loc[:, 'Недостача_ответов'] = 0
-            replieS = prefixDropper(replieS)
-            df2file.df2fileShell(
-                                 complicatedNamePart=complicatedNamePart,
-                                 dfIn=replieS,
-                                 fileFormatChoice=fileFormatChoice,
-                                 method='replieS',
-                                 coLabFolder=coLabFolder,
-                                 currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                                 )
-            commentReplieS = commentS.copy() # копия датафрейма c родительскими (topLevel) комментариями -- основа будущего общего датафрейма
-            # Найти столбцы, совпадающие для датафреймов c родительскими (topLevel) комментариями и с комментариями-ответами
-            mutualColumns = []
-            for column in commentReplieS.columns:
-                if column in replieS.columns:
-                    mutualColumns.append(column)
-
-# ********** commentReplieS
-            # Оставить только совпадающие столбцы датафреймов с родительскими (topLevel) комментариями и с комментариями-ответами
-            commentReplieS = commentReplieS[mutualColumns]
-            replieS = replieS[mutualColumns]
-            commentReplieS = dfsProcessing(
-                                           channelIdForSearch=channelIdForSearch,
-                                           complicatedNamePart=complicatedNamePart,
-                                           contentType=contentType,
-                                           fileFormatChoice=fileFormatChoice,
-                                           dfAdd=replieS,
-                                           dfFinal=itemS,
-                                           dfIn=commentReplieS,
-                                           goS=goS,
-                                           method=method,
-                                           q=q,
-                                           rootName=rootName,
-                                           slash=slash,
-                                           stageTarget=stage,
-                                           targetCount=targetCount,
-                                           momentCurrent=momentCurrent,
-                                           year=year,
-                                           yearsRange=yearsRange
-                                           )
-            method = 'comments'
-            part = 'id, snippet'
-            textFormat = 'plainText' # = 'html' по умолчанию
-            problemCommentIdS = []
-            replieS = pandas.DataFrame() # зачем? См. этап 4.2 ниже
-            print('\nВ скрипте используются следующие аргументы метода', method, 'API YouTube:'
-                  , 'part=["snippet", "id"], maxResults, parentId, textFormat .'
-                  , 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
-                  , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
-                  , 'https://developers.google.com/youtube/v3/docs/commentThreads')
-            if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-            print('Проход по id всех родительских (topLevel) комментариев с недостачей ответов для выгрузки этих ответов')
-            commentIdS = commentReplieS['id'][commentReplieS['Недостача_ответов'] > 0]
-            for commentId in tqdm(commentIdS):
-                page = 0 # номер страницы выдачи
-                repliesAdditional, goS, keyOrder, problemCommentId = downloadComments(
-                                                                                      API_keyS=API_keyS,
-                                                                                      sourceId=commentId,
-                                                                                      keyOrder=keyOrder,
-                                                                                      method=method
-                                                                                      )
-                if problemCommentId != None: problemCommentIdS.append(problemCommentId)
-                replieS = dfsProcessing(
-                                        channelIdForSearch=channelIdForSearch,
-                                        complicatedNamePart=complicatedNamePart,
-                                        contentType=contentType,
-                                        fileFormatChoice=fileFormatChoice,
-                                        dfAdd=repliesAdditional,
-                                        dfFinal=itemS,
-                                        dfIn=replieS,
-                                        goS=goS,
-                                        method=method,
-                                        q=q,
-                                        rootName=rootName,
-                                        slash=slash,
-                                        stageTarget=stage,
-                                        targetCount=targetCount,
-                                        momentCurrent=momentCurrent,
-                                        year=year,
-                                        yearsRange=yearsRange
-                                        )
-            print('Ответов выгружено', len(replieS)
-                  , '; проблемные родительские (topLevel) комментарии:', problemCommentIdS if len(problemCommentIdS) > 0  else 'отсутствуют\n')
-
-            # Для совместимости датафреймов добавить столбцы`snippet.totalReplyCount` и `Недостача_ответов`
-            replieS.loc[:, 'snippet.totalReplyCount'] = 0
-            replieS.loc[:, 'Недостача_ответов'] = 0
-
-            # Удалить столбец `snippet.parentId`, т.к. и из столбца `id` всё ясно
-            replieS = replieS.drop('snippet.parentId', axis=1)
-
-            commentReplieS = dfsProcessing(
-                                           channelIdForSearch=channelIdForSearch,
-                                           complicatedNamePart=complicatedNamePart,
-                                           contentType=contentType,
-                                           fileFormatChoice=fileFormatChoice,
-                                           dfAdd=replieS,
-                                           dfFinal=itemS,
-                                           dfIn=commentReplieS,
-                                           goS=goS,
-                                           method=method,
-                                           q=q,
-                                           rootName=rootName,
-                                           slash=slash,
-                                           stageTarget=stage,
-                                           targetCount=targetCount,
-                                           momentCurrent=momentCurrent,
-                                           year=year,
-                                           yearsRange=yearsRange
-                                           )
-            df2file.df2fileShell(
-                                 complicatedNamePart=complicatedNamePart,
-                                 dfIn=commentReplieS,
-                                 fileFormatChoice=fileFormatChoice,
-                                 method='commentReplieS',
-                                 coLabFolder=coLabFolder,
-                                 currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                                 )
+            if len(commentS[commentS['snippet.totalReplyCount'] > 0]) > 0: # есть ли хотя бы один отвеченный родительский (topLevel) комментарий?
+                print('\nПроход по строкам всех родительских (topLevel) комментариев, имеющих ответы')
+                replieS = pandas.DataFrame()
+                for row in tqdm(commentS[commentS['snippet.totalReplyCount'] > 0].index):
+                    addReplieS = pandas.json_normalize(commentS['replies.comments'][row])
+    
+                    # Записать разницу между ожданиями и реальностью в новый столбец `Недостача_ответов`
+                    commentS.loc[row, 'Недостача_ответов'] = commentS['snippet.totalReplyCount'][row] - len(addReplieS)
+    
+                    replieS = pandas.concat([replieS, addReplieS]).reset_index(drop=True)
+    
+                replieS.loc[:, 'snippet.totalReplyCount'] = 0
+                replieS.loc[:, 'Недостача_ответов'] = 0
+                replieS = prefixDropper(replieS)
+                df2file.df2fileShell(
+                                     complicatedNamePart=complicatedNamePart,
+                                     dfIn=replieS,
+                                     fileFormatChoice=fileFormatChoice,
+                                     method='replieS',
+                                     coLabFolder=coLabFolder,
+                                     currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                     )
+                commentReplieS = commentS.copy() # копия датафрейма c родительскими (topLevel) комментариями -- основа будущего общего датафрейма
+                # Найти столбцы, совпадающие для датафреймов c родительскими (topLevel) комментариями и с комментариями-ответами
+                mutualColumns = []
+                for column in commentReplieS.columns:
+                    if column in replieS.columns:
+                        mutualColumns.append(column)
+    
+    # ********** commentReplieS
+                # Оставить только совпадающие столбцы датафреймов с родительскими (topLevel) комментариями и с комментариями-ответами
+                commentReplieS = commentReplieS[mutualColumns]
+                replieS = replieS[mutualColumns]
+                commentReplieS = dfsProcessing(
+                                               channelIdForSearch=channelIdForSearch,
+                                               complicatedNamePart=complicatedNamePart,
+                                               contentType=contentType,
+                                               fileFormatChoice=fileFormatChoice,
+                                               dfAdd=replieS,
+                                               dfFinal=itemS,
+                                               dfIn=commentReplieS,
+                                               goS=goS,
+                                               method=method,
+                                               q=q,
+                                               rootName=rootName,
+                                               slash=slash,
+                                               stageTarget=stage,
+                                               targetCount=targetCount,
+                                               momentCurrent=momentCurrent,
+                                               year=year,
+                                               yearsRange=yearsRange
+                                               )
+                method = 'comments'
+                part = 'id, snippet'
+                textFormat = 'plainText' # = 'html' по умолчанию
+                problemCommentIdS = []
+                replieS = pandas.DataFrame() # зачем? См. этап 4.2 ниже
+                print('\nВ скрипте используются следующие аргументы метода', method, 'API YouTube:'
+                      , 'part=["snippet", "id"], maxResults, parentId, textFormat .'
+                      , 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
+                      , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
+                      , 'https://developers.google.com/youtube/v3/docs/commentThreads')
+                if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+                print('Проход по id всех родительских (topLevel) комментариев с недостачей ответов для выгрузки этих ответов')
+                commentIdS = commentReplieS['id'][commentReplieS['Недостача_ответов'] > 0]
+                for commentId in tqdm(commentIdS):
+                    page = 0 # номер страницы выдачи
+                    repliesAdditional, goS, keyOrder, problemCommentId = downloadComments(
+                                                                                          API_keyS=API_keyS,
+                                                                                          sourceId=commentId,
+                                                                                          keyOrder=keyOrder,
+                                                                                          method=method
+                                                                                          )
+                    if problemCommentId != None: problemCommentIdS.append(problemCommentId)
+                    replieS = dfsProcessing(
+                                            channelIdForSearch=channelIdForSearch,
+                                            complicatedNamePart=complicatedNamePart,
+                                            contentType=contentType,
+                                            fileFormatChoice=fileFormatChoice,
+                                            dfAdd=repliesAdditional,
+                                            dfFinal=itemS,
+                                            dfIn=replieS,
+                                            goS=goS,
+                                            method=method,
+                                            q=q,
+                                            rootName=rootName,
+                                            slash=slash,
+                                            stageTarget=stage,
+                                            targetCount=targetCount,
+                                            momentCurrent=momentCurrent,
+                                            year=year,
+                                            yearsRange=yearsRange
+                                            )
+                print('Ответов выгружено', len(replieS)
+                      , '; проблемные родительские (topLevel) комментарии:', problemCommentIdS if len(problemCommentIdS) > 0  else 'отсутствуют\n')
+    
+                # Для совместимости датафреймов добавить столбцы`snippet.totalReplyCount` и `Недостача_ответов`
+                replieS.loc[:, 'snippet.totalReplyCount'] = 0
+                replieS.loc[:, 'Недостача_ответов'] = 0
+    
+                # Удалить столбец `snippet.parentId`, т.к. и из столбца `id` всё ясно
+                replieS = replieS.drop('snippet.parentId', axis=1)
+    
+                commentReplieS = dfsProcessing(
+                                               channelIdForSearch=channelIdForSearch,
+                                               complicatedNamePart=complicatedNamePart,
+                                               contentType=contentType,
+                                               fileFormatChoice=fileFormatChoice,
+                                               dfAdd=replieS,
+                                               dfFinal=itemS,
+                                               dfIn=commentReplieS,
+                                               goS=goS,
+                                               method=method,
+                                               q=q,
+                                               rootName=rootName,
+                                               slash=slash,
+                                               stageTarget=stage,
+                                               targetCount=targetCount,
+                                               momentCurrent=momentCurrent,
+                                               year=year,
+                                               yearsRange=yearsRange
+                                               )
+                df2file.df2fileShell(
+                                     complicatedNamePart=complicatedNamePart,
+                                     dfIn=commentReplieS,
+                                     fileFormatChoice=fileFormatChoice,
+                                     method='commentReplieS',
+                                     coLabFolder=coLabFolder,
+                                     currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                     )
+            else: print('Нет ни одного откомментированного родительского (topLevel) комментария')
 
 # 2.2.4 Выгрузка дополнительных характеристик каналов
     snippetContentType = 'channel'
