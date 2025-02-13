@@ -1339,7 +1339,7 @@ videoPaidProductPlacement : str
                          coLabFolder=(coLabFolder + slash) if coLabFolder != None else None, # + slash -- поскольку при определении df2fileShell slash отдельно не подаётся
                          currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                          )
-    print('Выгрузка метода search содержит НЕ ВСЕ доступные для выгрузки из API YouTube характеристки контента'
+    print('\nВыгрузка метода search содержит НЕ ВСЕ доступные для выгрузки из API YouTube характеристки контента'
           , '\n--- Если хотите выгрузить дополнительные характеристики (ссылки для ознакомления с ними появятся ниже), нажмите Enter'
           , '\n--- Если НЕ хотите их выгрузить, нажмите пробел и затем Enter. Тогда исполнение скрипта завершится')
 
@@ -1553,7 +1553,7 @@ videoPaidProductPlacement : str
     if len(videoS) > 0:
         print('\n--- Если хотите выгрузить комментарии к видео (в отдельный файл),'
               , f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart} {method}.xlsx" директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}",'
-              , 'просто нажмите Enter, но учтите, что поиск может занять минуты и даже часы'
+              , 'просто нажмите Enter, но учтите, что выгрузка может занять минуты и даже часы'
               , '\n--- Если НЕ хотите выгрузить комментарии, нажмите пробел и затем Enter')
         if len(input()) == 0:
 
