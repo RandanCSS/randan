@@ -94,17 +94,19 @@ def df2file(dfIn, *arg): # арки: fileName и folder
                 dfIn.to_excel(folder + fileName)
                 # print(folder + fileName)
                 break
-            except pandas.errors.IllegalCharacterError:
-                print(sys.exc_info()[1])
-                module = 'xlsxwriter'
-                print('Для устранения ошибки требуется пакет', {module}, 'поэтому он будет инсталирован сейчас\n')
-                check_call([sys.executable, "-m", "pip", "install", module])
-                attempt += 1
-                if  attempt == 10:
-                    print('Пакет', module
-                          , 'НЕ прединсталлируется с установкой Анаконды, для работы скрипта требуется этот пакет,'
-                          , 'но инсталлировать его не удаётся, попробуйте инсталлировать его вручную, после чего снова запустите требуемый скрипт пакета\n')
-                    break                
+            except:
+                errorDescription = sys.exc_info()
+                print(errorDescription[1])
+                if 'IllegalCharacterError' in errorDescription[0]:
+                    module = 'xlsxwriter'
+                    print('Для устранения ошибки требуется пакет', {module}, 'поэтому он будет инсталирован сейчас\n')
+                    check_call([sys.executable, "-m", "pip", "install", module])
+                    attempt += 1
+                    if  attempt == 10:
+                        print('Пакет', module
+                              , 'НЕ прединсталлируется с установкой Анаконды, для работы скрипта требуется этот пакет,'
+                              , 'но инсталлировать его не удаётся, попробуйте инсталлировать его вручную, после чего снова запустите требуемый скрипт пакета\n')
+                        break                
     if fileFormatChoice == 'csv':
         dfIn.to_csv(folder + fileName)   
     if fileFormatChoice == 'json':
