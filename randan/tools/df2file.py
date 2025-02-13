@@ -119,14 +119,14 @@ def df2fileShell(complicatedNamePart, dfIn, fileFormatChoice, method, coLabFolde
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     folder = currentMoment + complicatedNamePart
     if coLabFolder == None:
-        print('Сохраняю выгрузку метода', method, '                              ', f'в директорию "{folder}"') #
+        print('Сохраняю выгрузку метода', method, '                              ') #, f'в директорию "{folder}"'
         if os.path.exists(folder) == False:
             print('Такой директории не существовало, поэтому она создана')
             os.makedirs(folder)
         # else:
             # print('Эта директория существует')
     else:
-        print('Сохраняю выгрузку метода', method, '                              ', f'в директорию "{os.getcwd() + slash + coLabFolder + slash + folder}"') #
+        print('Сохраняю выгрузку метода', method, '                              ') #, f'в директорию "{os.getcwd() + slash + coLabFolder + slash + folder}"'
         if os.path.exists(os.getcwd() + slash + coLabFolder + slash + folder) == False:
             print('Такой директории не существовало, поэтому она создана')
             os.makedirs(os.getcwd() + slash + coLabFolder + slash + folder)
@@ -144,7 +144,7 @@ def df2fileShell(complicatedNamePart, dfIn, fileFormatChoice, method, coLabFolde
         if dfIn[column].apply(lambda content: True if (type(content) == dict) | (type(content) == list) else False).sum() == 0:
             columnsToJSON.remove(column) # .. то этот столбец исключается из "подозреваемых"
 
-    print('folder', folder) # для отладки
+    # print('folder', folder) # для отладки
     if len(columnsToJSON) > 0:
         print('В выгрузке метода', method, 'есть столбцы, содержащие внутри своих ячеек JSON-объекты; Excel не поддерживает JSON-формат;'
               , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
@@ -153,10 +153,10 @@ def df2fileShell(complicatedNamePart, dfIn, fileFormatChoice, method, coLabFolde
         if 'from_id' in dfIn.columns: columnsToJSON.append('from_id')
         if 'owner_id' in dfIn.columns: columnsToJSON.append('owner_id')
 
-        df2file(dfIn[columnsToJSON], f'{folder}_{method}_JSON_varS.json', folder)
+        df2file(dfIn[columnsToJSON], f'{folder}_{method}_JSON_varS.json', folder if coLabFolder == None else coLabFolder + slash + folder)
         columnsToJSON.remove('id')
         if 'from_id' in columnsToJSON: columnsToJSON.remove('from_id')
         if 'owner_id' in columnsToJSON: columnsToJSON.remove('owner_id')
 
-        df2file(dfIn.drop(columnsToJSON, axis=1), f'{folder}_{method}_Other_varS{fileFormatChoice}', folder)
-    else: df2file(dfIn, f'{folder}_{method}{fileFormatChoice}', folder)
+        df2file(dfIn.drop(columnsToJSON, axis=1), f'{folder}_{method}_Other_varS{fileFormatChoice}', folder if coLabFolder == None else coLabFolder + slash + folder)
+    else: df2file(dfIn, f'{folder}_{method}{fileFormatChoice}', folder if coLabFolder == None else coLabFolder + slash + folder)
