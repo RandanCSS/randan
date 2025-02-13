@@ -362,11 +362,6 @@ def portionProcessing(API_keyS, channelIdForSearch, complicatedNamePart, content
                                                     part='snippet, contentDetails, localizations, status'
                                                     , id=idS[bound:bound + 50]
                                                     ).execute()
-            if method == 'playlistItems':
-                response = youtube.playlistItems().list(
-                                                        part='snippet'
-                                                        , playlistId=idS[bound:bound + 50]
-                                                        ).execute()
             if method == 'videos':
                 response = youtube.videos().list(
                                                  part='snippet, contentDetails, localizations, statistics, status, topicDetails'
