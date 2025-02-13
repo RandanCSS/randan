@@ -346,7 +346,7 @@ def iterationVisualization(idS, iteration, portion, response):
     if portion > 1: print('   Сколько в порции наблюдений?', len(response['items']), end='\r')
 
 # 1.5 для порционной выгрузки, когда метод предполагает подачу ему id порциями
-def portionProcessing(API_keyS, complicatedNamePart, fileFormatChoice, goS, idS, keyOrder, method, momentCurrent, slash, stage, stageTarget, targetCount, year, yearsRange, q):
+def portionProcessing(API_keyS, channelIdForSearch, complicatedNamePart, fileFormatChoice, goS, idS, keyOrder, method, momentCurrent, slash, stage, stageTarget, targetCount, year, yearsRange, q):
     # print('method', method) # для отладки
     bound = 0
     chplviS = pandas.DataFrame()
@@ -1410,7 +1410,24 @@ videoPaidProductPlacement : str
         if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
 
         print('Проход порциями по 50 плейлистов')
-        playlistS = portionProcessing(API_keyS, complicatedNamePart, fileFormatChoice, goS, playlistIdS, keyOrder, method, momentCurrent, slash, stage, stageTarget, targetCount, year, yearsRange, q=None)
+        playlistS = portionProcessing(
+                                      API_keyS=API_keyS,
+                                      channelIdForSearch=channelIdForSearch,
+                                      complicatedNamePart=complicatedNamePart,
+                                      fileFormatChoice=fileFormatChoice,
+                                      goS=goS,
+                                      idS=playlistIdS,
+                                      keyOrder=keyOrder,
+                                      method=method,
+                                      momentCurrent=momentCurrent,
+                                      slash=slash,
+                                      stage=stage,
+                                      stageTarget=stageTarget,
+                                      targetCount=targetCount,
+                                      year=year,
+                                      yearsRange=yearsRange,
+                                      q=None
+                                      )
 
         method = 'playlistItems'
         print('\nВ скрипте используются следующие аргументы метода', method, 'API YouTube:'
@@ -1513,7 +1530,24 @@ videoPaidProductPlacement : str
                     videoIdS = list(dict.fromkeys(videoIdS))
 
         print('Проход порциями по 50 видео')
-        videoS = portionProcessing(API_keyS, complicatedNamePart, fileFormatChoice, goS, videoIdS, keyOrder, method, momentCurrent, slash, stage, stageTarget, targetCount, year, yearsRange, q=None)
+        videoS = portionProcessing(
+                                   API_keyS=API_keyS,
+                                   channelIdForSearch=channelIdForSearch,
+                                   complicatedNamePart=complicatedNamePart,
+                                   fileFormatChoice=fileFormatChoice,
+                                   goS=goS,
+                                   idS=videoIdS,
+                                   keyOrder=keyOrder,
+                                   method=method,
+                                   momentCurrent=momentCurrent,
+                                   slash=slash,
+                                   stage=stage,
+                                   stageTarget=stageTarget,
+                                   targetCount=targetCount,
+                                   year=year,
+                                   yearsRange=yearsRange,
+                                   q=None
+                                   )
 
 # ********** categoryId
         # Взять столбец snippet.categoryId, удалить из него дубликаты кодов категорий и помеcтить уникальные коды в список
@@ -1804,7 +1838,24 @@ videoPaidProductPlacement : str
                     channelIdS.extend(playlistChannelIdS)
                     channelIdS = list(dict.fromkeys(channelIdS))
         print('Проход порциями по 50 каналов')
-        channelS = portionProcessing(API_keyS, complicatedNamePart, fileFormatChoice, goS, channelIdS, keyOrder, method, momentCurrent, slash, stage, stageTarget, targetCount, year, yearsRange, q=None)
+        channelS = portionProcessing(
+                                     API_keyS=API_keyS,
+                                     channelIdForSearch=channelIdForSearch,
+                                     complicatedNamePart=complicatedNamePart,
+                                     fileFormatChoice=fileFormatChoice,
+                                     goS=goS,
+                                     idS=channelIdS,
+                                     keyOrder=keyOrder,
+                                     method=method,
+                                     momentCurrent=momentCurrent,
+                                     slash=slash,
+                                     stage=stage,
+                                     stageTarget=stageTarget,
+                                     targetCount=targetCount,
+                                     year=year,
+                                     yearsRange=yearsRange,
+                                     q=None
+                                     )
         df2file.df2fileShell(
                              complicatedNamePart=f'{complicatedNamePart}_Temporal',
                              dfIn=itemS,
