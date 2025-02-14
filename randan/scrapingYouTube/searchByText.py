@@ -11,7 +11,7 @@
 # In[ ]:
 
 
-# 0.0 В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
+# В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
 # sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
 import sys
 from subprocess import check_call
@@ -22,6 +22,7 @@ while True:
     try:
         from datetime import date, datetime
         from randan.tools import calendarWithinYear # авторский модуль для работы с календарём конкретного года
+        from randan.tools import caLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
         from randan.tools import df2file # авторский модуль для сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
         from randan.tools import files2df # авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
         from tqdm import tqdm
@@ -41,26 +42,7 @@ while True:
                   , 'НЕ прединсталлируется с установкой Анаконды, для работы скрипта требуется этот пакет,'
                   , 'но инсталлировать его не удаётся, попробуйте инсталлировать его вручную, после чего снова запустите требуемый скрипт пакета\n')
             break
-
-# 0.1 В случае работы в CoLab требуется особенный код
-attempt = 0
-coLabFolder = None
-colabMode = False
-import sys
-while True:
-    try:
-        from google.colab import drive
-        print('Похоже, я исполняюсь в CoLab, поэтому сейчас появится окно с просьбой открыть доступ для сохранения результатов работы на Ваш Google Drive\n')
-        colabMode = True
-        from google.colab import drive
-        drive.mount('/content/drive')
-        coLabFolder = 'drive/MyDrive/Colab Notebooks'
-        break
-    except ModuleNotFoundError:
-        attempt += 1
-        if attempt == 2:
-            # print('Похоже, я исполняюсь не в CoLab\n')
-            break
+coLabFolder, colabMode = caLabAdaptor.caLabAdaptor()
 
 
 # In[ ]:
@@ -196,6 +178,7 @@ def dfsProcessing(
     # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck)
     df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True) # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
 
+# Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
     if goS == False:
         print('Поскольку исполнение скрипта натолкнулось на непреодолимую ошибку,'
               , f'сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"')
