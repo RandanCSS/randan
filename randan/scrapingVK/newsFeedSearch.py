@@ -88,7 +88,7 @@ def bigSearch(
         if 'response' in response.keys():
             response = response['response']
             # print('    response.keys() внутри bigSearch', response.keys()) # для отладки
-            dfAdd = pandas.json_normalize(response)
+            dfAdd = pandas.json_normalize(response['items'])
             break
         elif 'error' in response.keys():
             if 'Too many requests per second' in response['error']['error_msg']:
@@ -131,6 +131,8 @@ def bigSearch(
     # Сменить формат представления дат, класс данных столбцов с id, создать столбец с кликабельными ссылками на контент
         # Здесь, а не в конце, поскольку нужна совместимость с itemS из Temporal и от пользователя
     if len(dfAdd) > 0:
+        # display(dfAdd) # для отладки
+        # print('dfAdd.columns', dfAdd.columns) # для отладки
         dfAdd['date'] = dfAdd['date'].apply(lambda content: datetime.fromtimestamp(content).strftime('%Y.%m.%d'))
         dfAdd['URL'] = dfAdd['from_id'].astype(str)
         dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL'] = 'id' + dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL']
@@ -156,8 +158,6 @@ def dfsProcessing(
                   year,
                   yearsRange
                   ):
-    response['items']
-
     df = pandas.concat([dfIn, dfAdd])
     columnsForCheck = []
     if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
@@ -379,7 +379,7 @@ def newsFeedSearch(
             file.close()
             year = int(year)
 
-            file = open(f'{rootName}{slash}q.txt') # , encoding='utf-8'
+            file = open(f'{rootName}{slash}q.txt', encoding='utf-8') # 
             q = file.read()
             file.close()
             if q == '': q = None # для единообразия
