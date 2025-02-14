@@ -22,7 +22,7 @@ while True:
     try:
         from datetime import date, datetime
         from randan.tools import calendarWithinYear # авторский модуль для работы с календарём конкретного года
-        from randan.tools import caLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
+        from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
         from randan.tools import df2file # авторский модуль для сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
         from randan.tools import files2df # авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
         from tqdm import tqdm
@@ -42,7 +42,7 @@ while True:
                   , 'НЕ прединсталлируется с установкой Анаконды, для работы скрипта требуется этот пакет,'
                   , 'но инсталлировать его не удаётся, попробуйте инсталлировать его вручную, после чего снова запустите требуемый скрипт пакета\n')
             break
-coLabFolder, colabMode = caLabAdaptor.caLabAdaptor()
+coLabFolder, colabMode = coLabAdaptor.coLabAdaptor()
 
 
 # In[ ]:
