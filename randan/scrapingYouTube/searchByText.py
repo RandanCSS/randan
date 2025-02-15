@@ -42,8 +42,6 @@ while True:
                   , 'НЕ прединсталлируется с установкой Анаконды, для работы скрипта требуется этот пакет,'
                   , 'но инсталлировать его не удаётся, попробуйте инсталлировать его вручную, после чего снова запустите требуемый скрипт пакета\n')
             break
-coLabFolder, colabMode = coLabAdaptor.coLabAdaptor()
-
 
 # In[ ]:
 
@@ -149,6 +147,7 @@ def bigSearch(
 # 1.1 для обработки выдачи любого из методов, помогающая работе с ключами
 def dfsProcessing(
                   channelIdForSearch,
+                  coLabFolder,
                   complicatedNamePart,
                   contentType,
                   fileFormatChoice,
@@ -367,6 +366,7 @@ def portionProcessing(API_keyS, channelIdForSearch, complicatedNamePart, content
             addChplviS = pandas.json_normalize(response['items'])
             chplviS = dfsProcessing(
                                     channelIdForSearch=channelIdForSearch,
+                                    coLabFolder=coLabFolder,
                                     complicatedNamePart=complicatedNamePart,
                                     contentType=contentType,
                                     fileFormatChoice=fileFormatChoice,
@@ -511,6 +511,7 @@ videoPaidProductPlacement : str
 
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API YouTube
+    coLabFolder = coLabAdaptor.coLabAdaptor()
     fileFormatChoice = '.xlsx' # базовый формат сохраняемых файлов; формат .json добавляется опционально через наличие columnsToJSON
     folder = None
     folderFile = None
@@ -853,6 +854,7 @@ videoPaidProductPlacement : str
         targetCount = response['pageInfo']['totalResults']
         itemS = dfsProcessing(
                               channelIdForSearch=channelIdForSearch,
+                              coLabFolder=coLabFolder,
                               complicatedNamePart=complicatedNamePart,
                               contentType=contentType,
                               fileFormatChoice=fileFormatChoice,
@@ -908,6 +910,7 @@ videoPaidProductPlacement : str
                                                                      )
             itemS = dfsProcessing(
                                   channelIdForSearch=channelIdForSearch,
+                                  coLabFolder=coLabFolder,
                                   complicatedNamePart=complicatedNamePart,
                                   contentType=contentType,
                                   fileFormatChoice=fileFormatChoice,
@@ -971,6 +974,7 @@ videoPaidProductPlacement : str
                                                                          )
                 itemS = dfsProcessing(
                                       channelIdForSearch=channelIdForSearch,
+                                      coLabFolder=coLabFolder,
                                       complicatedNamePart=complicatedNamePart,
                                       contentType=contentType,
                                       fileFormatChoice=fileFormatChoice,
@@ -1030,6 +1034,7 @@ videoPaidProductPlacement : str
                                                                              )
                     itemS = dfsProcessing(
                                           channelIdForSearch=channelIdForSearch,
+                                          coLabFolder=coLabFolder,
                                           complicatedNamePart=complicatedNamePart,
                                           contentType=contentType,
                                           fileFormatChoice=fileFormatChoice,
@@ -1108,6 +1113,7 @@ videoPaidProductPlacement : str
                             break
                     itemS = dfsProcessing(
                                           channelIdForSearch=channelIdForSearch,
+                                          coLabFolder=coLabFolder,
                                           complicatedNamePart=complicatedNamePart,
                                           contentType=contentType,
                                           fileFormatChoice=fileFormatChoice,
@@ -1163,6 +1169,7 @@ videoPaidProductPlacement : str
                     if len(addItemS) == 0:
                         itemS = dfsProcessing(
                                               channelIdForSearch=channelIdForSearch,
+                                              coLabFolder=coLabFolder,
                                               complicatedNamePart=complicatedNamePart,
                                               contentType=contentType,
                                               fileFormatChoice=fileFormatChoice,
@@ -1221,6 +1228,7 @@ videoPaidProductPlacement : str
                                                                                      )
                             itemS = dfsProcessing(
                                                   channelIdForSearch=channelIdForSearch,
+                                                  coLabFolder=coLabFolder,
                                                   complicatedNamePart=complicatedNamePart,
                                                   contentType=contentType,
                                                   fileFormatChoice=fileFormatChoice,
@@ -1276,6 +1284,7 @@ videoPaidProductPlacement : str
                                                                                          )
                                 itemS = dfsProcessing(
                                                       channelIdForSearch=channelIdForSearch,
+                                                      coLabFolder=coLabFolder,
                                                       complicatedNamePart=complicatedNamePart,
                                                       contentType=contentType,
                                                       fileFormatChoice=fileFormatChoice,
@@ -1395,6 +1404,7 @@ videoPaidProductPlacement : str
                 addPlaylistVideoChannelS = pandas.json_normalize(response['items'])
                 playlistVideoChannelS = dfsProcessing(
                                                       channelIdForSearch=channelIdForSearch,
+                                                      coLabFolder=coLabFolder,
                                                       complicatedNamePart=complicatedNamePart,
                                                       contentType=contentType,
                                                       fileFormatChoice=fileFormatChoice,
@@ -1568,6 +1578,7 @@ videoPaidProductPlacement : str
                 if problemVideoId != None: problemVideoId.append(problemVideoId)
                 commentS = dfsProcessing(
                                          channelIdForSearch=channelIdForSearch,
+                                         coLabFolder=coLabFolder,
                                          complicatedNamePart=complicatedNamePart,
                                          contentType=contentType,
                                          fileFormatChoice=fileFormatChoice,
@@ -1633,6 +1644,7 @@ videoPaidProductPlacement : str
                 replieS = replieS[mutualColumns]
                 commentReplieS = dfsProcessing(
                                                channelIdForSearch=channelIdForSearch,
+                                               coLabFolder=coLabFolder,
                                                complicatedNamePart=complicatedNamePart,
                                                contentType=contentType,
                                                fileFormatChoice=fileFormatChoice,
@@ -1674,6 +1686,7 @@ videoPaidProductPlacement : str
                     if problemCommentId != None: problemCommentIdS.append(problemCommentId)
                     replieS = dfsProcessing(
                                             channelIdForSearch=channelIdForSearch,
+                                            coLabFolder=coLabFolder,
                                             complicatedNamePart=complicatedNamePart,
                                             contentType=contentType,
                                             fileFormatChoice=fileFormatChoice,
@@ -1703,6 +1716,7 @@ videoPaidProductPlacement : str
     
                 commentReplieS = dfsProcessing(
                                                channelIdForSearch=channelIdForSearch,
+                                               coLabFolder=coLabFolder,
                                                complicatedNamePart=complicatedNamePart,
                                                contentType=contentType,
                                                fileFormatChoice=fileFormatChoice,
