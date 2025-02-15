@@ -39,7 +39,6 @@ while True:
                   , 'НЕ прединсталлируется с установкой Анаконды, для работы скрипта требуется этот пакет,'
                   , 'но инсталлировать его не удаётся, попробуйте инсталлировать его вручную, после чего снова запустите требуемый скрипт пакета\n')
             break
-coLabFolder, colabMode = coLabAdaptor.coLabAdaptor()
 
 
 # In[ ]:
@@ -144,6 +143,7 @@ def bigSearch(
 # 1.1 для обработки выдачи любого из методов, помогающая работе с ключами
 def dfsProcessing(
                   complicatedNamePart,
+                  coLabFolder,
                   dfAdd,
                   dfFinal, # на обработке какой бы ни было выгрузки не возникла бы непреодолима ошибка, сохранить следует выгрузку метода search
                   dfIn,
@@ -306,6 +306,7 @@ def newsFeedSearch(
 
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API ВК
+    coLabFolder = coLabAdaptor.coLabAdaptor()
     fileFormatChoice = '.xlsx' # базовый формат сохраняемых файлов; формат .json добавляется опционально через наличие columnsToJSON
     folder = None
     folderFile = None
@@ -537,6 +538,7 @@ def newsFeedSearch(
         # if len(itemS) < targetCount: # на случай достаточности
         itemS = dfsProcessing(
                               complicatedNamePart=complicatedNamePart,
+                              coLabFolder=coLabFolder,
                               fileFormatChoice=fileFormatChoice,
                               goS=goS,
                               dfAdd=itemsAdditional,
@@ -573,6 +575,7 @@ def newsFeedSearch(
 
             itemS = dfsProcessing(
                                   complicatedNamePart=complicatedNamePart,
+                                  coLabFolder=coLabFolder,
                                   fileFormatChoice=fileFormatChoice,
                                   goS=goS,
                                   dfAdd=itemsAdditional,
@@ -625,6 +628,7 @@ def newsFeedSearch(
                                                                                                       )
                         itemsYearlyAdditional = dfsProcessing(
                                                               complicatedNamePart=complicatedNamePart,
+                                                              coLabFolder=coLabFolder,
                                                               fileFormatChoice=fileFormatChoice,
                                                               goS=goS,
                                                               dfAdd=itemsAdditional,
@@ -658,6 +662,7 @@ def newsFeedSearch(
                                                                                                           )
                             itemsYearlyAdditional = dfsProcessing(
                                                                   complicatedNamePart=complicatedNamePart,
+                                                                  coLabFolder=coLabFolder,
                                                                   fileFormatChoice=fileFormatChoice,
                                                                   goS=goS,
                                                                   dfAdd=itemsAdditional,
@@ -675,6 +680,7 @@ def newsFeedSearch(
                             time.sleep(pause)
                     itemS = dfsProcessing(
                                           complicatedNamePart=complicatedNamePart,
+                                          coLabFolder=coLabFolder,
                                           fileFormatChoice=fileFormatChoice,
                                           goS=goS,
                                           dfAdd=itemsAdditional,
