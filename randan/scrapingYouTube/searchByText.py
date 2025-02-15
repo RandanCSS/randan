@@ -1831,7 +1831,7 @@ videoPaidProductPlacement : str
     sys.exit()
 
 # warnings.filterwarnings("ignore")
-# print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть)
+# print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть')
 # input()
 # sys.exit()
 
