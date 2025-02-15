@@ -24,4 +24,4 @@ def coLabAdaptor():
             if attempt == 2:
                 # print('Похоже, я исполняюсь не в CoLab\n')
                 break
-    return coLabFolder, colabMode
+    return coLabFolder
