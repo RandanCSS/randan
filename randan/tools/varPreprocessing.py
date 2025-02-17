@@ -29,6 +29,18 @@ while True:
                   , 'но инсталлировать его не удаётся, попробуйте инсталлировать его вручную, после чего снова запустите требуемый скрипт пакета\n')
             break
 
+def jsonChecker(dfIn):
+    '''
+    Проверка всех столбцов датафрейма на наличие в них словарей или списков
+    '''
+    
+    columnsToJSON = list(dfIn.columns)
+    for column in dfIn.columns: # цикл для прохода по всем столбцам датафрейма
+        # Если в столбце не встречаются ячейки со словарями или списками, то..
+        if dfIn[column].apply(lambda cellContent: True if (type(cellContent) == dict) | (type(cellContent) == list) else False).sum() == 0:
+            columnsToJSON.remove(column) # .. то этот столбец исключается из "подозреваемых" методм .remove() класса списков
+    return columnsToJSON
+
 def varHist(dfIn, var):
     plt.figure()
     plt.hist(dfIn[var])
