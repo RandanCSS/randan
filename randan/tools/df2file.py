@@ -13,6 +13,7 @@ from subprocess import check_call
 attempt = 0
 while True:
     try:
+        from randan.tools import varPreprocessing
         import os, pandas
         break
     except ModuleNotFoundError:
@@ -138,11 +139,7 @@ def df2fileShell(complicatedNamePart, dfIn, fileFormatChoice, method, coLabFolde
     #       , 'Оно вызвано слишком длинными URL-адресами в датафрейме и не является проблемой; его следует пролистать и перейти к диалоговому окну' )
 
     # Проверка всех столбцов на наличие в их ячейках JSON-формата
-    columnsToJSON = list(dfIn.columns) # все столбцы объекта dfIn записать в объект columnsToJSON , причём отнести класс этого объекта к списку
-    for column in dfIn.columns: # цикл для прохода по всем столбцам объекта dfIn
-        # Если в столбце не встречаются ячейки со словарями или списками, то..
-        if dfIn[column].apply(lambda content: True if (type(content) == dict) | (type(content) == list) else False).sum() == 0:
-            columnsToJSON.remove(column) # .. то этот столбец исключается из "подозреваемых"
+    columnsToJSON = varPreprocessing.jsonChecker(itemS)
 
     # print('folder', folder) # для отладки
     if len(columnsToJSON) > 0:
