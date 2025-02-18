@@ -248,12 +248,12 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
                     if idCopy in idS: idS.remove(idCopy)
             print('    Проверяю строку №', row, 'из', len(df),'датафрейма с постами на наличие в ней id из датафрейма с дополнительными характеристиками fields', end='\r')
             # print('dict:', fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')) # для отладки
-            try: if idsToItemS != []: df.at[row, fieldsColumn] = fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')
+            try:
+                if idsToItemS != []: df.at[row, fieldsColumn] = fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')
             except:
                 print('!!! Ошибка:', sys.exc_info()[1])
                 print('dict:', fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')) # для отладки
-
-    print('                                                                                                                                  ', end='\r')
+        print('                                                                                                                                  ', end='\r')
     return df
 
 # # Код, чтобы распарсить любой из двух столбцов датафрейма itemS с выдачей аргумента fields
