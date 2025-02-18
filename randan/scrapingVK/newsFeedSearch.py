@@ -233,9 +233,9 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
     columnsToJSON = varPreprocessing.jsonChecker(df)
     idColumnS.extend(columnsToJSON)
     
-    dfAdditional = pandas.json_normalize(response['response'][fieldsColumn])
-    idS = pandas.json_normalize(response['response'][fieldsColumn])['id'].to_list()
-    idsCopy = pandas.json_normalize(response['response'][fieldsColumn])['id'].to_list()
+    dfAdditional = pandas.json_normalize(response[fieldsColumn])
+    idS = pandas.json_normalize(response[fieldsColumn])['id'].to_list()
+    idsCopy = pandas.json_normalize(response[fieldsColumn])['id'].to_list()
 
     for row in df.index:
     # for row in df.index[120:]: # для отладки
