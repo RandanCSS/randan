@@ -25,6 +25,7 @@ while True:
         from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
         from randan.tools import df2file # авторский модуль для сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
         from randan.tools import files2df # авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
+        from randan.tools import varPreprocessing # авторский модуль для предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
         from tqdm import tqdm
         import os, pandas, re, shutil, time, warnings
         import googleapiclient.discovery as api
