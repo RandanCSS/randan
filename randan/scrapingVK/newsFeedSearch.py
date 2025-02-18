@@ -233,24 +233,27 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
     columnsToJSON = varPreprocessing.jsonChecker(df)
     idColumnS.extend(columnsToJSON)
     
-    dfAdditional = pandas.json_normalize(response[fieldsColumn])
+    fieldsDf = pandas.json_normalize(response[fieldsColumn])
     idS = pandas.json_normalize(response[fieldsColumn])['id'].to_list()
-    idsCopy = pandas.json_normalize(response[fieldsColumn])['id'].to_list()
+    if len(idS) > 0: 
+        idsCopy = pandas.json_normalize(response[fieldsColumn])['id'].to_list()
+        for row in df.index:
+        # for row in df.index[120:]: # для отладки
+            idsToItemS = []
+            for idCopy in idsCopy:
+                if str(idCopy) in str(df.loc[row, idColumnS]):
+                    # print('row:', row)
+                    # display(fieldsDf[fieldsDf['id'] == idCopy])
+                    idsToItemS.append(idCopy)
+                    if idCopy in idS: idS.remove(idCopy)
+            print('    Проверяю строку №', row, 'из', len(df),'датафрейма с постами на наличие в ней id из датафрейма с дополнительными характеристиками fields', end='\r')
+            # print('dict:', fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')) # для отладки
+            try: if idsToItemS != []: df.at[row, fieldsColumn] = fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')
+            except:
+                print('!!! Ошибка:', sys.exc_info()[1])
+                print('dict:', fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')) # для отладки
 
-    for row in df.index:
-    # for row in df.index[120:]: # для отладки
-        idsToItemS = []
-        for idCopy in idsCopy:
-            if str(idCopy) in str(df.loc[row, idColumnS]):
-                # print('row:', row)
-                # display(dfAdditional[dfAdditional['id'] == idCopy])
-                idsToItemS.append(idCopy)
-                if idCopy in idS: idS.remove(idCopy)
-        print('Проверяю строку №', row, 'датафрейма с постами на наличие в ней id из датафрейма с дополнительными характеристиками fields', end='\r')
-        # print('dict:', dfAdditional[dfAdditional['id'].isin(idsToItemS)].to_dict('records')) # для отладки
-        if idsToItemS != []: df.at[row, fieldsColumn] = dfAdditional[dfAdditional['id'].isin(idsToItemS)].to_dict('records')
-
-    print('                                                                                                                                  ')
+    print('                                                                                                                                  ', end='\r')
     return df
 
 # # Код, чтобы распарсить любой из двух столбцов датафрейма itemS с выдачей аргумента fields
