@@ -138,6 +138,9 @@ def bigSearch(
         dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'] = dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'].str.replace('-', 'public')
         dfAdd['URL'] = 'https://vk.com' + '/' + dfAdd['URL'] + '?w=' + dfAdd['inner_type'].str.split('_').str[0] + dfAdd['owner_id'].astype(str) + '_' + dfAdd['id'].astype(str)
 
+        for fieldsColumn in ['groups', 'profiles']:
+            if fieldsColumn in response.keys(): dfAdd = fieldsProcessor(dfIn=dfAdd, fieldsColumn=fieldsColumn, response=response)
+
     return dfAdd, goS, iteration, keyOrder, pause, response
 
 # 1.1 для обработки выдачи любого из методов, помогающая работе с ключами
@@ -217,7 +220,45 @@ def dfsProcessing(
     return df
 
 
+# 1.2 для обработки выдачи аргумента fields
+def fieldsProcessor(dfIn, fieldsColumn, response):
+    df = dfIn.copy()
+    idColumnS = []
+    for column in df.columns:
+    # for column in df.columns[1:]: # для отладки
+        if 'id' in column:
+            # print('column:', column) # для отладки
+            idColumnS.append(column)
+    columnsToJSON = varPreprocessing.jsonChecker(df)
+    idColumnS.extend(columnsToJSON)
+    
+    dfAdditional = pandas.json_normalize(response['response'][fieldsColumn])
+    idS = pandas.json_normalize(response['response'][fieldsColumn])['id'].to_list()
+    idsCopy = pandas.json_normalize(response['response'][fieldsColumn])['id'].to_list()
 
+    for row in df.index:
+    # for row in df.index[120:]: # для отладки
+        idsToItemS = []
+        for idCopy in idsCopy:
+            if str(idCopy) in str(df.loc[row, idColumnS]):
+                # print('row:', row)
+                # display(dfAdditional[dfAdditional['id'] == idCopy])
+                idsToItemS.append(idCopy)
+                if idCopy in idS: idS.remove(idCopy)
+        print('Проверяю строку №', row, 'датафрейма с постами на наличие в ней id из датафрейма с дополнительными характеристиками fields', end='\r')
+        # print('dict:', dfAdditional[dfAdditional['id'].isin(idsToItemS)].to_dict('records')) # для отладки
+        if idsToItemS != []: df.at[row, fieldsColumn] = dfAdditional[dfAdditional['id'].isin(idsToItemS)].to_dict('records')
+
+    print('                                                                                                                                  ')
+    return df
+
+# # Код, чтобы распарсить любой из двух столбцов датафрейма itemS с выдачей аргумента fields
+# fieldsColumn = 'groups'
+# # fieldsColumn = 'profiles'
+# fieldsJSON = []
+# for cell in itemS[fieldsColumn].dropna():
+#     prifileS.extend(cell)
+# pandas.json_normalize(fieldsJSON)
 
 
 # In[ ]:
@@ -232,12 +273,12 @@ def dfsProcessing(
 def newsFeedSearch(
                    params=None,
                    access_token=None,
-                   q=None,
-                   start_time=None,
                    end_time=None,
+                   fields=None,
                    latitude=None,
                    longitude=None,
-                   fields=None
+                   q=None,
+                   start_time=None
                    ):
     """
     Функция для выгрузки характеристик контента ВК методом его API newsfeed.search. Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам
@@ -248,12 +289,12 @@ def newsFeedSearch(
     Причём они могут быть поданы и в качестве самостоятельных аргументов функции, и в качестве словаря params , который обычно подаётся в метод get пакета requests
           params : dict
     access_token : str
-               q : str
-      start_time : int
         end_time : int
+          fields : list Учтите, что использование этого аргумента удлинняет срок работы алгоритма в разы
         latitude : int
        longitude : int
-          fields : list
+               q : str
+      start_time : int
     """
     if (params == None) & (access_token == None) & (q == None) & (start_time == None) & (end_time == None) & (latitude == None) & (longitude == None) & (fields == None):
         # print('Пользователь не подал аргументы')
