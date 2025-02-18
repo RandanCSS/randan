@@ -139,7 +139,7 @@ def df2fileShell(complicatedNamePart, dfIn, fileFormatChoice, method, coLabFolde
     #       , 'Оно вызвано слишком длинными URL-адресами в датафрейме и не является проблемой; его следует пролистать и перейти к диалоговому окну' )
 
     # Проверка всех столбцов на наличие в их ячейках JSON-формата
-    columnsToJSON = varPreprocessing.jsonChecker(itemS)
+    columnsToJSON = varPreprocessing.jsonChecker(dfIn)
 
     # print('folder', folder) # для отладки
     if len(columnsToJSON) > 0:
