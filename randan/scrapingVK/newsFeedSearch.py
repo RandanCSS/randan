@@ -593,6 +593,14 @@ def newsFeedSearch(
                                                                                start_time=start_time
                                                                                )
         targetCount = response['total_count']
+        if targetCount == 0:
+            print('  Искомых объектов на серверах ВК по Вашему запросу, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта',
+                  '  Что делать? Поменяйте настройки запроса и запустите скрипт с начала')
+            warnings.filterwarnings("ignore")
+            print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
+                  , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+            sys.exit()
+
         # if len(itemS) < targetCount: # на случай достаточности
         itemS = dfsProcessing(
                               complicatedNamePart=complicatedNamePart,
