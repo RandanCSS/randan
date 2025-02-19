@@ -322,7 +322,7 @@ def iterationVisualization(idS, iteration, portion, response):
     if portion > 1: print('   Сколько в порции наблюдений?', len(response['items']), end='\r')
 
 # 1.5 для порционной выгрузки, когда метод предполагает подачу ему id порциями
-def portionProcessing(API_keyS, channelIdForSearch, complicatedNamePart, contentType, dfFinal, fileFormatChoice, idS, keyOrder, method, momentCurrent, q, rootName, slash, stage, targetCount, year, yearsRange):
+def portionProcessing(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, contentType, dfFinal, fileFormatChoice, idS, keyOrder, method, momentCurrent, q, rootName, slash, stage, targetCount, year, yearsRange):
     # print('method', method) # для отладки
     bound = 0
     chplviS = pandas.DataFrame()
@@ -1367,6 +1367,7 @@ videoPaidProductPlacement : str
         playlistS = portionProcessing(
                                       API_keyS=API_keyS,
                                       channelIdForSearch=channelIdForSearch,
+                                      coLabFolder = coLabFolder,
                                       complicatedNamePart=complicatedNamePart,
                                       contentType=contentType,
                                       dfFinal=itemS,
@@ -1487,6 +1488,7 @@ videoPaidProductPlacement : str
         videoS = portionProcessing(
                                    API_keyS=API_keyS,
                                    channelIdForSearch=channelIdForSearch,
+                                   coLabFolder = coLabFolder,
                                    complicatedNamePart=complicatedNamePart,
                                    contentType=contentType,
                                    fileFormatChoice=fileFormatChoice,
@@ -1506,6 +1508,8 @@ videoPaidProductPlacement : str
 
 # ********** categoryId
         # Взять столбец snippet.categoryId, удалить из него дубликаты кодов категорий и помеcтить уникальные коды в список
+        display(videoS) # для отладки
+        print('videoS.columns:', videoS.columns) # для отладки
         uniqueCategorieS = videoS['snippet.categoryId'].drop_duplicates().to_list()
         # print('\nУникальные коды категорий в базе:', uniqueCategorieS, '\nЧисло уникальных категорий в базе:', len(uniqueCategorieS))
         try:
@@ -1794,6 +1798,7 @@ videoPaidProductPlacement : str
         channelS = portionProcessing(
                                      API_keyS=API_keyS,
                                      channelIdForSearch=channelIdForSearch,
+                                     coLabFolder = coLabFolder,
                                      complicatedNamePart=complicatedNamePart,
                                      contentType=contentType,
                                      dfFinal=itemS,
