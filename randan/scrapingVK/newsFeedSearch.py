@@ -26,7 +26,7 @@ while True:
         from randan.tools import df2file # авторский модуль для сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
         from randan.tools import files2df # авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
         from randan.tools import varPreprocessing # авторский модуль для предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
-        import os, pandas, re, shutil, time, requests, warnings
+        import numpy, os, pandas, re, shutil, time, requests, warnings
         break
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
