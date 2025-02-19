@@ -235,25 +235,38 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
     
     fieldsDf = pandas.json_normalize(response[fieldsColumn])
     idS = pandas.json_normalize(response[fieldsColumn])['id'].to_list()
-    if len(idS) > 0: 
+    if len(idS) > 0:
         idsCopy = pandas.json_normalize(response[fieldsColumn])['id'].to_list()
-        for row in df.index:
-        # for row in df.index[120:]: # для отладки
-            idsToItemS = []
-            for idCopy in idsCopy:
-                if str(idCopy) in str(df.loc[row, idColumnS]):
-                    # print('row:', row)
-                    # display(fieldsDf[fieldsDf['id'] == idCopy])
-                    idsToItemS.append(idCopy)
-                    if idCopy in idS: idS.remove(idCopy)
-            print('    Проверяю строку №', row, 'из', len(df),'датафрейма с постами на наличие в ней id из датафрейма с дополнительными характеристиками fields', end='\r')
-            # print('dict:', fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')) # для отладки
-            try:
-                if idsToItemS != []: df.at[row, fieldsColumn] = fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')
+        idsCopyStr = '' # список в текстовый объект, чтобы ниже подать его внутрь столбца idColumnsConcatinated, созданного конкатенацией idColumnS
+        for idCopy in idsCopy: idsCopyStr += str(idCopy) + ', '
+        idsCopyStr = idsCopyStr[:-2]
+        # print('idsCopyStr':, idsCopyStr) # для отладки
+    
+    def fieldsIdsChecker(cellContent): # функция, приминяемая ниже посредством apply , чтобы ускорить процесс (по сравнению с циклом по ячейкам)
+        idsCopy = cellContent.split('idsCopy')[1].split(', ')
+        cellContent = cellContent.split('idsCopy')[0]
+        idsToItemS = []
+        for idCopy in idsCopy:
+            if idCopy in cellContent:
+                idsToItemS.append(int(idCopy))
+        if idsToItemS != []:
+            # print('idsToItemS не пустой список:', idsToItemS) # для отладки
+            try: return fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')
             except:
                 print('!!! Ошибка:', sys.exc_info()[1])
                 print('dict:', fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')) # для отладки
-        print('                                                                                                                                  ', end='\r')
+                return ''
+        else:
+            # print('idsToItemS пустой список:', idsToItemS) # для отладки
+            return ''
+
+    df['idColumnsConcatinated'] = ''
+    for idColumn in idColumnS:
+        df['idColumnsConcatinated'] += ' ' + df[idColumn].astype(str)
+
+    df['idColumnsConcatinated'] += 'idsCopy' + idsCopyStr
+    df[fieldsColumn] = df['idColumnsConcatinated'].apply(fieldsIdsChecker)
+    df[fieldsColumn] = df[fieldsColumn].replace('N/A', numpy.NaN)
     return df
 
 # # Код, чтобы распарсить любой из двух столбцов датафрейма itemS с выдачей аргумента fields
