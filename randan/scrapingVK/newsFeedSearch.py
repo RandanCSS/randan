@@ -213,6 +213,7 @@ def dfsProcessing(
                              coLabFolder=coLabFolder,
                              currentMoment=momentCurrent.strftime("%Y%m%d") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              )
+        return itemS
         warnings.filterwarnings("ignore")
         print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
               , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
@@ -804,11 +805,18 @@ def newsFeedSearch(
               , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
         shutil.rmtree(rootName, ignore_errors=True)
 
+    '''
+    Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
+    column = 'Имя_столбца'
+    JSONS = Исходный_датафрейм[column].dropna().to_list()
+    Новый_датафрейм = pandas.json_normalize(fieldsJSON).drop_duplicates('id').reset_index(drop=True)
+    '''
+    return itemS
+
     warnings.filterwarnings("ignore")
     print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
           , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
     sys.exit()
-    return itemS
 # warnings.filterwarnings("ignore")
 # print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть')
 # input()
