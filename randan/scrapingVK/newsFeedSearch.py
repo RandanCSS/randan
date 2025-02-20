@@ -307,7 +307,7 @@ def newsFeedSearch(
           params : dict
     access_token : str
         end_time : int
-          fields : list Учтите, что использование этого аргумента удлинняет срок работы алгоритма в разы
+          fields : list
         latitude : int
        longitude : int
                q : str
@@ -808,7 +808,7 @@ def newsFeedSearch(
     print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
           , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
     sys.exit()
-
+    return itemS
 # warnings.filterwarnings("ignore")
 # print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть')
 # input()
