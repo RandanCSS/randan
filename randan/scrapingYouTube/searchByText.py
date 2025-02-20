@@ -297,6 +297,8 @@ def dfsProcessor(
                              coLabFolder=coLabFolder,
                              currentMoment=momentCurrent.strftime("%Y%m%d") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              )
+        return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
+
         warnings.filterwarnings("ignore")
         print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
               , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
@@ -1049,7 +1051,7 @@ videoPaidProductPlacement : str
                                                                      )
             targetCount = response['pageInfo']['totalResults']
             if targetCount == 0:
-                print('  Искомых объектов на серверах ВК по Вашему запросу, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта.',
+                print('  Искомых объектов на серверах YouTube по Вашему запросу, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта.',
                       'Что делать? Поменяйте настройки запроса и запустите скрипт с начала')
                 warnings.filterwarnings("ignore")
                 print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
@@ -1539,7 +1541,8 @@ videoPaidProductPlacement : str
                 print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
                       , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
                 shutil.rmtree(rootName, ignore_errors=True)
-    
+            return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
+
             warnings.filterwarnings("ignore")
             print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
                   , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
@@ -1916,6 +1919,7 @@ videoPaidProductPlacement : str
         print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
               , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
         shutil.rmtree(rootName, ignore_errors=True)
+    return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
 
     warnings.filterwarnings("ignore")
     print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
