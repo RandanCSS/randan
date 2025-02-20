@@ -145,8 +145,77 @@ def bigSearch(
                                                                 )
     return addItemS, goS, iteration, keyOrder, response # от response отказаться нельзя, т.к. в нём много важных ключей, даже если их значения нули
 
-# 1.1 для обработки выдачи любого из методов, помогающая работе с ключами
-def dfsProcessing(
+# 1.1 для обработки выдачи метода channels, помогающая работе с ключами
+def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, dfIn, expiriencedMode, fileFormatChoice, keyOrder, momentCurrent, playlistS, q, rootName, slash, snippetContentType, stage, targetCount, year, yearsRange, videoS):
+    if len(itemS) > 0: # если использовался search и успешно, id каналов берутся из него
+        df = dfIn.copy()
+        channelIdS = df[df['id.kind'] == f'youtube#{snippetContentType}']
+        channelIdS =\
+            channelIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in channelIdS.columns else channelIdS['id'].to_list()
+    else: channelIdS = [channelIdForSearch] # в другом случае id канала подаётся пользователем
+    # channelIdS = channelIdS[:5] # для отладки
+    # print(channelIdS)
+
+    channelS = pandas.DataFrame()
+    iteration = 0 # номер итерации применения текущего метода
+    method = 'channels'
+    print('В скрипте используются следующие аргументы метода', method, 'API YouTube:'
+          , 'part=["snippet", "brandingSettings", "contentDetails", "id", "localizations", "statistics", "status", "topicDetails"], id, maxResults .'
+          , 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
+          , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
+          , 'https://developers.google.com/youtube/v3/docs/channels')
+    if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+
+# ********** Дополнение списка id каналов из df списком id каналов из videoS
+    if len(videoS) > 0:
+        print('--- Если хотите дополнить спискок id каналов, выгруженных методом search, списком id каналов, к которым относятся выгруженные видео'
+              , 'просто нажмите Enter (это увеличит совокупность изучаемых каналов)'
+              , '\n--- Если НЕ хотите дополнить спискок, нажмите пробел и затем Enter')
+        if len(input()) == 0:
+            channelIdS.extend(videoS['snippet.channelId'].to_list())
+            channelIdS = list(dict.fromkeys(channelIdS))
+
+# ********** Дополнение списка id каналов из df списком id каналов из playlistS
+    if len(playlistS) > 0:
+        print('--- Если хотите дополнить спискок id видео, выгруженных методом search, списком id видео, составляющих выгруженные плейлисты'
+              , 'просто нажмите Enter (это тоже увеличит совокупность изучаемых каналов)'
+              , '\n--- Если НЕ хотите дополнить спискок, нажмите пробел и затем Enter')
+        if len(input()) == 0:
+
+            # Список списков, каждый из которых соответствует одному плейлисту
+            playlistChannelId_list = playlistS['snippet.videoOwnerChannelId'].str.split(', ').to_list()
+
+            playlistChannelIdS = []
+            for snippet in playlistChannelId_list:
+                playlistChannelIdS.extend(snipet)
+            channelIdS.extend(playlistChannelIdS)
+            channelIdS = list(dict.fromkeys(channelIdS))
+
+    if len(channelIdS) > 0: print('Проход порциями по 50 каналов')
+    channelS = portionProcessor(
+                                API_keyS=API_keyS,
+                                channelIdForSearch=channelIdForSearch,
+                                coLabFolder = coLabFolder,
+                                complicatedNamePart=complicatedNamePart,
+                                contentType=contentType,
+                                dfFinal=df,
+                                fileFormatChoice=fileFormatChoice,
+                                idS=channelIdS,
+                                keyOrder=keyOrder,
+                                method=method,
+                                momentCurrent=momentCurrent,
+                                q=q,
+                                rootName=rootName,
+                                slash=slash,
+                                stage=stage,
+                                targetCount=targetCount,
+                                year=year,
+                                yearsRange=yearsRange
+                                )
+    return channelS
+
+# 1.2 для обработки выдачи любого из методов, помогающая работе с ключами
+def dfsProcessor(
                   channelIdForSearch,
                   coLabFolder,
                   complicatedNamePart,
@@ -235,7 +304,7 @@ def dfsProcessing(
 
     return df
 
-# 1.2 для выгрузки комментариев
+# 1.3 для выгрузки комментариев
 def downloadComments(
                      API_keyS,
                      sourceId,
@@ -274,7 +343,7 @@ def downloadComments(
 
     return commentS, goS, keyOrder, problemItemId
 
-# 1.3 для обработки ошибок
+# 1.4 для обработки ошибок
 def errorProcessing(errorDescription, keyOrder, sourceId):
     goS = True
     goC = True
@@ -306,7 +375,7 @@ def errorProcessing(errorDescription, keyOrder, sourceId):
         goC = False # нет смысла повторного обращения к API ни с этим id, ни пока не ясна суть ошибки
     return goC, goS, keyOrder, problemItemId
 
-# 1.4 для визуализации процесса через итерации
+# 1.5 для визуализации процесса через итерации
 def iterationVisualization(idS, iteration, portion, response):
     iterationUpperBound = len(idS)
 
@@ -321,8 +390,133 @@ def iterationVisualization(idS, iteration, portion, response):
     print('  Порция №', iteration + 1, 'из', iterationUpperBound, end='\r')
     if portion > 1: print('   Сколько в порции наблюдений?', len(response['items']), end='\r')
 
-# 1.5 для порционной выгрузки, когда метод предполагает подачу ему id порциями
-def portionProcessing(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, contentType, dfFinal, fileFormatChoice, idS, keyOrder, method, momentCurrent, q, rootName, slash, stage, targetCount, year, yearsRange):
+# 1.6 для обработки выдачи методов playlists и playlistItems, помогающая работе с ключами
+def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, dfIn, expiriencedMode, fileFormatChoice, keyOrder, momentCurrent, q, rootName, slash, snippetContentType, stage, targetCount, year, yearsRange):    
+    if len(itemS) > 0: # если использовался search и успешно, id плейлистов берутся из него
+        df = dfIn.copy()
+        playlistIdS = df[df['id.kind'] == f'youtube#{snippetContentType}']
+        playlistIdS =\
+            playlistIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in playlistIdS.columns else playlistIdS['id'].to_list()
+    else: # в другом случае id плейлиста берётся из канала, id которого подаётся пользователем
+        df = pandas.DataFrame()
+        channelS = channelProcessor(
+                                    API_keyS=API_keyS,
+                                    channelIdForSearch=channelIdForSearch,
+                                    coLabFolder=coLabFolder,
+                                    complicatedNamePart=complicatedNamePart,
+                                    dfIn=df,
+                                    expiriencedMode=expiriencedMode,
+                                    fileFormatChoice=fileFormatChoice,
+                                    keyOrder=keyOrder,
+                                    momentCurrent=momentCurrent,
+                                    playlistS=playlistS,
+                                    q=q,
+                                    rootName=rootName,
+                                    slash=slash,
+                                    stage=stage,
+                                    targetCount=targetCount,
+                                    year=year,
+                                    yearsRange=yearsRange,
+                                    videoS=videoS
+                                    )
+        playlistIdS = channelS['contentDetails.relatedPlaylists.uploads'].to_list()
+    # playlistIdS = playlistIdS[:5] # для отладки
+    # print(playlistIdS)
+
+    method = 'playlists'
+    print('В скрипте используются следующие аргументы метода', method, 'API YouTube:'
+          , 'part=["snippet", "contentDetails", "localizations", "status"], id, maxResults .'
+          , 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
+          , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
+          , 'https://developers.google.com/youtube/v3/docs/playlists')
+    if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+
+    if len(playlistIdS) > 0: print('Проход порциями по 50 плейлистов')
+    playlistS = portionProcessor(
+                                 API_keyS=API_keyS,
+                                 channelIdForSearch=channelIdForSearch,
+                                 coLabFolder = coLabFolder,
+                                 complicatedNamePart=complicatedNamePart,
+                                 contentType=contentType,
+                                 dfFinal=df,
+                                 fileFormatChoice=fileFormatChoice,
+                                 idS=playlistIdS,
+                                 keyOrder=keyOrder,
+                                 method=method,
+                                 momentCurrent=momentCurrent,
+                                 q=q,
+                                 rootName=rootName,
+                                 slash=slash,
+                                 stage=stage,
+                                 targetCount=targetCount,
+                                 year=year,
+                                 yearsRange=yearsRange
+                                 )
+
+    method = 'playlistItems'
+    print('\nВ скрипте используются следующие аргументы метода', method, 'API YouTube:'
+          , 'part=["snippet"], playlistId, maxResults .'
+          , 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
+          , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
+          , 'https://developers.google.com/youtube/v3/docs/playlistitems')
+    if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+    iteration = 0 # номер итерации применения текущего метода
+    playlistVideoChannelS = pandas.DataFrame()
+    portion = 1
+    print('\nПроход по плейлистам для выгрузки id видео, составляющих плейлисты, и каналов, к которым они принадлежат')
+    for playlistId in playlistIdS:
+        try:
+            youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
+            response = youtube.playlistItems().list(part='snippet', playlistId=playlistId).execute()
+            iterationVisualization(playlistIdS, iteration, portion, response) # для визуализации процесса через итерации
+            iteration += 1
+            addPlaylistVideoChannelS = pandas.json_normalize(response['items'])
+            playlistVideoChannelS = dfsProcessor(
+                                                 channelIdForSearch=channelIdForSearch,
+                                                 coLabFolder=coLabFolder,
+                                                 complicatedNamePart=complicatedNamePart,
+                                                 contentType=contentType,
+                                                 fileFormatChoice=fileFormatChoice,
+                                                 dfAdd=addPlaylistVideoChannelS,
+                                                 dfFinal=df,
+                                                 dfIn=playlistVideoChannelS,
+                                                 goS=goS,
+                                                 method=method,
+                                                 q=q,
+                                                 rootName=rootName,
+                                                 slash=slash,
+                                                 stageTarget=stage,
+                                                 targetCount=targetCount,
+                                                 momentCurrent=momentCurrent,
+                                                 year=year,
+                                                 yearsRange=yearsRange
+                                                 )
+        except: goC, goS, keyOrder, problemItemId = errorProcessor(
+                                                                   errorDescription=sys.exc_info(),
+                                                                   keyOrder=keyOrder,
+                                                                   sourceId=None
+                                                                   )
+    # Перечислить сначала id всех составляющих каждый плейлист видео через запятую и записать в ячейку,
+        # затем id всех канадов, к которым относятся составляющие каждый плейлист видео, через запятую и записать в ячейку
+    # display('playlistVideoChannelS', playlistVideoChannelS) # для отладки
+    for playlistId in playlistIdS:
+        for column in ['snippet.resourceId.videoId', 'snippet.videoOwnerChannelId']:
+            playlistVideoChannelS_snippet = playlistVideoChannelS[playlistVideoChannelS[column].notna()]
+            playlistS.loc[playlistS[playlistS['id'] == playlistId].index[0], column] =\
+                ', '.join(playlistVideoChannelS_snippet[playlistVideoChannelS_snippet['snippet.playlistId'] == playlistId][column].to_list())
+    # display(playlistS)
+    df2file.df2fileShell(
+                         complicatedNamePart=complicatedNamePart,
+                         dfIn=playlistVideoChannelS,
+                         fileFormatChoice=fileFormatChoice,
+                         method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                         coLabFolder=coLabFolder,
+                         currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                             )
+    return playlistS, playlistVideoChannelS
+
+# 1.7 для порционной выгрузки, когда метод предполагает подачу ему id порциями
+def portionProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, contentType, dfFinal, fileFormatChoice, idS, keyOrder, method, momentCurrent, q, rootName, slash, stage, targetCount, year, yearsRange):
     # print('method', method) # для отладки
     bound = 0
     chplviS = pandas.DataFrame()
@@ -365,7 +559,7 @@ def portionProcessing(API_keyS, channelIdForSearch, coLabFolder, complicatedName
             iteration += 1
 
             addChplviS = pandas.json_normalize(response['items'])
-            chplviS = dfsProcessing(
+            chplviS = dfsProcessor(
                                     channelIdForSearch=channelIdForSearch,
                                     coLabFolder=coLabFolder,
                                     complicatedNamePart=complicatedNamePart,
@@ -386,7 +580,7 @@ def portionProcessing(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                                     yearsRange=yearsRange
                                     )
         except:
-            print('\nОшибка внутри авторской функции portionProcessing') # для отладки
+            print('\nОшибка внутри авторской функции portionProcessor') # для отладки
             goC, goS, keyOrder, problemItemId = errorProcessing(
                                                                 errorDescription=sys.exc_info(),
                                                                 keyOrder=keyOrder,
@@ -517,13 +711,13 @@ videoPaidProductPlacement : str
     folder = None
     folderFile = None
     goS = True
-    itemS = pandas.DataFrame()
+    itemS = pandas.DataFrame(columns=['id.kind']) # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     keyOrder = 0
-    playlistS = None # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
+    playlistS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     stageTarget = 0 # stageTarget принимает значения [0; 3] и относится к стадиям скрипта
     temporalName = None
-    videoS = None # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
+    videoS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     yearsRange = None
 
     momentCurrent = datetime.now() # запрос текущего момента
@@ -806,101 +1000,37 @@ videoPaidProductPlacement : str
 
 # 2.1 Первичный сбор контента методом search
 # 2.1.0 Первый заход БЕЗ аргумента order (этап stage = 0)
-    stage = 0
-    iteration = 0 # номер итерации применения текущего метода
-    method = 'search'
-    if yearsRange != None: # если пользователь не подал этот аргумент в рамках experiencedMode
-        print('')
-    print(f'В скрипте используются следующие аргументы метода {method} API YouTube:'
-          , 'channelId, maxResults, order, pageToken, part, publishedAfter, publishedBefore, q, type.'
-          , 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
-          , f'Если хотите добавить другие аргументы метода {method} API YouTube, доступные по ссылке https://developers.google.com/youtube/v3/docs/search ,'
-          , f'-- можете сделать это внутри метода {method} в разделе 2 исполняемого сейчас скрипта')
-    if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-
-    if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
-        print('Заход на первую страницу выдачи')
-        # print('publishedAfter', publishedAfter) # для отладки
-        addItemS, goS, iteration, keyOrder, response = bigSearch(
-                                                                 API_keyS=API_keyS,
-                                                                 channelIdForSearch=channelIdForSearch,
-                                                                 channelType=channelType,
-                                                                 contentType=contentType,
-                                                                 iteration=iteration,
-                                                                 keyOrder=keyOrder,
-                                                                 order=None,
-                                                                 publishedAfter=publishedAfter,
-                                                                 publishedBefore=publishedBefore,
-                                                                 pageToken=None,
-                                                                 q=q,
-                                                                 eventType=eventType,
-                                                                 location=location,
-                                                                 locationRadius=locationRadius,
-                                                                 regionCode=regionCode,
-                                                                 relevanceLanguage=relevanceLanguage,
-                                                                 safeSearch=safeSearch,
-                                                                 topicId=topicId,
-                                                                 videoCaption=videoCaption,
-                                                                 videoCategoryId=videoCategoryId,
-                                                                 videoDefinition=videoDefinition,
-                                                                 videoDimension=videoDimension,
-                                                                 videoDuration=videoDuration,
-                                                                 videoEmbeddable=videoEmbeddable,
-                                                                 videoLicense=videoLicense,
-                                                                 videoPaidProductPlacement=videoPaidProductPlacement,
-                                                                 videoType=videoType,
-                                                                 videoSyndicated=videoSyndicated,
-                                                                 year=None
-                                                                 )
-        targetCount = response['pageInfo']['totalResults']
-        if targetCount == 0:
-            print('  Искомых объектов на серверах ВК по Вашему запросу, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта.',
-                  'Что делать? Поменяйте настройки запроса и запустите скрипт с начала')
-            warnings.filterwarnings("ignore")
-            print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
-                  , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
-            sys.exit()
-
-        itemS = dfsProcessing(
-                              channelIdForSearch=channelIdForSearch,
-                              coLabFolder=coLabFolder,
-                              complicatedNamePart=complicatedNamePart,
-                              contentType=contentType,
-                              fileFormatChoice=fileFormatChoice,
-                              dfAdd=addItemS,
-                              dfFinal=itemS,
-                              dfIn=itemS,
-                              goS=goS,
-                              method=method,
-                              q=q,
-                              rootName=rootName,
-                              slash=slash,
-                              stageTarget=stage,
-                              targetCount=targetCount,
-                              momentCurrent=momentCurrent,
-                              year=year,
-                              yearsRange=yearsRange
-                              )
-        # display('itemS', itemS) # для отладки
-
-        print('  Проход по всем следующим страницам с выдачей          ')
-        while 'nextPageToken' in response.keys():
-            pageToken = response['nextPageToken']
+    if (channelIdForSearch == None) | (q == None): # в противном случае search следует заменить на cannels + playlistItems
+        stage = 0
+        iteration = 0 # номер итерации применения текущего метода
+        method = 'search'
+        if yearsRange != None: # если пользователь не подал этот аргумент в рамках experiencedMode
+            print('')
+        print(f'В скрипте используются следующие аргументы метода {method} API YouTube:'
+              , 'channelId, maxResults, order, pageToken, part, publishedAfter, publishedBefore, q, type.'
+              , 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
+              , f'Если хотите добавить другие аргументы метода {method} API YouTube, доступные по ссылке https://developers.google.com/youtube/v3/docs/search ,'
+              , f'-- можете сделать это внутри метода {method} в разделе 2 исполняемого сейчас скрипта')
+        if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+    
+        if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
+            print('Заход на первую страницу выдачи')
+            # print('publishedAfter', publishedAfter) # для отладки
             addItemS, goS, iteration, keyOrder, response = bigSearch(
                                                                      API_keyS=API_keyS,
                                                                      channelIdForSearch=channelIdForSearch,
                                                                      channelType=channelType,
                                                                      contentType=contentType,
-                                                                     eventType=eventType,
                                                                      iteration=iteration,
                                                                      keyOrder=keyOrder,
                                                                      order=None,
-                                                                     location=location,
-                                                                     locationRadius=locationRadius,
                                                                      publishedAfter=publishedAfter,
                                                                      publishedBefore=publishedBefore,
-                                                                     pageToken=pageToken,
+                                                                     pageToken=None,
                                                                      q=q,
+                                                                     eventType=eventType,
+                                                                     location=location,
+                                                                     locationRadius=locationRadius,
                                                                      regionCode=regionCode,
                                                                      relevanceLanguage=relevanceLanguage,
                                                                      safeSearch=safeSearch,
@@ -917,7 +1047,16 @@ videoPaidProductPlacement : str
                                                                      videoSyndicated=videoSyndicated,
                                                                      year=None
                                                                      )
-            itemS = dfsProcessing(
+            targetCount = response['pageInfo']['totalResults']
+            if targetCount == 0:
+                print('  Искомых объектов на серверах ВК по Вашему запросу, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта.',
+                      'Что делать? Поменяйте настройки запроса и запустите скрипт с начала')
+                warnings.filterwarnings("ignore")
+                print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
+                      , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+                sys.exit()
+    
+            itemS = dfsProcessor(
                                   channelIdForSearch=channelIdForSearch,
                                   coLabFolder=coLabFolder,
                                   complicatedNamePart=complicatedNamePart,
@@ -937,19 +1076,11 @@ videoPaidProductPlacement : str
                                   year=year,
                                   yearsRange=yearsRange
                                   )
-        print('  Искомых объектов', targetCount
-              , ', а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
-    elif stage < stageTarget:
-        print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{rootName}"')
-
-# 2.1.1 Цикл для прохода по значениям аргумента order, внутри которых проход по всем страницам выдачи (этап stage = 1)
-    stage = 1
-    orderS = ['date', 'rating', 'title', 'videoCount', 'viewCount']
-    if stage >= stageTarget: # eсли НЕТ файла с id и нет временного файла stage.txt с указанием пропустить этап
-        if len(itemS) < targetCount:
-        # -- для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
-            print('Проход по значениям аргумента order, внутри которых проход по всем страницам выдачи')
-            for order in orderS:
+            # display('itemS', itemS) # для отладки
+    
+            print('  Проход по всем следующим страницам с выдачей          ')
+            while 'nextPageToken' in response.keys():
+                pageToken = response['nextPageToken']
                 addItemS, goS, iteration, keyOrder, response = bigSearch(
                                                                          API_keyS=API_keyS,
                                                                          channelIdForSearch=channelIdForSearch,
@@ -958,12 +1089,12 @@ videoPaidProductPlacement : str
                                                                          eventType=eventType,
                                                                          iteration=iteration,
                                                                          keyOrder=keyOrder,
+                                                                         order=None,
                                                                          location=location,
                                                                          locationRadius=locationRadius,
-                                                                         order=order,
                                                                          publishedAfter=publishedAfter,
                                                                          publishedBefore=publishedBefore,
-                                                                         pageToken=None,
+                                                                         pageToken=pageToken,
                                                                          q=q,
                                                                          regionCode=regionCode,
                                                                          relevanceLanguage=relevanceLanguage,
@@ -981,7 +1112,7 @@ videoPaidProductPlacement : str
                                                                          videoSyndicated=videoSyndicated,
                                                                          year=None
                                                                          )
-                itemS = dfsProcessing(
+                itemS = dfsProcessor(
                                       channelIdForSearch=channelIdForSearch,
                                       coLabFolder=coLabFolder,
                                       complicatedNamePart=complicatedNamePart,
@@ -1001,15 +1132,19 @@ videoPaidProductPlacement : str
                                       year=year,
                                       yearsRange=yearsRange
                                       )
-
-                print('  Проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order, '          ')
-                while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0):
-                # -- второе условие -- для остановки алгоритма, если все искомые объекты найдены
-                    # БЕЗ какой-то из следующих страниц (в т.ч. вообще БЕЗ них)
-                    # третье условие -- для остановки алгоритма, если предыдущая страница выдачи содержит 0 объектов
-
-                    pageToken = response['nextPageToken']
-                    # print('pageToken', pageToken)
+            print('  Искомых объектов', targetCount
+                  , ', а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
+        elif stage < stageTarget:
+            print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{rootName}"')
+    
+# 2.1.1 Цикл для прохода по значениям аргумента order, внутри которых проход по всем страницам выдачи (этап stage = 1)
+        stage = 1
+        orderS = ['date', 'rating', 'title', 'videoCount', 'viewCount']
+        if stage >= stageTarget: # eсли НЕТ файла с id и нет временного файла stage.txt с указанием пропустить этап
+            if len(itemS) < targetCount:
+            # -- для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
+                print('Проход по значениям аргумента order, внутри которых проход по всем страницам выдачи')
+                for order in orderS:
                     addItemS, goS, iteration, keyOrder, response = bigSearch(
                                                                              API_keyS=API_keyS,
                                                                              channelIdForSearch=channelIdForSearch,
@@ -1023,7 +1158,7 @@ videoPaidProductPlacement : str
                                                                              order=order,
                                                                              publishedAfter=publishedAfter,
                                                                              publishedBefore=publishedBefore,
-                                                                             pageToken=pageToken,
+                                                                             pageToken=None,
                                                                              q=q,
                                                                              regionCode=regionCode,
                                                                              relevanceLanguage=relevanceLanguage,
@@ -1041,7 +1176,7 @@ videoPaidProductPlacement : str
                                                                              videoSyndicated=videoSyndicated,
                                                                              year=None
                                                                              )
-                    itemS = dfsProcessing(
+                    itemS = dfsProcessor(
                                           channelIdForSearch=channelIdForSearch,
                                           coLabFolder=coLabFolder,
                                           complicatedNamePart=complicatedNamePart,
@@ -1061,89 +1196,15 @@ videoPaidProductPlacement : str
                                           year=year,
                                           yearsRange=yearsRange
                                           )
-            print('  Искомых объектов', targetCount, ', а найденных С включением аргумента order:', len(itemS))
-        else:
-            print('Все искомые объекты найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
-    elif stage < stageTarget:
-        print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{rootName}"')
-
-# 2.1.2 Этап сегментирования по годам (stage = 2)
-    stage = 2
-    if stage >= stageTarget: # eсли НЕТ файла с id и нет временного файла stage.txt с указанием пропустить этап
-        if len(itemS) < targetCount:
-        # для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
-            print('Увы'
-                  , f'\nЧисло найденных объектов: {len(itemS)} -- менее числа искомых: {targetCount}')
-            print('\n--- Если хотите для поиска дополнительных объектов попробовать сегментирование по годам, просто нажмите Enter, но учтите, что поиск может занять минуты и даже часы'
-                  , '\n--- Если НЕ хотите, нажмите пробел и затем Enter')
-            if len(input()) == 0:
-                print('Внутри каждого года прохожу по значениям аргумента order, внутри которых прохожу по всем страницам выдачи')
-                goC = True
-# ********** из фрагмента 2.1.0 + условие для goC
-                while (len(itemS) < targetCount) & (goC):
-                    print(f'  Для года {year} заход на первую страницу выдачи БЕЗ аргумента order')
-                    addItemS, goS, iteration, keyOrder, response = bigSearch(
-                                                                             API_keyS=API_keyS,
-                                                                             channelIdForSearch=channelIdForSearch,
-                                                                             channelType=channelType,
-                                                                             contentType=contentType,
-                                                                             eventType=eventType,
-                                                                             iteration=iteration,
-                                                                             keyOrder=keyOrder,
-                                                                             location=location,
-                                                                             locationRadius=locationRadius,
-                                                                             order=None,
-                                                                             publishedAfter = f'{year}-01-01T00:00:00Z',
-                                                                             publishedBefore = f'{year + 1}-01-01T00:00:00Z',
-                                                                             pageToken=None,
-                                                                             q=q,
-                                                                             regionCode=regionCode,
-                                                                             relevanceLanguage=relevanceLanguage,
-                                                                             safeSearch=safeSearch,
-                                                                             topicId=topicId,
-                                                                             videoCaption=videoCaption,
-                                                                             videoCategoryId=videoCategoryId,
-                                                                             videoDefinition=videoDefinition,
-                                                                             videoDimension=videoDimension,
-                                                                             videoDuration=videoDuration,
-                                                                             videoEmbeddable=videoEmbeddable,
-                                                                             videoLicense=videoLicense,
-                                                                             videoPaidProductPlacement=videoPaidProductPlacement,
-                                                                             videoType=videoType,
-                                                                             videoSyndicated=videoSyndicated,
-                                                                             year=year
-                                                                             )
-                    if len(addItemS) == 0:
-                        print(f'\n--- Первая страница выдачи БЕЗ аргумента order для года {year} -- пуста'
-                              , '\n--- Если НЕ хотите для поиска дополнительных объектов попробовать предыдущий год, просто нажмите Enter'
-                              , '\n--- Если хотите, нажмите пробел и затем Enter')
-                        if len(input()) == 0:
-                            goC = False
-                            break
-                    itemS = dfsProcessing(
-                                          channelIdForSearch=channelIdForSearch,
-                                          coLabFolder=coLabFolder,
-                                          complicatedNamePart=complicatedNamePart,
-                                          contentType=contentType,
-                                          fileFormatChoice=fileFormatChoice,
-                                          dfAdd=addItemS,
-                                          dfFinal=itemS,
-                                          dfIn=itemS,
-                                          goS=goS,
-                                          method=method,
-                                          q=q,
-                                          rootName=rootName,
-                                          slash=slash,
-                                          stageTarget=stage,
-                                          targetCount=targetCount,
-                                          momentCurrent=momentCurrent,
-                                          year=year,
-                                          yearsRange=yearsRange
-                                          )
-
-                    print(f'    Проход по всем следующим страницам с выдачей для года {year} БЕЗ аргумента order')
-                    while 'nextPageToken' in response.keys():
+    
+                    print('  Проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order, '          ')
+                    while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0):
+                    # -- второе условие -- для остановки алгоритма, если все искомые объекты найдены
+                        # БЕЗ какой-то из следующих страниц (в т.ч. вообще БЕЗ них)
+                        # третье условие -- для остановки алгоритма, если предыдущая страница выдачи содержит 0 объектов
+    
                         pageToken = response['nextPageToken']
+                        # print('pageToken', pageToken)
                         addItemS, goS, iteration, keyOrder, response = bigSearch(
                                                                                  API_keyS=API_keyS,
                                                                                  channelIdForSearch=channelIdForSearch,
@@ -1154,9 +1215,9 @@ videoPaidProductPlacement : str
                                                                                  keyOrder=keyOrder,
                                                                                  location=location,
                                                                                  locationRadius=locationRadius,
-                                                                                 order=None,
-                                                                                 publishedAfter = f'{year}-01-01T00:00:00Z',
-                                                                                 publishedBefore = f'{year + 1}-01-01T00:00:00Z',
+                                                                                 order=order,
+                                                                                 publishedAfter=publishedAfter,
+                                                                                 publishedBefore=publishedBefore,
                                                                                  pageToken=pageToken,
                                                                                  q=q,
                                                                                  regionCode=regionCode,
@@ -1173,10 +1234,9 @@ videoPaidProductPlacement : str
                                                                                  videoPaidProductPlacement=videoPaidProductPlacement,
                                                                                  videoType=videoType,
                                                                                  videoSyndicated=videoSyndicated,
-                                                                                 year=year
+                                                                                 year=None
                                                                                  )
-                    if len(addItemS) == 0:
-                        itemS = dfsProcessing(
+                        itemS = dfsProcessor(
                                               channelIdForSearch=channelIdForSearch,
                                               coLabFolder=coLabFolder,
                                               complicatedNamePart=complicatedNamePart,
@@ -1196,14 +1256,89 @@ videoPaidProductPlacement : str
                                               year=year,
                                               yearsRange=yearsRange
                                               )
-
-                    print(f'    Искомых объектов в году {year}: {targetCount},'
-                          , 'а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
-# ********** из фрагмента 2.1.1
-                    if len(itemS) < targetCount:
-                        print(f'  Для года {year} проход по значениям аргумента order,'
-                              , 'внутри которых проход по всем страницам выдачи')
-                        for order in orderS:
+                print('  Искомых объектов', targetCount, ', а найденных С включением аргумента order:', len(itemS))
+            else:
+                print('Все искомые объекты найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
+        elif stage < stageTarget:
+            print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{rootName}"')
+    
+# 2.1.2 Этап сегментирования по годам (stage = 2)
+        stage = 2
+        if stage >= stageTarget: # eсли НЕТ файла с id и нет временного файла stage.txt с указанием пропустить этап
+            if len(itemS) < targetCount:
+            # для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
+                print('Увы'
+                      , f'\nЧисло найденных объектов: {len(itemS)} -- менее числа искомых: {targetCount}')
+                print('\n--- Если хотите для поиска дополнительных объектов попробовать сегментирование по годам, просто нажмите Enter, но учтите, что поиск может занять минуты и даже часы'
+                      , '\n--- Если НЕ хотите, нажмите пробел и затем Enter')
+                if len(input()) == 0:
+                    print('Внутри каждого года прохожу по значениям аргумента order, внутри которых прохожу по всем страницам выдачи')
+                    goC = True
+# ********** из фрагмента 2.1.0 + условие для goC
+                    while (len(itemS) < targetCount) & (goC):
+                        print(f'  Для года {year} заход на первую страницу выдачи БЕЗ аргумента order')
+                        addItemS, goS, iteration, keyOrder, response = bigSearch(
+                                                                                 API_keyS=API_keyS,
+                                                                                 channelIdForSearch=channelIdForSearch,
+                                                                                 channelType=channelType,
+                                                                                 contentType=contentType,
+                                                                                 eventType=eventType,
+                                                                                 iteration=iteration,
+                                                                                 keyOrder=keyOrder,
+                                                                                 location=location,
+                                                                                 locationRadius=locationRadius,
+                                                                                 order=None,
+                                                                                 publishedAfter = f'{year}-01-01T00:00:00Z',
+                                                                                 publishedBefore = f'{year + 1}-01-01T00:00:00Z',
+                                                                                 pageToken=None,
+                                                                                 q=q,
+                                                                                 regionCode=regionCode,
+                                                                                 relevanceLanguage=relevanceLanguage,
+                                                                                 safeSearch=safeSearch,
+                                                                                 topicId=topicId,
+                                                                                 videoCaption=videoCaption,
+                                                                                 videoCategoryId=videoCategoryId,
+                                                                                 videoDefinition=videoDefinition,
+                                                                                 videoDimension=videoDimension,
+                                                                                 videoDuration=videoDuration,
+                                                                                 videoEmbeddable=videoEmbeddable,
+                                                                                 videoLicense=videoLicense,
+                                                                                 videoPaidProductPlacement=videoPaidProductPlacement,
+                                                                                 videoType=videoType,
+                                                                                 videoSyndicated=videoSyndicated,
+                                                                                 year=year
+                                                                                 )
+                        if len(addItemS) == 0:
+                            print(f'\n--- Первая страница выдачи БЕЗ аргумента order для года {year} -- пуста'
+                                  , '\n--- Если НЕ хотите для поиска дополнительных объектов попробовать предыдущий год, просто нажмите Enter'
+                                  , '\n--- Если хотите, нажмите пробел и затем Enter')
+                            if len(input()) == 0:
+                                goC = False
+                                break
+                        itemS = dfsProcessor(
+                                              channelIdForSearch=channelIdForSearch,
+                                              coLabFolder=coLabFolder,
+                                              complicatedNamePart=complicatedNamePart,
+                                              contentType=contentType,
+                                              fileFormatChoice=fileFormatChoice,
+                                              dfAdd=addItemS,
+                                              dfFinal=itemS,
+                                              dfIn=itemS,
+                                              goS=goS,
+                                              method=method,
+                                              q=q,
+                                              rootName=rootName,
+                                              slash=slash,
+                                              stageTarget=stage,
+                                              targetCount=targetCount,
+                                              momentCurrent=momentCurrent,
+                                              year=year,
+                                              yearsRange=yearsRange
+                                              )
+    
+                        print(f'    Проход по всем следующим страницам с выдачей для года {year} БЕЗ аргумента order')
+                        while 'nextPageToken' in response.keys():
+                            pageToken = response['nextPageToken']
                             addItemS, goS, iteration, keyOrder, response = bigSearch(
                                                                                      API_keyS=API_keyS,
                                                                                      channelIdForSearch=channelIdForSearch,
@@ -1214,10 +1349,10 @@ videoPaidProductPlacement : str
                                                                                      keyOrder=keyOrder,
                                                                                      location=location,
                                                                                      locationRadius=locationRadius,
-                                                                                     order=order,
+                                                                                     order=None,
                                                                                      publishedAfter = f'{year}-01-01T00:00:00Z',
                                                                                      publishedBefore = f'{year + 1}-01-01T00:00:00Z',
-                                                                                     pageToken=None,
+                                                                                     pageToken=pageToken,
                                                                                      q=q,
                                                                                      regionCode=regionCode,
                                                                                      relevanceLanguage=relevanceLanguage,
@@ -1235,7 +1370,8 @@ videoPaidProductPlacement : str
                                                                                      videoSyndicated=videoSyndicated,
                                                                                      year=year
                                                                                      )
-                            itemS = dfsProcessing(
+                        if len(addItemS) == 0:
+                            itemS = dfsProcessor(
                                                   channelIdForSearch=channelIdForSearch,
                                                   coLabFolder=coLabFolder,
                                                   complicatedNamePart=complicatedNamePart,
@@ -1255,11 +1391,14 @@ videoPaidProductPlacement : str
                                                   year=year,
                                                   yearsRange=yearsRange
                                                   )
-
-                            print(f'    Для года {year} проход по всем следующим страницам с выдачей'
-                                  , f'с тем же значением аргумента order:', order)
-                            while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0):
-                                pageToken = response['nextPageToken']
+    
+                        print(f'    Искомых объектов в году {year}: {targetCount},'
+                              , 'а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
+# ********** из фрагмента 2.1.1
+                        if len(itemS) < targetCount:
+                            print(f'  Для года {year} проход по значениям аргумента order,'
+                                  , 'внутри которых проход по всем страницам выдачи')
+                            for order in orderS:
                                 addItemS, goS, iteration, keyOrder, response = bigSearch(
                                                                                          API_keyS=API_keyS,
                                                                                          channelIdForSearch=channelIdForSearch,
@@ -1273,7 +1412,7 @@ videoPaidProductPlacement : str
                                                                                          order=order,
                                                                                          publishedAfter = f'{year}-01-01T00:00:00Z',
                                                                                          publishedBefore = f'{year + 1}-01-01T00:00:00Z',
-                                                                                         pageToken=pageToken,
+                                                                                         pageToken=None,
                                                                                          q=q,
                                                                                          regionCode=regionCode,
                                                                                          relevanceLanguage=relevanceLanguage,
@@ -1291,7 +1430,7 @@ videoPaidProductPlacement : str
                                                                                          videoSyndicated=videoSyndicated,
                                                                                          year=year
                                                                                          )
-                                itemS = dfsProcessing(
+                                itemS = dfsProcessor(
                                                       channelIdForSearch=channelIdForSearch,
                                                       coLabFolder=coLabFolder,
                                                       complicatedNamePart=complicatedNamePart,
@@ -1311,154 +1450,133 @@ videoPaidProductPlacement : str
                                                       year=year,
                                                       yearsRange=yearsRange
                                                       )
-                        print('    Искомых объектов', targetCount
-                              , ', а найденных с добавлением сегментирования по году (год'
-                              , year
-                              , ') и включением аргумента order:', len(itemS))
-                    else:
-                        print('  Все искомые объекты в году', year, 'найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
-                    year -= 1
-                    if yearMinByUser != None: # если пользователь ограничил временнОй диапазон
-                        if (year) <= yearMinByUser:
-                            goC = False
-                            print(f'\nЗавершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser} (с точностью до года)')
-    elif stage < stageTarget:
-        print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"')
-
+    
+                                print(f'    Для года {year} проход по всем следующим страницам с выдачей'
+                                      , f'с тем же значением аргумента order:', order)
+                                while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0):
+                                    pageToken = response['nextPageToken']
+                                    addItemS, goS, iteration, keyOrder, response = bigSearch(
+                                                                                             API_keyS=API_keyS,
+                                                                                             channelIdForSearch=channelIdForSearch,
+                                                                                             channelType=channelType,
+                                                                                             contentType=contentType,
+                                                                                             eventType=eventType,
+                                                                                             iteration=iteration,
+                                                                                             keyOrder=keyOrder,
+                                                                                             location=location,
+                                                                                             locationRadius=locationRadius,
+                                                                                             order=order,
+                                                                                             publishedAfter = f'{year}-01-01T00:00:00Z',
+                                                                                             publishedBefore = f'{year + 1}-01-01T00:00:00Z',
+                                                                                             pageToken=pageToken,
+                                                                                             q=q,
+                                                                                             regionCode=regionCode,
+                                                                                             relevanceLanguage=relevanceLanguage,
+                                                                                             safeSearch=safeSearch,
+                                                                                             topicId=topicId,
+                                                                                             videoCaption=videoCaption,
+                                                                                             videoCategoryId=videoCategoryId,
+                                                                                             videoDefinition=videoDefinition,
+                                                                                             videoDimension=videoDimension,
+                                                                                             videoDuration=videoDuration,
+                                                                                             videoEmbeddable=videoEmbeddable,
+                                                                                             videoLicense=videoLicense,
+                                                                                             videoPaidProductPlacement=videoPaidProductPlacement,
+                                                                                             videoType=videoType,
+                                                                                             videoSyndicated=videoSyndicated,
+                                                                                             year=year
+                                                                                             )
+                                    itemS = dfsProcessor(
+                                                          channelIdForSearch=channelIdForSearch,
+                                                          coLabFolder=coLabFolder,
+                                                          complicatedNamePart=complicatedNamePart,
+                                                          contentType=contentType,
+                                                          fileFormatChoice=fileFormatChoice,
+                                                          dfAdd=addItemS,
+                                                          dfFinal=itemS,
+                                                          dfIn=itemS,
+                                                          goS=goS,
+                                                          method=method,
+                                                          q=q,
+                                                          rootName=rootName,
+                                                          slash=slash,
+                                                          stageTarget=stage,
+                                                          targetCount=targetCount,
+                                                          momentCurrent=momentCurrent,
+                                                          year=year,
+                                                          yearsRange=yearsRange
+                                                          )
+                            print('    Искомых объектов', targetCount
+                                  , ', а найденных с добавлением сегментирования по году (год'
+                                  , year
+                                  , ') и включением аргумента order:', len(itemS))
+                        else:
+                            print('  Все искомые объекты в году', year, 'найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
+                        year -= 1
+                        if yearMinByUser != None: # если пользователь ограничил временнОй диапазон
+                            if (year) <= yearMinByUser:
+                                goC = False
+                                print(f'\nЗавершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser} (с точностью до года)')
+        elif stage < stageTarget:
+            print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"')
+    
 # 2.1.3 Экспорт выгрузки метода search и опциональное завершение скрипта
-    df2file.df2fileShell(
-                         complicatedNamePart=complicatedNamePart,
-                         dfIn=itemS,
-                         fileFormatChoice=fileFormatChoice,
-                         method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                         coLabFolder=coLabFolder,
-                         currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                         )
-    print('\nВыгрузка метода search содержит НЕ ВСЕ доступные для выгрузки из API YouTube характеристки контента'
-          , '\n--- Если хотите выгрузить дополнительные характеристики (ссылки для ознакомления с ними появятся ниже), нажмите Enter'
-          , '\n--- Если НЕ хотите их выгрузить, нажмите пробел и затем Enter. Тогда исполнение скрипта завершится')
-
-    if len(input()) > 0:
-        print('Скрипт исполнен')
-        if os.path.exists(rootName):
-            print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
-                  , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
-            shutil.rmtree(rootName, ignore_errors=True)
-
-        warnings.filterwarnings("ignore")
-        print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
-              , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
-        sys.exit()
-
-# 2.2 Выгрузка дополнительных характеристик и контента методами playlists и playlistItems, videos, commentThreads и comments, channels
-# 2.2.0 Этап stage = 3
-    stage = 3
-
-# 2.2.1 Выгрузка дополнительных характеристик плейлистов
-    snippetContentType = 'playlist'
-    if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # если в выдаче есть плейлисты
-        playlistIdS = itemS[itemS['id.kind'] == f'youtube#{snippetContentType}']
-        playlistIdS =\
-            playlistIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in playlistIdS.columns else playlistIdS['id'].to_list()
-        # playlistIdS = playlistIdS[:5] # для отладки
-        # print(playlistIdS)
-
-        method = 'playlists'
-        print('В скрипте используются следующие аргументы метода', method, 'API YouTube:'
-              , 'part=["snippet", "contentDetails", "localizations", "status"], id, maxResults .'
-              , 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
-              , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
-              , 'https://developers.google.com/youtube/v3/docs/playlists')
-        if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-
-        print('Проход порциями по 50 плейлистов')
-        playlistS = portionProcessing(
-                                      API_keyS=API_keyS,
-                                      channelIdForSearch=channelIdForSearch,
-                                      coLabFolder = coLabFolder,
-                                      complicatedNamePart=complicatedNamePart,
-                                      contentType=contentType,
-                                      dfFinal=itemS,
-                                      fileFormatChoice=fileFormatChoice,
-                                      idS=playlistIdS,
-                                      keyOrder=keyOrder,
-                                      method=method,
-                                      momentCurrent=momentCurrent,
-                                      q=q,
-                                      rootName=rootName,
-                                      slash=slash,
-                                      stage=stage,
-                                      targetCount=targetCount,
-                                      year=year,
-                                      yearsRange=yearsRange
-                                      )
-
-        method = 'playlistItems'
-        print('\nВ скрипте используются следующие аргументы метода', method, 'API YouTube:'
-              , 'part=["snippet"], playlistId, maxResults .'
-              , 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
-              , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
-              , 'https://developers.google.com/youtube/v3/docs/playlistitems')
-        if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-        goC = True
-        iteration = 0 # номер итерации применения текущего метода
-        playlistVideoChannelS = pandas.DataFrame()
-        portion = 1
-        print('\nПроход по плейлистам для выгрузки id видео, составляющих плейлисты, и каналов, к которым они принадлежат')
-        for playlistId in playlistIdS:
-            try:
-                youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
-                response = youtube.playlistItems().list(part='snippet', playlistId=playlistId).execute()
-                iterationVisualization(playlistIdS, iteration, portion, response) # для визуализации процесса через итерации
-                iteration += 1
-                addPlaylistVideoChannelS = pandas.json_normalize(response['items'])
-                playlistVideoChannelS = dfsProcessing(
-                                                      channelIdForSearch=channelIdForSearch,
-                                                      coLabFolder=coLabFolder,
-                                                      complicatedNamePart=complicatedNamePart,
-                                                      contentType=contentType,
-                                                      fileFormatChoice=fileFormatChoice,
-                                                      dfAdd=addPlaylistVideoChannelS,
-                                                      dfFinal=itemS,
-                                                      dfIn=playlistVideoChannelS,
-                                                      goS=goS,
-                                                      method=method,
-                                                      q=q,
-                                                      rootName=rootName,
-                                                      slash=slash,
-                                                      stageTarget=stage,
-                                                      targetCount=targetCount,
-                                                      momentCurrent=momentCurrent,
-                                                      year=year,
-                                                      yearsRange=yearsRange
-                                                      )
-            except: goC, goS, keyOrder, problemItemId = errorProcessing(
-                                                                        errorDescription=sys.exc_info(),
-                                                                        keyOrder=keyOrder,
-                                                                        sourceId=None
-                                                                        )
-        # Перечислить сначала id всех составляющих каждый плейлист видео через запятую и записать в ячейку,
-            # затем id всех канадов, к которым относятся составляющие каждый плейлист видео, через запятую и записать в ячейку
-        # display('playlistVideoChannelS', playlistVideoChannelS) # для отладки
-        for playlistId in playlistIdS:
-            for column in ['snippet.resourceId.videoId', 'snippet.videoOwnerChannelId']:
-                playlistVideoChannelS_snippet = playlistVideoChannelS[playlistVideoChannelS[column].notna()]
-                playlistS.loc[playlistS[playlistS['id'] == playlistId].index[0], column] =\
-                    ', '.join(playlistVideoChannelS_snippet[playlistVideoChannelS_snippet['snippet.playlistId'] == playlistId][column].to_list())
-        # display(playlistS)
         df2file.df2fileShell(
                              complicatedNamePart=complicatedNamePart,
-                             dfIn=playlistVideoChannelS,
+                             dfIn=itemS,
                              fileFormatChoice=fileFormatChoice,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
                              coLabFolder=coLabFolder,
                              currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              )
+        print('\nВыгрузка метода search содержит НЕ ВСЕ доступные для выгрузки из API YouTube характеристки контента'
+              , '\n--- Если хотите выгрузить дополнительные характеристики (ссылки для ознакомления с ними появятся ниже), нажмите Enter'
+              , '\n--- Если НЕ хотите их выгрузить, нажмите пробел и затем Enter. Тогда исполнение скрипта завершится')
+    
+        if len(input()) > 0:
+            print('Скрипт исполнен')
+            if os.path.exists(rootName):
+                print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы,'
+                      , 'УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
+                shutil.rmtree(rootName, ignore_errors=True)
+    
+            warnings.filterwarnings("ignore")
+            print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'
+                  , '\nМодуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+            sys.exit()
+
+# 2.2 Выгрузка дополнительных характеристик и контента методами playlists и playlistItems, videos, commentThreads и comments, channels
+# 2.2.0 Этап stage = 3
+    stage = 3
+
+# 2.2.1 Выгрузка дополнительных характеристик плейлистов ИЛИ тот самый случай "в противном случае", когда search следует заменить на cannels + playlistItems
+    snippetContentType = 'playlist'
+    if (sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0) | (len(itemS) == 0): # если в выдаче search есть плейлисты ИЛИ если НЕ использовался search
+        playlistS, playlistVideoChannelS = playListProcessor(
+                                                             API_keyS=API_keyS,
+                                                             channelIdForSearch=channelIdForSearch,
+                                                             coLabFolder=coLabFolder,
+                                                             complicatedNamePart=complicatedNamePart,
+                                                             dfIn=itemS,
+                                                             expiriencedMode=expiriencedMode,
+                                                             fileFormatChoice=fileFormatChoice,
+                                                             keyOrder=keyOrder,
+                                                             momentCurrent=momentCurrent,
+                                                             q=q,
+                                                             rootName=rootName,
+                                                             slash=slash,
+                                                             snippetContentType=snippetContentType,
+                                                             stage=stage,
+                                                             targetCount=targetCount,
+                                                             year=year,
+                                                             yearsRange=yearsRange
+                                                             )
+
+
 
 # 2.2.2 Выгрузка дополнительных характеристик видео
     snippetContentType = 'video'
-    videoS = pandas.DataFrame() # не внутри условия, чтобы следующий чанк исполнялся даже при невыполнении этого условия
-    if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # если в выдаче есть видео
+    if (sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0) | (len(itemS) == 0): # если в выдаче есть видео ИЛИ если НЕ использовался search
         iteration = 0 # номер итерации применения текущего метода
         method = 'videos'
         print('\nВ скрипте используются следующие аргументы метода', method, 'API YouTube:'
@@ -1468,32 +1586,33 @@ videoPaidProductPlacement : str
               , 'https://developers.google.com/youtube/v3/docs/videos')
         if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
 
-        videoIdS = itemS[itemS['id.kind'] == f'youtube#{snippetContentType}']
-        videoIdS = videoIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in videoIdS.columns else videoIdS['id'].to_list()
+        if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0:
+            videoIdS = itemS[itemS['id.kind'] == f'youtube#{snippetContentType}']
+            videoIdS = videoIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in videoIdS.columns else videoIdS['id'].to_list()
+
+# ********** Дополнение списка id видео из itemS списком id видео из playlistS
+        if len(playlistS) > 0:
+            # print('\n--- Если хотите дополнить спискок id видео, выгруженных методом search, списком id видео, составляющих выгруженные плейлисты'
+            #       , 'просто нажмите Enter (это увеличит совокупность изучаемых видео)'
+            #       , '\n--- Если НЕ хотите дополнить спискок, нажмите пробел и затем Enter')
+            # if len(input()) == 0:
+
+            # Список списков, каждый из которых соответствует одному плейлисту
+            playlistVideoId_list = playlistS['snippet.resourceId.videoId'].str.split(', ').to_list()
+            # print('playlistVideoId_list:', playlistVideoId_list) # для отладки
+
+            playlistVideoIdS = []
+            for playlistVideoIdSnippet in playlistVideoId_list:
+                playlistVideoIdS.extend(playlistVideoIdSnippet)
+
+            videoIdS.extend(playlistVideoIdS)
+            videoIdS = list(dict.fromkeys(videoIdS))
+
         # videoIdS = videoIdS[:5] # для отладки
         # print(videoIdS)
 
-# ********** Дополнение списка id видео из itemS списком id видео из playlistS
-        if playlistS != None:
-            if len(playlistS) > 0:
-                print('\n--- Если хотите дополнить спискок id видео, выгруженных методом search, списком id видео, составляющих выгруженные плейлисты'
-                      , 'просто нажмите Enter (это увеличит совокупность изучаемых видео)'
-                      , '\n--- Если НЕ хотите дополнить спискок, нажмите пробел и затем Enter')
-                if len(input()) == 0:
-
-                    # Список списков, каждый из которых соответствует одному плейлисту
-                    playlistVideoId_list = playlistS['snippet.resourceId.videoId'].str.split(', ').to_list()
-                    # print('playlistVideoId_list:', playlistVideoId_list) # для отладки
-
-                    playlistVideoIdS = []
-                    for playlistVideoIdSnippet in playlistVideoId_list:
-                        playlistVideoIdS.extend(playlistVideoIdSnippet)
-
-                    videoIdS.extend(playlistVideoIdS)
-                    videoIdS = list(dict.fromkeys(videoIdS))
-
-        print('Проход порциями по 50 видео')
-        videoS = portionProcessing(
+        if len(videoIdS) > 0: print('Проход порциями по 50 видео')
+        videoS = portionProcessor(
                                    API_keyS=API_keyS,
                                    channelIdForSearch=channelIdForSearch,
                                    coLabFolder = coLabFolder,
@@ -1589,7 +1708,7 @@ videoPaidProductPlacement : str
                                                                                      method=method
                                                                                      )
                 if problemVideoId != None: problemVideoId.append(problemVideoId)
-                commentS = dfsProcessing(
+                commentS = dfsProcessor(
                                          channelIdForSearch=channelIdForSearch,
                                          coLabFolder=coLabFolder,
                                          complicatedNamePart=complicatedNamePart,
@@ -1655,7 +1774,7 @@ videoPaidProductPlacement : str
                 # Оставить только совпадающие столбцы датафреймов с родительскими (topLevel) комментариями и с комментариями-ответами
                 commentReplieS = commentReplieS[mutualColumns]
                 replieS = replieS[mutualColumns]
-                commentReplieS = dfsProcessing(
+                commentReplieS = dfsProcessor(
                                                channelIdForSearch=channelIdForSearch,
                                                coLabFolder=coLabFolder,
                                                complicatedNamePart=complicatedNamePart,
@@ -1697,7 +1816,7 @@ videoPaidProductPlacement : str
                                                                                           method=method
                                                                                           )
                     if problemCommentId != None: problemCommentIdS.append(problemCommentId)
-                    replieS = dfsProcessing(
+                    replieS = dfsProcessor(
                                             channelIdForSearch=channelIdForSearch,
                                             coLabFolder=coLabFolder,
                                             complicatedNamePart=complicatedNamePart,
@@ -1727,7 +1846,7 @@ videoPaidProductPlacement : str
                 # Удалить столбец `snippet.parentId`, т.к. и из столбца `id` всё ясно
                 replieS = replieS.drop('snippet.parentId', axis=1)
     
-                commentReplieS = dfsProcessing(
+                commentReplieS = dfsProcessor(
                                                channelIdForSearch=channelIdForSearch,
                                                coLabFolder=coLabFolder,
                                                complicatedNamePart=complicatedNamePart,
@@ -1759,78 +1878,37 @@ videoPaidProductPlacement : str
 
 # 2.2.4 Выгрузка дополнительных характеристик каналов
     snippetContentType = 'channel'
-    if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # если в выдаче есть каналы
-        channelS = pandas.DataFrame()
-        iteration = 0 # номер итерации применения текущего метода
-        method = 'channels'
-        print('В скрипте используются следующие аргументы метода', method, 'API YouTube:'
-              , 'part=["snippet", "brandingSettings", "contentDetails", "id", "localizations", "statistics", "status", "topicDetails"], id, maxResults .'
-              , 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.'
-              , 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:'
-              , 'https://developers.google.com/youtube/v3/docs/channels')
-        if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-
-        channelIdS = itemS[itemS['id.kind'] == f'youtube#{snippetContentType}']
-        channelIdS =\
-            channelIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in channelIdS.columns else channelIdS['id'].to_list()
-        # channelIdS = channelIdS[:5] # для отладки
-        # print(channelIdS)
-
-# ********** Дополнение списка id каналов из itemS списком id каналов из videoS
-        if videoS != None:
-            if len(videoS) > 0:
-                print('--- Если хотите дополнить спискок id каналов, выгруженных методом search, списком id каналов, к которым относятся выгруженные видео'
-                      , 'просто нажмите Enter (это увеличит совокупность изучаемых каналов)'
-                      , '\n--- Если НЕ хотите дополнить спискок, нажмите пробел и затем Enter')
-                if len(input()) == 0:
-                    channelIdS.extend(videoS['snippet.channelId'].to_list())
-                    channelIdS = list(dict.fromkeys(channelIdS))
-
-# ********** Дополнение списка id каналов из itemS списком id каналов из playlistS
-        if playlistS != None:
-            if len(playlistS) > 0:
-                print('--- Если хотите дополнить спискок id видео, выгруженных методом search, списком id видео, составляющих выгруженные плейлисты'
-                      , 'просто нажмите Enter (это тоже увеличит совокупность изучаемых каналов)'
-                      , '\n--- Если НЕ хотите дополнить спискок, нажмите пробел и затем Enter')
-                if len(input()) == 0:
-
-                    # Список списков, каждый из которых соответствует одному плейлисту
-                    playlistChannelId_list = playlistS['snippet.videoOwnerChannelId'].str.split(', ').to_list()
-
-                    playlistChannelIdS = []
-                    for snippet in playlistChannelId_list:
-                        playlistChannelIdS.extend(snipet)
-                    channelIdS.extend(playlistChannelIdS)
-                    channelIdS = list(dict.fromkeys(channelIdS))
-        print('Проход порциями по 50 каналов')
-        channelS = portionProcessing(
-                                     API_keyS=API_keyS,
-                                     channelIdForSearch=channelIdForSearch,
-                                     coLabFolder = coLabFolder,
-                                     complicatedNamePart=complicatedNamePart,
-                                     contentType=contentType,
-                                     dfFinal=itemS,
-                                     fileFormatChoice=fileFormatChoice,
-                                     idS=channelIdS,
-                                     keyOrder=keyOrder,
-                                     method=method,
-                                     momentCurrent=momentCurrent,
-                                     q=q,
-                                     rootName=rootName,
-                                     slash=slash,
-                                     stage=stage,
-                                     targetCount=targetCount,
-                                     year=year,
-                                     yearsRange=yearsRange
-                                     )
-        df2file.df2fileShell(
-                             complicatedNamePart=complicatedNamePart,
-                             dfIn=channelS,
-                             fileFormatChoice=fileFormatChoice,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                             coLabFolder=coLabFolder,
-                             currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                             )
+    if len(itemS) > 0: # если использовался search и успешно
+        if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # если в выдаче есть каналы
+            channelS = channelProcessor(
+                                        API_keyS=API_keyS,
+                                        channelIdForSearch=channelIdForSearch,
+                                        coLabFolder=coLabFolder,
+                                        complicatedNamePart=complicatedNamePart,
+                                        dfIn=itemS,
+                                        expiriencedMode=expiriencedMode,
+                                        fileFormatChoice=fileFormatChoice,
+                                        keyOrder=keyOrder,
+                                        momentCurrent=momentCurrent,
+                                        playlistS=playlistS,
+                                        q=q,
+                                        rootName=rootName,
+                                        slash=slash,
+                                        snippetContentType=snippetContentType,
+                                        stage=stage,
+                                        targetCount=targetCount,
+                                        year=year,
+                                        yearsRange=yearsRange,
+                                        videoS=videoS
+                                        )
+            df2file.df2fileShell(
+                                 complicatedNamePart=complicatedNamePart,
+                                 dfIn=channelS,
+                                 fileFormatChoice=fileFormatChoice,
+                                 method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                                 coLabFolder=coLabFolder,
+                                 currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                 )
 
 # 2.2.5 Экспорт выгрузки метода search и финальное завершение скрипта
     print('Скрипт исполнен')
