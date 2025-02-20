@@ -147,7 +147,7 @@ def bigSearch(
 
 # 1.1 для обработки выдачи метода channels, помогающая работе с ключами
 def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, dfIn, expiriencedMode, fileFormatChoice, keyOrder, momentCurrent, playlistS, q, rootName, slash, snippetContentType, stage, targetCount, year, yearsRange, videoS):
-    if len(itemS) > 0: # если использовался search и успешно, id каналов берутся из него
+    if len(dfIn) > 0: # если использовался search и успешно, id каналов берутся из него
         df = dfIn.copy()
         channelIdS = df[df['id.kind'] == f'youtube#{snippetContentType}']
         channelIdS =\
@@ -393,38 +393,7 @@ def iterationVisualization(idS, iteration, portion, response):
     if portion > 1: print('   Сколько в порции наблюдений?', len(response['items']), end='\r')
 
 # 1.6 для обработки выдачи методов playlists и playlistItems, помогающая работе с ключами
-def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, dfIn, expiriencedMode, fileFormatChoice, keyOrder, momentCurrent, q, rootName, slash, snippetContentType, stage, targetCount, year, yearsRange):    
-    if len(itemS) > 0: # если использовался search и успешно, id плейлистов берутся из него
-        df = dfIn.copy()
-        playlistIdS = df[df['id.kind'] == f'youtube#{snippetContentType}']
-        playlistIdS =\
-            playlistIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in playlistIdS.columns else playlistIdS['id'].to_list()
-    else: # в другом случае id плейлиста берётся из канала, id которого подаётся пользователем
-        df = pandas.DataFrame()
-        channelS = channelProcessor(
-                                    API_keyS=API_keyS,
-                                    channelIdForSearch=channelIdForSearch,
-                                    coLabFolder=coLabFolder,
-                                    complicatedNamePart=complicatedNamePart,
-                                    dfIn=df,
-                                    expiriencedMode=expiriencedMode,
-                                    fileFormatChoice=fileFormatChoice,
-                                    keyOrder=keyOrder,
-                                    momentCurrent=momentCurrent,
-                                    playlistS=playlistS,
-                                    q=q,
-                                    rootName=rootName,
-                                    slash=slash,
-                                    stage=stage,
-                                    targetCount=targetCount,
-                                    year=year,
-                                    yearsRange=yearsRange,
-                                    videoS=videoS
-                                    )
-        playlistIdS = channelS['contentDetails.relatedPlaylists.uploads'].to_list()
-    # playlistIdS = playlistIdS[:5] # для отладки
-    # print(playlistIdS)
-
+def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, expiriencedMode, fileFormatChoice, keyOrder, momentCurrent, playlistIdS, q, rootName, slash, snippetContentType, stage, targetCount, year, yearsRange):
     method = 'playlists'
     print('В скрипте используются следующие аргументы метода', method, 'API YouTube:'
           , 'part=["snippet", "contentDetails", "localizations", "status"], id, maxResults .'
@@ -718,6 +687,7 @@ videoPaidProductPlacement : str
     playlistS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     stageTarget = 0 # stageTarget принимает значения [0; 3] и относится к стадиям скрипта
+    targetCount = 0
     temporalName = None
     videoS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     yearsRange = None
@@ -1554,17 +1524,63 @@ videoPaidProductPlacement : str
 
 # 2.2.1 Выгрузка дополнительных характеристик плейлистов ИЛИ тот самый случай "в противном случае", когда search следует заменить на cannels + playlistItems
     snippetContentType = 'playlist'
-    if (sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0) | (len(itemS) == 0): # если в выдаче search есть плейлисты ИЛИ если НЕ использовался search
+    if len(itemS) > 0:
+        if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # если в выдаче search есть плейлисты
+            playlistIdS = df[df['id.kind'] == f'youtube#{snippetContentType}']
+            playlistIdS =\
+            playlistIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in playlistIdS.columns else playlistIdS['id'].to_list()
+            playlistS, playlistVideoChannelS = playListProcessor(
+                                                                 API_keyS=API_keyS,
+                                                                 channelIdForSearch=channelIdForSearch,
+                                                                 coLabFolder=coLabFolder,
+                                                                 complicatedNamePart=complicatedNamePart,
+                                                                 expiriencedMode=expiriencedMode,
+                                                                 fileFormatChoice=fileFormatChoice,
+                                                                 keyOrder=keyOrder,
+                                                                 momentCurrent=momentCurrent,
+                                                                 playlistIdS=playlistIdS,
+                                                                 q=q,
+                                                                 rootName=rootName,
+                                                                 slash=slash,
+                                                                 snippetContentType=snippetContentType,
+                                                                 stage=stage,
+                                                                 targetCount=targetCount,
+                                                                 year=year,
+                                                                 yearsRange=yearsRange
+                                                                 )
+    else: # если НЕ использовался search
+        channelS = channelProcessor(
+                                    API_keyS=API_keyS,
+                                    channelIdForSearch=channelIdForSearch,
+                                    coLabFolder=coLabFolder,
+                                    complicatedNamePart=complicatedNamePart,
+                                    dfIn=itemS,
+                                    expiriencedMode=expiriencedMode,
+                                    fileFormatChoice=fileFormatChoice,
+                                    keyOrder=keyOrder,
+                                    momentCurrent=momentCurrent,
+                                    playlistS=playlistS,
+                                    q=q,
+                                    rootName=rootName,
+                                    slash=slash,
+                                    snippetContentType=snippetContentType,
+                                    stage=stage,
+                                    targetCount=targetCount,
+                                    year=year,
+                                    yearsRange=yearsRange,
+                                    videoS=videoS
+                                    )
+        playlistIdS = channelS['contentDetails.relatedPlaylists.uploads'].to_list()
         playlistS, playlistVideoChannelS = playListProcessor(
                                                              API_keyS=API_keyS,
                                                              channelIdForSearch=channelIdForSearch,
                                                              coLabFolder=coLabFolder,
                                                              complicatedNamePart=complicatedNamePart,
-                                                             dfIn=itemS,
                                                              expiriencedMode=expiriencedMode,
                                                              fileFormatChoice=fileFormatChoice,
                                                              keyOrder=keyOrder,
                                                              momentCurrent=momentCurrent,
+                                                             playlistIdS=playlistIdS,
                                                              q=q,
                                                              rootName=rootName,
                                                              slash=slash,
@@ -1573,9 +1589,8 @@ videoPaidProductPlacement : str
                                                              targetCount=targetCount,
                                                              year=year,
                                                              yearsRange=yearsRange
-                                                             )
-
-
+                                                             )        
+    # print(playlistIdS)
 
 # 2.2.2 Выгрузка дополнительных характеристик видео
     snippetContentType = 'video'
