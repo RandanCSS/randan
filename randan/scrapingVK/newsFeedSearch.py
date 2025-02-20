@@ -274,8 +274,8 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
 # # fieldsColumn = 'profiles'
 # fieldsJSON = []
 # for cell in itemS[fieldsColumn].dropna():
-#     prifileS.extend(cell)
-# pandas.json_normalize(fieldsJSON)
+#     fieldsJSON.extend(cell)
+# pandas.json_normalize(fieldsJSON).drop_duplicates('id').reset_index(drop=True)
 
 
 # In[ ]:
