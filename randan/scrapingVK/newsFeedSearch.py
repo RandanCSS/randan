@@ -145,7 +145,7 @@ def bigSearch(
     return dfAdd, goS, iteration, keyOrder, pause, response
 
 # 1.1 для обработки выдачи любого из методов, помогающая работе с ключами
-def dfsprocessor(
+def dfsProcessor(
                   complicatedNamePart,
                   coLabFolder,
                   dfAdd,
@@ -603,7 +603,7 @@ def newsFeedSearch(
             sys.exit()
 
         # if len(itemS) < targetCount: # на случай достаточности
-        itemS = dfsprocessor(
+        itemS = dfsProcessor(
                               complicatedNamePart=complicatedNamePart,
                               coLabFolder=coLabFolder,
                               fileFormatChoice=fileFormatChoice,
@@ -640,7 +640,7 @@ def newsFeedSearch(
 
             # print('''    response['next_from'] после bigSearch''', response['next_from']) # для отладки
 
-            itemS = dfsprocessor(
+            itemS = dfsProcessor(
                                   complicatedNamePart=complicatedNamePart,
                                   coLabFolder=coLabFolder,
                                   fileFormatChoice=fileFormatChoice,
@@ -693,7 +693,7 @@ def newsFeedSearch(
                                                                                                       start_from=None,
                                                                                                       start_time=int(datetime(year, int(month), 1).timestamp())
                                                                                                       )
-                        itemsYearlyAdditional = dfsprocessor(
+                        itemsYearlyAdditional = dfsProcessor(
                                                               complicatedNamePart=complicatedNamePart,
                                                               coLabFolder=coLabFolder,
                                                               fileFormatChoice=fileFormatChoice,
@@ -727,7 +727,7 @@ def newsFeedSearch(
                                                                                                           start_from=start_from,
                                                                                                           start_time=int(datetime(year, int(month), 1).timestamp())
                                                                                                           )
-                            itemsYearlyAdditional = dfsprocessor(
+                            itemsYearlyAdditional = dfsProcessor(
                                                                   complicatedNamePart=complicatedNamePart,
                                                                   coLabFolder=coLabFolder,
                                                                   fileFormatChoice=fileFormatChoice,
@@ -745,7 +745,7 @@ def newsFeedSearch(
                                                                   yearsRange=yearsRange
                                                                   )
                             time.sleep(pause)
-                    itemS = dfsprocessor(
+                    itemS = dfsProcessor(
                                           complicatedNamePart=complicatedNamePart,
                                           coLabFolder=coLabFolder,
                                           fileFormatChoice=fileFormatChoice,
@@ -967,7 +967,7 @@ def bigSearch(
     return dfAdd, goS, iteration, keyOrder, pause, response
 
 # 1.1 для обработки выдачи любого из методов, помогающая работе с ключами
-def dfsprocessor(
+def dfsProcessor(
                   complicatedNamePart,
                   coLabFolder,
                   dfAdd,
@@ -1425,7 +1425,7 @@ def newsFeedSearch(
             sys.exit()
 
         # if len(itemS) < targetCount: # на случай достаточности
-        itemS = dfsprocessor(
+        itemS = dfsProcessor(
                               complicatedNamePart=complicatedNamePart,
                               coLabFolder=coLabFolder,
                               fileFormatChoice=fileFormatChoice,
@@ -1462,7 +1462,7 @@ def newsFeedSearch(
 
             # print('''    response['next_from'] после bigSearch''', response['next_from']) # для отладки
 
-            itemS = dfsprocessor(
+            itemS = dfsProcessor(
                                   complicatedNamePart=complicatedNamePart,
                                   coLabFolder=coLabFolder,
                                   fileFormatChoice=fileFormatChoice,
@@ -1515,7 +1515,7 @@ def newsFeedSearch(
                                                                                                       start_from=None,
                                                                                                       start_time=int(datetime(year, int(month), 1).timestamp())
                                                                                                       )
-                        itemsYearlyAdditional = dfsprocessor(
+                        itemsYearlyAdditional = dfsProcessor(
                                                               complicatedNamePart=complicatedNamePart,
                                                               coLabFolder=coLabFolder,
                                                               fileFormatChoice=fileFormatChoice,
@@ -1549,7 +1549,7 @@ def newsFeedSearch(
                                                                                                           start_from=start_from,
                                                                                                           start_time=int(datetime(year, int(month), 1).timestamp())
                                                                                                           )
-                            itemsYearlyAdditional = dfsprocessor(
+                            itemsYearlyAdditional = dfsProcessor(
                                                                   complicatedNamePart=complicatedNamePart,
                                                                   coLabFolder=coLabFolder,
                                                                   fileFormatChoice=fileFormatChoice,
@@ -1567,7 +1567,7 @@ def newsFeedSearch(
                                                                   yearsRange=yearsRange
                                                                   )
                             time.sleep(pause)
-                    itemS = dfsprocessor(
+                    itemS = dfsProcessor(
                                           complicatedNamePart=complicatedNamePart,
                                           coLabFolder=coLabFolder,
                                           fileFormatChoice=fileFormatChoice,
