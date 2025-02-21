@@ -310,7 +310,7 @@ f'Поскольку исполнение скрипта натолкнулос�
                              coLabFolder=coLabFolder,
                              currentMoment=momentCurrent.strftime("%Y%m%d") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              )
-        # return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
+        if returnDfs: return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
 
         warnings.filterwarnings("ignore")
         print(
@@ -627,7 +627,8 @@ def searchByText(
                  videoLicense=None,
                  videoPaidProductPlacement=None,
                  videoSyndicated=None,
-                 videoType=None
+                 videoType=None,
+                 returnDfs = False
                  ):
     """
     Функция для выгрузки характеристик контента YouTube методами его API: search, playlists & playlistItems, videos, commentThreads & comments, channels -- ключевым из которых выступает search
@@ -665,6 +666,7 @@ def searchByText(
 videoPaidProductPlacement : str
           videoSyndicated : str
                 videoType : str
+                returnDfs : bool -- в случае True функция возвращает итоговые датафреймы с выдачей методов search, playlists и playlistItems, videos, commentThreads и comments, channels
     """
     if (access_token == None) & (channelIdForSearch == None) & (contentType == None) & (publishedAfter == None) & (publishedBefore == None) & (q == None)\
         & (channelType == None) & (eventType == None) & (location == None) & (locationRadius == None) & (regionCode == None) & (relevanceLanguage == None) & (safeSearch == None) & (topicId == None)\
@@ -1536,7 +1538,7 @@ f'    Для года {year} проход по всем следующим ст�
 'Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'
                       )
                 shutil.rmtree(rootName, ignore_errors=True)
-            # return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
+            if returnDfs: return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
 
             warnings.filterwarnings("ignore")
             print(
@@ -1966,7 +1968,7 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
 'Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'
               )
         shutil.rmtree(rootName, ignore_errors=True)
-    # return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
+    if returnDfs: return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
 
     warnings.filterwarnings("ignore")
     print(
