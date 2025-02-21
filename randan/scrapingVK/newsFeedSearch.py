@@ -25,7 +25,7 @@ while True:
         from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
         from randan.tools import df2file # авторский модуль для сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
         from randan.tools import files2df # авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
-        from randan.tools import varPreprocessing # авторский модуль для предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
+        from randan.tools import varPreprocessor # авторский модуль для предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
         import numpy, os, pandas, re, shutil, time, requests, warnings
         break
     except ModuleNotFoundError:
@@ -145,7 +145,7 @@ def bigSearch(
     return dfAdd, goS, iteration, keyOrder, pause, response
 
 # 1.1 для обработки выдачи любого из методов, помогающая работе с ключами
-def dfsProcessing(
+def dfsprocessor(
                   complicatedNamePart,
                   coLabFolder,
                   dfAdd,
@@ -231,7 +231,7 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
         if 'id' in column:
             # print('column:', column) # для отладки
             idColumnS.append(column)
-    columnsToJSON = varPreprocessing.jsonChecker(df)
+    columnsToJSON = varPreprocessor.jsonChecker(df)
     idColumnS.extend(columnsToJSON)
     
     fieldsDf = pandas.json_normalize(response[fieldsColumn])
@@ -403,7 +403,7 @@ def newsFeedSearch(
                 if len(API_keyS) != 0:
                     print('-- далее буд[е у]т использован[ы] эт[от и] ключ[и]')
 
-                    from randan.tools.textPreprocessing import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
+                    from randan.tools.textPreprocessor import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
                     API_keyS = multispaceCleaner(API_keyS)
                     while API_keyS[-1] == ',': API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста
 
@@ -603,7 +603,7 @@ def newsFeedSearch(
             sys.exit()
 
         # if len(itemS) < targetCount: # на случай достаточности
-        itemS = dfsProcessing(
+        itemS = dfsprocessor(
                               complicatedNamePart=complicatedNamePart,
                               coLabFolder=coLabFolder,
                               fileFormatChoice=fileFormatChoice,
@@ -640,7 +640,7 @@ def newsFeedSearch(
 
             # print('''    response['next_from'] после bigSearch''', response['next_from']) # для отладки
 
-            itemS = dfsProcessing(
+            itemS = dfsprocessor(
                                   complicatedNamePart=complicatedNamePart,
                                   coLabFolder=coLabFolder,
                                   fileFormatChoice=fileFormatChoice,
@@ -693,7 +693,7 @@ def newsFeedSearch(
                                                                                                       start_from=None,
                                                                                                       start_time=int(datetime(year, int(month), 1).timestamp())
                                                                                                       )
-                        itemsYearlyAdditional = dfsProcessing(
+                        itemsYearlyAdditional = dfsprocessor(
                                                               complicatedNamePart=complicatedNamePart,
                                                               coLabFolder=coLabFolder,
                                                               fileFormatChoice=fileFormatChoice,
@@ -727,7 +727,7 @@ def newsFeedSearch(
                                                                                                           start_from=start_from,
                                                                                                           start_time=int(datetime(year, int(month), 1).timestamp())
                                                                                                           )
-                            itemsYearlyAdditional = dfsProcessing(
+                            itemsYearlyAdditional = dfsprocessor(
                                                                   complicatedNamePart=complicatedNamePart,
                                                                   coLabFolder=coLabFolder,
                                                                   fileFormatChoice=fileFormatChoice,
@@ -745,7 +745,7 @@ def newsFeedSearch(
                                                                   yearsRange=yearsRange
                                                                   )
                             time.sleep(pause)
-                    itemS = dfsProcessing(
+                    itemS = dfsprocessor(
                                           complicatedNamePart=complicatedNamePart,
                                           coLabFolder=coLabFolder,
                                           fileFormatChoice=fileFormatChoice,
@@ -847,7 +847,7 @@ while True:
         from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
         from randan.tools import df2file # авторский модуль для сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
         from randan.tools import files2df # авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
-        from randan.tools import varPreprocessing # авторский модуль для предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
+        from randan.tools import varPreprocessor # авторский модуль для предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
         import numpy, os, pandas, re, shutil, time, requests, warnings
         break
     except ModuleNotFoundError:
@@ -967,7 +967,7 @@ def bigSearch(
     return dfAdd, goS, iteration, keyOrder, pause, response
 
 # 1.1 для обработки выдачи любого из методов, помогающая работе с ключами
-def dfsProcessing(
+def dfsprocessor(
                   complicatedNamePart,
                   coLabFolder,
                   dfAdd,
@@ -1053,7 +1053,7 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
         if 'id' in column:
             # print('column:', column) # для отладки
             idColumnS.append(column)
-    columnsToJSON = varPreprocessing.jsonChecker(df)
+    columnsToJSON = varPreprocessor.jsonChecker(df)
     idColumnS.extend(columnsToJSON)
     
     fieldsDf = pandas.json_normalize(response[fieldsColumn])
@@ -1225,7 +1225,7 @@ def newsFeedSearch(
                 if len(API_keyS) != 0:
                     print('-- далее буд[е у]т использован[ы] эт[от и] ключ[и]')
 
-                    from randan.tools.textPreprocessing import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
+                    from randan.tools.textPreprocessor import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
                     API_keyS = multispaceCleaner(API_keyS)
                     while API_keyS[-1] == ',': API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста
 
@@ -1425,7 +1425,7 @@ def newsFeedSearch(
             sys.exit()
 
         # if len(itemS) < targetCount: # на случай достаточности
-        itemS = dfsProcessing(
+        itemS = dfsprocessor(
                               complicatedNamePart=complicatedNamePart,
                               coLabFolder=coLabFolder,
                               fileFormatChoice=fileFormatChoice,
@@ -1462,7 +1462,7 @@ def newsFeedSearch(
 
             # print('''    response['next_from'] после bigSearch''', response['next_from']) # для отладки
 
-            itemS = dfsProcessing(
+            itemS = dfsprocessor(
                                   complicatedNamePart=complicatedNamePart,
                                   coLabFolder=coLabFolder,
                                   fileFormatChoice=fileFormatChoice,
@@ -1515,7 +1515,7 @@ def newsFeedSearch(
                                                                                                       start_from=None,
                                                                                                       start_time=int(datetime(year, int(month), 1).timestamp())
                                                                                                       )
-                        itemsYearlyAdditional = dfsProcessing(
+                        itemsYearlyAdditional = dfsprocessor(
                                                               complicatedNamePart=complicatedNamePart,
                                                               coLabFolder=coLabFolder,
                                                               fileFormatChoice=fileFormatChoice,
@@ -1549,7 +1549,7 @@ def newsFeedSearch(
                                                                                                           start_from=start_from,
                                                                                                           start_time=int(datetime(year, int(month), 1).timestamp())
                                                                                                           )
-                            itemsYearlyAdditional = dfsProcessing(
+                            itemsYearlyAdditional = dfsprocessor(
                                                                   complicatedNamePart=complicatedNamePart,
                                                                   coLabFolder=coLabFolder,
                                                                   fileFormatChoice=fileFormatChoice,
@@ -1567,7 +1567,7 @@ def newsFeedSearch(
                                                                   yearsRange=yearsRange
                                                                   )
                             time.sleep(pause)
-                    itemS = dfsProcessing(
+                    itemS = dfsprocessor(
                                           complicatedNamePart=complicatedNamePart,
                                           coLabFolder=coLabFolder,
                                           fileFormatChoice=fileFormatChoice,
