@@ -821,6 +821,7 @@ f'-- можете подать их в скобки функции newsFeedSearc
     if fields != None: print(
 '''
 Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
+import pandas
 column = 'Имя_столбца'
 JSONS = []
 for cellContent in Исходный_датафрейм[column].dropna():
