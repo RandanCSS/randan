@@ -816,13 +816,14 @@ f'-- можете подать их в скобки функции newsFeedSearc
 'Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'
               )
         shutil.rmtree(rootName, ignore_errors=True)
-
+    if fields != None: print(
     '''
     Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
     column = 'Имя_столбца'
     JSONS = Исходный_датафрейм[column].dropna().to_list()
     Новый_датафрейм = pandas.json_normalize(fieldsJSON).drop_duplicates('id').reset_index(drop=True)
     '''
+                             )
     # return itemS
     warnings.filterwarnings("ignore")
     print(
