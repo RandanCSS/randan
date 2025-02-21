@@ -215,7 +215,7 @@ f'Поскольку исполнение скрипта натолкнулос�
                              coLabFolder=coLabFolder,
                              currentMoment=momentCurrent.strftime("%Y%m%d") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              )
-        # return itemS
+        if returnDfs: return itemS
         warnings.filterwarnings("ignore")
         print(
 'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
@@ -301,7 +301,7 @@ def newsFeedSearch(
                    longitude=None,
                    q=None,
                    start_time=None
-                   ):
+                   returnDfs = False):
     """
     Функция для выгрузки характеристик контента ВК методом его API newsfeed.search. Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам
 
@@ -317,6 +317,7 @@ def newsFeedSearch(
        longitude : int
                q : str
       start_time : int
+       returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
     """
     if (params == None) & (access_token == None) & (q == None) & (start_time == None) & (end_time == None) & (latitude == None) & (longitude == None) & (fields == None):
         # print('Пользователь не подал аргументы')
@@ -826,7 +827,7 @@ for cellContent in Исходный_датафрейм[column].dropna():
 Новый_датафрейм = pandas.json_normalize(JSONS).drop_duplicates('id').reset_index(drop=True)
 '''
                              )
-    # return itemS
+    if returnDfs: return itemS
     warnings.filterwarnings("ignore")
     print(
 'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
