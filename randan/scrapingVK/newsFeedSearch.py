@@ -53,6 +53,7 @@ while True:
 # 1.0 для метода search из API ВК, помогающая работе с ключами
 def bigSearch(
               API_keyS,
+              count,
               end_time,
               fields,
               iteration,
@@ -68,17 +69,17 @@ def bigSearch(
     dfAdd = pandas.DataFrame()
     goS = True
     params = {
-              'access_token': API_keyS[keyOrder], # обязательный параметр,
-              'v': '5.199', # обязательный параметр,
-              'q': q, # опциональный параметр,
-              'count': 200, # опциональный параметр,
-              'start_time': start_time, # опциональный параметр,
-              'end_time': end_time, # опциональный параметр,
-              'latitude': latitude, # опциональный параметр,
-              'longitude': longitude, # опциональный параметр,
-              'extended': 1, # опциональный параметр,
-              'fields': fields, # опциональный параметр,
-              'start_from': start_from # опциональный параметр
+              'access_token': API_keyS[keyOrder], # обязательный параметр
+              'count': count, # опциональный параметр
+              'end_time': end_time, # опциональный параметр
+              'extended': 1, # опциональный параметр
+              'fields': fields, # опциональный параметр
+              'latitude': latitude, # опциональный параметр
+              'longitude': longitude, # опциональный параметр
+              'q': q, # опциональный параметр
+              'start_from': start_from, # опциональный параметр
+              'start_time': start_time, # опциональный параметр
+              'v': '5.199' # обязательный параметр
               }
     while True:
         response = requests.get('https://api.vk.ru/method/newsfeed.search', params=params)
@@ -140,8 +141,9 @@ def bigSearch(
         dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'] = dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'].str.replace('-', 'public')
         dfAdd['URL'] = 'https://vk.com' + '/' + dfAdd['URL'] + '?w=' + dfAdd['inner_type'].str.split('_').str[0] + dfAdd['owner_id'].astype(str) + '_' + dfAdd['id'].astype(str)
 
-        for fieldsColumn in ['groups', 'profiles']:
-            if fieldsColumn in response.keys(): dfAdd = fieldsProcessor(dfIn=dfAdd, fieldsColumn=fieldsColumn, response=response)
+        if fields != None:
+            for fieldsColumn in ['groups', 'profiles']:
+                if fieldsColumn in response.keys(): dfAdd = fieldsProcessor(dfIn=dfAdd, fieldsColumn=fieldsColumn, response=response)
 
     return dfAdd, goS, iteration, keyOrder, pause, response
 
@@ -295,6 +297,7 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
 def newsFeedSearch(
                    params=None,
                    access_token=None,
+                   count=200,
                    end_time=None,
                    fields=None,
                    latitude=None,
@@ -312,6 +315,7 @@ def newsFeedSearch(
     Причём они могут быть поданы и в качестве самостоятельных аргументов функции, и в качестве словаря params , который обычно подаётся в метод get пакета requests
           params : dict
     access_token : str
+           count : int
         end_time : int
           fields : list
         latitude : int
@@ -320,7 +324,7 @@ def newsFeedSearch(
       start_time : int
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
     """
-    if (params == None) & (access_token == None) & (q == None) & (start_time == None) & (end_time == None) & (latitude == None) & (longitude == None) & (fields == None):
+    if (params == None) & (access_token == None) & (count == None) & (end_time == None) & (fields == None) & (latitude == None) & (longitude == None) & (q == None) & (start_time == None):
         # print('Пользователь не подал аргументы')
         expiriencedMode = False
     else:
@@ -334,10 +338,17 @@ def newsFeedSearch(
                 if type(start_time) == str: start_time = int(start_time)
             else: start_time = None
 
+            if 'count' in params.keys():
+                count = params['count']
+                if type(count) == str: count = int(count)
+            else: count = None
+
             if 'end_time' in params.keys():
                 end_time = params['end_time']
                 if type(end_time) == str: end_time = int(end_time)
             else: end_time = None
+
+            fields = params['fields'] if 'fields' in params.keys() else None
 
             if 'latitude' in params.keys():
                 latitude = params['latitude']
@@ -348,8 +359,6 @@ def newsFeedSearch(
                 longitude = params['longitude']
                 if type(longitude) == str: longitude = int(longitude)
             else: longitude = None
-
-            fields = params['fields'] if 'fields' in params.keys() else None
 
     if expiriencedMode == False:
         print(
@@ -486,6 +495,7 @@ def newsFeedSearch(
 # 2.0.3 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
     if temporalName == None: # если itemsTemporal, в т.ч. пустой, не существует
             # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
+        rootName = 'No folder'
         print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку')
         print(
 '''
@@ -590,6 +600,7 @@ f'-- можете подать их в скобки функции newsFeedSearc
         # print('    start_from', start_from) # для отладки
         itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
                                                                                API_keyS=API_keyS,
+                                                                               count=count,
                                                                                end_time=end_time,
                                                                                fields=fields,
                                                                                iteration=iteration,
@@ -615,28 +626,29 @@ f'-- можете подать их в скобки функции newsFeedSearc
 
         # if len(itemS) < targetCount: # на случай достаточности
         itemS = dfsProcessor(
-                              complicatedNamePart=complicatedNamePart,
-                              coLabFolder=coLabFolder,
-                              fileFormatChoice=fileFormatChoice,
-                              goS=goS,
-                              dfAdd=itemsAdditional,
-                              dfFinal=itemS,
-                              dfIn=itemS,
-                              method=method,
-                              momentCurrent=momentCurrent,
-                              q=q,
-                              slash=slash,
-                              stage=stage,
-                              targetCount=targetCount,
-                              year=year,
-                              yearsRange=yearsRange
-                              )
+                             complicatedNamePart=complicatedNamePart,
+                             coLabFolder=coLabFolder,
+                             fileFormatChoice=fileFormatChoice,
+                             goS=goS,
+                             dfAdd=itemsAdditional,
+                             dfFinal=itemS,
+                             dfIn=itemS,
+                             method=method,
+                             momentCurrent=momentCurrent,
+                             q=q,
+                             slash=slash,
+                             stage=stage,
+                             targetCount=targetCount,
+                             year=year,
+                             yearsRange=yearsRange
+                             )
         print('  Проход по всем следующим страницам с выдачей          ')
         while 'next_from' in response.keys():
             start_from = response['next_from']
             # print('    start_from', start_from) # для отладки
             itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
                                                                                    API_keyS=API_keyS,
+                                                                                   count=count,
                                                                                    end_time=end_time,
                                                                                    fields=fields,
                                                                                    iteration=iteration,
@@ -652,22 +664,22 @@ f'-- можете подать их в скобки функции newsFeedSearc
             # print('''    response['next_from'] после bigSearch''', response['next_from']) # для отладки
 
             itemS = dfsProcessor(
-                                  complicatedNamePart=complicatedNamePart,
-                                  coLabFolder=coLabFolder,
-                                  fileFormatChoice=fileFormatChoice,
-                                  goS=goS,
-                                  dfAdd=itemsAdditional,
-                                  dfFinal=itemS,
-                                  dfIn=itemS,
-                                  method=method,
-                                  momentCurrent=momentCurrent,
-                                  q=q,
-                                  slash=slash,
-                                  stage=stage,
-                                  targetCount=targetCount,
-                                  year=year,
-                                  yearsRange=yearsRange
-                                  )
+                                 complicatedNamePart=complicatedNamePart,
+                                 coLabFolder=coLabFolder,
+                                 fileFormatChoice=fileFormatChoice,
+                                 goS=goS,
+                                 dfAdd=itemsAdditional,
+                                 dfFinal=itemS,
+                                 dfIn=itemS,
+                                 method=method,
+                                 momentCurrent=momentCurrent,
+                                 q=q,
+                                 slash=slash,
+                                 stage=stage,
+                                 targetCount=targetCount,
+                                 year=year,
+                                 yearsRange=yearsRange
+                                 )
         print('  Искомых объектов', targetCount, ', а найденных БЕЗ сегментирования по годам и месяцам:', len(itemS))
 
 # 2.1.1 Этап сегментирования по годам и месяцам (stage = 1)
@@ -679,7 +691,7 @@ f'-- можете подать их в скобки функции newsFeedSearc
 '''Увы, без назначения временнОго диапазона метод newsfeed.search выдаёт ограниченное количество объектов, причём наиболее приближенных к текущему моменту. Поэтому внутри каждого года, начиная с текущего, помесячно выгружаю контент, после чего меняю год -- вглубь веков, пока не достигну заданной пользователем левой границы временнОго диапазона или года с пустой выдачей'''
                   )
             print(
-'''--- Если хотите для поиска дополнительных объектов попробовать сегментирование по годам, просто нажмите Enter, но учтите, что поиск может занять минуты и даже часы
+'''--- Если хотите для поиска дополнительных объектов попробовать сегментирование по годам и месяцам, просто нажмите Enter, но учтите, что поиск может занять минуты и даже часы
 --- Если НЕ хотите, нажмите пробел и затем Enter'''
                   )
             if len(input()) == 0:
@@ -695,6 +707,7 @@ f'-- можете подать их в скобки функции newsFeedSearc
                         print('  Заход на первую страницу выдачи', '               ', end='\r')
                         itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
                                                                                                       API_keyS=API_keyS,
+                                                                                                      count=count,
                                                                                                       end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
                                                                                                       fields=fields,
                                                                                                       iteration=iteration,
@@ -707,28 +720,29 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                                                                                       start_time=int(datetime(year, int(month), 1).timestamp())
                                                                                                       )
                         itemsYearlyAdditional = dfsProcessor(
-                                                              complicatedNamePart=complicatedNamePart,
-                                                              coLabFolder=coLabFolder,
-                                                              fileFormatChoice=fileFormatChoice,
-                                                              goS=goS,
-                                                              dfAdd=itemsAdditional,
-                                                              dfFinal=itemS,
-                                                              dfIn=itemS,
-                                                              method=method,
-                                                              momentCurrent=momentCurrent,
-                                                              q=q,
-                                                              slash=slash,
-                                                              stage=stage,
-                                                              targetCount=targetCount,
-                                                              year=year,
-                                                              yearsRange=yearsRange
-                                                              )
+                                                             complicatedNamePart=complicatedNamePart,
+                                                             coLabFolder=coLabFolder,
+                                                             fileFormatChoice=fileFormatChoice,
+                                                             goS=goS,
+                                                             dfAdd=itemsMonthlyAdditional,
+                                                             dfFinal=itemS,
+                                                             dfIn=itemS,
+                                                             method=method,
+                                                             momentCurrent=momentCurrent,
+                                                             q=q,
+                                                             slash=slash,
+                                                             stage=stage,
+                                                             targetCount=targetCount,
+                                                             year=year,
+                                                             yearsRange=yearsRange
+                                                             )
                         print('  Проход по всем следующим страницам с выдачей', '               ', end='\r')
                         while 'next_from' in response.keys():
                             start_from = response['next_from']
                             # print('    start_from', start_from) # для отладки
                             itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
                                                                                                           API_keyS=API_keyS,
+                                                                                                          count=count,
                                                                                                           end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
                                                                                                           fields=fields,
                                                                                                           iteration=iteration,
@@ -741,40 +755,40 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                                                                                           start_time=int(datetime(year, int(month), 1).timestamp())
                                                                                                           )
                             itemsYearlyAdditional = dfsProcessor(
-                                                                  complicatedNamePart=complicatedNamePart,
-                                                                  coLabFolder=coLabFolder,
-                                                                  fileFormatChoice=fileFormatChoice,
-                                                                  goS=goS,
-                                                                  dfAdd=itemsAdditional,
-                                                                  dfFinal=itemS,
-                                                                  dfIn=itemS,
-                                                                  method=method,
-                                                                  momentCurrent=momentCurrent,
-                                                                  q=q,
-                                                                  slash=slash,
-                                                                  stage=stage,
-                                                                  targetCount=targetCount,
-                                                                  year=year,
-                                                                  yearsRange=yearsRange
-                                                                  )
+                                                                 complicatedNamePart=complicatedNamePart,
+                                                                 coLabFolder=coLabFolder,
+                                                                 fileFormatChoice=fileFormatChoice,
+                                                                 goS=goS,
+                                                                 dfAdd=itemsMonthlyAdditional,
+                                                                 dfFinal=itemS,
+                                                                 dfIn=itemS,
+                                                                 method=method,
+                                                                 momentCurrent=momentCurrent,
+                                                                 q=q,
+                                                                 slash=slash,
+                                                                 stage=stage,
+                                                                 targetCount=targetCount,
+                                                                 year=year,
+                                                                 yearsRange=yearsRange
+                                                                 )
                             time.sleep(pause)
                     itemS = dfsProcessor(
-                                          complicatedNamePart=complicatedNamePart,
-                                          coLabFolder=coLabFolder,
-                                          fileFormatChoice=fileFormatChoice,
-                                          goS=goS,
-                                          dfAdd=itemsAdditional,
-                                          dfFinal=itemS,
-                                          dfIn=itemS,
-                                          method=method,
-                                          momentCurrent=momentCurrent,
-                                          q=q,
-                                          slash=slash,
-                                          stage=stage,
-                                          targetCount=targetCount,
-                                          year=year,
-                                          yearsRange=yearsRange
-                                          )
+                                         complicatedNamePart=complicatedNamePart,
+                                         coLabFolder=coLabFolder,
+                                         fileFormatChoice=fileFormatChoice,
+                                         goS=goS,
+                                         dfAdd=itemsYearlyAdditional,
+                                         dfFinal=itemS,
+                                         dfIn=itemS,
+                                         method=method,
+                                         momentCurrent=momentCurrent,
+                                         q=q,
+                                         slash=slash,
+                                         stage=stage,
+                                         targetCount=targetCount,
+                                         year=year,
+                                         yearsRange=yearsRange
+                                         )
                     # display(itemS.head())
                     # print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
 
@@ -814,6 +828,7 @@ f'-- можете подать их в скобки функции newsFeedSearc
 
     print('Скрипт исполнен')
     if os.path.exists(rootName):
+        print('rootName:', rootName)
         print(
 'Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'
               )
