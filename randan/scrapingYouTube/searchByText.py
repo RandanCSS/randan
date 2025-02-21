@@ -25,7 +25,7 @@ while True:
         from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
         from randan.tools import df2file # авторский модуль для сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
         from randan.tools import files2df # авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
-        from randan.tools import varPreprocessing # авторский модуль для предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
+        from randan.tools import varPreprocessor # авторский модуль для предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
         from tqdm import tqdm
         import os, pandas, re, shutil, time, warnings
         import googleapiclient.discovery as api
@@ -739,7 +739,7 @@ videoPaidProductPlacement : str
                 if len(API_keyS) != 0:
                     print('-- далее буд[е у]т использован[ы] эт[от и] ключ[и]')
 
-                    from randan.tools.textPreprocessing import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
+                    from randan.tools.textPreprocessor import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
                     API_keyS = multispaceCleaner(API_keyS)
                     while API_keyS[-1] == ',': API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста
 
@@ -918,7 +918,7 @@ videoPaidProductPlacement : str
 # ЛАЙФХАК: автоматизированно оперировать многими каналами можно через файл channelIdForSearch директорий _Temporal , в котором подаются стартовые настройки + id каждого из интересующих каналов
 # ----------
                 else:
-                    from randan.tools.textPreprocessing import multispaceCleaner
+                    from randan.tools.textPreprocessor import multispaceCleaner
                     channelIdForSearch = multispaceCleaner(channelIdForSearch)
                     while channelIdForSearch[-1] == ',': channelIdForSearch = channelIdForSearch[:-1] # избавиться от запятых в конце текста
                     # channelIdForSearch = channelIdForSearch.split(', ')
