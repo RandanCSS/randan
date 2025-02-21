@@ -194,7 +194,7 @@ def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNameP
     if len(channelIdS) > 0:
         print('Проход порциями по каналам')
         if len(channelIdS) > 50: print('  Порциями по 50 штук')
-        channelS = portionProcessor(
+        channelS = portionsProcessor(
                                     API_keyS=API_keyS,
                                     channelIdForSearch=channelIdForSearch,
                                     coLabFolder = coLabFolder,
@@ -416,7 +416,7 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
     if len(playlistIdS) > 0:
         print('Проход по плейлистам')
         if len(playlistIdS) > 50: print('  Порциями по 50 штук')
-        playlistS = portionProcessor(
+        playlistS = portionsProcessor(
                                      API_keyS=API_keyS,
                                      channelIdForSearch=channelIdForSearch,
                                      coLabFolder = coLabFolder,
@@ -506,7 +506,7 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
     return playlistS, playlistVideoChannelS
 
 # 1.7 для порционной выгрузки, когда метод предполагает подачу ему id порциями
-def portionProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, contentType, dfFinal, fileFormatChoice, idS, keyOrder, method, momentCurrent, q, rootName, slash, stage, targetCount, year, yearsRange):
+def portionsProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, contentType, dfFinal, fileFormatChoice, idS, keyOrder, method, momentCurrent, q, rootName, slash, stage, targetCount, year, yearsRange):
     # print('method', method) # для отладки
     bound = 0
     chplviS = pandas.DataFrame()
@@ -571,7 +571,7 @@ def portionProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNameP
                                     yearsRange=yearsRange
                                     )
         except:
-            print('\nОшибка внутри авторской функции portionProcessor') # для отладки
+            print('\nОшибка внутри авторской функции portionsProcessor') # для отладки
             goC, goS, keyOrder, problemItemId = errorProcessor(
                                                                 errorDescription=sys.exc_info(),
                                                                 keyOrder=keyOrder,
@@ -1659,7 +1659,7 @@ videoPaidProductPlacement : str
     if len(videoIdS) > 0:
         print('Проход по видео')
         if len(videoIdS) > 50: print('  Порциями по 50 штук')
-        videoS = portionProcessor(
+        videoS = portionsProcessor(
                                    API_keyS=API_keyS,
                                    channelIdForSearch=channelIdForSearch,
                                    coLabFolder = coLabFolder,
