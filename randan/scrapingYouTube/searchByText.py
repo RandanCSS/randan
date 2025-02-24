@@ -149,14 +149,13 @@ def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNameP
     df = dfIn.copy()
     if len(df) > 0: # если использовался search и успешно, id каналов берутся из него
         channelIdS = df[df['id.kind'] == f'youtube#{snippetContentType}']
-        channelIdS =\
-            channelIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in channelIdS.columns else channelIdS['id'].to_list()
+        if len(channelIdS) > 0:
+            channelIdS =\
+                channelIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in channelIdS.columns else channelIdS['id'].to_list()
     else: channelIdS = [channelIdForSearch] # в другом случае id канала подаётся пользователем
     # channelIdS = channelIdS[:5] # для отладки
     # print(channelIdS)
 
-    channelS = pandas.DataFrame()
-    iteration = 0 # номер итерации применения текущего метода
     method = 'channels'
     print(
 'В скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "brandingSettings", "contentDetails", "id", "localizations", "statistics", "status", "topicDetails"], id, maxResults .',
@@ -164,58 +163,54 @@ def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNameP
 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/channels')
     if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
 
-# ********** Дополнение списка id каналов из df списком id каналов из videoS
-    if len(videoS) > 0:
-        print(
-'''--- Если хотите дополнить спискок id каналов, выгруженных методом search, списком id каналов, к которым относятся выгруженные видео,
-просто нажмите Enter (это увеличит совокупность изучаемых каналов
---- Если НЕ хотите дополнить спискок, нажмите пробел и затем Enter'''
-              )
-        if len(input()) == 0:
-            channelIdS.extend(videoS['snippet.channelId'].to_list())
-            channelIdS = list(dict.fromkeys(channelIdS))
 
 # ********** Дополнение списка id каналов из df списком id каналов из playlistS
-    if len(playlistS) > 0:
+    if (len(playlistS) > 0) | (len(videoS) > 0):
         print(
-'''--- Если хотите дополнить спискок id видео, выгруженных методом search, списком id видео, составляющих выгруженные плейлисты,
-просто нажмите Enter (это тоже увеличит совокупность изучаемых каналов)
---- Если НЕ хотите дополнить спискок, нажмите пробел и затем Enter'''
+'''--- Если стоит задача сформировать релевантную запросу базу каналов и хотите пополнить список каналов теми, к которым относятся выгруженные плейлисты и видео,
+просто нажмите Enter (это увеличит совокупность выгруженных каналов, но нет гарантии, что если плейлисты и видео релевантны, то и каналы, к которым они относятся, тоже релевантны)
+--- Если НЕ хотите пополнить список, нажмите пробел и затем Enter'''
               )
         if len(input()) == 0:
+            if len(playlistS) > 0:
 
-            # Список списков, каждый из которых соответствует одному плейлисту
-            playlistChannelId_list = playlistS['snippet.videoOwnerChannelId'].str.split(', ').to_list()
+                # Список списков, каждый из которых соответствует одному плейлисту
+                playlistChannelId_list = playlistS['snippet.videoOwnerChannelId'].str.split(', ').to_list()
+    
+                playlistChannelIdS = []
+                for snippet in playlistChannelId_list:
+                    playlistChannelIdS.extend(snipet)
+                channelIdS.extend(playlistChannelIdS)
+                channelIdS = list(dict.fromkeys(channelIdS))
 
-            playlistChannelIdS = []
-            for snippet in playlistChannelId_list:
-                playlistChannelIdS.extend(snipet)
-            channelIdS.extend(playlistChannelIdS)
-            channelIdS = list(dict.fromkeys(channelIdS))
+# ********** Дополнение списка id каналов из df списком id каналов из videoS
+            if len(videoS) > 0:
+                channelIdS.extend(videoS['snippet.channelId'].to_list())
+                channelIdS = list(dict.fromkeys(channelIdS))
 
     if len(channelIdS) > 0:
         print('Проход порциями по каналам')
         if len(channelIdS) > 50: print('  Порциями по 50 штук')
         channelS = portionsProcessor(
-                                    API_keyS=API_keyS,
-                                    channelIdForSearch=channelIdForSearch,
-                                    coLabFolder = coLabFolder,
-                                    complicatedNamePart=complicatedNamePart,
-                                    contentType=contentType, # snippetContentType -- не то же самое, что contentType , т.к. contentType исходно подаётся пользователем
-                                    dfFinal=df,
-                                    fileFormatChoice=fileFormatChoice,
-                                    idS=channelIdS,
-                                    keyOrder=keyOrder,
-                                    method=method,
-                                    momentCurrent=momentCurrent,
-                                    q=q,
-                                    rootName=rootName,
-                                    slash=slash,
-                                    stage=stage,
-                                    targetCount=targetCount,
-                                    year=year,
-                                    yearsRange=yearsRange
-                                    )
+                                     API_keyS=API_keyS,
+                                     channelIdForSearch=channelIdForSearch,
+                                     coLabFolder = coLabFolder,
+                                     complicatedNamePart=complicatedNamePart,
+                                     contentType=contentType, # snippetContentType -- не то же самое, что contentType , т.к. contentType исходно подаётся пользователем
+                                     dfFinal=df,
+                                     fileFormatChoice=fileFormatChoice,
+                                     idS=channelIdS,
+                                     keyOrder=keyOrder,
+                                     method=method,
+                                     momentCurrent=momentCurrent,
+                                     q=q,
+                                     rootName=rootName,
+                                     slash=slash,
+                                     stage=stage,
+                                     targetCount=targetCount,
+                                     year=year,
+                                     yearsRange=yearsRange
+                                     )
         df2file.df2fileShell(
                              complicatedNamePart=complicatedNamePart,
                              dfIn=channelS,
@@ -666,7 +661,7 @@ def searchByText(
 videoPaidProductPlacement : str
           videoSyndicated : str
                 videoType : str
-                returnDfs : bool -- в случае True функция возвращает итоговые датафреймы с выдачей методов search, playlists и playlistItems, videos, commentThreads и comments, channels
+                returnDfs : bool -- в случае True функция возвращает пять итоговые датафреймы с выдачей методов (1) search, (2) playlists и playlistItems, (3) videos, (4) commentThreads и comments, (5) channels
     """
     if (access_token == None) & (channelIdForSearch == None) & (contentType == None) & (publishedAfter == None) & (publishedBefore == None) & (q == None)\
         & (channelType == None) & (eventType == None) & (location == None) & (locationRadius == None) & (regionCode == None) & (relevanceLanguage == None) & (safeSearch == None) & (topicId == None)\
@@ -1553,34 +1548,35 @@ f'    Для года {year} проход по всем следующим ст�
     stage = 3
 
 # 2.2.1 Выгрузка дополнительных характеристик плейлистов ИЛИ тот самый случай "в противном случае", когда search следует заменить на cannels + playlistItems
-    snippetContentType = 'playlist'
-    if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # если использовался search и успешно и в его выдаче есть плейлисты
-        playlistIdS = df[df['id.kind'] == f'youtube#{snippetContentType}']
-        playlistIdS =\
-        playlistIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in playlistIdS.columns else playlistIdS['id'].to_list()
-        playlistS, playlistVideoChannelS = playListProcessor(
-                                                             API_keyS=API_keyS,
-                                                             channelIdForSearch=channelIdForSearch,
-                                                             coLabFolder=coLabFolder,
-                                                             complicatedNamePart=complicatedNamePart,
-                                                             contentType=contentType,
-                                                             dfIn=dfIn,
-                                                             expiriencedMode=expiriencedMode,
-                                                             fileFormatChoice=fileFormatChoice,
-                                                             goS=goS,
-                                                             keyOrder=keyOrder,
-                                                             momentCurrent=momentCurrent,
-                                                             playlistIdS=playlistIdS,
-                                                             q=q,
-                                                             rootName=rootName,
-                                                             slash=slash,
-                                                             snippetContentType=snippetContentType,
-                                                             stage=stage,
-                                                             targetCount=targetCount,
-                                                             year=year,
-                                                             yearsRange=yearsRange
-                                                             )
-    else: # если НЕ использовался search
+    if len(itemS) > 0: # если использовался search..
+        snippetContentType = 'playlist'
+        if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # .. и в его выдаче есть плейлисты
+            playlistIdS = df[df['id.kind'] == f'youtube#{snippetContentType}']
+            playlistIdS =\
+            playlistIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in playlistIdS.columns else playlistIdS['id'].to_list()
+            playlistS, playlistVideoChannelS = playListProcessor(
+                                                                 API_keyS=API_keyS,
+                                                                 channelIdForSearch=channelIdForSearch,
+                                                                 coLabFolder=coLabFolder,
+                                                                 complicatedNamePart=complicatedNamePart,
+                                                                 contentType=contentType,
+                                                                 dfIn=dfIn,
+                                                                 expiriencedMode=expiriencedMode,
+                                                                 fileFormatChoice=fileFormatChoice,
+                                                                 goS=goS,
+                                                                 keyOrder=keyOrder,
+                                                                 momentCurrent=momentCurrent,
+                                                                 playlistIdS=playlistIdS,
+                                                                 q=q,
+                                                                 rootName=rootName,
+                                                                 slash=slash,
+                                                                 snippetContentType=snippetContentType,
+                                                                 stage=stage,
+                                                                 targetCount=targetCount,
+                                                                 year=year,
+                                                                 yearsRange=yearsRange
+                                                                 )
+    else: # если НЕ использовался search (то есть пользователь подал id канала)
         channelS = channelProcessor(
                                     API_keyS=API_keyS,
                                     channelIdForSearch=channelIdForSearch,
@@ -1630,42 +1626,45 @@ f'    Для года {year} проход по всем следующим ст�
     # print(playlistIdS)
 
 # 2.2.2 Выгрузка дополнительных характеристик видео
-    snippetContentType = 'video'
-    method = 'videos'
-    print(
+    if len(itemS) > 0: # если использовался search..
+        snippetContentType = 'video'
+        if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # .. и в его выдаче есть видео
+            print(
 '\nВ скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "contentDetails", "localizations", "statistics", "status", "topicDetails"], id, maxResults .',
 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/videos'
-          )
-    if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-    iteration = 0 # номер итерации применения текущего метода
-
-    if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # если использовался search и успешно и в его выдаче есть видео
-        videoIdS = itemS[itemS['id.kind'] == f'youtube#{snippetContentType}']
-        videoIdS = videoIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in videoIdS.columns else videoIdS['id'].to_list()
-    else: videoIdS = []
+                  )
+            if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+            iteration = 0 # номер итерации применения текущего метода
+        
+            videoIdS = itemS[itemS['id.kind'] == f'youtube#{snippetContentType}']
+            videoIdS = videoIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in videoIdS.columns else videoIdS['id'].to_list()
+        else: videoIdS = []
 
 # ********** Дополнение списка id видео из itemS списком id видео из playlistS
     if len(playlistS) > 0:
-        # print('\n--- Если хотите дополнить спискок id видео, выгруженных методом search, списком id видео, составляющих выгруженные плейлисты'
-        #       , 'просто нажмите Enter (это увеличит совокупность изучаемых видео)'
-        #       , '\n--- Если НЕ хотите дополнить спискок, нажмите пробел и затем Enter')
-        # if len(input()) == 0:
+        print(
+'''--- Если стоит задача сформировать релевантную запросу базу видео и хотите пополнить список видео теми, которые составляют выгруженные плейлисты,
+просто нажмите Enter (это увеличит совокупность выгруженных видео, но нет гарантии, что если плейлисты релевантны, то и все содержащиеся в них видео тоже релевантны)
+--- Если НЕ хотите пополнить список, нажмите пробел и затем Enter'''
+              )
+        if len(input()) == 0:
 
-        # Список списков, каждый из которых соответствует одному плейлисту
-        playlistVideoId_list = playlistS['snippet.resourceId.videoId'].str.split(', ').to_list()
-        # print('playlistVideoId_list:', playlistVideoId_list) # для отладки
+            # Список списков, каждый из которых соответствует одному плейлисту
+            playlistVideoId_list = playlistS['snippet.resourceId.videoId'].str.split(', ').to_list()
+            # print('playlistVideoId_list:', playlistVideoId_list) # для отладки
 
-        playlistVideoIdS = []
-        for playlistVideoIdSnippet in playlistVideoId_list:
-            playlistVideoIdS.extend(playlistVideoIdSnippet)
+            playlistVideoIdS = []
+            for playlistVideoIdSnippet in playlistVideoId_list:
+                playlistVideoIdS.extend(playlistVideoIdSnippet)
+    
+            videoIdS.extend(playlistVideoIdS)
+            videoIdS = list(dict.fromkeys(videoIdS))
 
-        videoIdS.extend(playlistVideoIdS)
-        videoIdS = list(dict.fromkeys(videoIdS))
-
-    # print(videoIdS)
+    # print(videoIdS) # для отладки
 
     if len(videoIdS) > 0:
+        method = 'videos'
         print('Проход по видео')
         if len(videoIdS) > 50: print('  Порциями по 50 штук')
         videoS = portionsProcessor(
@@ -1725,7 +1724,6 @@ f'    Для года {year} проход по всем следующим ст�
         commentS = pandas.DataFrame() # не в следующем ченке, чтобы иметь возможность перезапускать его, не затирая промежуточный результат выгрузки
 
 # 2.2.3 Выгрузка комментариев к видео
-    if len(videoS) > 0:
         print(
 '\n--- Если хотите выгрузить комментарии к видео (в отдельный файл),',
 f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart} {method}.xlsx" директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}",',
