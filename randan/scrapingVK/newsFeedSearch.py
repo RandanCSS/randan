@@ -217,7 +217,6 @@ f'Поскольку исполнение скрипта натолкнулос�
                              coLabFolder=coLabFolder,
                              currentMoment=momentCurrent.strftime("%Y%m%d") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              )
-        if returnDfs: return itemS
         warnings.filterwarnings("ignore")
         print(
 'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
@@ -825,7 +824,7 @@ f'-- можете подать их в скобки функции newsFeedSearc
                          currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                          )
 
-    print('Скрипт исполнен')
+    print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
     if os.path.exists(rootName):
         print('rootName:', rootName)
         print(
@@ -844,12 +843,6 @@ for cellContent in Исходный_датафрейм[column].dropna():
 '''
                              )
     if returnDfs: return itemS
-    warnings.filterwarnings("ignore")
-    print(
-'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
-'Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'
-          )
-    sys.exit()
 # warnings.filterwarnings("ignore")
 # print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть')
 # input()
