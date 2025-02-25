@@ -189,7 +189,7 @@ def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNameP
                 channelIdS = list(dict.fromkeys(channelIdS))
 
     if len(channelIdS) > 0:
-        print('Проход порциями по каналам')
+        print('Проход по каналам')
         if len(channelIdS) > 50: print('  Порциями по 50 штук')
         channelS = portionsProcessor(
                                      API_keyS=API_keyS,
@@ -305,15 +305,12 @@ f'Поскольку исполнение скрипта натолкнулос�
                              coLabFolder=coLabFolder,
                              currentMoment=momentCurrent.strftime("%Y%m%d") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              )
-        if returnDfs: return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
-
         warnings.filterwarnings("ignore")
         print(
 '''Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть
 Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
               )
         sys.exit()
-
     return df
 
 # 1.3 для выгрузки комментариев
@@ -403,8 +400,7 @@ def iterationVisualization(idS, iteration, portion, response):
     if portion > 1: print('   Сколько в порции наблюдений?', len(response['items']), end='\r')
 
 # 1.6 для обработки выдачи методов playlists и playlistItems, помогающая работе с ключами
-def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, contentType, dfIn, expiriencedMode, fileFormatChoice, goS, keyOrder, momentCurrent, playlistIdS, q, rootName, slash, snippetContentType, stage, targetCount, year, yearsRange):
-    df = dfIn.copy()
+def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, contentType, dfFinal, expiriencedMode, fileFormatChoice, goS, keyOrder, momentCurrent, playlistIdS, q, rootName, slash, snippetContentType, stage, targetCount, year, yearsRange):
     method = 'playlists'
     print('В скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "contentDetails", "localizations", "status"], id, maxResults .',
           'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
@@ -416,25 +412,25 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
         print('Проход по плейлистам')
         if len(playlistIdS) > 50: print('  Порциями по 50 штук')
         playlistS = portionsProcessor(
-                                     API_keyS=API_keyS,
-                                     channelIdForSearch=channelIdForSearch,
-                                     coLabFolder = coLabFolder,
-                                     complicatedNamePart=complicatedNamePart,
-                                     contentType=contentType,
-                                     dfFinal=df,
-                                     fileFormatChoice=fileFormatChoice,
-                                     idS=playlistIdS,
-                                     keyOrder=keyOrder,
-                                     method=method,
-                                     momentCurrent=momentCurrent,
-                                     q=q,
-                                     rootName=rootName,
-                                     slash=slash,
-                                     stage=stage,
-                                     targetCount=targetCount,
-                                     year=year,
-                                     yearsRange=yearsRange
-                                     )
+                                      API_keyS=API_keyS,
+                                      channelIdForSearch=channelIdForSearch,
+                                      coLabFolder = coLabFolder,
+                                      complicatedNamePart=complicatedNamePart,
+                                      contentType=contentType,
+                                      dfFinal=dfFinal,
+                                      fileFormatChoice=fileFormatChoice,
+                                      idS=playlistIdS,
+                                      keyOrder=keyOrder,
+                                      method=method,
+                                      momentCurrent=momentCurrent,
+                                      q=q,
+                                      rootName=rootName,
+                                      slash=slash,
+                                      stage=stage,
+                                      targetCount=targetCount,
+                                      year=year,
+                                      yearsRange=yearsRange
+                                      )
 
         method = 'playlistItems'
         print('\nВ скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet"], playlistId, maxResults .',
@@ -463,7 +459,7 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                                                          contentType=contentType,
                                                          fileFormatChoice=fileFormatChoice,
                                                          dfAdd=addPlaylistVideoChannelS,
-                                                         dfFinal=df,
+                                                         dfFinal=dfFinal,
                                                          dfIn=playlistVideoChannelS,
                                                          goS=goS,
                                                          method=method,
@@ -633,16 +629,11 @@ def searchByText(
     ----------
     Аргументы этой функции аналогичны аргументам метода https://developers.google.com/youtube/v3/docs/search/list
              access_token : str
-       channelIdForSearch : str
-           -- это аналог channelId
-
-              contentType : str
-                  -- это аналог type
-
+       channelIdForSearch : str -- это аналог channelId
+              contentType : str -- это аналог type
            publishedAfter : str, readable by datetime
           publishedBefore : str, readable by datetime
                         q : str
-
               channelType : str
                 eventType : str
                  location : str
@@ -1499,7 +1490,7 @@ f'    Для года {year} проход по всем следующим ст�
                                                           yearsRange=yearsRange
                                                           )
                             print(
-'    Искомых объектов', targetCount, ', а найденных с добавлением сегментирования по году (год', year, ') и включением аргумента order:', len(itemS)
+'    Искомых объектов', targetCount, ', а найденных с добавлением сегментирования по году (год', year, ') и включением аргумента order:', len(itemS), '\n'
                                   )
                         else:
                             print('  Все искомые объекты в году', year, 'найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
@@ -1508,18 +1499,19 @@ f'    Для года {year} проход по всем следующим ст�
                             if (year) <= yearMinByUser:
                                 goC = False
                                 print(f'\nЗавершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser} (с точностью до года)')
-        elif stage < stageTarget:
-            print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"')
     
 # 2.1.3 Экспорт выгрузки метода search и опциональное завершение скрипта
-        df2file.df2fileShell(
-                             complicatedNamePart=complicatedNamePart,
-                             dfIn=itemS,
-                             fileFormatChoice=fileFormatChoice,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                             coLabFolder=coLabFolder,
-                             currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                             )
+            df2file.df2fileShell(
+                                 complicatedNamePart=complicatedNamePart,
+                                 dfIn=itemS,
+                                 fileFormatChoice=fileFormatChoice,
+                                 method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                                 coLabFolder=coLabFolder,
+                                 currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                 )
+        elif stage < stageTarget:
+            print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"')
+
         print(
 '''
 Выгрузка метода search содержит НЕ ВСЕ доступные для выгрузки из API YouTube характеристки контента
@@ -1534,22 +1526,21 @@ f'    Для года {year} проход по всем следующим ст�
 'Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'
                       )
                 shutil.rmtree(rootName, ignore_errors=True)
-            if returnDfs: return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
-
             warnings.filterwarnings("ignore")
             print(
 'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
 'Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'
                   )
             sys.exit()
+            if returnDfs: return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
 
 # 2.2 Выгрузка дополнительных характеристик и контента методами playlists и playlistItems, videos, commentThreads и comments, channels
 # 2.2.0 Этап stage = 3
     stage = 3
 
 # 2.2.1 Выгрузка дополнительных характеристик плейлистов ИЛИ тот самый случай "в противном случае", когда search следует заменить на cannels + playlistItems
+    snippetContentType = 'playlist'
     if len(itemS) > 0: # если использовался search..
-        snippetContentType = 'playlist'
         if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # .. и в его выдаче есть плейлисты
             playlistIdS = df[df['id.kind'] == f'youtube#{snippetContentType}']
             playlistIdS =\
@@ -1560,7 +1551,7 @@ f'    Для года {year} проход по всем следующим ст�
                                                                  coLabFolder=coLabFolder,
                                                                  complicatedNamePart=complicatedNamePart,
                                                                  contentType=contentType,
-                                                                 dfIn=dfIn,
+                                                                 dfFinal=itemS,
                                                                  expiriencedMode=expiriencedMode,
                                                                  fileFormatChoice=fileFormatChoice,
                                                                  goS=goS,
@@ -1576,6 +1567,7 @@ f'    Для года {year} проход по всем следующим ст�
                                                                  year=year,
                                                                  yearsRange=yearsRange
                                                                  )
+        else: playlistVideoChannelS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     else: # если НЕ использовался search (то есть пользователь подал id канала)
         channelS = channelProcessor(
                                     API_keyS=API_keyS,
@@ -1607,7 +1599,7 @@ f'    Для года {year} проход по всем следующим ст�
                                                              coLabFolder=coLabFolder,
                                                              complicatedNamePart=complicatedNamePart,
                                                              contentType=contentType,
-                                                             dfIn=itemS,
+                                                             dfFinal=channelS, # т.к. в отсутствие itemS channelS становится базовым датафреймом
                                                              expiriencedMode=expiriencedMode,
                                                              fileFormatChoice=fileFormatChoice,
                                                              goS=goS,
@@ -1626,6 +1618,8 @@ f'    Для года {year} проход по всем следующим ст�
     # print(playlistIdS)
 
 # 2.2.2 Выгрузка дополнительных характеристик видео
+    method = 'videos'
+    videoIdS = []
     if len(itemS) > 0: # если использовался search..
         snippetContentType = 'video'
         if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # .. и в его выдаче есть видео
@@ -1639,12 +1633,12 @@ f'    Для года {year} проход по всем следующим ст�
         
             videoIdS = itemS[itemS['id.kind'] == f'youtube#{snippetContentType}']
             videoIdS = videoIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in videoIdS.columns else videoIdS['id'].to_list()
-        else: videoIdS = []
 
 # ********** Дополнение списка id видео из itemS списком id видео из playlistS
     if len(playlistS) > 0:
         print(
-'''--- Если стоит задача сформировать релевантную запросу базу видео и хотите пополнить список видео теми, которые составляют выгруженные плейлисты,
+'''
+--- Если стоит задача сформировать релевантную запросу базу видео и хотите пополнить список видео теми, которые составляют выгруженные плейлисты,
 просто нажмите Enter (это увеличит совокупность выгруженных видео, но нет гарантии, что если плейлисты релевантны, то и все содержащиеся в них видео тоже релевантны)
 --- Если НЕ хотите пополнить список, нажмите пробел и затем Enter'''
               )
@@ -1664,7 +1658,6 @@ f'    Для года {year} проход по всем следующим ст�
     # print(videoIdS) # для отладки
 
     if len(videoIdS) > 0:
-        method = 'videos'
         print('Проход по видео')
         if len(videoIdS) > 50: print('  Порциями по 50 штук')
         videoS = portionsProcessor(
@@ -1934,47 +1927,42 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
             else: print('Нет ни одного откомментированного родительского (topLevel) комментария')
 
 # 2.2.4 Выгрузка дополнительных характеристик каналов
-    snippetContentType = 'channel'
-    if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # если использовался search и успешно и в его выдаче есть каналы
-        channelS = channelProcessor(
-                                    API_keyS=API_keyS,
-                                    channelIdForSearch=channelIdForSearch,
-                                    coLabFolder=coLabFolder,
-                                    complicatedNamePart=complicatedNamePart,
-                                    contentType=contentType,
-                                    dfIn=itemS,
-                                    expiriencedMode=expiriencedMode,
-                                    fileFormatChoice=fileFormatChoice,
-                                    goS=goS,
-                                    keyOrder=keyOrder,
-                                    momentCurrent=momentCurrent,
-                                    playlistS=playlistS,
-                                    q=q,
-                                    rootName=rootName,
-                                    slash=slash,
-                                    snippetContentType=snippetContentType,
-                                    stage=stage,
-                                    targetCount=targetCount,
-                                    year=year,
-                                    yearsRange=yearsRange,
-                                    videoS=videoS
-                                    )
+    if len(itemS) > 0: # если использовался search..
+        snippetContentType = 'channel'
+        if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # .. и в его выдаче есть каналы
+            channelS = channelProcessor(
+                                        API_keyS=API_keyS,
+                                        channelIdForSearch=channelIdForSearch,
+                                        coLabFolder=coLabFolder,
+                                        complicatedNamePart=complicatedNamePart,
+                                        contentType=contentType,
+                                        dfIn=itemS,
+                                        expiriencedMode=expiriencedMode,
+                                        fileFormatChoice=fileFormatChoice,
+                                        goS=goS,
+                                        keyOrder=keyOrder,
+                                        momentCurrent=momentCurrent,
+                                        playlistS=playlistS,
+                                        q=q,
+                                        rootName=rootName,
+                                        slash=slash,
+                                        snippetContentType=snippetContentType,
+                                        stage=stage,
+                                        targetCount=targetCount,
+                                        year=year,
+                                        yearsRange=yearsRange,
+                                        videoS=videoS
+                                        )
+        else: channelS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
 
 # 2.2.5 Экспорт выгрузки метода search и финальное завершение скрипта
-    print('Скрипт исполнен')
+    print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
     if os.path.exists(rootName):
         print(
 'Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'
               )
         shutil.rmtree(rootName, ignore_errors=True)
     if returnDfs: return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
-
-    warnings.filterwarnings("ignore")
-    print(
-'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
-'Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'
-          )
-    sys.exit()
 
 # warnings.filterwarnings("ignore")
 # print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть')
