@@ -128,10 +128,9 @@ def bigSearch(
             addItemS = pandas.json_normalize(response['items'])
 
             # Для визуализации процесса
-            print('      Итерация №', iteration, ', number of items', len(response['items'])
-                  , '' if year == None else f', year {year}'
-                  , '' if order == None else f', order {order}'
-                  , '          ', end='\r')
+            print(
+'      Итерация №', iteration, ', number of items', len(response['items']), '' if year == None else f', year {year}', '' if order == None else f', order {order}', '          ', end='\r'
+                  )
             iteration += 1
             goC = False
 
