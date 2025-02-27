@@ -92,7 +92,7 @@ def bigSearch(
                 } # принудительная выдача для response на случай неуспеха request.execute()
     addItemS = pandas.DataFrame() # принудительная выдача для response на случай неуспеха request.execute()
     goC = True
-    while goC:
+    while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
         try:
             youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
             request = youtube.search().list(
@@ -326,7 +326,7 @@ def downloadComments(
     youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
     while True: # прерывается командой break при отсутствии nextPageToken
         goC = True
-        while goC: # этот цикл позволяет возвращяться со следующим keyOrder к прежнему id при истечении квоты текущего ключа
+        while goC: # цикл позволяет возвращяться со следующим keyOrder к прежнему id при истечении квоты текущего ключа
             try:
                 if method == 'comments':
                     response = youtube.comments().list(part='id, snippet', parentId=sourceId, maxResults=100, pageToken=pageToken).execute()
@@ -438,7 +438,7 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
               'https://developers.google.com/youtube/v3/docs/playlistitems')
         if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
         iteration = 0 # номер итерации применения текущего метода
-        playlistVideoChannelS = pandas.DataFrame()
+        playlistVideoChannelS = pandas.DataFrame() # хотя датафреймы и глобальны как переменные, пусть и тут инициализируется
         portion = 50
         print('\nПроход по плейлистам для выгрузки id видео, составляющих плейлисты, и каналов, к которым они принадлежат')
         for playlistId in playlistIdS:
@@ -449,8 +449,6 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                     try:
                         youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
                         response = youtube.playlistItems().list(part='snippet', maxResults=50, pageToken=pageToken, playlistId=playlistId).execute()
-                        iterationVisualization(playlistIdS, iteration, portion, response) # для визуализации процесса через итерации
-                        iteration += 1
                         addPlaylistVideoChannelS = pandas.json_normalize(response['items'])
                         playlistVideoChannelS = dfsProcessor(
                                                              channelIdForSearch=channelIdForSearch,
@@ -472,11 +470,14 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                                                              year=year,
                                                              yearsRange=yearsRange
                                                              )
+                        goC = False # если try успешно исполнился, то цикл прекращается
                     except: goC, goS, keyOrder, problemItemId = errorProcessor(
                                                                                errorDescription=sys.exc_info(),
                                                                                keyOrder=keyOrder,
                                                                                sourceId=None
                                                                                )
+                iterationVisualization(playlistIdS, iteration, portion, response) # для визуализации процесса через итерации
+                iteration += 1
                 if 'nextPageToken' in response.keys(): pageToken = response['nextPageToken']
                 else: break
 
@@ -504,74 +505,79 @@ def portionsProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
     # print('method', method) # для отладки
     bound = 0
     chplviS = pandas.DataFrame()
-    goC = True
     goS = True
     iteration = 0 # номер итерации применения текущего метода
-    while (bound < len(idS)) & goC:
-    # while (bound < 100) & goC: # для отладки
-        try:
-            youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
-            if method == 'channels':
-                response = youtube.channels().list(
-                                                   part='snippet, brandingSettings, contentDetails, id, localizations, statistics, status, topicDetails'
-                                                   , id=idS[bound:bound + 50]
-                                                   , maxResults=50
-                                                   ).execute()
-            if method == 'playlists':
-                response = youtube.playlists().list(
-                                                    part='snippet, contentDetails, localizations, status'
-                                                    , id=idS[bound:bound + 50]
-                                                   , maxResults=50
-                                                    ).execute()
-            if method == 'videos':
-                response = youtube.videos().list(
-                                                 part='snippet, contentDetails, localizations, statistics, status, topicDetails'
-                                                 , id=idS[bound:bound + 50]
-                                                 , maxResults=50
-                                                 ).execute()
-            # Для визуализации процесса через итерации
-            iterationUpperBound = len(idS)
-
-            # Дробная часть после деления числа idS должна увеличить iterationUpperBound на единицу
-            iterationUpperBound = str(round(len(idS) / 50, 0)) if iterationUpperBound % 50 == 0 else str(round(len(idS) / 50, 0) + 1)
-
-            # И `.0` лишние
-            if '.' in iterationUpperBound: iterationUpperBound = iterationUpperBound.split('.')[0]
-
-            print('  Порция №', iteration + 1, 'из', iterationUpperBound, '; сколько в порции наблюдений?', len(response['items']), end='\r')
-
-            bound += 50
-            iteration += 1
-
-            addChplviS = pandas.json_normalize(response['items'])
-            chplviS = dfsProcessor(
-                                    channelIdForSearch=channelIdForSearch,
-                                    coLabFolder=coLabFolder,
-                                    complicatedNamePart=complicatedNamePart,
-                                    contentType=contentType,
-                                    fileFormatChoice=fileFormatChoice,
-                                    dfAdd=addChplviS,
-                                    dfFinal=dfFinal, # itemS подаются как значение аргумента оборачивающей функции
-                                    dfIn=chplviS,
-                                    goS=goS,
-                                    method=method,
-                                    momentCurrent=momentCurrent,
-                                    q=q,
-                                    rootName=rootName,
-                                    slash=slash,
-                                    stageTarget=stage,
-                                    targetCount=targetCount,
-                                    year=year,
-                                    yearsRange=yearsRange
-                                    )
-        except:
-            print('\nОшибка внутри авторской функции portionsProcessor') # для отладки
-            goC, goS, keyOrder, problemItemId = errorProcessor(
-                                                                errorDescription=sys.exc_info(),
-                                                                keyOrder=keyOrder,
-                                                                sourceId=None
-                                                                )
-        # display(chplviS) # для отладки
+    portion = 50
+    while bound < len(idS):
+    # while bound < 100: # для отладки
+        goC = True
+        while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
+            try:
+                youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
+                if method == 'channels':
+                    response = youtube.channels().list(
+                                                       part='snippet, brandingSettings, contentDetails, id, localizations, statistics, status, topicDetails'
+                                                       , id=idS[bound:bound + portion]
+                                                       , maxResults=50
+                                                       ).execute()
+                if method == 'playlists':
+                    response = youtube.playlists().list(
+                                                        part='snippet, contentDetails, localizations, status'
+                                                        , id=idS[bound:bound + portion]
+                                                       , maxResults=50
+                                                        ).execute()
+                if method == 'videos':
+                    response = youtube.videos().list(
+                                                     part='snippet, contentDetails, localizations, statistics, status, topicDetails'
+                                                     , id=idS[bound:bound + portion]
+                                                     , maxResults=50
+                                                     ).execute()
+                # # Для визуализации процесса через итерации
+                # iterationUpperBound = len(idS)
+    
+                # # Дробная часть после деления числа idS должна увеличить iterationUpperBound на единицу
+                # iterationUpperBound = str(round(len(idS) / 50, 0)) if iterationUpperBound % 50 == 0 else str(round(len(idS) / 50, 0) + 1)
+    
+                # # И `.0` лишние
+                # if '.' in iterationUpperBound: iterationUpperBound = iterationUpperBound.split('.')[0]
+    
+                # print('  Порция №', iteration + 1, 'из', iterationUpperBound, '; сколько в порции наблюдений?', len(response['items']), end='\r')
+    
+                # bound += 50
+                # iteration += 1
+                addChplviS = pandas.json_normalize(response['items'])
+                chplviS = dfsProcessor(
+                                        channelIdForSearch=channelIdForSearch,
+                                        coLabFolder=coLabFolder,
+                                        complicatedNamePart=complicatedNamePart,
+                                        contentType=contentType,
+                                        fileFormatChoice=fileFormatChoice,
+                                        dfAdd=addChplviS,
+                                        dfFinal=dfFinal, # itemS подаются как значение аргумента оборачивающей функции
+                                        dfIn=chplviS,
+                                        goS=goS,
+                                        method=method,
+                                        momentCurrent=momentCurrent,
+                                        q=q,
+                                        rootName=rootName,
+                                        slash=slash,
+                                        stageTarget=stage,
+                                        targetCount=targetCount,
+                                        year=year,
+                                        yearsRange=yearsRange
+                                        )
+                goC = False # если try успешно исполнился, то цикл прекращается
+            except:
+                print('\nОшибка внутри авторской функции portionsProcessor') # для отладки
+                goC, goS, keyOrder, problemItemId = errorProcessor(
+                                                                    errorDescription=sys.exc_info(),
+                                                                    keyOrder=keyOrder,
+                                                                    sourceId=None
+                                                                    )
+        iterationVisualization(idS, iteration, portion, response) # для визуализации процесса через итерации
+        iteration += 1
+        bound += portion
+        # display('chplviS:', chplviS) # для отладки
     return chplviS
 
 # 1.6 чтобы избавиться от префиксов в названиях столбцов датафрейма с комментариями
