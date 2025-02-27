@@ -442,42 +442,43 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
         portion = 50
         print('\nПроход по плейлистам для выгрузки id видео, составляющих плейлисты, и каналов, к которым они принадлежат')
         for playlistId in playlistIdS:
-            goC = True
             pageToken = None
-            while goC:
-                try:
-                    youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
-                    response = youtube.playlistItems().list(part='snippet', maxResults=50, pageToken=pageToken, playlistId=playlistId).execute()
-                    iterationVisualization(playlistIdS, iteration, portion, response) # для визуализации процесса через итерации
-                    iteration += 1
-                    addPlaylistVideoChannelS = pandas.json_normalize(response['items'])
-                    playlistVideoChannelS = dfsProcessor(
-                                                         channelIdForSearch=channelIdForSearch,
-                                                         coLabFolder=coLabFolder,
-                                                         complicatedNamePart=complicatedNamePart,
-                                                         contentType=contentType,
-                                                         fileFormatChoice=fileFormatChoice,
-                                                         dfAdd=addPlaylistVideoChannelS,
-                                                         dfFinal=dfFinal,
-                                                         dfIn=playlistVideoChannelS,
-                                                         goS=goS,
-                                                         method=method,
-                                                         q=q,
-                                                         rootName=rootName,
-                                                         slash=slash,
-                                                         stageTarget=stage,
-                                                         targetCount=targetCount,
-                                                         momentCurrent=momentCurrent,
-                                                         year=year,
-                                                         yearsRange=yearsRange
-                                                         )
-                except: goC, goS, keyOrder, problemItemId = errorProcessor(
-                                                                           errorDescription=sys.exc_info(),
-                                                                           keyOrder=keyOrder,
-                                                                           sourceId=None
-                                                                           )
+            while True:
+                goC = True
+                while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
+                    try:
+                        youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
+                        response = youtube.playlistItems().list(part='snippet', maxResults=50, pageToken=pageToken, playlistId=playlistId).execute()
+                        iterationVisualization(playlistIdS, iteration, portion, response) # для визуализации процесса через итерации
+                        iteration += 1
+                        addPlaylistVideoChannelS = pandas.json_normalize(response['items'])
+                        playlistVideoChannelS = dfsProcessor(
+                                                             channelIdForSearch=channelIdForSearch,
+                                                             coLabFolder=coLabFolder,
+                                                             complicatedNamePart=complicatedNamePart,
+                                                             contentType=contentType,
+                                                             fileFormatChoice=fileFormatChoice,
+                                                             dfAdd=addPlaylistVideoChannelS,
+                                                             dfFinal=dfFinal,
+                                                             dfIn=playlistVideoChannelS,
+                                                             goS=goS,
+                                                             method=method,
+                                                             q=q,
+                                                             rootName=rootName,
+                                                             slash=slash,
+                                                             stageTarget=stage,
+                                                             targetCount=targetCount,
+                                                             momentCurrent=momentCurrent,
+                                                             year=year,
+                                                             yearsRange=yearsRange
+                                                             )
+                    except: goC, goS, keyOrder, problemItemId = errorProcessor(
+                                                                               errorDescription=sys.exc_info(),
+                                                                               keyOrder=keyOrder,
+                                                                               sourceId=None
+                                                                               )
                 if 'nextPageToken' in response.keys(): pageToken = response['nextPageToken']
-                else: goC = False
+                else: break
 
         # Перечислить сначала id всех составляющих каждый плейлист видео через запятую и записать в ячейку,
             # затем id всех канадов, к которым относятся составляющие каждый плейлист видео, через запятую и записать в ячейку
@@ -1615,7 +1616,7 @@ f'    Для года {year} проход по всем следующим ст�
                                                              year=year,
                                                              yearsRange=yearsRange
                                                              )        
-    # print(playlistIdS)
+    # print('playlistIdS:', playlistIdS) # для отладки
 
 # 2.2.2 Выгрузка дополнительных характеристик видео
     method = 'videos'
