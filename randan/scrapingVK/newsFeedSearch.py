@@ -303,7 +303,7 @@ def newsFeedSearch(
                    longitude=None,
                    q=None,
                    start_time=None,
-                   returnDfs = False
+                   returnDfs=False
                    ):
     """
     Функция для выгрузки характеристик контента ВК методом его API newsfeed.search. Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам
@@ -323,7 +323,7 @@ def newsFeedSearch(
       start_time : int
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
     """
-    if (params == None) & (access_token == None) & (count == None) & (end_time == None) & (fields == None) & (latitude == None) & (longitude == None) & (q == None) & (start_time == None):
+    if (params == None) & (access_token == None) & (count == None) & (end_time == None) & (fields == None) & (latitude == None) & (longitude == None) & (q == None) & (start_time == None) & (returnDfs == False):
         # print('Пользователь не подал аргументы')
         expiriencedMode = False
     else:
