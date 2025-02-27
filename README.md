@@ -195,32 +195,33 @@ searchByText.searchByText()
 # The first one is to use the module's dialog interface, which appears in the process of executing the module's code.
 # The second one is to assign manually the function scrapingVK() arguments, which are None by default:
 
-searchByText(
-             access_token=None,
-             channelIdForSearch=None,
-             contentType=None,
-             publishedAfter=None,
-             publishedBefore=None,
-             q=None,
-             channelType=None,
-             eventType=None,
-             location=None,
-             locationRadius=None,
-             regionCode=None,
-             relevanceLanguage=None,
-             safeSearch=None,
-             topicId=None,
-             videoCaption=None,
-             videoCategoryId=None,
-             videoDefinition=None,
-             videoDimension=None,
-             videoDuration=None,
-             videoEmbeddable=None,
-             videoLicense=None,
-             videoPaidProductPlacement=None,
-             videoSyndicated=None,
-             videoType=None
-             )
+searchByText.searchByText(
+                          access_token=None,
+                          channelIdForSearch=None,
+                          contentType=None,
+                          publishedAfter=None,
+                          publishedBefore=None,
+                          q=None,
+                          channelType=None,
+                          eventType=None,
+                          location=None,
+                          locationRadius=None,
+                          regionCode=None,
+                          relevanceLanguage=None,
+                          safeSearch=None,
+                          topicId=None,
+                          videoCaption=None,
+                          videoCategoryId=None,
+                          videoDefinition=None,
+                          videoDimension=None,
+                          videoDuration=None,
+                          videoEmbeddable=None,
+                          videoLicense=None,
+                          videoPaidProductPlacement=None,
+                          videoSyndicated=None,
+                          videoType=None,
+                          returnDfs = False
+                          )
 
 # The function's arguments are analoguous to those of the method https://dev.vk.com/ru/method/newsfeed.search .
 # The arguments might be inputed in the function brackets as stay alone entities.
@@ -243,14 +244,16 @@ newsFeedSearch.newsFeedSearch()
 # The second one is to assign manually the function scrapingVK() arguments, which are None by default:
 
 newsFeedSearch.newsFeedSearch(
-                              params=None
-                              , access_token=None
-                              , q=None
-                              , start_time=None
-                              , end_time=None
-                              , latitude=None
-                              , longitude=None
-                              , fields=None
+                              params=None,
+                              access_token=None,
+                              count=200,
+                              end_time=None,
+                              fields=None,
+                              latitude=None,
+                              longitude=None,
+                              q=None,
+                              start_time=None,
+                              returnDfs=False
                               )
 
 # The function's arguments are analoguous to those of the method https://dev.vk.com/ru/method/newsfeed.search .
