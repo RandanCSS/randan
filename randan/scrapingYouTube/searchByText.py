@@ -137,9 +137,9 @@ def bigSearch(
         except:
             print('\nОшибка внутри авторской функции bigSearch') # для отладки
             goC, goS, keyOrder, problemItemId = errorProcessor(
-                                                                errorDescription=sys.exc_info(),
-                                                                keyOrder=keyOrder,
-                                                                sourceId=channelIdForSearch
+                                                               errorDescription=sys.exc_info(),
+                                                               keyOrder=keyOrder,
+                                                               sourceId=channelIdForSearch
                                                                 )
     return addItemS, goS, iteration, keyOrder, response # от response отказаться нельзя, т.к. в нём много важных ключей, даже если их значения нули
 
@@ -374,7 +374,7 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
         goC = False # и, следовательно, нет смысла в новых итерациях цикла (вовне этой функции)
     elif ('channel' in str(errorDescription[1]).lower()) | ('comment' in str(errorDescription[1]).lower()) | ('playlist' in str(errorDescription[1]).lower()) | ('video' in str(errorDescription[1]).lower()):
         print('  Проблема может быть связана с ограничением доступа к обрабатываемому объекту, поэтому фиксирую его id:', problemItemId)
-        # print('problemItemId', problemItemId) # для отладки
+        # print('problemItemId:', problemItemId) # для отладки
     elif 'TimeoutError' in str(errorDescription[0]):
         print('!!! Похоже, проблема в слишком высокой частоте запросов к удалённому серверу; засыпаю на 10 миллисекунд')
         time.sleep(10)
