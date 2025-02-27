@@ -656,7 +656,7 @@ videoPaidProductPlacement : str
     if (access_token == None) & (channelIdForSearch == None) & (contentType == None) & (publishedAfter == None) & (publishedBefore == None) & (q == None)\
         & (channelType == None) & (eventType == None) & (location == None) & (locationRadius == None) & (regionCode == None) & (relevanceLanguage == None) & (safeSearch == None) & (topicId == None)\
         & (videoCaption == None) & (videoCategoryId == None) & (videoDefinition == None) & (videoDimension == None) & (videoDuration == None) & (videoEmbeddable == None) & (videoLicense == None)\
-        & (videoPaidProductPlacement == None) & (videoSyndicated == None) & (videoType == None):
+        & (videoPaidProductPlacement == None) & (videoSyndicated == None) & (videoType == None) & (returnDfs == None):
         # print('Пользователь не подал аргументы')
         expiriencedMode = False
     else: expiriencedMode = True
@@ -675,6 +675,7 @@ videoPaidProductPlacement : str
 
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API YouTube
+    channelS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     coLabFolder = coLabAdaptor.coLabAdaptor()
     commentReplieS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     fileFormatChoice = '.xlsx' # базовый формат сохраняемых файлов; формат .json добавляется опционально через наличие columnsToJSON
@@ -683,6 +684,7 @@ videoPaidProductPlacement : str
     goS = True
     itemS = pandas.DataFrame(columns=['id.kind']) # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     keyOrder = 0
+    playlistVideoChannelS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     playlistS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     stageTarget = 0 # stageTarget принимает значения [0; 3] и относится к стадиям скрипта
@@ -1566,7 +1568,6 @@ f'    Для года {year} проход по всем следующим ст�
                                                                  year=year,
                                                                  yearsRange=yearsRange
                                                                  )
-        else: playlistVideoChannelS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     else: # если НЕ использовался search (то есть пользователь подал id канала)
         channelS = channelProcessor(
                                     API_keyS=API_keyS,
@@ -1755,7 +1756,7 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                                                                                      keyOrder=keyOrder,
                                                                                      method=method
                                                                                      )
-                if problemVideoId != None: problemVideoId.append(problemVideoId)
+                if problemVideoId != None: problemVideoIdS.append(problemVideoId)
                 commentS = dfsProcessor(
                                          channelIdForSearch=channelIdForSearch,
                                          coLabFolder=coLabFolder,
@@ -1952,7 +1953,6 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                                         yearsRange=yearsRange,
                                         videoS=videoS
                                         )
-        else: channelS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
 
 # 2.2.5 Экспорт выгрузки метода search и финальное завершение скрипта
     print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
