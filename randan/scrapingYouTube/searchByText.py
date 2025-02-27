@@ -1530,8 +1530,8 @@ f'    Для года {year} проход по всем следующим ст�
 'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
 'Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'
                   )
-            sys.exit()
             if returnDfs: return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
+            sys.exit()
 
 # 2.2 Выгрузка дополнительных характеристик и контента методами playlists и playlistItems, videos, commentThreads и comments, channels
 # 2.2.0 Этап stage = 3
