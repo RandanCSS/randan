@@ -296,7 +296,7 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
 def newsFeedSearch(
                    params=None,
                    access_token=None,
-                   count=200,
+                   count=None,
                    end_time=None,
                    fields=None,
                    latitude=None,
@@ -324,8 +324,9 @@ def newsFeedSearch(
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
     """
     if (params == None) & (access_token == None) & (count == None) & (end_time == None) & (fields == None) & (latitude == None) & (longitude == None) & (q == None) & (start_time == None) & (returnDfs == False):
-        # print('Пользователь не подал аргументы')
+        # print('Пользователь не подал аргументы') # для отладки
         expiriencedMode = False
+        count = 200
     else:
         expiriencedMode = True
         if params != None:
@@ -574,6 +575,8 @@ def newsFeedSearch(
         if (start_time == None) & (yearMinByUser != None): start_time = int(datetime(yearMinByUser, 1, 1).timestamp()) # int(time.mktime(datetime(yearMinByUser, 1, 1).timetuple()))
         if (end_time == None) & (yearMaxByUser != None): end_time = int(datetime(yearMaxByUser, 12, 31).timestamp())
 
+        if yearsRange != None: print('') # чтобы был отступ, если пользователь подал этот аргумент
+
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_VK'
     if q != None: complicatedNamePart += "_" + q if len(q) < 50 else "_" + q[:50]
@@ -586,17 +589,18 @@ def newsFeedSearch(
     method = 'newsfeed.search'
     iteration = 0 # номер итерации применения текущего метода
     pause = 0.25
-
     print(
 f'В скрипте используются следующие аргументы метода {method} API ВК: q, start_from, start_time, end_time, expand.',
 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
 f'Если хотите добавить другие аргументы метода {method} API ВК, доступные по ссылке https://dev.vk.com/ru/method/newsfeed.search ,',
 f'-- можете подать их в скобки функции newsFeedSearch перед её запуском или скопировать код исполняемого сейчас скрипта и сделать это внутри кода внутри метода {method} в разделе 2'
           )
+    # print('expiriencedMode:', expiriencedMode) # для отладки
     if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+    print('') # для отступа
 
     if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
-        print('\nПервое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов')
+        print('Первое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов')
         # print('    start_from', start_from) # для отладки
         itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
                                                                                API_keyS=API_keyS,
