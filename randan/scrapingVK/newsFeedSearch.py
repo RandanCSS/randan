@@ -546,9 +546,11 @@ def newsFeedSearch(
                     if '-' in yearsRange:
                         yearsRange = yearsRange.split('-')
                         if len(yearsRange) == 2:
-                            yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
-                            year = yearMaxByUser
-                            break
+                            if (len(yearsRange[0]) == 4) & (len(yearsRange[1]) == 4):
+                                yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
+                                year = yearMaxByUser
+                                break
+                            else: print('--- Вы ввели год[ы] НЕ из четырёх цифр. Попробуйте ещё раз..')
                         else: print('--- Вы ввели тире, но при этом ввели НЕ два года. Попробуйте ещё раз..')
                     else: print('--- Вы НЕ ввели тире. Попробуйте ещё раз..')
                 else:
