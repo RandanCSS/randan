@@ -188,12 +188,11 @@ def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNameP
                 channelIdS = list(dict.fromkeys(channelIdS))
 
     if len(channelIdS) > 0:
-        print('Проход по каналам')
-        if len(channelIdS) > 50: print('  Порциями по 50 штук')
+        print(f'Проход по каналам{' порциями по 50 штук' if len(channelIdS) > 50 else ''} для выгрузки их характеристик (дополнительных к выруженным методом search)')
         channelS = portionsProcessor(
                                      API_keyS=API_keyS,
                                      channelIdForSearch=channelIdForSearch,
-                                     coLabFolder = coLabFolder,
+                                     coLabFolder=coLabFolder,
                                      complicatedNamePart=complicatedNamePart,
                                      contentType=contentType, # snippetContentType -- не то же самое, что contentType , т.к. contentType исходно подаётся пользователем
                                      dfFinal=df,
@@ -385,18 +384,10 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
 
 # 1.5 для визуализации процесса через итерации
 def iterationVisualization(idS, iteration, portion, response):
-    iterationUpperBound = len(idS)
-
-    # Дробная часть после деления числа idS должна увеличить iterationUpperBound на единицу
-    iterationUpperBound = str(round(len(idS) / portion, 0))\
-        if (portion > 1) & (iterationUpperBound % portion == 0)\
-        else str(round(len(idS) / portion, 0) + 1)
-
-    # И `.0` лишние
-    if '.' in iterationUpperBound: iterationUpperBound = iterationUpperBound.split('.')[0]
-
-    print('  Порция №', iteration + 1, 'из', iterationUpperBound, end='\r')
-    if portion > 1: print('   Сколько в порции наблюдений?', len(response['items']), end='\r')
+    if idS != None: iterationUpperBound = int(str(len(idS) / portion).split('.')[0]) + 1 # дробная часть после деления числа idS должна увеличить iterationUpperBound на единицу
+    print(
+f'  Порция № {iteration + 1}{f' из {iterationUpperBound}' if idS != None else ''}.{f' Сколько в порции наблюдений? {len(response["items"])}' if portion > 1 else ''}', end='\r'
+          )
 
 # 1.6 для обработки выдачи методов playlists и playlistItems, помогающая работе с ключами
 def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, contentType, dfFinal, expiriencedMode, fileFormatChoice, goS, keyOrder, momentCurrent, playlistIdS, q, rootName, slash, snippetContentType, stage, targetCount, year, yearsRange):
@@ -408,12 +399,11 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
     if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
 
     if len(playlistIdS) > 0:
-        print('Проход по плейлистам')
-        if len(playlistIdS) > 50: print('  Порциями по 50 штук')
+        print(f'Проход по плейлистам{' порциями по 50 штук' if len(playlistIdS) > 50 else ''} для выгрузки их характеристик (дополнительных к выруженным методом search)')
         playlistS = portionsProcessor(
                                       API_keyS=API_keyS,
                                       channelIdForSearch=channelIdForSearch,
-                                      coLabFolder = coLabFolder,
+                                      coLabFolder=coLabFolder,
                                       complicatedNamePart=complicatedNamePart,
                                       contentType=contentType,
                                       dfFinal=dfFinal,
@@ -432,7 +422,7 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                                       )
 
         method = 'playlistItems'
-        print('\nВ скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet"], playlistId, maxResults .',
+        print('В скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet"], playlistId, maxResults .',
               'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
               'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:',
               'https://developers.google.com/youtube/v3/docs/playlistitems')
@@ -440,7 +430,7 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
         iteration = 0 # номер итерации применения текущего метода
         playlistVideoChannelS = pandas.DataFrame() # хотя датафреймы и глобальны как переменные, пусть и тут инициализируется
         portion = 50
-        print('\nПроход по плейлистам для выгрузки id видео, составляющих плейлисты, и каналов, к которым они принадлежат')
+        print('Проход по плейлистам для выгрузки id видео, составляющих плейлисты, и каналов, к которым они принадлежат')
         for playlistId in playlistIdS:
             pageToken = None
             while True:
@@ -476,10 +466,11 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                                                                                keyOrder=keyOrder,
                                                                                sourceId=None
                                                                                )
-                iterationVisualization(playlistIdS, iteration, portion, response) # для визуализации процесса через итерации
+                iterationVisualization(idS=None, iteration=iteration, portion=portion, response=response) # для визуализации процесса через итерации
                 iteration += 1
                 if 'nextPageToken' in response.keys(): pageToken = response['nextPageToken']
                 else: break
+        print('                                                                                                              ') # затираю последнюю визуализацию
 
         # Перечислить сначала id всех составляющих каждый плейлист видео через запятую и записать в ячейку,
             # затем id всех канадов, к которым относятся составляющие каждый плейлист видео, через запятую и записать в ячейку
@@ -532,19 +523,6 @@ def portionsProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                                                      , id=idS[bound:bound + portion]
                                                      , maxResults=50
                                                      ).execute()
-                # # Для визуализации процесса через итерации
-                # iterationUpperBound = len(idS)
-    
-                # # Дробная часть после деления числа idS должна увеличить iterationUpperBound на единицу
-                # iterationUpperBound = str(round(len(idS) / 50, 0)) if iterationUpperBound % 50 == 0 else str(round(len(idS) / 50, 0) + 1)
-    
-                # # И `.0` лишние
-                # if '.' in iterationUpperBound: iterationUpperBound = iterationUpperBound.split('.')[0]
-    
-                # print('  Порция №', iteration + 1, 'из', iterationUpperBound, '; сколько в порции наблюдений?', len(response['items']), end='\r')
-    
-                # bound += 50
-                # iteration += 1
                 addChplviS = pandas.json_normalize(response['items'])
                 chplviS = dfsProcessor(
                                         channelIdForSearch=channelIdForSearch,
@@ -574,10 +552,12 @@ def portionsProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                                                                     keyOrder=keyOrder,
                                                                     sourceId=None
                                                                     )
+        # print('len(idS):', len(idS)) # для отладки
         iterationVisualization(idS, iteration, portion, response) # для визуализации процесса через итерации
         iteration += 1
         bound += portion
         # display('chplviS:', chplviS) # для отладки
+    print('                                                                                                              ') # затираю последнюю визуализацию
     return chplviS
 
 # 1.6 чтобы избавиться от префиксов в названиях столбцов датафрейма с комментариями
@@ -788,9 +768,9 @@ videoPaidProductPlacement : str
             file.close()
             stageTargetTemporal = int(stageTargetTemporal)
 
-            print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:'
-                  , '\n- было выявлено целевое число записей (totalResults)', targetCountTemporal
-                  , '\n- скрипт остановился на методе', methodTemporal)
+            print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:',
+                  '\n- было выявлено целевое число записей (totalResults)', targetCountTemporal,
+                  '\n- скрипт остановился на методе', methodTemporal)
             if yearTemporal != None: print('- и на годе (при сегментировани по годам)', yearTemporal)
             print('- пользователь НЕ определил тип контента' if contentTypeTemporal == None else  f'- пользователь определил тип контента как "{contentTypeTemporal}"')
             if contentTypeTemporal == 'video':
@@ -874,8 +854,8 @@ videoPaidProductPlacement : str
                     break
                 elif contentType.lower() == 'p':
                     contentType = 'playlist'
-                    break
                     print('')
+                    break
                 elif contentType.lower() == 'v':
                     contentType = 'video'
                     print('')
@@ -953,9 +933,11 @@ videoPaidProductPlacement : str
                     if '-' in yearsRange:
                         yearsRange = yearsRange.split('-')
                         if len(yearsRange) == 2:
-                            yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
-                            year = yearMaxByUser
-                            break
+                            if (len(yearsRange[0]) == 4) & (len(yearsRange[1]) == 4):
+                                yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
+                                year = yearMaxByUser
+                                break
+                            else: print('--- Вы ввели год[ы] НЕ из четырёх цифр. Попробуйте ещё раз..')
                         else: print('--- Вы ввели тире, но при этом ввели НЕ два года. Попробуйте ещё раз..')
                     else: print('--- Вы НЕ ввели тире. Попробуйте ещё раз..')
                 else:
@@ -1550,7 +1532,7 @@ f'    Для года {year} проход по всем следующим ст�
     snippetContentType = 'playlist'
     if len(itemS) > 0: # если использовался search..
         if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # .. и в его выдаче есть плейлисты
-            playlistIdS = df[df['id.kind'] == f'youtube#{snippetContentType}']
+            playlistIdS = itemS[itemS['id.kind'] == f'youtube#{snippetContentType}']
             playlistIdS =\
             playlistIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in playlistIdS.columns else playlistIdS['id'].to_list()
             playlistS, playlistVideoChannelS = playListProcessor(
@@ -1665,12 +1647,11 @@ f'    Для года {year} проход по всем следующим ст�
     # print(videoIdS) # для отладки
 
     if len(videoIdS) > 0:
-        print('Проход по видео')
-        if len(videoIdS) > 50: print('  Порциями по 50 штук')
+        print(f'Проход по видео{' порциями по 50 штук' if len(videoIdS) > 50 else ''} для выгрузки их характеристик (дополнительных к выруженным методом search)')
         videoS = portionsProcessor(
                                    API_keyS=API_keyS,
                                    channelIdForSearch=channelIdForSearch,
-                                   coLabFolder = coLabFolder,
+                                   coLabFolder=coLabFolder,
                                    complicatedNamePart=complicatedNamePart,
                                    contentType=contentType,
                                    fileFormatChoice=fileFormatChoice,
@@ -1690,7 +1671,7 @@ f'    Для года {year} проход по всем следующим ст�
 
 # ********** categoryId
         # Взять столбец snippet.categoryId, удалить из него дубликаты кодов категорий и помеcтить уникальные коды в список
-        display(videoS) # для отладки
+        # display(videoS) # для отладки
         # print('videoS.columns:', videoS.columns) # для отладки
         uniqueCategorieS = videoS['snippet.categoryId'].drop_duplicates().to_list()
         # print('\nУникальные коды категорий в базе:', uniqueCategorieS, '\nЧисло уникальных категорий в базе:', len(uniqueCategorieS))
