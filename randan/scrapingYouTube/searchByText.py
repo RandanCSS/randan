@@ -161,7 +161,7 @@ def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNameP
 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/channels')
     if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-
+    print('') # для отступа
 
 # ********** Дополнение списка id каналов из df списком id каналов из playlistS
     if (len(playlistS) > 0) | (len(videoS) > 0):
@@ -397,7 +397,8 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
           'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:',
           'https://developers.google.com/youtube/v3/docs/playlists')
     if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-
+    print('') # для отступа
+    
     if len(playlistIdS) > 0:
         print(f'Проход по плейлистам{' порциями по 50 штук' if len(playlistIdS) > 50 else ''} для выгрузки их характеристик (дополнительных к выруженным методом search)')
         playlistS = portionsProcessor(
@@ -427,6 +428,8 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
               'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:',
               'https://developers.google.com/youtube/v3/docs/playlistitems')
         if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+        print('') # для отступа
+    
         iteration = 0 # номер итерации применения текущего метода
         playlistVideoChannelS = pandas.DataFrame() # хотя датафреймы и глобальны как переменные, пусть и тут инициализируется
         portion = 50
@@ -643,7 +646,7 @@ videoPaidProductPlacement : str
     if (access_token == None) & (channelIdForSearch == None) & (contentType == None) & (publishedAfter == None) & (publishedBefore == None) & (q == None)\
         & (channelType == None) & (eventType == None) & (location == None) & (locationRadius == None) & (regionCode == None) & (relevanceLanguage == None) & (safeSearch == None) & (topicId == None)\
         & (videoCaption == None) & (videoCategoryId == None) & (videoDefinition == None) & (videoDimension == None) & (videoDuration == None) & (videoEmbeddable == None) & (videoLicense == None)\
-        & (videoPaidProductPlacement == None) & (videoSyndicated == None) & (videoType == None) & (returnDfs == None):
+        & (videoPaidProductPlacement == None) & (videoSyndicated == None) & (videoType == None) & (returnDfs == False):
         # print('Пользователь не подал аргументы')
         expiriencedMode = False
     else: expiriencedMode = True
@@ -961,6 +964,8 @@ videoPaidProductPlacement : str
         if (publishedAfter == None) & (yearMinByUser != None): publishedAfter = datetime(yearMinByUser, 1, 1).isoformat() + 'Z'
         if (publishedBefore == None) & (yearMaxByUser != None): publishedBefore = datetime(yearMaxByUser, 12, 31).isoformat() + 'Z'
 
+        if yearsRange != None: print('') # чтобы был отступ, если пользователь подал этот аргумент
+
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_YT'
     complicatedNamePart += "" if contentType == None else "_" + contentType
@@ -975,15 +980,14 @@ videoPaidProductPlacement : str
         stage = 0
         iteration = 0 # номер итерации применения текущего метода
         method = 'search'
-        if yearsRange != None: # если пользователь не подал этот аргумент в рамках experiencedMode
-            print('')
         print(
 f'В скрипте используются следующие аргументы метода {method} API YouTube: channelId, maxResults, order, pageToken, part, publishedAfter, publishedBefore, q, type.',
 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
 f'Если хотите добавить другие аргументы метода {method} API YouTube, доступные по ссылке https://developers.google.com/youtube/v3/docs/search , -- можете сделать это внутри метода {method} в разделе 2 исполняемого сейчас скрипта'
               )
         if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-    
+        print('') # для отступа
+
         if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
             print('Заход на первую страницу выдачи')
             # print('publishedAfter', publishedAfter) # для отладки
@@ -1613,13 +1617,14 @@ f'    Для года {year} проход по всем следующим ст�
         snippetContentType = 'video'
         if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # .. и в его выдаче есть видео
             print(
-'\nВ скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "contentDetails", "localizations", "statistics", "status", "topicDetails"], id, maxResults .',
+'В скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "contentDetails", "localizations", "statistics", "status", "topicDetails"], id, maxResults .',
 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/videos'
                   )
             if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+            print('') # для отступа
+
             iteration = 0 # номер итерации применения текущего метода
-        
             videoIdS = itemS[itemS['id.kind'] == f'youtube#{snippetContentType}']
             videoIdS = videoIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in videoIdS.columns else videoIdS['id'].to_list()
 
@@ -1726,6 +1731,7 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/commentThreads'
                   )
             if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+            print('') # для отступа
 
             # Переназначить объект videoIdS для целей текущего чанка
             videoIdS = videoS[videoS['statistics.commentCount'].notna()]
@@ -1842,6 +1848,8 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/commentThreads'
                       )
                 if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+                print('') # для отступа
+
                 print('Проход по id всех родительских (topLevel) комментариев с недостачей ответов для выгрузки этих ответов')
                 commentIdS = commentReplieS['id'][commentReplieS['Недостача_ответов'] > 0]
                 for commentId in tqdm(commentIdS):
