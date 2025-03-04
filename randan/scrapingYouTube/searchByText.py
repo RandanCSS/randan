@@ -188,7 +188,7 @@ def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNameP
                 channelIdS = list(dict.fromkeys(channelIdS))
 
     if len(channelIdS) > 0:
-        print(f'Проход по каналам{' порциями по 50 штук' if len(channelIdS) > 50 else ''} для выгрузки их характеристик (дополнительных к выруженным методом search)')
+        print(f'''Проход по каналам{' порциями по 50 штук' if 90 > 50 else ''} для выгрузки их характеристик (дополнительных к выруженным методом search)''')
         channelS = portionsProcessor(
                                      API_keyS=API_keyS,
                                      channelIdForSearch=channelIdForSearch,
@@ -386,7 +386,7 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
 def iterationVisualization(idS, iteration, portion, response):
     if idS != None: iterationUpperBound = int(str(len(idS) / portion).split('.')[0]) + 1 # дробная часть после деления числа idS должна увеличить iterationUpperBound на единицу
     print(
-f'  Порция № {iteration + 1}{f' из {iterationUpperBound}' if idS != None else ''}.{f' Сколько в порции наблюдений? {len(response["items"])}' if portion > 1 else ''}', end='\r'
+f'''  Порция № {iteration + 1}{f' из {iterationUpperBound}' if idS != None else ''}.{f' Сколько в порции наблюдений? {len(response["items"])}' if portion > 1 else ''}''', end='\r'
           )
 
 # 1.6 для обработки выдачи методов playlists и playlistItems, помогающая работе с ключами
@@ -400,7 +400,7 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
     print('') # для отступа
     
     if len(playlistIdS) > 0:
-        print(f'Проход по плейлистам{' порциями по 50 штук' if len(playlistIdS) > 50 else ''} для выгрузки их характеристик (дополнительных к выруженным методом search)')
+        print(f'''Проход по плейлистам{' порциями по 50 штук' if len(playlistIdS) > 50 else ''} для выгрузки их характеристик (дополнительных к выруженным методом search)''')
         playlistS = portionsProcessor(
                                       API_keyS=API_keyS,
                                       channelIdForSearch=channelIdForSearch,
@@ -1652,7 +1652,7 @@ f'    Для года {year} проход по всем следующим ст�
     # print(videoIdS) # для отладки
 
     if len(videoIdS) > 0:
-        print(f'Проход по видео{' порциями по 50 штук' if len(videoIdS) > 50 else ''} для выгрузки их характеристик (дополнительных к выруженным методом search)')
+        print(f'''Проход по видео{' порциями по 50 штук' if len(videoIdS) > 50 else ''} для выгрузки их характеристик (дополнительных к выруженным методом search)''')
         videoS = portionsProcessor(
                                    API_keyS=API_keyS,
                                    channelIdForSearch=channelIdForSearch,
