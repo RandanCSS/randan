@@ -178,7 +178,7 @@ def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNameP
     
                 playlistChannelIdS = []
                 for snippet in playlistChannelId_list:
-                    playlistChannelIdS.extend(snipet)
+                    playlistChannelIdS.extend(snippet)
                 channelIdS.extend(playlistChannelIdS)
                 channelIdS = list(dict.fromkeys(channelIdS))
 
