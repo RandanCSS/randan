@@ -2,7 +2,8 @@
 # coding: utf-8
 
 '''
-A module for processing two (semi)standardized text variables: snippet.tags, topic Details.topic Categories. They are variables from the output of the YouTube API method `videos`. As well the module creates a column with a video's absolute link
+(EN) A module for processing two (semi)standardized text variables: brandingSettings.channel.keywords or snippet.tags and topic Details.topic Categories. They are variables from the output of the YouTube API methods `channels` or `videos`. As well the module creates a column with a channels's or video's absolute link
+(RU) Авторский модуль для обработки двух (полу)стандартизированных текстовых переменных выгрузки методов channels или videos API YouTube: brandingSettings.channel.keywords или snippet.tags и topicDetails.topicCategories, а также создания столбца с абсолютной ссылкой на канала или видео
 '''
 
 # sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
