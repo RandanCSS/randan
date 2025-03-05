@@ -731,7 +731,7 @@ videoPaidProductPlacement : str
 'Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку'
           )
     for rootName in rootNameS:
-        if 'Temporal' in rootName:
+        if ('Temporal' in rootName) & (len(os.listdir(rootName)) == 8):
             file = open(f'{rootName}{slash}targetCount.txt')
             targetCountTemporal = file.read()
             file.close()
