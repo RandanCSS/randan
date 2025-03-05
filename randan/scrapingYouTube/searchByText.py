@@ -732,7 +732,7 @@ videoPaidProductPlacement : str
           )
     for rootName in rootNameS:
         if 'Temporal' in rootName:
-            if len(os.listdir(rootName)) == 8:
+            if len(os.listdir(rootName)) == 9:
                 file = open(f'{rootName}{slash}targetCount.txt')
                 targetCountTemporal = file.read()
                 file.close()
