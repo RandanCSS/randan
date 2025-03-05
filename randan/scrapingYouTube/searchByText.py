@@ -731,89 +731,90 @@ videoPaidProductPlacement : str
 'Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку'
           )
     for rootName in rootNameS:
-        if ('Temporal' in rootName) & (len(os.listdir(rootName)) == 8):
-            file = open(f'{rootName}{slash}targetCount.txt')
-            targetCountTemporal = file.read()
-            file.close()
-            targetCountTemporal = int(targetCountTemporal)
-
-            file = open(f'{rootName}{slash}method.txt')
-            methodTemporal = file.read()
-            file.close()
-
-            file = open(f'{rootName}{slash}year.txt')
-            yearTemporal = file.read()
-            file.close()
-            yearTemporal = int(yearTemporal)
-
-            file = open(f'{rootName}{slash}contentType.txt')
-            contentTypeTemporal = file.read()
-            file.close()
-            if contentTypeTemporal == '': contentTypeTemporal = None # для единообразия
-
-            file = open(f'{rootName}{slash}channelIdForSearch.txt')
-            channelIdForSearchTemporal = file.read()
-            file.close()
-            if channelIdForSearchTemporal == '': channelIdForSearchTemporal = None # для единообразия
-
-            file = open(f'{rootName}{slash}q.txt', encoding='utf-8')
-            qTemporal = file.read()
-            file.close()
-            if qTemporal == '': qTemporal = None # для единообразия
-
-            file = open(f'{rootName}{slash}yearsRange.txt')
-            yearsRangeTemporal = file.read()
-            file.close()
-            if yearsRangeTemporal == '': yearsRangeTemporal = None # для единообразия
-
-            file = open(f'{rootName}{slash}stageTarget.txt')
-            stageTargetTemporal = file.read()
-            file.close()
-            stageTargetTemporal = int(stageTargetTemporal)
-
-            print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:',
-                  '\n- было выявлено целевое число записей (totalResults)', targetCountTemporal,
-                  '\n- скрипт остановился на методе', methodTemporal)
-            if yearTemporal != None: print('- и на годе (при сегментировани по годам)', yearTemporal)
-            print('- пользователь НЕ определил тип контента' if contentTypeTemporal == None else  f'- пользователь определил тип контента как "{contentTypeTemporal}"')
-            if contentTypeTemporal == 'video':
-                print('- пользователь НЕ выбрал конкретный канал для выгрузки видео' if channelIdForSearchTemporal == None else  f'- пользователь выбрал канал с id "{channelIdForSearchTemporal}" для выгрузки видео')
-            print('- пользователь НЕ сформулировал запрос-фильтр' if qTemporal == None else  f'- пользователь сформулировал запрос-фильтр как "{qTemporal}"')
-            print('- пользователь НЕ ограничил временнОй диапазон' if yearsRangeTemporal == '' else  f'- пользователь ограничил временнОй диапазон границами {yearsRangeTemporal}')
-            print(
+        if 'Temporal' in rootName:
+            if len(os.listdir(rootName)) == 8:
+                file = open(f'{rootName}{slash}targetCount.txt')
+                targetCountTemporal = file.read()
+                file.close()
+                targetCountTemporal = int(targetCountTemporal)
+    
+                file = open(f'{rootName}{slash}method.txt')
+                methodTemporal = file.read()
+                file.close()
+    
+                file = open(f'{rootName}{slash}year.txt')
+                yearTemporal = file.read()
+                file.close()
+                yearTemporal = int(yearTemporal)
+    
+                file = open(f'{rootName}{slash}contentType.txt')
+                contentTypeTemporal = file.read()
+                file.close()
+                if contentTypeTemporal == '': contentTypeTemporal = None # для единообразия
+    
+                file = open(f'{rootName}{slash}channelIdForSearch.txt')
+                channelIdForSearchTemporal = file.read()
+                file.close()
+                if channelIdForSearchTemporal == '': channelIdForSearchTemporal = None # для единообразия
+    
+                file = open(f'{rootName}{slash}q.txt', encoding='utf-8')
+                qTemporal = file.read()
+                file.close()
+                if qTemporal == '': qTemporal = None # для единообразия
+    
+                file = open(f'{rootName}{slash}yearsRange.txt')
+                yearsRangeTemporal = file.read()
+                file.close()
+                if yearsRangeTemporal == '': yearsRangeTemporal = None # для единообразия
+    
+                file = open(f'{rootName}{slash}stageTarget.txt')
+                stageTargetTemporal = file.read()
+                file.close()
+                stageTargetTemporal = int(stageTargetTemporal)
+    
+                print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:',
+                      '\n- было выявлено целевое число записей (totalResults)', targetCountTemporal,
+                      '\n- скрипт остановился на методе', methodTemporal)
+                if yearTemporal != None: print('- и на годе (при сегментировани по годам)', yearTemporal)
+                print('- пользователь НЕ определил тип контента' if contentTypeTemporal == None else  f'- пользователь определил тип контента как "{contentTypeTemporal}"')
+                if contentTypeTemporal == 'video':
+                    print('- пользователь НЕ выбрал конкретный канал для выгрузки видео' if channelIdForSearchTemporal == None else  f'- пользователь выбрал канал с id "{channelIdForSearchTemporal}" для выгрузки видео')
+                print('- пользователь НЕ сформулировал запрос-фильтр' if qTemporal == None else  f'- пользователь сформулировал запрос-фильтр как "{qTemporal}"')
+                print('- пользователь НЕ ограничил временнОй диапазон' if yearsRangeTemporal == '' else  f'- пользователь ограничил временнОй диапазон границами {yearsRangeTemporal}')
+                print(
 '''--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
 --- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите "R" и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter'''
                   )
-            decision = input()
-            if len(decision) == 0: # Temporal-значения обретают статус постоянных
-                targetCount = targetCountTemporal
-                method = methodTemporal
-                year = yearTemporal
-                contentType = contentTypeTemporal
-                channelIdForSearch = channelIdForSearchTemporal
-                q = qTemporal
-                yearsRange = yearsRangeTemporal
-                stageTarget = stageTargetTemporal
-
-                temporalNameS = os.listdir(rootName)
-                for temporalName in temporalNameS:
-                    if '.xlsx' in temporalName: break
-                itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
-
-                for temporalName in temporalNameS:
-                    if '.json' in temporalName:
-                        itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
-                        break
-
-                if yearsRange != None:
-                    yearsRange = yearsRange.split('-')
-                    yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
+                decision = input()
+                if len(decision) == 0: # Temporal-значения обретают статус постоянных
+                    targetCount = targetCountTemporal
+                    method = methodTemporal
+                    year = yearTemporal
+                    contentType = contentTypeTemporal
+                    channelIdForSearch = channelIdForSearchTemporal
+                    q = qTemporal
+                    yearsRange = yearsRangeTemporal
+                    stageTarget = stageTargetTemporal
+    
+                    temporalNameS = os.listdir(rootName)
+                    for temporalName in temporalNameS:
+                        if '.xlsx' in temporalName: break
+                    itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
+    
+                    for temporalName in temporalNameS:
+                        if '.json' in temporalName:
+                            itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
+                            break
+    
+                    if yearsRange != None:
+                        yearsRange = yearsRange.split('-')
+                        yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
 # Данные, сохранённые при прошлом запуске скрипта, загружены; их метаданные (q, contentType, yearsRange, stageTarget) будут использоваться при исполнении скрипта
-                break
-            elif decision.upper() == 'R':
-                shutil.rmtree(rootName, ignore_errors=True)
-                print('')
+                    break
+                elif decision.upper() == 'R':
+                    shutil.rmtree(rootName, ignore_errors=True)
+                    print('')
 
 # 2.0.3 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
     if temporalName == None: # если itemsTemporal, в т.ч. пустой, не существует
