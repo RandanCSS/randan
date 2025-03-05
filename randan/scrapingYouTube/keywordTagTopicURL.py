@@ -6,7 +6,8 @@ A module for processing two (semi)standardized text variables: snippet.tags, top
 '''
 
 # sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
-import sys
+import sys, warnings
+from randan.tools import textPreprocessor
 from subprocess import check_call
 
 # --- остальные модули и пакеты
@@ -29,28 +30,33 @@ while True:
                   , 'но инсталлировать его не удаётся, попробуйте инсталлировать его вручную, после чего снова запустите требуемый скрипт пакета\n')
             break
 
-def tag_topic_URL(videoS):
+def keyword_tag_topic_URL(dfIn):
     """
     Функция для обработки двух (полу)стандартизированных текстовых переменных выгрузки метода videos: snippet.tags, topicDetails.topicCategories, а также создания столбца с абсолютной ссылкой
 
     Parameters
     ----------
-    videoS : DataFrame
+    dfIn : DataFrame
     """
+    df = dfIn.copy()
+    contentType = 'channel' if 'brandingSettings.channel.keywords' in df.columns else 'video'
+    
     warnings.filterwarnings("ignore")
-    varS = ['snippet.tags', 'topicDetails.topicCategories']
+    varS = ['brandingSettings.channel.keywords' if contentType == 'channel' else 'snippet.tags', 'topicDetails.topicCategories']
     for var in varS:
-        nanVideoS = videoS[videoS[var].isna()]
-        notNanVideoS = videoS[videoS[var].notna()]
-        notNanVideoS[var] = notNanVideoS[var].apply(lambda content: ' '.join(content))
-        if var == 'snippet.tags': # расщепить на отдельные слова и удалить средли них дубликаты
-             notNanVideoS[var] =  notNanVideoS[var].str.split().apply(lambda content: list(dict.fromkeys(content))).apply(lambda content: ' '.join(content))
-        if var == 'topicDetails.topicCategories':
-            notNanVideoS['https://en.wikipedia.org/wiki/'] = notNanVideoS[var].str.replace('https://en.wikipedia.org/wiki/', '')
-        videoS = pandas.concat([nanVideoS, notNanVideoS])
-
-    videoS['URL'] = 'https://www.youtube.com/video/' + videoS['id'] # столбец с абсолютной ссылкой
-
-    display(videoS[['snippet.tags', 'https://en.wikipedia.org/wiki/', 'URL']].tail())
-    print('Число строк', videoS.shape[0])
-    return videoS
+        nanDf = df[df[var].isna()]
+        notNanDf = df[df[var].notna()]
+        if var == 'brandingSettings.channel.keywords': notNanDf[var] = notNanDf[var].str.split(' ')
+        notNanDf[var] = notNanDf[var].apply(lambda cellContent: ' '.join(cellContent))
+        if var == 'topicDetails.topicCategories': notNanDf['https://en.wikipedia.org/wiki/'] = notNanDf[var].str.replace('https://en.wikipedia.org/wiki/', '')
+        else: # расщепить на отдельные слова и удалить среди них дубликаты
+            notNanDf[var] = notNanDf[var].apply(lambda cellContent: textPreprocessor.simbolsCleaner(cellContent))
+            notNanDf[var] = textPreprocessor.pymystemLemmatizer(notNanDf, var)
+            notNanDf[var] = notNanDf[var].apply(lambda cellContent: textPreprocessor.stopwordsDropper(cellContent))
+        df = pandas.concat([nanDf, notNanDf])
+    
+    df['URL'] = f'https://www.youtube.com/{contentType}/{df['id']}' # столбец с абсолютной ссылкой
+    
+    display(df[[varS[0], 'https://en.wikipedia.org/wiki/', 'URL']].tail())
+    print('Число строк', df.shape[0])
+    return df
