@@ -433,64 +433,65 @@ def newsFeedSearch(
     # Поиск данных
     print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
     for rootName in rootNameS:
-        if ('Temporal' in rootName) & (len(os.listdir(rootName)) == 6):
-            file = open(f'{rootName}{slash}targetCount.txt')
-            targetCount = file.read()
-            file.close()
-            targetCount = int(targetCount)
-
-            file = open(f'{rootName}{slash}method.txt')
-            method = file.read()
-            file.close()
-
-            file = open(f'{rootName}{slash}year.txt')
-            year = file.read()
-            file.close()
-            year = int(year)
-
-            file = open(f'{rootName}{slash}q.txt', encoding='utf-8') # 
-            q = file.read()
-            file.close()
-            if q == '': q = None # для единообразия
-
-            file = open(f'{rootName}{slash}yearsRange.txt')
-            yearsRange = file.read()
-            file.close()
-
-            file = open(f'{rootName}{slash}stageTarget.txt')
-            stageTarget = file.read()
-            file.close()
-            stageTarget = int(stageTarget)
-
-            print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:'
-                  # , '\n- было выявлено целевое число объектов (targetCount)', targetCount
-                  , '\n- скрипт остановился на методе', method)
-            if year < int(momentCurrent.strftime("%Y")): print('- и на годе (при сегментировани по годам)', year)
-            print('- пользователь НЕ сформулировал запрос-фильтр' if q == None else  f'- пользователь сформулировал запрос-фильтр как "{q}"')
-            print('- пользователь НЕ ограничил временнОй диапазон' if yearsRange == None else  f'- пользователь ограничил временнОй диапазон границами {yearsRange}')
-            print(
+        if 'Temporal' in rootName:
+            if len(os.listdir(rootName)) == 6:
+                file = open(f'{rootName}{slash}targetCount.txt')
+                targetCount = file.read()
+                file.close()
+                targetCount = int(targetCount)
+    
+                file = open(f'{rootName}{slash}method.txt')
+                method = file.read()
+                file.close()
+    
+                file = open(f'{rootName}{slash}year.txt')
+                year = file.read()
+                file.close()
+                year = int(year)
+    
+                file = open(f'{rootName}{slash}q.txt', encoding='utf-8') # 
+                q = file.read()
+                file.close()
+                if q == '': q = None # для единообразия
+    
+                file = open(f'{rootName}{slash}yearsRange.txt')
+                yearsRange = file.read()
+                file.close()
+    
+                file = open(f'{rootName}{slash}stageTarget.txt')
+                stageTarget = file.read()
+                file.close()
+                stageTarget = int(stageTarget)
+    
+                print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:'
+                      # , '\n- было выявлено целевое число объектов (targetCount)', targetCount
+                      , '\n- скрипт остановился на методе', method)
+                if year < int(momentCurrent.strftime("%Y")): print('- и на годе (при сегментировани по годам)', year)
+                print('- пользователь НЕ сформулировал запрос-фильтр' if q == None else  f'- пользователь сформулировал запрос-фильтр как "{q}"')
+                print('- пользователь НЕ ограничил временнОй диапазон' if yearsRange == None else  f'- пользователь ограничил временнОй диапазон границами {yearsRange}')
+                print(
 '''--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
 --- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите "R" и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter'''
                   )
-            decision = input()
-            if len(decision) == 0:
-                temporalNameS = os.listdir(rootName)
-                for temporalName in temporalNameS:
-                    if '.xlsx' in temporalName: break
-                itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
-
-                for temporalName in temporalNameS:
-                    if '.json' in temporalName:
-                        itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
-                        break
-
-                if yearsRange != None:
-                    yearsRange = yearsRange.split('-')
-                    yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
+                decision = input()
+                if len(decision) == 0:
+                    temporalNameS = os.listdir(rootName)
+                    for temporalName in temporalNameS:
+                        if '.xlsx' in temporalName: break
+                    itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
+    
+                    for temporalName in temporalNameS:
+                        if '.json' in temporalName:
+                            itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
+                            break
+    
+                    if yearsRange != None:
+                        yearsRange = yearsRange.split('-')
+                        yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
 # Данные, сохранённые при прошлом запуске скрипта, загружены; их метаданные (q, yearsRange, stageTarget) будут использоваться при исполнении скрипта
-                break
-            elif decision == 'R': shutil.rmtree(rootName, ignore_errors=True)
+                    break
+                elif decision == 'R': shutil.rmtree(rootName, ignore_errors=True)
 
 # 2.0.3 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
     if temporalName == None: # если itemsTemporal, в т.ч. пустой, не существует
