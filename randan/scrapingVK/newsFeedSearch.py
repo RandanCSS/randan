@@ -434,7 +434,7 @@ def newsFeedSearch(
     print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
     for rootName in rootNameS:
         if 'Temporal' in rootName:
-            if len(os.listdir(rootName)) == 6:
+            if len(os.listdir(rootName)) == 7:
                 file = open(f'{rootName}{slash}targetCount.txt')
                 targetCount = file.read()
                 file.close()
