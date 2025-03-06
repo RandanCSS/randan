@@ -56,7 +56,7 @@ def keywordTagTopicURL(dfIn):
             notNanDf[var] = notNanDf[var].apply(lambda cellContent: textPreprocessor.stopwordsDropper(cellContent))
         df = pandas.concat([nanDf, notNanDf])
     
-    df['URL'] = f'https://www.youtube.com/{contentType}/{df['id']}' # столбец с абсолютной ссылкой
+    df['URL'] = f'https://www.youtube.com/{contentType}/' + df['id'] # столбец с абсолютной ссылкой
     
     display(df[[varS[0], 'https://en.wikipedia.org/wiki/', 'URL']].tail())
     print('Число строк', df.shape[0])
