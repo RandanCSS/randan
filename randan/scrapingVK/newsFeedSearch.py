@@ -34,6 +34,7 @@ while True:
         if '.' in module: module = module.split('.')[0]
         print(
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
+Попытка № {attempt} из 10
 '''
               )
         check_call([sys.executable, "-m", "pip", "install", module])
