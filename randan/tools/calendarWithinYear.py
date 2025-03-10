@@ -22,6 +22,7 @@ while True:
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
         print(
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
+Попытка № {attempt} из 10
 '''
               )
         check_call([sys.executable, "-m", "pip", "install", module])
