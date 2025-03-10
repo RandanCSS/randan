@@ -1973,3 +1973,4 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
 # sys.exit()
 
 # https://stackoverflow.com/questions/30475309/get-youtube-trends-v3-country-wise-in-json -- про тренды
+# Если подавать в скрипт располагаемый файл НЕ search , то в нём не будет столбца id.kind , следовательно, скрипт не поймёт, какие дополнительные характеристки выгружать
