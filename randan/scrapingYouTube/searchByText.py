@@ -102,6 +102,7 @@ def bigSearch(
     while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
         try:
             youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
+            # print('contentType:', contentType) # для отладки
             request = youtube.search().list(
                                             channelId=channelIdForSearch,
                                             channelType=channelType,
@@ -764,8 +765,14 @@ videoPaidProductPlacement : str
                 file.close()
                 if channelIdForSearchTemporal == '': channelIdForSearchTemporal = None # для единообразия
     
-                file = open(f'{rootName}{slash}q.txt', encoding='utf-8')
-                qTemporal = file.read()
+                try:
+                    file = open(f'{rootName}{slash}q.txt')
+                    qTemporal = file.read()
+                except:               
+                    errorDescription = sys.exc_info()
+                    # print(errorDescription) # для отладки
+                    file = open(f'{rootName}{slash}q.txt', encoding='utf-8')
+                    qTemporal = file.read()                
                 file.close()
                 if qTemporal == '': qTemporal = None # для единообразия
     
