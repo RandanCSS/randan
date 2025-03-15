@@ -2,7 +2,8 @@
 # coding: utf-8
 
 '''
-A module for an unstandardized text preprocessing
+(EN) A module for an unstandardized text preprocessing
+(RU) Авторский модуль для предобработки нестандартизированнрого текста
 '''
 
 # sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
