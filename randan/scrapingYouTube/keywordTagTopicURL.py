@@ -56,6 +56,7 @@ def keywordTagTopicURL(dfIn):
         notNanDf[var] = notNanDf[var].apply(lambda cellContent: ' '.join(cellContent))
         if var == 'topicDetails.topicCategories': notNanDf['https://en.wikipedia.org/wiki/'] = notNanDf[var].str.replace('https://en.wikipedia.org/wiki/', '')
         else: # расщепить на отдельные слова и удалить среди них дубликаты
+            # print('var:', var) # для отладки
             notNanDf[var] = notNanDf[var].apply(lambda cellContent: textPreprocessor.simbolsCleaner(cellContent))
             notNanDf[var] = textPreprocessor.pymystemLemmatizer(notNanDf, var)
             notNanDf[var] = notNanDf[var].apply(lambda cellContent: textPreprocessor.stopwordsDropper(cellContent))
