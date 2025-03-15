@@ -1,5 +1,5 @@
 from randan.tools import varPreprocessor
-df = df.drop([307, 1037, 1339, 1420, 1433])
+df = df.drop([904, 2173, 2392, 2822, 3252, 3558, 3865, 3925])
 # Проверка всех столбцов на наличие в их ячейках JSON-формата
 from randan.tools import varPreprocessor
 columnsToJSON = varPreprocessor.jsonChecker(df)
