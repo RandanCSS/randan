@@ -766,12 +766,12 @@ videoPaidProductPlacement : str
                 if channelIdForSearchTemporal == '': channelIdForSearchTemporal = None # для единообразия
     
                 try:
-                    file = open(f'{rootName}{slash}q.txt')
+                    file = open(f'{rootName}{slash}q.txt', encoding='utf-8')
                     qTemporal = file.read()
                 except:               
                     errorDescription = sys.exc_info()
                     # print(errorDescription) # для отладки
-                    file = open(f'{rootName}{slash}q.txt', encoding='utf-8')
+                    file = open(f'{rootName}{slash}q.txt')
                     qTemporal = file.read()                
                 file.close()
                 if qTemporal == '': qTemporal = None # для единообразия
