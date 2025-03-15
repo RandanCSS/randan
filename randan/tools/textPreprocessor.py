@@ -53,7 +53,7 @@ def pymystemLemmatizer(dfIn, columnWithText):
     """
     df = dfIn.copy()
     time.sleep(0.01)
-    print('                                                                                          ', end='\r')
+    # print('                                                                                          ', end='\r')
     mstem = pymystem3.Mystem()
     separator = r'|||'
     while len(df[df[columnWithText].str.contains(separator)]) == 0:
@@ -76,7 +76,7 @@ def simbolsCleaner(text):
     text : str
     """
     time.sleep(0.01)
-    print('                                                                                          ', end='\r')
+    # print('                                                                                          ', end='\r')
     cleaned_text = ''
     for a in text:
         if (a.isalnum()) | (a == ' '): cleaned_text += a
@@ -95,7 +95,7 @@ def stopwordsDropper(text):
     text : str
     """
     time.sleep(0.01)
-    print('                                                                                          ', end='\r')
+    # print('                                                                                          ', end='\r')
     stopwords_list = stop_words.get_stop_words('russian')
     text_cleaned = ''
     for word in text.split(' '):
