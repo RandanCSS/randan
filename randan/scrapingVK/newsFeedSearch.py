@@ -156,29 +156,28 @@ def bigSearch(
 
 # 1.1 для обработки выдачи любого из методов, помогающая работе с ключами
 def dfsProcessor(
-                  complicatedNamePart,
-                  coLabFolder,
-                  dfAdd,
-                  dfFinal, # на обработке какой бы ни было выгрузки не возникла бы непреодолима ошибка, сохранить следует выгрузку метода search
-                  dfIn,
-                  fileFormatChoice,
-                  goS, # единственная из функций, принимающая этот аргумент
-                  method,
-                  momentCurrent,
-                  q,
-                  slash,
-                  stage,
-                  targetCount,
-                  year,
-                  yearsRange
-                  ):
+                 complicatedNamePart,
+                 coLabFolder,
+                 dfAdd,
+                 dfFinal, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода search
+                 dfIn,
+                 fileFormatChoice,
+                 goS, # единственная из функций, принимающая этот аргумент
+                 method,
+                 momentCurrent,
+                 q,
+                 slash,
+                 stage,
+                 targetCount,
+                 year,
+                 yearsRange
+                 ):
     df = pandas.concat([dfIn, dfAdd])
     columnsForCheck = []
     if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
         for column in df.columns:
-            if 'id' in column:
-                columnsForCheck.append(column)
-    # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck)
+            if 'id' in column: columnsForCheck.append(column)
+    # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck) # для отладки
     df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True) # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
 
     if goS == False:
@@ -267,7 +266,7 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
             try: return fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')
             except:
                 print('!!! Ошибка:', sys.exc_info()[1])
-                print('dict:', fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')) # для отладки
+                # print('dict:', fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')) # для отладки
                 return ''
         else:
             # print('idsToItemS пустой список:', idsToItemS) # для отладки
@@ -585,6 +584,8 @@ def newsFeedSearch(
 
         if yearsRange != None: print('') # чтобы был отступ, если пользователь подал этот аргумент
 
+        if count == None: count = 200 # если ни пользователь не подал, ни в данных, сохранённых при прошлом запуске скрипта, нет
+
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_VK'
     if q != None: complicatedNamePart += "_" + q if len(q) < 50 else "_" + q[:50]
@@ -672,9 +673,7 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                                                                    start_from=start_from,
                                                                                    start_time=start_time
                                                                                    )
-
             # print('''    response['next_from'] после bigSearch''', response['next_from']) # для отладки
-
             itemS = dfsProcessor(
                                  complicatedNamePart=complicatedNamePart,
                                  coLabFolder=coLabFolder,
@@ -731,6 +730,8 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                                                                                       start_from=None,
                                                                                                       start_time=int(datetime(year, int(month), 1).timestamp())
                                                                                                       )
+                        # print('itemsMonthlyAdditional:') # для отладки
+                        # display(itemsMonthlyAdditional.sort_values('date')['date'].drop_duplicates()) # для отладки
                         itemsYearlyAdditional = dfsProcessor(
                                                              complicatedNamePart=complicatedNamePart,
                                                              coLabFolder=coLabFolder,
@@ -738,7 +739,7 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                                              goS=goS,
                                                              dfAdd=itemsMonthlyAdditional,
                                                              dfFinal=itemS,
-                                                             dfIn=itemS,
+                                                             dfIn=itemsYearlyAdditional,
                                                              method=method,
                                                              momentCurrent=momentCurrent,
                                                              q=q,
@@ -748,6 +749,8 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                                              year=year,
                                                              yearsRange=yearsRange
                                                              )
+                        # print('len(itemsYearlyAdditional):', len(itemsYearlyAdditional)) # для отладки
+
                         print('  Проход по всем следующим страницам с выдачей', '               ', end='\r')
                         while 'next_from' in response.keys():
                             start_from = response['next_from']
@@ -766,6 +769,8 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                                                                                           start_from=start_from,
                                                                                                           start_time=int(datetime(year, int(month), 1).timestamp())
                                                                                                           )
+                            # print('itemsMonthlyAdditional:') # для отладки
+                            # display(itemsMonthlyAdditional.sort_values('date')['date'].drop_duplicates()) # для отладки
                             itemsYearlyAdditional = dfsProcessor(
                                                                  complicatedNamePart=complicatedNamePart,
                                                                  coLabFolder=coLabFolder,
@@ -773,7 +778,7 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                                                  goS=goS,
                                                                  dfAdd=itemsMonthlyAdditional,
                                                                  dfFinal=itemS,
-                                                                 dfIn=itemS,
+                                                                 dfIn=itemsYearlyAdditional,
                                                                  method=method,
                                                                  momentCurrent=momentCurrent,
                                                                  q=q,
@@ -783,7 +788,10 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                                                  year=year,
                                                                  yearsRange=yearsRange
                                                                  )
+                            # print('len(itemsYearlyAdditional):', len(itemsYearlyAdditional)) # для отладки
                             time.sleep(pause)
+                    # print('itemsYearlyAdditional:') # для отладки
+                    # display(itemsYearlyAdditional.sort_values('date')['date'].drop_duplicates()) # для отладки
                     itemS = dfsProcessor(
                                          complicatedNamePart=complicatedNamePart,
                                          coLabFolder=coLabFolder,
@@ -801,6 +809,7 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                          year=year,
                                          yearsRange=yearsRange
                                          )
+                    # print('len(itemS):', len(itemS)) # для отладки
                     # display(itemS.head())
                     # print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
 
