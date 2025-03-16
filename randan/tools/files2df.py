@@ -83,7 +83,7 @@ def excel2df(*arg):
     try:
         df = pandas.read_excel(folderFile, index_col=0)
         print(f'Файл "{folderFile}" импортирован')
-    except FileNotFoundError:
+    except:
         errorDescription = sys.exc_info()
         error = str(errorDescription[1]).replace("No module named '", '').replace("'", '').replace('_', '')
         print('error:', error)
@@ -108,56 +108,56 @@ def files2df(*arg):
           , 'и присоединения к ней связанных ключом (id) таблиц из файлов форматов CSV, Excel и JSON,'
           , 'расположенных в той же директории')
     df, error, fileName, folder, slash = excel2df(*arg)
-
     # print('fileName', fileName) # для отладки
     # print('folder', folder) # для отладки
-    if len(folder) == 0: # значит, из excel2df полный путь передан в fileName
-        folder = slash.join(fileName.split(slash)[:-1]) + slash # из полного пути убрать имя файла
-        fileName = fileName.split(slash)[-1] # из полного пути оставить только имя файла
-
-    fileNameS = os.listdir(folder)
-    print(fileNameS)
-    fileNameS.remove(fileName)
-
-    formatS = ['XLSX', 'CSV', 'JSON']
-    for frmt in formatS:
-        print('\n--- Если требуется найти ещё файл формата', frmt, 'для присоединения, то нажмите Enter'
-              , '\n--- Если НЕ требуется, то введите любой символ и нажмите Enter')
-        if len(input()) == 0:
-            fileNamesForImport = []
-            for fileName in fileNameS:
-                if ('.' + frmt.lower()) in fileName:
-                    print('--- Найден файл', fileName, '. Если он подходит, то нажмите Enter'
-                          , '\n--- Если искать дальше, то введите любой символ и нажмите Enter')
-                    if len(input()) == 0:
-                        fileNamesForImport.append(fileName)
-                        print('--- Файл', fileName, 'учтён; если требуется найти ещё файл формата', frmt, ', то нажмите Enter'
-                              , '\n--- Если НЕ требуется, то введите любой символ и нажмите Enter')
-                        if len(input()) > 0:
-                            break
-
-            if len(fileNamesForImport) > 0:
-                # print('fileNamesForImport', fileNamesForImport) # для отладки
-                # print('folder', folder) # для отладки
-                # print('fileName', fileName) # для отладки
-                error = None
-                try:
-                    for fileName in fileNamesForImport:
-                        if 'xlsx' in fileName: df = df.merge(pandas.read_excel(f'{folder}{fileName}', index_col=0), on='id', how='outer')
-                        if 'csv' in fileName: df = df.merge(pandas.read_csv(f'{folder}{fileName}'), on='id', how='outer')
-                        if 'json' in fileName: df = df.merge(pandas.read_json(f'{folder}{fileName}'), on='id', how='outer')
-                        # if 'json' in fileName: df = pandas.concat([df, pandas.read_json(f'{folder}{fileName}')], axis=1)
-                except FileNotFoundError:
-                    errorDescription = sys.exc_info()
-                    error = str(errorDescription[1])
-                    print('error:', error)
-            else:
-                print('Файлы форматов', formatS, 'не найдены в директории\n')
     if error == None:
-        display(df.head())
-        print('Число столбцов:', df.shape[1], ', число строк', df.shape[0], '\n')
-    else:
-        df = None
+        if len(folder) == 0: # значит, из excel2df полный путь передан в fileName
+            folder = slash.join(fileName.split(slash)[:-1]) + slash # из полного пути убрать имя файла
+            fileName = fileName.split(slash)[-1] # из полного пути оставить только имя файла
+    
+        fileNameS = os.listdir(folder)
+        print(fileNameS)
+        fileNameS.remove(fileName)
+    
+        formatS = ['XLSX', 'CSV', 'JSON']
+        for frmt in formatS:
+            print('\n--- Если требуется найти ещё файл формата', frmt, 'для присоединения, то нажмите Enter'
+                  , '\n--- Если НЕ требуется, то введите любой символ и нажмите Enter')
+            if len(input()) == 0:
+                fileNamesForImport = []
+                for fileName in fileNameS:
+                    if ('.' + frmt.lower()) in fileName:
+                        print('--- Найден файл', fileName, '. Если он подходит, то нажмите Enter'
+                              , '\n--- Если искать дальше, то введите любой символ и нажмите Enter')
+                        if len(input()) == 0:
+                            fileNamesForImport.append(fileName)
+                            print('--- Файл', fileName, 'учтён; если требуется найти ещё файл формата', frmt, ', то нажмите Enter'
+                                  , '\n--- Если НЕ требуется, то введите любой символ и нажмите Enter')
+                            if len(input()) > 0:
+                                break
+    
+                if len(fileNamesForImport) > 0:
+                    # print('fileNamesForImport', fileNamesForImport) # для отладки
+                    # print('folder', folder) # для отладки
+                    # print('fileName', fileName) # для отладки
+                    error = None
+                    try:
+                        for fileName in fileNamesForImport:
+                            if 'xlsx' in fileName: df = df.merge(pandas.read_excel(f'{folder}{fileName}', index_col=0), on='id', how='outer')
+                            if 'csv' in fileName: df = df.merge(pandas.read_csv(f'{folder}{fileName}'), on='id', how='outer')
+                            if 'json' in fileName: df = df.merge(pandas.read_json(f'{folder}{fileName}'), on='id', how='outer')
+                            # if 'json' in fileName: df = pandas.concat([df, pandas.read_json(f'{folder}{fileName}')], axis=1)
+                    except:
+                        errorDescription = sys.exc_info()
+                        error = str(errorDescription[1])
+                        print('error:', error)
+                else:
+                    print('Файлы форматов', formatS, 'не найдены в директории\n')
+        if error == None:
+            display(df.head())
+            print('Число столбцов:', df.shape[1], ', число строк', df.shape[0], '\n')
+        else:
+            df = None
     return df, error, folder
 
 # def googleDriver2local(file_id, dest_path):
@@ -165,7 +165,7 @@ def files2df(*arg):
 #     error = None
 #     try:
 #         df = pandas.read_excel(dest_path, index_col=0)
-#     except FileNotFoundError:
+#     except:
 #         errorDescription = sys.exc_info()
 #         error = str(errorDescription[1]).replace("No module named '", '').replace("'", '').replace('_', '')
 #         print('error:', error)
