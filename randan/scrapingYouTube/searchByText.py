@@ -624,7 +624,7 @@ def searchByText(
 
     Parameters
     ----------
-    Аргументы этой функции аналогичны аргументам метода https://developers.google.com/youtube/v3/docs/search/list
+    Аргументы этой функции аналогичны аргументам метода https://developers.google.com/youtube/v3/docs/search/list  , за исключением аргумена returnDfs
              access_token : str
        channelIdForSearch : str -- это аналог channelId
               contentType : str -- это аналог type
@@ -637,6 +637,7 @@ def searchByText(
            locationRadius : str
                regionCode : str
         relevanceLanguage : str
+                returnDfs : bool -- в случае True функция возвращает пять итоговые датафреймы с выдачей методов (1) search, (2) playlists и playlistItems, (3) videos, (4) commentThreads и comments, (5) channels
                safeSearch : str
                   topicId : str
              videoCaption : str
@@ -649,7 +650,6 @@ def searchByText(
 videoPaidProductPlacement : str
           videoSyndicated : str
                 videoType : str
-                returnDfs : bool -- в случае True функция возвращает пять итоговые датафреймы с выдачей методов (1) search, (2) playlists и playlistItems, (3) videos, (4) commentThreads и comments, (5) channels
     """
     if (access_token == None) & (channelIdForSearch == None) & (contentType == None) & (publishedAfter == None) & (publishedBefore == None) & (q == None)\
         & (channelType == None) & (eventType == None) & (location == None) & (locationRadius == None) & (regionCode == None) & (relevanceLanguage == None) & (safeSearch == None) & (topicId == None)\
