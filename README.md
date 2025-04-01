@@ -208,6 +208,7 @@ searchByText.searchByText(
                           locationRadius=None,
                           regionCode=None,
                           relevanceLanguage=None,
+                          returnDfs = False
                           safeSearch=None,
                           topicId=None,
                           videoCaption=None,
@@ -220,10 +221,9 @@ searchByText.searchByText(
                           videoPaidProductPlacement=None,
                           videoSyndicated=None,
                           videoType=None,
-                          returnDfs = False
                           )
 
-# The function's arguments are analoguous to those of the method https://dev.vk.com/ru/method/newsfeed.search .
+# The function's arguments are analoguous to those of the method https://dev.vk.com/ru/method/newsfeed.search with the exception of returnDfs arfument.
 # The arguments might be inputed in the function brackets as stay alone entities.
 # This way is names 'expiriencedMode'
 
@@ -244,21 +244,21 @@ newsFeedSearch.newsFeedSearch()
 # The second one is to assign manually the function scrapingVK() arguments, which are None by default:
 
 newsFeedSearch.newsFeedSearch(
-                              params=None,
                               access_token=None,
                               count=200,
                               end_time=None,
                               fields=None,
                               latitude=None,
                               longitude=None,
+                              params=None,
                               q=None,
-                              start_time=None,
                               returnDfs=False
+                              start_time=None,
                               )
 
-# The function's arguments are analoguous to those of the method https://dev.vk.com/ru/method/newsfeed.search .
+# The function's arguments are analoguous to those of the method https://dev.vk.com/ru/method/newsfeed.search with the exception of params and returnDfs arfuments.
 # Moreover, the arguments might be inputed in the function brackets both as stay alone entities, and as params parts
-#( params belongs to dictionary class and is an argument of the method get of the module requests ).
+#( params belongs to a dictionary class and is an argument of the method get of the module requests ).
 # This way is names 'expiriencedMode'
 
 # Finally, the third way is to take the module's code manually and and alter it
