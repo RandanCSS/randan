@@ -80,10 +80,8 @@ def simbolsCleaner(text):
     cleaned_text = ''
     for a in text:
         if (a.isalnum()) | (a == ' '): cleaned_text += a
-
-    while '  ' in cleaned_text: cleaned_text = cleaned_text.replace('  ', ' ')
-    while cleaned_text[0] == ' ': cleaned_text = cleaned_text[1:] # избавиться от пробелов в начале текста
-    while cleaned_text[-1] == ' ': cleaned_text = cleaned_text[:-1] # избавиться от пробелов в конце текста
+        else: cleaned_text += ' ' # чтобы при удалении невербального мусора, за которым не следует пробел, оставшиеся символы не сливались
+    cleaned_text = multispaceCleaner(cleaned_text)
     return cleaned_text
 
 def stopwordsDropper(text):
