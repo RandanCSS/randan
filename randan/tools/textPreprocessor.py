@@ -37,7 +37,7 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 
 def multispaceCleaner(text):
     cleaned_text = text
-    while '  ' in text: cleaned_text = text.replace('  ', ' ')
+    while '  ' in cleaned_text: cleaned_text = cleaned_text.replace('  ', ' ')
     while cleaned_text[0] == ' ': cleaned_text = cleaned_text[1:] # избавиться от пробелов в начале текста
     while cleaned_text[-1] == ' ': cleaned_text = cleaned_text[:-1] # избавиться от пробелов в конце текста
     return cleaned_text
@@ -52,8 +52,6 @@ def pymystemLemmatizer(dfIn, columnWithText):
     columnWithText : str
     """
     df = dfIn.copy()
-    time.sleep(0.01)
-    # print('                                                                                          ', end='\r')
     mstem = pymystem3.Mystem()
     separator = r'|||'
     while len(df[df[columnWithText].str.contains(separator)]) == 0:
@@ -75,8 +73,6 @@ def simbolsCleaner(text):
     ----------
     text : str
     """
-    time.sleep(0.01)
-    # print('                                                                                          ', end='\r')
     cleaned_text = ''
     for a in text:
         if (a.isalnum()) | (a == ' '): cleaned_text += a
@@ -92,8 +88,6 @@ def stopwordsDropper(text):
     ----------
     text : str
     """
-    time.sleep(0.01)
-    # print('                                                                                          ', end='\r')
     stopwords_list = stop_words.get_stop_words('russian')
     text_cleaned = ''
     for word in text.split(' '):
