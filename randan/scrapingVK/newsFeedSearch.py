@@ -300,34 +300,34 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
 
 
 def newsFeedSearch(
-                   params=None,
                    access_token=None,
                    count=None,
                    end_time=None,
                    fields=None,
                    latitude=None,
                    longitude=None,
+                   params=None,
                    q=None,
-                   start_time=None,
                    returnDfs=False
+                   start_time=None,
                    ):
     """
     Функция для выгрузки характеристик контента ВК методом его API newsfeed.search. Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам
 
     Parameters
     ----------
-    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/newsfeed.search
+    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/newsfeed.search , за исключением аргументов params и returnDfs
     Причём они могут быть поданы и в качестве самостоятельных аргументов функции, и в качестве словаря params , который обычно подаётся в метод get пакета requests
-          params : dict
     access_token : str
            count : int
         end_time : int
           fields : list
         latitude : int
        longitude : int
+          params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/newsfeed.search , чтобы не подавать эти аргументы по отдельности
                q : str
-      start_time : int
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
+      start_time : int
     """
     if (params == None) & (access_token == None) & (count == None) & (end_time == None) & (fields == None) & (latitude == None) & (longitude == None) & (q == None) & (start_time == None) & (returnDfs == False):
         # print('Пользователь не подал аргументы') # для отладки
