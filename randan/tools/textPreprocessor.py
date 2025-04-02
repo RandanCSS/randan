@@ -62,6 +62,7 @@ def pymystemLemmatizer(dfIn, columnWithText):
     textS = mstem.lemmatize(separator.join(textS))
     textS = ' '.join(textS)
     df[columnWithText] = textS.split(separator)
+    df[columnWithText] = df[columnWithText].str.strip() # убрать появившиеся после лемматизации \n на концах лемматизированных текстов
     df[columnWithText] = df[columnWithText].apply(lambda text: re.sub(r'  +', ' ', text))
     return df[columnWithText]
 
