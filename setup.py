@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import os
 
 name="randan"
-version="1.3.29"
+version="1.3.30"
 slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
 
 folderS = []
