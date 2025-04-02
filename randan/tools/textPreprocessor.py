@@ -36,11 +36,11 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
             break
 
 def multispaceCleaner(text):
-    cleaned_text = text
-    while '  ' in cleaned_text: cleaned_text = cleaned_text.replace('  ', ' ')
-    while cleaned_text[0] == ' ': cleaned_text = cleaned_text[1:] # избавиться от пробелов в начале текста
-    while cleaned_text[-1] == ' ': cleaned_text = cleaned_text[:-1] # избавиться от пробелов в конце текста
-    return cleaned_text
+    textCleaned = text
+    while '  ' in textCleaned: textCleaned = textCleaned.replace('  ', ' ')
+    while textCleaned[0] == ' ': textCleaned = textCleaned[1:] # избавиться от пробелов в начале текста
+    while textCleaned[-1] == ' ': textCleaned = textCleaned[:-1] # избавиться от пробелов в конце текста
+    return textCleaned
 
 def pymystemLemmatizer(dfIn, columnWithText):
     """
@@ -74,26 +74,28 @@ def simbolsCleaner(text):
     ----------
     text : str
     """
-    cleaned_text = ''
+    textCleaned = ''
     for a in text:
-        if (a.isalnum()) | (a == ' '): cleaned_text += a
-        else: cleaned_text += ' ' # чтобы при удалении невербального мусора, за которым не следует пробел, оставшиеся символы не сливались
-    cleaned_text = multispaceCleaner(cleaned_text)
-    return cleaned_text
+        if (a.isalnum()) | (a == ' '): textCleaned += a
+        else: textCleaned += ' ' # чтобы при удалении невербального мусора, за которым не следует пробел, оставшиеся символы не сливались
+    textCleaned = multispaceCleaner(textCleaned)
+    return textCleaned
 
-def stopwordsDropper(text):
+def stopwordsDropper(text, userStopWords=None):
     """
     Функция для чистки текстов от стоп-слов пакетом stop_words
 
     Parameters
     ----------
-    text : str
+         text : str
+userStopWords : list
     """
-    stopwords_list = stop_words.get_stop_words('russian')
-    text_cleaned = ''
+    stopWordS = stop_words.get_stop_words('russian')
+    if userStopWords != None: stopWordS.extend(userStopWords)
+    textCleaned = ''
     for word in text.split(' '):
-        if word not in stopwords_list:
-            text_cleaned += ' ' + word
-    text_cleaned = text_cleaned.strip()
-    # text_cleaned = text_cleaned.split(' ')
-    return text_cleaned
+        if word not in stopWordS:
+            textCleaned += ' ' + word
+    textCleaned = textCleaned.strip()
+    # textCleaned = textCleaned.split(' ')
+    return textCleaned
