@@ -81,17 +81,20 @@ def simbolsCleaner(text):
     textCleaned = multispaceCleaner(textCleaned)
     return textCleaned
 
-def stopwordsDropper(text, userStopWords=None):
+def stopwordsDropper(text, userStopWordsToAdd=None, userStopWordsToRemove=None):
     """
     Функция для чистки текстов от стоп-слов пакетом stop_words
 
     Parameters
     ----------
-         text : str
-userStopWords : list
+                 text : str
+   userStopWordsToAdd : list
+userStopWordsToRemove : list
     """
     stopWordS = stop_words.get_stop_words('russian')
-    if userStopWords != None: stopWordS.extend(userStopWords)
+    if userStopWordsToAdd != None: stopWordS.extend(userStopWords)
+    if userStopWordsToRemove != None:
+        for word in userStopWordsToRemove: stopWordS.remove(word)
     textCleaned = ''
     for word in text.split(' '):
         if word not in stopWordS:
