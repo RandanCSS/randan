@@ -33,6 +33,7 @@ setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
+        'autocorrect>=2.6.1',
         'factor_analyzer',
         'google-api-python-client>=2.154.0',
         'googledrivedownloader>=0.4',
@@ -41,6 +42,7 @@ setup(
         'numpy>=1.18.4',
         'pandas>=1.0.3',
         'pydot>=1.4.1',
+        'pymystem3>=0.2.0',
         'regex>=2024.9.11',
         'requests>=2.32.3',
         'scikit-learn>=0.23.1',
