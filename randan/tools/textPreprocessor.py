@@ -14,7 +14,8 @@ from subprocess import check_call
 attempt = 0
 while True:
     try:
-        import os, pandas, pymystem3, re, stop_words, time
+        from autocorrect import Speller
+        import itertools, numpy, os, pandas, pymystem3, re, stop_words, time, warnings
         break
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
@@ -34,6 +35,82 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 '''
                   )
             break
+
+def autoCorrectorTextS(columnWithText, dfIn, fast=False, language='ru', probeMode=True, userWordS=None):
+    df = dfIn.copy()
+    if probeMode:
+        dfProbe = df.sample(min(100, int(round(len(df) / 10, 0))))
+        # display(dfProbe) # для отладки
+        print('\nПробный запуск автокорректора')
+        dfProbe['correctionResults'] = dfProbe[columnWithText].progress_apply(lambda text: autoCorrectorText(language=language, text=text, userWordS=userWordS))
+        correctionCoefficienceMean = dfProbe['correctionResults'].apply(lambda dictionary: dictionary['correctionCoefficience']).mean()
+
+        dfIncorrected = df.drop(dfProbe.index)
+        df = pandas.concat([dfProbe, dfIncorrected])
+
+        print(f'Расчитанный на выборке текстов коэффициент исправлений равен {round(correctionCoefficienceMean, 2)}%')
+        if correctionCoefficienceMean < 5: print('Поскольку он меньше 5% , применение автокорректора не рекомендуется или требует предварительного рассмотрения предлагаемых автокорректором исправлений')
+        else: print('Поскольку он НЕ меньше 5% , применение автокорректора рекомендуется')
+        print(
+'''--- Для полноценного (на всех текстах) запуска функции autoCorrectorTextS , укажите в её круглых скобках: probeMode=False
+--- Перед запуском желательно предварительно рассмотреть предлагаемые автокорректором исправления (код: df['correctionResults'].apply(lambda dictionary: dictionary['corrections']) )
+и, возможно, добавить список дополнений в словарь правильных слов, указав в круглых скобках userWordS=[список закавыченных слов через запятую с пробелом]'''
+              )
+    else:
+        print(
+'''
+Полноценный (на всех текстах) запуск автокорректора. Приготовьтесь, что если тексты большие, то на каждые 3 текста уйдёт минута, а то и больше.
+Для ускорения можно в круглых скобках функции autoCorrectorTextS указать: fast=True'''
+              )
+        if 'correctionResults' in df.columns:
+            if len(df) > len(df[df['correctionResults'].notna()]):
+                dfCorrected = df[df['correctionResults'].notna()]
+                dfIncorrected = df[df['correctionResults'].isna()]
+                dfIncorrected['correctionResults'] = dfIncorrected[columnWithText].progress_apply(lambda text: autoCorrectorText(language=language, text=text, userWordS=userWordS))
+                df = pandas.concat([dfCorrected, dfIncorrected]).sort_index()
+            else:
+                print('--- Автокоррекция всех текстов уже выполнялась, если хотите повторить, то удалите из Вашего датафрейма столбец correctionResults и перезапустите функцию autoCorrectorTextS')
+                warnings.filterwarnings("ignore")
+                sys.exit()
+        else: df['correctionResults'] = df[columnWithText].progress_apply(lambda text: autoCorrectorText(language=language, text=text, userWordS=userWordS))
+        correctionCoefficienceMean = df['correctionResults'].apply(lambda dictionary: dictionary['correctionCoefficience']).mean()
+        print(f'Расчитанный на всех текстах коэффициент исправлений равен {round(correctionCoefficienceMean, 2)}%')
+
+    corrections = {}
+    for row in df['correctionResults'].dropna().apply(lambda dictionary: dictionary['corrections']):
+        for key in row.keys():
+            corrections[key] = row[key]
+    print('\nСловарь предлагаемых автокорректором исправлений (первые 100):', dict(itertools.islice(corrections.items(), 100)))
+    return corrections, df
+
+def autoCorrectorText(fast=False, language, text, userWordS):
+    spellerInstance = Speller(fast=fast, language=language) # настройки: выбор языка
+    spellerInstance(text) # применение к тексту
+    if userWordS != None:
+        for word in userWordS: spellerInstance.nlp_data[word] = 0
+
+    correctionResults = {}
+    corrections = {}
+    textCorrected = spellerInstance(text)
+    tokenS = text.split(' ')
+    tokensCorrectedActual = textCorrected.split(' ')
+    tokensCorrectedPotential = tokensCorrectedActual.copy()
+    for tokenPosition in range(len(tokenS)):
+        # print('tokenPosition:', tokenPosition)
+        token = tokenS[tokenPosition]
+        tokenCorrected = tokensCorrectedPotential[tokenPosition]
+        # print(f'Проверяю токен {token}, его порядковый номер: {tokenPosition} -- из {len(tokenS)}', '                    ') #, end='\r'
+        # print('                                                                                ', end='\r')
+        if token == tokenCorrected: tokensCorrectedActual.remove(tokenCorrected)
+        else:
+            # print(f'Обнаружил несоответствие: token: "{token}", tokenCorrected: "{tokenCorrected}"')
+            corrections[token] = tokenCorrected
+    correctionCoefficience = round(len(corrections.keys()) / len(numpy.unique(tokenS)), 2)
+    correctionResults['correctionCoefficience'] = correctionCoefficience
+    correctionResults['textCorrected'] = textCorrected
+    corrections = dict(sorted(corrections.items()))
+    correctionResults['corrections'] = corrections
+    return correctionResults
 
 def multispaceCleaner(text):
     textCleaned = text
@@ -86,7 +163,7 @@ def stopwordsDropper(text, userStopWordsToAdd=None, userStopWordsToRemove=None):
     Функция для чистки текстов от стоп-слов пакетом stop_words
 
     Parameters
-    ----------
+    --------------------
                  text : str
    userStopWordsToAdd : list
 userStopWordsToRemove : list
