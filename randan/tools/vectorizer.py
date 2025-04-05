@@ -50,7 +50,7 @@ def vectProcess(frequencyMetric, column, df, min_df):
     # matrix_df_T_Sum = matrix_df.T.sum()
     # df = df[matrix_df_T_Sum == 0]
     matrix_df = pandas.DataFrame(matrix.toarray(), columns=vect.get_feature_names_out(), index=df.index)
-    print('Абсолютные частоты' if frequencyMetric == 'c' else 'Относительные частоты TF-IDF')
+    print('\nАбсолютные частоты' if frequencyMetric == 'c' else '\nОтносительные частоты TF-IDF')
     display(matrix_df.head())
     print('Число столбцов:', matrix_df.shape[1], ', число строк', matrix_df.shape[0])
     print('\nЧастотность токенов:')
