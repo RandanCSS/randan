@@ -604,6 +604,7 @@ def searchByText(
                  locationRadius=None,
                  regionCode=None,
                  relevanceLanguage=None,
+                 returnDfs=False,
                  safeSearch=None,
                  topicId=None,
                  videoCaption=None,
@@ -615,8 +616,7 @@ def searchByText(
                  videoLicense=None,
                  videoPaidProductPlacement=None,
                  videoSyndicated=None,
-                 videoType=None,
-                 returnDfs = False
+                 videoType=None
                  ):
     """
     Функция для выгрузки характеристик контента YouTube методами его API: search, playlists & playlistItems, videos, commentThreads & comments, channels -- ключевым из которых выступает search
