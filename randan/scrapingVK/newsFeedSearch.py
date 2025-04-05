@@ -308,8 +308,8 @@ def newsFeedSearch(
                    longitude=None,
                    params=None,
                    q=None,
-                   returnDfs=False
-                   start_time=None,
+                   returnDfs=False,
+                   start_time=None
                    ):
     """
     Функция для выгрузки характеристик контента ВК методом его API newsfeed.search. Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам
