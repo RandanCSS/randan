@@ -36,11 +36,13 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
                   )
             break
 
-def autoCorrectorText(fast, language, text, userWordS):
+def autoCorrectorText(fast, language, text, tokensCorrectedQuantityMax, userWordS):
     spellerInstance = Speller(fast=fast, lang=language) # настройки: выбор языка
-    spellerInstance(text) # применение к тексту
     if userWordS != None:
-        for word in userWordS: spellerInstance.nlp_data[word] = 0
+        for word in userWordS:
+            spellerInstance.nlp_data[word] = tokensCorrectedQuantityMax
+            # print('word:', word) # для отладки
+            # print('word in spellerInstance.nlp_data:', word in spellerInstance.nlp_data) # для отладки
 
     # # Оставить только уникальные слова (для ускорения работы)
     # tokenS = text.split(' ')
@@ -49,10 +51,11 @@ def autoCorrectorText(fast, language, text, userWordS):
 
     correctionResults = {}
     corrections = {}
-    textCorrected = spellerInstance(text)
+    textCorrected = spellerInstance(text) # применение к тексту
     tokenS = text.split(' ')
     tokensCorrectedActual = textCorrected.split(' ')
     tokensCorrectedPotential = tokensCorrectedActual.copy()
+    tokensCorrectedQuantityMax = 0
     for tokenPosition in range(len(tokenS)):
         # print('tokenPosition:', tokenPosition)
         token = tokenS[tokenPosition]
@@ -61,22 +64,26 @@ def autoCorrectorText(fast, language, text, userWordS):
         # print('                                                                                ', end='\r')
         if token == tokenCorrected: tokensCorrectedActual.remove(tokenCorrected)
         else:
-            # print(f'Обнаружил несоответствие: token: "{token}", tokenCorrected: "{tokenCorrected}"')
+            # print(f'Обнаружил несоответствие: token: "{token}", tokenCorrected: "{tokenCorrected}"') # для отладки
             corrections[token] = tokenCorrected
-    correctionCoefficience = round(len(corrections.keys()) / len(numpy.unique(tokenS)), 2)
+            # print('spellerInstance.nlp_data[tokenCorrected]:', spellerInstance.nlp_data[tokenCorrected]) # для отладки
+            if tokenCorrected in spellerInstance.nlp_data.keys(): # как ни странно, автокоррект иногда берёт слова для исправления не из словаря своего (например, "Щёлкнул")
+                if spellerInstance.nlp_data[tokenCorrected] > tokensCorrectedQuantityMax: tokensCorrectedQuantityMax = spellerInstance.nlp_data[tokenCorrected]
+    correctionCoefficience = 100 * round(len(corrections.keys()) / len(numpy.unique(tokenS)), 4)
     correctionResults['correctionCoefficience'] = correctionCoefficience
-    correctionResults['textCorrected'] = textCorrected
     corrections = dict(sorted(corrections.items()))
     correctionResults['corrections'] = corrections
+    correctionResults['tokensCorrectedQuantityMax'] = tokensCorrectedQuantityMax
+    correctionResults['textCorrected'] = textCorrected
     return correctionResults
 
-def autoCorrectorTextS(columnWithText, dfIn, fast=False, language='ru', probeMode=True, userWordS=None):
+def autoCorrectorTextS(columnWithText, dfIn, fast=False, language='ru', probeMode=True, tokensCorrectedQuantityMax=0, userWordS=None):
     df = dfIn.copy()
     if probeMode:
         dfProbe = df.sample(min(100, int(round(len(df) / 10, 0))))
         # display(dfProbe) # для отладки
         print('\nПробный запуск автокорректора')
-        dfProbe['correctionResults'] = dfProbe[columnWithText].progress_apply(lambda text: autoCorrectorText(fast=False, language=language, text=text, userWordS=userWordS))
+        dfProbe['correctionResults'] = dfProbe[columnWithText].progress_apply(lambda text: autoCorrectorText(fast=False, language=language, text=text, tokensCorrectedQuantityMax=tokensCorrectedQuantityMax, userWordS=userWordS))
         correctionCoefficienceMean = dfProbe['correctionResults'].apply(lambda dictionary: dictionary['correctionCoefficience']).mean()
 
         dfIncorrected = df.drop(dfProbe.index)
@@ -88,7 +95,8 @@ def autoCorrectorTextS(columnWithText, dfIn, fast=False, language='ru', probeMod
         print(
 '''--- Для полноценного (на всех текстах) запуска функции autoCorrectorTextS , укажите в её круглых скобках: probeMode=False
 --- Перед запуском желательно предварительно рассмотреть предлагаемые автокорректором исправления (код: df['correctionResults'].apply(lambda dictionary: dictionary['corrections']) )
-и, возможно, добавить список дополнений в словарь правильных слов, указав в круглых скобках userWordS=[список закавыченных слов через запятую с пробелом]'''
+и, возможно, добавить список дополнений в словарь правильных слов, указав в круглых скобках userWordS=[список закавыченных слов через запятую с пробелом],
+а также внести в tokensCorrectedQuantityMax= то число tokensCorrectedQuantityMax , которые Вы получите чуть ниже'''
               )
     else:
         print(
@@ -96,26 +104,31 @@ def autoCorrectorTextS(columnWithText, dfIn, fast=False, language='ru', probeMod
 Полноценный (на всех текстах) запуск автокорректора. Приготовьтесь, что если тексты большие, то на каждые 3 текста уйдёт минута, а то и больше.
 Для ускорения можно в круглых скобках функции autoCorrectorTextS указать: fast=True'''
               )
-        if 'correctionResults' in df.columns:
-            if len(df) > len(df[df['correctionResults'].notna()]):
-                dfCorrected = df[df['correctionResults'].notna()]
-                dfIncorrected = df[df['correctionResults'].isna()]
-                dfIncorrected['correctionResults'] = dfIncorrected[columnWithText].progress_apply(lambda text: autoCorrectorText(fast=False, language=language, text=text, userWordS=userWordS))
-                df = pandas.concat([dfCorrected, dfIncorrected]).sort_index()
-            else:
-                print('--- Автокоррекция всех текстов уже выполнялась, если хотите повторить, то удалите из Вашего датафрейма столбец correctionResults и перезапустите функцию autoCorrectorTextS')
-                warnings.filterwarnings("ignore")
-                sys.exit()
-        else: df['correctionResults'] = df[columnWithText].progress_apply(lambda text: autoCorrectorText(fast=False, language=language, text=text, userWordS=userWordS))
+        if ('correctionResults' in df.columns) & (userWordS == None): # автокоррекция уже выполнялась пробно и пользователь НЕ запросил подстройку словаря, поэтому она будет применена только к остальным текстам
+            dfCorrected = df[df['correctionResults'].notna()]
+            dfIncorrected = df[df['correctionResults'].isna()]
+        else: # автокоррекция НЕ выполнялась пробно или пользователь запросил подстройку словаря, поэтому она будет применена ко ВСЕМ текстам
+            dfCorrected = pandas.DataFrame()
+            dfIncorrected = df.copy()
+        dfIncorrected['correctionResults'] = dfIncorrected[columnWithText].progress_apply(lambda text: autoCorrectorText(fast=False, language=language, text=text, tokensCorrectedQuantityMax=tokensCorrectedQuantityMax, userWordS=userWordS))
+        df = pandas.concat([dfCorrected, dfIncorrected]).sort_index()
+# print('--- Автокоррекция всех текстов уже выполнялась, если хотите повторить, то удалите из Вашего датафрейма столбец correctionResults и перезапустите функцию autoCorrectorTextS')
+# warnings.filterwarnings("ignore")
+# sys.exit()
+# else: df['correctionResults'] = df[columnWithText].progress_apply(lambda text: autoCorrectorText(fast=False, language=language, text=text, tokensCorrectedQuantityMax=tokensCorrectedQuantityMax, userWordS=userWordS))
         correctionCoefficienceMean = df['correctionResults'].apply(lambda dictionary: dictionary['correctionCoefficience']).mean()
-        print(f'Расчитанный на всех текстах коэффициент исправлений равен {round(correctionCoefficienceMean, 2)}%')
+        print(f'Расчитанный на всех текстах коэффициент исправлений равен {round(correctionCoefficienceMean, 4)}%')
 
     corrections = {}
     for row in df['correctionResults'].dropna().apply(lambda dictionary: dictionary['corrections']):
         for key in row.keys():
             corrections[key] = row[key]
-    print('\nСловарь предлагаемых автокорректором исправлений (первые 100):', dict(itertools.islice(corrections.items(), 100)))
-    return corrections, df
+    corrections = dict(sorted(corrections.items()))
+
+    tokensCorrectedQuantityMax = df['correctionResults'].dropna().apply(lambda dictionary: dictionary['tokensCorrectedQuantityMax']).max()
+
+    print('\nСловарь предлагаемых автокорректором исправлений (первые 100):', dict(itertools.islice(corrections.items(), 100)), '\ntokensCorrectedQuantityMax:', tokensCorrectedQuantityMax)
+    return corrections, df, tokensCorrectedQuantityMax
 
 def multispaceCleaner(text):
     textCleaned = text
