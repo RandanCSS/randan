@@ -35,14 +35,10 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
                   )
             break
 
-# # Импортировать прединсталированные с установкой Анаконды пакеты
-# from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-# import pandas
-
 # Процесс векторизации
-def vectProcess(frequencyMetric, column, df, min_df):
+def vectProcess(frequencyMetric, column, df, min_df, ngram=1):
     df = df[df[column].notna()]
-    vect = CountVectorizer(min_df=min_df).fit(df[column]) if frequencyMetric == 'c' else TfidfVectorizer(min_df=min_df).fit(df[column])
+    vect = CountVectorizer(min_df=min_df, ngram_range=(ngram, ngram)).fit(df[column]) if frequencyMetric == 'c' else TfidfVectorizer(min_df=min_df, ngram_range=(ngram, ngram)).fit(df[column])
     matrix = vect.transform(df[column]) # оформить новый датафрейм..
     matrix_df = pandas.DataFrame(matrix.toarray(), columns=vect.get_feature_names_out(), index=df.index) # .. у которого
         # по столбцам слова из столбца column, а по строкам -- индексы строк исходного датафрейма df
@@ -58,9 +54,9 @@ def vectProcess(frequencyMetric, column, df, min_df):
     return matrix_df
 
 # Выбор настроек векторизации
-def vectSettings(column, df):
-    vectProcess('c', column, df, 1)
-    vectProcess('t', column, df, 1)
+def vectSettings(column, df, ngram=1):
+    vectProcess('c', column, df, 1, ngram=ngram)
+    vectProcess('t', column, df, 1, ngram=ngram)
 
     print('--- Выше представлены наиболее и наименее характерные токены с т.з. абсолютных частот и TF-IDF')
     goC_0 = True
@@ -100,7 +96,7 @@ def vectSettings(column, df):
                       , '\n--- После этого нажмите Enter: ')
                 frequencyMetric = input()
 
-        matrix_df = vectProcess(frequencyMetric, column, df, min_df)
+        matrix_df = vectProcess(frequencyMetric=frequencyMetric, column=column, df=df, min_df=min_df, ngram=ngram)
         print('--- Если результат Вас устраивает, нажмите Enter'
               , '\n--- Если НЕ устраивает и хотите заново вписать предпочитаемые границу и вариант векторизаци, введите любой символ и нажмите Enter')
         if len(input()) == 0:
