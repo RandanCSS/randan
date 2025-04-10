@@ -1,7 +1,7 @@
 # randan
 _A python package for gaining social and financial data and their analysis_
 
-_Current version: 1.3.31_
+_Current version: 1.3.32_
 
 _Documentation: https://randan.readthedocs.io/en/latest/_
 
