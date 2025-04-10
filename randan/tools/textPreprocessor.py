@@ -37,6 +37,16 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
             break
 
 def autoCorrectorText(fast, language, text, tokensCorrectedQuantityMax, userWordS):
+    """
+    Функция для автокоррекции грамматики текста
+    Parameters
+    --------------------
+                      fast : bool -- режим упрощённой автокоррекции и, как следствие, ускоренной
+                  language : str
+                      text : str
+tokensCorrectedQuantityMax : int -- частота самого высокочастотного слова из тех, которые предложены автокорректором в качестве правильного варианта; этот аргумент необходим для корректной работы аргумента userWordS
+                 userWordS : list -- слова, добавляемые пользователем в словарь грамматически корректных слов (не будут исправляться автокорректором)
+    """
     spellerInstance = Speller(fast=fast, lang=language) # настройки: выбор языка
     if userWordS != None:
         for word in userWordS:
@@ -78,6 +88,19 @@ def autoCorrectorText(fast, language, text, tokensCorrectedQuantityMax, userWord
     return correctionResults
 
 def autoCorrectorTextS(columnWithText, dfIn, fast=False, language='ru', probeMode=True, tokensCorrectedQuantityMax=0, userWordS=None):
+    """
+    Функция для автокоррекции грамматики текстов, организованных в формате столбца датафрейма
+
+    Parameters
+    --------------------
+            columnWithText : str
+                      dfIn : pandas DataFrame
+                      fast : bool -- режим упрощённой автокоррекции и, как следствие, ускоренной
+                  language : str
+                 probeMode : bool -- режим пробной автокоррекции, выполняемой на 10% вероятностно отобранных текстов из всего корпуса текстов (но не более 100 текстов)
+tokensCorrectedQuantityMax : int -- частота самого высокочастотного слова из тех, которые предложены автокорректором в качестве правильного варианта; этот аргумент необходим для корректной работы аргумента userWordS
+                 userWordS : list -- слова, добавляемые пользователем в словарь грамматически корректных слов (не будут исправляться автокорректором)
+    """
     df = dfIn.copy()
     if probeMode:
         dfProbe = df.sample(min(100, int(round(len(df) / 10, 0))))
@@ -131,10 +154,10 @@ def autoCorrectorTextS(columnWithText, dfIn, fast=False, language='ru', probeMod
     return corrections, df, tokensCorrectedQuantityMax
 
 def multispaceCleaner(text):
-    textCleaned = text
-    while '  ' in textCleaned: textCleaned = textCleaned.replace('  ', ' ')
-    while textCleaned[0] == ' ': textCleaned = textCleaned[1:] # избавиться от пробелов в начале текста
-    while textCleaned[-1] == ' ': textCleaned = textCleaned[:-1] # избавиться от пробелов в конце текста
+    if len(text) > 0: # т.к., например, после чистки текста от эмодзи в нём может остаться пустота
+        while '  ' in textCleaned: textCleaned = text.replace('  ', ' ')
+        while textCleaned[0] == ' ': textCleaned = textCleaned[1:] # избавиться от пробелов в начале текста
+        while textCleaned[-1] == ' ': textCleaned = textCleaned[:-1] # избавиться от пробелов в конце текста
     return textCleaned
 
 def pymystemLemmatizer(dfIn, columnWithText):
@@ -143,7 +166,7 @@ def pymystemLemmatizer(dfIn, columnWithText):
 
     Parameters
     ----------
-              dfIn : DataFrame
+              dfIn : pandas DataFrame
     columnWithText : str
     """
     df = dfIn.copy()
@@ -176,17 +199,18 @@ def simbolsCleaner(text):
     textCleaned = multispaceCleaner(textCleaned)
     return textCleaned
 
-def stopwordsDropper(text, userStopWordsToAdd=None, userStopWordsToRemove=None):
+def stopwordsDropper(text, userStopWordsToAdd=None, userStopWordsToRemove=None, language='russian'):
     """
     Функция для чистки текстов от стоп-слов пакетом stop_words
 
     Parameters
     --------------------
                  text : str
-   userStopWordsToAdd : list
-userStopWordsToRemove : list
+   userStopWordsToAdd : list -- слова, добавляемые пользователем в список стоп-слов (будут удалены из обрабатываемого текста)
+userStopWordsToRemove : list -- слова, исключаемые пользователем из списка стоп-слов (будут сохранены в обрабатываемом тексте)
+             language : str
     """
-    stopWordS = stop_words.get_stop_words('russian')
+    stopWordS = stop_words.get_stop_words(language)
     if userStopWordsToAdd != None: stopWordS.extend(userStopWordsToAdd)
     if userStopWordsToRemove != None:
         for word in userStopWordsToRemove: stopWordS.remove(word)
