@@ -187,7 +187,7 @@ def stopwordsDropper(text, userStopWordsToAdd=None, userStopWordsToRemove=None):
 userStopWordsToRemove : list
     """
     stopWordS = stop_words.get_stop_words('russian')
-    if userStopWordsToAdd != None: stopWordS.extend(userStopWords)
+    if userStopWordsToAdd != None: stopWordS.extend(userStopWordsToAdd)
     if userStopWordsToRemove != None:
         for word in userStopWordsToRemove: stopWordS.remove(word)
     textCleaned = ''
