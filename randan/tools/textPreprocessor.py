@@ -155,7 +155,8 @@ tokensCorrectedQuantityMax : int -- частота самого высокоча
 
 def multispaceCleaner(text):
     if len(text) > 0: # т.к., например, после чистки текста от эмодзи в нём может остаться пустота
-        while '  ' in textCleaned: textCleaned = text.replace('  ', ' ')
+        textCleaned = text
+        while '  ' in textCleaned: textCleaned = textCleaned.replace('  ', ' ')
         while textCleaned[0] == ' ': textCleaned = textCleaned[1:] # избавиться от пробелов в начале текста
         while textCleaned[-1] == ' ': textCleaned = textCleaned[:-1] # избавиться от пробелов в конце текста
     return textCleaned
