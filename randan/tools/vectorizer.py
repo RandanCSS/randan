@@ -51,6 +51,10 @@ def vectProcess(frequencyMetric, column, df, min_df, ngram=1):
     print('Число столбцов:', matrix_df.shape[1], ', число строк', matrix_df.shape[0])
     print('\nЧастотность токенов:')
     display(matrix_df.sum().sort_values(ascending=False))
+    print(
+'''--- Если хотите посмотреть топ мешка токенов глубже, чем сейчас он выведен, можете использовать в следующем чанке такой код:
+matrix_df.sum().sort_values(ascending=False).head(25) , где 25 -- требуемая глубина (максимально можно увеличить до 50)'''
+          )
     return matrix_df
 
 # Выбор настроек векторизации
