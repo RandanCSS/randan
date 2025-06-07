@@ -154,8 +154,8 @@ tokensCorrectedQuantityMax : int -- частота самого высокоча
     return corrections, df, tokensCorrectedQuantityMax
 
 def multispaceCleaner(text):
+    textCleaned = text
     if len(text) > 0: # т.к., например, после чистки текста от эмодзи в нём может остаться пустота
-        textCleaned = text
         while '  ' in textCleaned: textCleaned = textCleaned.replace('  ', ' ')
         while textCleaned[0] == ' ': textCleaned = textCleaned[1:] # избавиться от пробелов в начале текста
         while textCleaned[-1] == ' ': textCleaned = textCleaned[:-1] # избавиться от пробелов в конце текста
@@ -187,7 +187,7 @@ def pymystemLemmatizer(dfIn, columnWithText):
 
 def simbolsCleaner(text):
     """
-    Функция для чистки текстов от символов, не являющихся буквами или цифрами
+    Функция для чистки текстов от лишних символов (не являющихся буквами или цифрами)
 
     Parameters
     ----------
@@ -196,7 +196,7 @@ def simbolsCleaner(text):
     textCleaned = ''
     for a in text:
         if (a.isalnum()) | (a == ' '): textCleaned += a
-        else: textCleaned += ' ' # чтобы при удалении невербального мусора, за которым не следует пробел, оставшиеся символы не сливались
+        else: textCleaned += ' ' # чтобы при удалении лишних символов, за которым не следует пробел, оставшиеся символы не сливались
     textCleaned = multispaceCleaner(textCleaned)
     return textCleaned
 
