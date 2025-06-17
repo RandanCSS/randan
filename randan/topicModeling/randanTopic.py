@@ -22,8 +22,7 @@ while True:
         from openpyxl.utils.dataframe import dataframe_to_rows
         from randan import descriptive_statistics, dimension_reduction
         from tqdm import tqdm
-        import pandas
-        # import itertools, numpy, os, pandas, pymystem3, re, stop_words, time, warnings
+        import matplotlib.pyplot as plt, os, pandas, time, warnings
         break
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
@@ -249,7 +248,7 @@ f'''В поданном Вами датафрейме отсутствует с�
     if topicsCount > len(matrix_df.columns):
         print('Число топиков принудительно снижено до', len(matrix_df.columns), ', поскольку значение topicsCount, равное', topicsCount, ', слишком велико для располагаемых данных.')
         topicsCount = len(matrix_df.columns)
-    pca = randan.dimension_reduction.PCA(n_components=topicsCount, rotation='varimax')
+    pca = dimension_reduction.PCA(n_components=topicsCount, rotation='varimax')
 # Подать токены в настроенный класс PCA
     pca = pca.fit(matrix_df, show_results=False)
 
