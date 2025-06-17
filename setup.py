@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import os
 
 name="randan"
-version="1.3.36"
+version="1.4.0"
 slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
 
 folderS = []
@@ -40,6 +40,7 @@ setup(
         'graphviz>=0.14',
         'matplotlib>=3.1.1',
         'numpy>=1.18.4',
+        'openpyxl>=3.1.5',
         'pandas>=1.0.3',
         'pydot>=1.4.1',
         'pymystem3>=0.2.0',
