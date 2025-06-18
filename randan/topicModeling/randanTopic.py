@@ -256,14 +256,14 @@ f'''В поданном Вами датафрейме отсутствует с�
     component_loadings_rotated = pca.component_loadings_rotated
     display(component_loadings_rotated) # для отладки
     topicNameS = component_loadings_rotated.columns
-    minLoading_among_maxLoadings_list = []
-    for topicName in topicNameS:
-        minLoading_among_maxLoadings_list.append(component_loadings_rotated[topicName].abs().max())
-    minLoading_among_maxLoadings_list.sort()
-    minLoading_among_maxLoadings = minLoading_among_maxLoadings_list[0]
-    if loadingsThreshold > minLoading_among_maxLoadings:
-        print('Порог (по модулю) усреднённой связи токена с топиком снижен до', round(minLoading_among_maxLoadings, 2), ', поскольку значение loadingsThreshold, равное', loadingsThreshold, ', слишком велико для располагаемых данных.')
-        loadingsThreshold = minLoading_among_maxLoadings * 0.99 # не выше минимума из максимальных по модулю loadings среди компонент
+    # minLoading_among_maxLoadings_list = []
+    # for topicName in topicNameS:
+    #     minLoading_among_maxLoadings_list.append(component_loadings_rotated[topicName].abs().max())
+    # minLoading_among_maxLoadings_list.sort()
+    # minLoading_among_maxLoadings = minLoading_among_maxLoadings_list[0]
+    # if loadingsThreshold > minLoading_among_maxLoadings:
+    #     print('Порог (по модулю) усреднённой связи токена с топиком снижен до', round(minLoading_among_maxLoadings, 2), ', поскольку значение loadingsThreshold, равное', loadingsThreshold, ', слишком велико для располагаемых данных.')
+    #     loadingsThreshold = minLoading_among_maxLoadings * 0.99 # не выше минимума из максимальных по модулю loadings среди компонент
 # Матрица "документы-топики" (и величины в ячейках матрицы названы так же)
     df = dfIn.copy()
     scoreS = pca.transform(matrix_df)
@@ -301,6 +301,13 @@ f'''В поданном Вами датафрейме отсутствует с�
         topicScoreS = scoreS[topicName]
     # Токены-топики
         topicLoadingS = component_loadings_rotated[[topicName]]
+        # display(topicLoadingS) # для отладки
+    # Максимум (по модулю) нагрузки внутри компоненты
+        maxLoading = topicLoadingS[topicName].abs().max()
+        # print('maxLoading:', maxLoading) # для отладки
+        if loadingsThreshold > maxLoading:
+            print('Порог (по модулю) усреднённой связи токена с топиком снижен до', round(maxLoading, 2), ', поскольку значение loadingsThreshold, равное', round(loadingsThreshold, 2), ', слишком велико для располагаемых данных.')
+            loadingsThreshold = maxLoading * 0.99 # не выше минимума из максимальных по модулю loadings среди компонент
 
         plt.figure(figsize=(9, 9))
 # Распределение документов по осям
