@@ -140,8 +140,9 @@ def snippetByDoc(df, loadingsThreshold, pole, poleDocsIndeceS, poleTokenS, suppl
                 # По границам интервала вывести окружение интересующего токена в нелемматизиованном документе
                 docSnippetS.loc[row, 'pole'] = pole.capitalize() + 'ый'
                 docSnippetS.loc[row, 'textSnippet'] = '..' + ' '.join(textFull_list[docSnippetS['min'][row]: docSnippetS['max'][row]]) + '..'
-                for supplementary in supplementarieS:
-                    docSnippetS.loc[row, supplementary] = df[supplementary][docIndex]
+                if supplementarieS != None:
+                    for supplementary in supplementarieS:
+                        docSnippetS.loc[row, supplementary] = df[supplementary][docIndex]
 
                 print(docSnippetS['textSnippet'][row])
             docs_snippetS = pandas.concat([docs_snippetS, docSnippetS])
@@ -154,13 +155,14 @@ def randanTopic(dfIn, matrix_df, docsLimit=5, loadingsThreshold=0.5, returnDfs=F
     
     Parameters
     --------------------
-                   dfIn : DataFrame
+                   dfIn : DataFrame -- таблица с исходными данными (текстами и, при ихналичии, вспомогательными переменными)
+              matrix_df : DataFrame -- мешок слов
       loadingsThreshold : float -- порог (по модулю) усреднённой связи токена с топиком; нужен для отбора токенов, косвенно лимитирует число токенов при интерпретации         
               docsLimit : int -- лимит на число документов на полюсе топика; нужен для отбора документов            
               returnDfs : bool -- в случае True функция возвращает датафреймы с фрагментами документов docs_snippetS и реквизитами документов и вспомогательными переменными scoreS
         supplementarieS : list -- дополнительные столбцы для последующей интерпретации
     textFull_lemmatized : str -- столбец с текстом, прошедшем лемматизацию, но из которого НЕ удалены стоп-слова
-    textFull_lemmatized : str -- столбец с текстом, прошедшем удаление лишних символов, но НЕ прошедший лемматизацию и из которого НЕ удалены стоп-слова
+textFull_simbolsCleaned : str -- столбец с текстом, прошедшем удаление лишних символов, но НЕ прошедший лемматизацию и из которого НЕ удалены стоп-слова
             tokensLimit : int -- лимит на число токенов на полюсе топика; нужен для отбора токенов           
             topicsCount : int -- частота самого высокочастотного слова из тех, которые предложены автокорректором в качестве правильного варианта; этот аргумент необходим для корректной работы аргумента userWordS'''
     if (returnDfs == False) & (supplementarieS == None) & (topicsCount == None):
@@ -256,14 +258,7 @@ f'''В поданном Вами датафрейме отсутствует с�
     component_loadings_rotated = pca.component_loadings_rotated
     display(component_loadings_rotated) # для отладки
     topicNameS = component_loadings_rotated.columns
-    # minLoading_among_maxLoadings_list = []
-    # for topicName in topicNameS:
-    #     minLoading_among_maxLoadings_list.append(component_loadings_rotated[topicName].abs().max())
-    # minLoading_among_maxLoadings_list.sort()
-    # minLoading_among_maxLoadings = minLoading_among_maxLoadings_list[0]
-    # if loadingsThreshold > minLoading_among_maxLoadings:
-    #     print('Порог (по модулю) усреднённой связи токена с топиком снижен до', round(minLoading_among_maxLoadings, 2), ', поскольку значение loadingsThreshold, равное', loadingsThreshold, ', слишком велико для располагаемых данных.')
-    #     loadingsThreshold = minLoading_among_maxLoadings * 0.99 # не выше минимума из максимальных по модулю loadings среди компонент
+
 # Матрица "документы-топики" (и величины в ячейках матрицы названы так же)
     df = dfIn.copy()
     scoreS = pca.transform(matrix_df)
@@ -295,7 +290,7 @@ f'''В поданном Вами датафрейме отсутствует с�
 
     for topicName in topicNameS:
     # for topicName in topicNameS[:1]: # для отладки
-        print('\n\n\nTopic', topicName)
+        print('\n\nTopic', topicName)
 
     # Документы-топики
         topicScoreS = scoreS[topicName]
@@ -397,7 +392,7 @@ f'''В поданном Вами датафрейме отсутствует с�
     while os.path.exists(fileName + ' ' + str(attempt) + ".xlsx"):
         attempt += 1
 
-    print(f'\nCоздаю файл "{fileName + ' ' + str(attempt)}.xlsx"')
+    print(f'''\nCоздаю файл "{fileName + ' ' + str(attempt)}.xlsx"''')
     wb.save(fileName + ' ' + str(attempt) + ".xlsx")
 
     # # Причём разместить релевантные фрагменты документов на отдельныъх страницах
