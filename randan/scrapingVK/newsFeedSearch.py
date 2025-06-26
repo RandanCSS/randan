@@ -278,7 +278,10 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
 
     df['idColumnsConcatinated'] += 'idsCopy' + idsCopyStr
     df[fieldsColumn] = df['idColumnsConcatinated'].apply(fieldsIdsChecker)
-    df[fieldsColumn] = df[fieldsColumn].replace('N/A', numpy.NaN)
+    try:
+        df[fieldsColumn] = df[fieldsColumn].replace('N/A', numpy.NaN)
+    except:
+        df[fieldsColumn] = df[fieldsColumn].replace('N/A', numpy.nan)
     return df
 
 # # Код, чтобы распарсить любой из двух столбцов датафрейма itemS с выдачей аргумента fields
