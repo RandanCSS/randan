@@ -161,7 +161,7 @@ def getBonds(
         bondS = securitieS.merge(marketdata_yieldS, on='SECID')
         bondS = bondS.groupby('SECID', as_index=False).first()
         bondS['URL'] = 'https://www.moex.com/ru/issue.aspx?code=' + bondS['ISIN']
-        bondS = bondS[columnsDescriptionsSelected]
+        bondS = bondS[columnsDescriptionS]
         bondS.to_excel(path + 'bondS.xlsx', index=False)
         # display(bondS)
     else:
