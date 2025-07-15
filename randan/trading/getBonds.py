@@ -121,7 +121,7 @@ def getBonds(
             columnsDescriptionS_additional.loc[:, 'data id'] = index
             columnsDescriptionS = pandas.concat([columnsDescriptionS, columnsDescriptionS_additional], ignore_index=True)
         columnsDescriptionS = columnsDescriptionS.drop_duplicates(['id', 'name'], ignore_index=True)
-        print('columnsDescriptionS:', columnsDescriptionS)
+        # display('columnsDescriptionS:', columnsDescriptionS) # для отладки
         columnsDescriptionS.to_excel(('' if path == None else path + slash) + 'columnsDescriptionS.xlsx', index=False)
     else:
         print('Файл со словарём полей БД МосБиржи существует')
@@ -143,7 +143,7 @@ def getBonds(
             marketdata_yieldS_additional = pseudojson2df(-1, urlGlobal)
             marketdata_yieldS = pandas.concat([marketdata_yieldS, marketdata_yieldS_additional], ignore_index=True)
     
-        columnsDescriptionsSelected = pandas.read_excel(('' if path == None else path + slash) + 'columnsDescriptionsSelected.xlsx')
+        columnsDescriptionsSelected = pandas.read_excel(('' if path == None else path + slash) + ('columnsDescriptionsSelected' if os.path.exists(path + slash + 'columnsDescriptionsSelected.xlsx') else 'columnsDescriptionS') + '.xlsx')
         columnsDescriptionsSelected = columnsDescriptionsSelected[columnsDescriptionsSelected['name'].notna()]
         columnsDescriptionsSelected = columnsDescriptionsSelected['name'].tolist()
         columnsDescriptionsSelected.append('URL')
