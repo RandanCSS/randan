@@ -71,7 +71,7 @@ def getBonds(
     ----------
          path : str -- путь к директории, включая её имя, в которой будут искаться файлы и куда будут сохраняться; по умолчанию, не в CoLab поиск и сохранение происходят в директории, в которой вызывается текущая функция, а в CoLab в директории Colab Notebooks
 
-    returnDfs : bool -- в случае True функция возвращает итоговые датафреймы boardS, bondS и columnsDescriptionsSelected
+    returnDfs : bool -- в случае True функция возвращает итоговые датафреймы boardS, bondS и columnsDescriptionS строго в такой последовательности
     """
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     if path == None: path = ''
