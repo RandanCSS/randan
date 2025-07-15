@@ -104,9 +104,9 @@ def getBonds(
         boardS.to_excel(path + 'boardS.xlsx', index=False)
     else:
         print('Файл с режимами торгов существует')
+        boardS = pandas.read_excel(path + 'boardS.xlsx')
     
     # 1.1 Нужны именно облигации, причём торгуемые, не Д (дефолтные) и не ПИР
-    boardS = pandas.read_excel(path + 'boardS.xlsx')
     boardS = boardS[(boardS['is_traded'] == 1) & (boardS['title'].str.contains('Облигации ', case=False))\
         & (boardS['title'].str.contains('ПИР ') != True) & (boardS['title'].str.contains('Д ') != True)]
     boardS
@@ -126,6 +126,7 @@ def getBonds(
         columnsDescriptionS.to_excel(path + 'columnsDescriptionS.xlsx', index=False)
     else:
         print('Файл со словарём полей БД МосБиржи существует')
+        columnsDescriptionS = pandas.read_excel(path + 'columnsDescriptionS.xlsx')
     
     # 2.2 Формирование файла с доступными облигациями в интересующих режимах торгов
     print(
@@ -144,15 +145,15 @@ def getBonds(
             marketdata_yieldS_additional = pseudojson2df(-1, urlGlobal)
             marketdata_yieldS = pandas.concat([marketdata_yieldS, marketdata_yieldS_additional], ignore_index=True)
 
-        if os.path.exists(path + 'columnsDescriptionsSelected.xlsx'): columnsDescriptionsSelected = pandas.read_excel(path + 'columnsDescriptionsSelected.xlsx')
+        if os.path.exists(path + 'columnsDescriptionsSelected.xlsx'): columnsDescriptionS = pandas.read_excel(path + 'columnsDescriptionsSelected.xlsx')
         else:
-            columnsDescriptionsSelected = pandas.read_excel(path + 'columnsDescriptionS.xlsx')
-            # display(columnsDescriptionsSelected) # для отладки
-            # print('BOARDID' in columnsDescriptionsSelected.columns) # для отладки
-            columnsDescriptionsSelected = columnsDescriptionsSelected[columnsDescriptionsSelected['name'] !='BOARDID']
-        columnsDescriptionsSelected = columnsDescriptionsSelected[columnsDescriptionsSelected['name'].notna()]
-        columnsDescriptionsSelected = columnsDescriptionsSelected['name'].tolist()
-        columnsDescriptionsSelected.append('URL')
+            columnsDescriptionS = pandas.read_excel(path + 'columnsDescriptionS.xlsx')
+            # display(columnsDescriptionS) # для отладки
+            # print('BOARDID' in columnsDescriptionS.columns) # для отладки
+            columnsDescriptionS = columnsDescriptionS[columnsDescriptionS['name'] !='BOARDID']
+        columnsDescriptionS = columnsDescriptionS[columnsDescriptionS['name'].notna()]
+        columnsDescriptionS = columnsDescriptionS['name'].tolist()
+        columnsDescriptionS.append('URL')
     
         bondS = securitieS.merge(marketdata_yieldS, on='SECID')
         bondS = bondS.groupby('SECID', as_index=False).first()
@@ -163,11 +164,9 @@ def getBonds(
     else:
         print('Файл с доступными облигациями в интересующих режимах торгов НЕ обновлялся')
         bondS = pandas.read_excel(path + 'bondS.xlsx')
-    
-    # bondS
-    
+
+    if returnDfs: return boardS, bondS, columnsDescriptionS
     warnings.filterwarnings("ignore")
     print('Скрипт исполнен. Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть')
     input()
     sys.exit()
-    if returnDfs: return boardS, bondS, columnsDescriptionsSelected
