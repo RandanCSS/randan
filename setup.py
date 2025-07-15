@@ -34,6 +34,7 @@ setup(
     ],
     install_requires=[
         'autocorrect>=2.6.1',
+        'beautifulsoup4>=4.12.3',
         'factor_analyzer',
         'google-api-python-client>=2.154.0',
         'googledrivedownloader>=0.4',
