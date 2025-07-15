@@ -34,7 +34,7 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
 tqdm.pandas() # для визуализации прогресса функций, применяемых к датафреймам
 
 # 1. Авторские функции
-    
+    # выгрузки имён полей БД МосБиржи
 def getColumnNameS(text):
     columnS = BeautifulSoup(text, features='xml').find_all('column')
     # print('columnS:', columnS) # для отладки
@@ -43,6 +43,7 @@ def getColumnNameS(text):
         columnNameS.append(column.get('name'))
     return columnNameS
 
+    # выгрузки данных из БД МосБиржи
 def pseudojson2df(index, url):
     df = pandas.DataFrame()
     headerS = {'Cookie': 'yashr=7199406881722422993; yabs-sid=1989516261722422994; gdpr=0; _ym_uid=172242390960576307; _ym_d=1722423909; yandex_login=aleksei.rotmistrov; yandexuid=1251707911713359739; yuidss=1251707911713359739; ymex=2038826180.yrts.1723466180; skid=98896631723495108; yabs-dsp=mts_banner.bjhrRmhRcmRTYWFqa2szTTdWRHB2UQ==; my=YwA=; amcuid=9218374081731017878; yandex_gid=213; is_gdpr=0; is_gdpr_b=COXEFxCCoAIoAg==; i=uleIuerZ29JaTX59z5G/+HKk9fEmnUoKXjW/KGLZiTQaKYElKHEzfPDCABcpPVUVz6h+GEzjHO3ElrWjkRmIAGlp+lY=; Session_id=3:1733758173.5.0.1730723942669:tOnmRptGBpQAvmusaCECKg:471c.1.2:1|454550616.-1.2.3:1730723942|3:10299425.956559.MUCs35YHhfnyWe6-GuWX5wjaRxs; sessar=1.1196.CiDL7YFrdyEcpmiO9V7a1ylcpw6ej8qZiLU8_AgTxsNW_w.AGdGhxY1_HuHtpuOQLQHoSH6QAM9RilP9yNVtHdZlXc; sessionid2=3:1733758173.5.0.1730723942669:tOnmRptGBpQAvmusaCECKg:471c.1.2:1|454550616.-1.2.3:1730723942|3:10299425.956559.fakesign0000000000000000000; _ym_isad=2; yabs-vdrf=A0; yp=1736202372.atds.1#1735233224.hdrc.0#2049118172.pcs.0#1765295017.swntab.0#1746491882.szm.1_875%3A1280x720%3A1676x760#2046083942.udn.cDphbGVrc2VpLnJvdG1pc3Ryb3Y%3D#1738499314.vhstfltr_onb.1%3A1730723314256#1734471330.ygu.1#1734622172.dlp.2; ys=udn.cDphbGVrc2VpLnJvdG1pc3Ryb3Y%3D#wprid.1733759017472236-15201027122329898332-balancer-l7leveler-kubr-yp-sas-248-BAL#c_chck.3523091273; bh=EkAiTWljcm9zb2Z0IEVkZ2UiO3Y9IjEzMSIsIkNocm9taXVtIjt2PSIxMzEiLCJOb3RfQSBCcmFuZCI7dj0iMjQiGgUieDg2IiIPIjEzMS4wLjI5MDMuODYiKgI/MDICIiI6CSJXaW5kb3dzIkIIIjEwLjAuMCJKBCI2NCJSXCJNaWNyb3NvZnQgRWRnZSI7dj0iMTMxLjAuMjkwMy44NiIsIkNocm9taXVtIjt2PSIxMzEuMC42Nzc4LjEwOSIsIk5vdF9BIEJyYW5kIjt2PSIyNC4wLjAuMCIiWgI/MA=='
@@ -59,6 +60,8 @@ def pseudojson2df(index, url):
             df.loc[i, column] = row.get(column)
     # display('df:', df)
     return df
+
+# 2. Авторская функция исполнения скрипта
 
 def getBonds(
              path=coLabFolder,
