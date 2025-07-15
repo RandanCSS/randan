@@ -63,8 +63,8 @@ def pseudojson2df(index, url):
     return df
 
 def getBonds(
-             path = coLabFolder
-             returnDfs=False,
+             path=coLabFolder,
+             returnDfs=False
              ):
     """
     Функция для выгрузки характеристик торгуемых на МосБирже облигаций, причём не Д (дефолтные) и не ПИР (повышенный инвестиционный риск). Дополнительно выгружается словарь полей БД МосБиржи
