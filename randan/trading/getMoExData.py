@@ -174,4 +174,5 @@ def getMoExData(
     print('Скрипт исполнен. Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть')
     input()
     sys.exit()
+# https://iss.moex.com/iss/reference/
 # https://iss.moex.com/iss/engines/stock/markets/qnv
