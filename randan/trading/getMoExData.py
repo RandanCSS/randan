@@ -105,13 +105,15 @@ def getMoExData(
 # 2.1 Формирование словаря полей БД МосБиржи
     print('Создаю файл со словарём полей БД МосБиржи')
     columnsDescriptionS = pandas.DataFrame()
-    for index in [2, 8]:
+    if market == 'bonds': indeceS = [2, 8]
+    if market == 'forts': indeceS = [2, 3]
+    for index in indeceS:
         columnsDescriptionS_additional = pseudojson2df(headerS, index, url)
         columnsDescriptionS_additional.loc[:, 'data id'] = index
         columnsDescriptionS = pandas.concat([columnsDescriptionS, columnsDescriptionS_additional], ignore_index=True)
     columnsDescriptionS = columnsDescriptionS.drop_duplicates(['id', 'name'], ignore_index=True)
     # display('columnsDescriptionS:', columnsDescriptionS) # для отладки
-    columnsDescriptionS.to_excel(path + market + 'ColumnsDescriptionS.xlsx', index=False)
+    columnsDescriptionS.to_excel(path + market + 'ColumnsDescriptionS.xlsx'.capitalize(), index=False)
     
 # 2.2 Формирование файла с доступными облигациями в интересующих режимах торгов
     decision = ''
@@ -151,7 +153,7 @@ def getMoExData(
 
         columnsDescriptionS = columnsDescriptionS[columnsDescriptionS['name'].notna()]
         columnsDescriptionS = columnsDescriptionS['name'].tolist()
-        columnsDescriptionS.append('URL')
+        if market == 'bonds': columnsDescriptionS.append('URL')
     
         # print('securitieS.columns:', securitieS.columns) # для отладки   
         # print('marketdata_yieldS.columns:', marketdata_yieldS.columns) # для отладки   
@@ -159,7 +161,7 @@ def getMoExData(
         if market == 'bonds': securitieS = securitieS.merge(marketdata_yieldS, on='SECID')
         if market == 'forts': securitieS = securitieS.merge(marketdata, on='SECID')
         securitieS = securitieS.groupby('SECID', as_index=False).first()
-        securitieS['URL'] = 'https://www.moex.com/ru/issue.aspx?code=' + securitieS['ISIN']
+        if market == 'bonds': securitieS['URL'] = 'https://www.moex.com/ru/issue.aspx?code=' + securitieS['ISIN']
         securitieS = securitieS[columnsDescriptionS]
         securitieS.to_excel(path + market + 'SecuritieS.xlsx', index=False)
         # display(securitieS) # для отладки
