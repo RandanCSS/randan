@@ -113,18 +113,18 @@ def getMoExData(
         columnsDescriptionS = pandas.concat([columnsDescriptionS, columnsDescriptionS_additional], ignore_index=True)
     columnsDescriptionS = columnsDescriptionS.drop_duplicates(['id', 'name'], ignore_index=True)
     # display('columnsDescriptionS:', columnsDescriptionS) # для отладки
-    columnsDescriptionS.to_excel(path + market + 'ColumnsDescriptionS.xlsx'.capitalize(), index=False)
+    columnsDescriptionS.to_excel(path + market + '_ColumnsDescriptionS.xlsx'.capitalize(), index=False)
     
 # 2.2 Формирование файла с доступными облигациями в интересующих режимах торгов
     decision = ''
-    if os.path.exists(path + market + 'SecuritieS.xlsx'):
+    if os.path.exists(path + market + '_SecuritieS.xlsx'):
         print(
 '''--- Если НЕ хотите обновить файл с доступными облигациями в интересующих режимах торгов, просто нажмите Enter
 --- Если хотите, то нажмите пробел и затем Enter'''
               )
         decision = input()
 
-    if (os.path.exists(path + market + 'SecuritieS.xlsx') != True) | len(decision) != 0:
+    if (os.path.exists(path + market + '_SecuritieS.xlsx') != True) | len(decision) != 0:
         print('Создаю файл с доступными инструментами в интересующих режимах торгов')
         securitieS = pandas.DataFrame()
         marketdata_yieldS = pandas.DataFrame()
@@ -144,10 +144,10 @@ def getMoExData(
                 display('marketdata_additional:', marketdata_additional) # для отладки
                 marketdata = pandas.concat([marketdata, marketdata_additional], ignore_index=True)
 
-        if os.path.exists(path + market + 'ColumnsDescriptionsSelected.xlsx'):
-            columnsDescriptionS = pandas.read_excel(path + market + 'ColumnsDescriptionsSelected.xlsx')
+        if os.path.exists(path + market + '_ColumnsDescriptionsSelected.xlsx'):
+            columnsDescriptionS = pandas.read_excel(path + market + '_ColumnsDescriptionsSelected.xlsx')
         else:
-            columnsDescriptionS = pandas.read_excel(path + market + 'ColumnsDescriptionS.xlsx')
+            columnsDescriptionS = pandas.read_excel(path + market + '_ColumnsDescriptionS.xlsx')
             # display('columnsDescriptionS:', columnsDescriptionS) # для отладки
             columnsDescriptionS = columnsDescriptionS[columnsDescriptionS['name'] !='BOARDID']
 
@@ -163,11 +163,11 @@ def getMoExData(
         securitieS = securitieS.groupby('SECID', as_index=False).first()
         if market == 'bonds': securitieS['URL'] = 'https://www.moex.com/ru/issue.aspx?code=' + securitieS['ISIN']
         securitieS = securitieS[columnsDescriptionS]
-        securitieS.to_excel(path + market + 'SecuritieS.xlsx', index=False)
+        securitieS.to_excel(path + market + '_SecuritieS.xlsx', index=False)
         # display(securitieS) # для отладки
     else:
         print('Файл с доступными инструментами в интересующих режимах торгов НЕ обновлялся')
-        securitieS = pandas.read_excel(path + market + 'SecuritieS.xlsx')
+        securitieS = pandas.read_excel(path + market + '_SecuritieS.xlsx')
 
     if returnDfs: return boardS, columnsDescriptionS, securitieS
     warnings.filterwarnings("ignore")
