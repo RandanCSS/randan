@@ -34,11 +34,11 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
 
 # 1. Авторская функция исполнения скрипта
 
-def getBondsCharacteristics(
-                            bondsIn,
-                            path=coLabFolder,
-                            returnDfs=False
-                            ):
+def bondsCharacteristicsProcessor(
+                                  bondsIn,
+                                  path=coLabFolder,
+                                  returnDfs=False
+                                  ):
     """
     Функция для выяснения, какие облигации есть в портфеле, на основе брокерских отчётов
 
