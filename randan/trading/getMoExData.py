@@ -141,7 +141,7 @@ def getMoExData(
 
             if market == 'forts':
                 marketdata_additional = pseudojson2df(headerS, 1, url + f'/boards/{board}/securities')
-                display('marketdata_additional:', marketdata_additional) # для отладки
+                # display('marketdata_additional:', marketdata_additional) # для отладки
                 marketdata = pandas.concat([marketdata, marketdata_additional], ignore_index=True)
 
         if os.path.exists(path + market + 'ColumnsDescriptionsSelected.xlsx'):
