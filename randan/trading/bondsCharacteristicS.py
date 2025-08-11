@@ -233,10 +233,11 @@ def bondsCharacteristicsProcessor(
 
 # 1.6 Интегральная переменная Специфика
     bondS.loc[(bondS['Сектор рынка'] == 'Гос') | (bondS['SECNAME'].str.contains('ОФЗ|Россия', case=False)), 'Сектор рынка'] = 'Гос'
+    bondS.loc[(bondS['Сектор рынка'].str.contains('Гос|Корп|Мун', case=False) != True), 'Сектор рынка'] = '?Корп'
     bondS['Специфика'] = bondS['FACEUNIT'].str[:2]
     for column in ['Сектор рынка', 'Амортизация', 'Тип купона', 'Тип текущего купона', 'Структурный параметр', 'Субординированность']:
         bondS[column] = bondS[column].fillna('--')
         bondS['Специфика'] += ' ' + bondS[column].str[:2]
-    display(bondS['Специфика'].value_counts())
+    display("bondS['Специфика']:", bondS['Специфика'].value_counts())
 
     if returnDfs: return bondS
