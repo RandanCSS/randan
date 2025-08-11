@@ -52,7 +52,6 @@ def bondsCharacteristicsProcessor(
         
 # 1.0 Настройки
     bondS = bondsIn.copy()
-    
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     if path == None: path = ''
     else: path += slash
@@ -69,19 +68,21 @@ def bondsCharacteristicsProcessor(
     # display(bondS) # для отладки
 
 # 1.2 Фильтры по датам
-    bondS = bondS[bondS['MATDATE'] != '0000-00-00'] # исключаются "вечные" облигации; обычно они субординорованные
-    bondS = bondS[bondS['NEXTCOUPON'] != '0000-00-00']
-    bondS = bondS[bondS['SETTLEDATE'] != '0000-00-00']
+    # bondS = bondS[bondS['MATDATE'] != '0000-00-00'] # исключаются "вечные" облигации; обычно они субординорованные
+    # bondS = bondS[bondS['NEXTCOUPON'] != '0000-00-00']
+    # bondS = bondS[bondS['SETTLEDATE'] != '0000-00-00']
     # display(bondS) # для отладки
 
     # Сколько дней до купона?
-    bondS = bondS[bondS['NEXTCOUPON'] != bondS['SETTLEDATE']] # исключить облигации, по которым купон уже на след.день
+    # bondS = bondS[bondS['NEXTCOUPON'] != bondS['SETTLEDATE']] # исключить облигации, по которым купон уже на след.день
     bondS['До купона'] = bondS['NEXTCOUPON'].astype('datetime64[ns]') - bondS['SETTLEDATE'].astype('datetime64[ns]')
     bondS['До купона'] = bondS['До купона'].astype(str)
     bondS['До купона'] = bondS['До купона'].str.split(' ').str[0]
     bondS['До купона'] = bondS['До купона'].astype(int)
     # display(bondS) # для отладки
-
+    # display(bondS[bondS['ISIN'] == 'RU000A10B347']) # для отладки
+    # display(сharacteristicsFromMoEx[сharacteristicsFromMoEx['ISIN'] == 'RU000A10B347']) # для отладки
+    
     # Сколько дней до возможности погасить?
     bondS_offer = bondS[bondS['BUYBACKDATE'] != '0000-00-00'] # облигации С офертой
     offerS = bondS_offer.index
@@ -173,8 +174,7 @@ def bondsCharacteristicsProcessor(
         bondS.loc[bondS['FACEUNIT'] == currency, 'FACEVALUE'] *= currencyExchangeValue
         bondS.loc[bondS['CURRENCYID'] == currency, 'ACCRUEDINT'] *= currencyExchangeValue # валюта расчётов
 
-# 1.4 Расчёт доходности в день до возможности погасить
-    
+# 1.4 Расчёт доходности в день до возможности погасить 
     # Если купить примерно на 1000 единиц валюты, то придётся заплатить
     bondS['Полная цена покупки'] = 1000 + 1000 / bondS['FACEVALUE'] * bondS['ACCRUEDINT']
     bondS['Полная цена покупки'] = bondS['Полная цена покупки'].astype(float).round(2)
@@ -199,7 +199,6 @@ def bondsCharacteristicsProcessor(
     bondS['Стоимость'] = bondS['Лотов'] * bondS['PRICE'] * 10 * bondS['FACEVALUE'] / 1000
 
 # 1.5 Рейтинг и другие важные характеристики из bondsRatingS
-
     if os.path.exists(path + 'Замеры рейтингов'):
         # print("Директория 'Замеры рейтингов' существует") # для отладки
         fileNameS_inDirectory = os.listdir('Замеры рейтингов')
@@ -224,10 +223,20 @@ def bondsCharacteristicsProcessor(
         print('\n Изменение лейтинга с прошлого замера:')
         display(bondsRatingS[bondsRatingS['С прошлого замера'] == 'Рейтинг изменился'][['ISIN', 'rating', 'rating_previous']])
 
+        # display('bondS:', bondS) # для отладки
+        # display('bondsRatingS:', bondsRatingS) # для отладки
         bondS = bondS.merge(bondsRatingS, on='ISIN', suffixes=("_drop", ""), how="left")
         bondS = bondS[[column for column in bondS.columns if not column.endswith("_drop")]]
     else:
         print("Найдите и запустите скрипт bondsRatingS")
         bondsRatingS = pandas.DataFrame()
+
+# 1.6 Интегральная переменная Специфика
+    bondS.loc[(bondS['Сектор рынка'] == 'Гос') | (bondS['SECNAME'].str.contains('ОФЗ|Россия', case=False)), 'Сектор рынка'] = 'Гос'
+    bondS['Специфика'] = bondS['FACEUNIT'].str[:2]
+    for column in ['Сектор рынка', 'Амортизация', 'Тип купона', 'Тип текущего купона', 'Структурный параметр', 'Субординированность']:
+        bondS[column] = bondS[column].fillna('--')
+        bondS['Специфика'] += ' ' + bondS[column].str[:2]
+    display("bondS['Специфика']:", bondS['Специфика'].value_counts())
 
     if returnDfs: return bondS
