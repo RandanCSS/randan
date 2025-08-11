@@ -237,6 +237,6 @@ def bondsCharacteristicsProcessor(
     for column in ['Сектор рынка', 'Амортизация', 'Тип купона', 'Тип текущего купона', 'Структурный параметр', 'Субординированность']:
         bondS[column] = bondS[column].fillna('--')
         bondS['Специфика'] += ' ' + bondS[column].str[:2]
-    display("bondS['Специфика']:", bondS['Специфика'].value_counts())
+    display(bondS['Специфика'].value_counts())
 
     if returnDfs: return bondS
