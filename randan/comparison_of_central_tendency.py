@@ -1,8 +1,10 @@
-import pandas as pd
 import numpy as np
-from scipy.stats import f
-from .utils import get_categories
+import pandas as pd
 from IPython.display import display
+from scipy.stats import f
+
+from .utils import get_categories
+
 
 class ANOVA:
     """
@@ -12,14 +14,14 @@ class ANOVA:
     ----------
     data : pd.DataFrame
         Data used to perform the analysis
-    dependent_variables : str or list 
+    dependent_variables : str or list
         Name(s) of (a) scale dependent variable(s).
         Note that if several variables are used, only summary table is available as a result.
-    independent_variable : str 
+    independent_variable : str
         Name of an independent (factor, grouping) variable
-    show_results : bool 
+    show_results : bool
         Whether to show results of analysis
-    n_decimals : int 
+    n_decimals : int
         Number of digits to round results when showing them
 
     Attributes
@@ -45,30 +47,34 @@ class ANOVA:
     dof_t : int
         Total degrees of freedom
     """
-    def __init__(self, 
-                 data, 
-                 dependent_variables, 
-                 independent_variable,
-                 show_results=True,
-                 n_decimals=3):
-        
+
+    def __init__(
+        self,
+        data,
+        dependent_variables,
+        independent_variable,
+        show_results=True,
+        n_decimals=3,
+    ):
         self._data = data.copy()
         self._dependent_variables = dependent_variables
         self._independent_variable = independent_variable
-        
+
         if isinstance(dependent_variables, list) and len(dependent_variables) > 1:
             self._several_variables_used = True
-            self._summary_several_variables = self._perform_anova_for_several_variables()
-        
+            self._summary_several_variables = (
+                self._perform_anova_for_several_variables()
+            )
+
         else:
             if isinstance(dependent_variables, list) and len(dependent_variables) == 1:
                 dependent_variables = dependent_variables[0]
-                
+
             self._several_variables_used = False
             data = data[[dependent_variables, independent_variable]].dropna()
-            #replace with get_categories from utils
+            # replace with get_categories from utils
             groups = get_categories(data[independent_variable])
-            #print(groups)
+            # print(groups)
             groups_n = len(groups)
             n = len(data)
 
@@ -77,19 +83,28 @@ class ANOVA:
             dof_t = dof_w + dof_b
 
             data.set_index(independent_variable, inplace=True)
-            groups_means = data.groupby(independent_variable).agg(['mean', 'count'])
-            data['mean'] = groups_means[dependent_variables]['mean']
+            groups_means = data.groupby(independent_variable).agg(["mean", "count"])
+            data["mean"] = groups_means[dependent_variables]["mean"]
 
-            SSw = ((data[dependent_variables] - data['mean'])**2).sum()
+            SSw = ((data[dependent_variables] - data["mean"]) ** 2).sum()
 
             if dof_w > 0:
                 MSw = SSw / dof_w
             else:
                 MSw = np.nan
 
-            groups_means['grand_mean'] = data[dependent_variables].mean()
+            groups_means["grand_mean"] = data[dependent_variables].mean()
 
-            SSb = (((groups_means[dependent_variables]['mean'] - groups_means['grand_mean'])**2)*groups_means[dependent_variables]['count']).sum()
+            SSb = (
+                (
+                    (
+                        groups_means[dependent_variables]["mean"]
+                        - groups_means["grand_mean"]
+                    )
+                    ** 2
+                )
+                * groups_means[dependent_variables]["count"]
+            ).sum()
             MSb = SSb / dof_b
 
             SSt = SSw + SSb
@@ -99,7 +114,7 @@ class ANOVA:
             else:
                 F = MSb / MSw
                 pvalue = f.sf(F, dof_b, dof_w)
-            
+
             if pd.isnull(pvalue):
                 pvalue = 1
 
@@ -113,10 +128,10 @@ class ANOVA:
             self.dof_b = dof_b
             self.dof_w = dof_w
             self.dof_t = dof_t
-        
+
         if show_results:
             self.show_results(n_decimals=n_decimals)
-        
+
     def summary(self):
         """
         Get summary information on the conducted analysis.
@@ -127,48 +142,55 @@ class ANOVA:
             Summary table with results of analysis
         """
         if self._several_variables_used:
-            
             results = self._summary_several_variables
-        
+
         else:
-        
-            results = [[self.SSb, self.dof_b, self.MSb, self.F, self.pvalue],
-                      [self.SSw, self.dof_w, self.MSw, np.nan, np.nan],
-                      [self.SSt, self.dof_t, np.nan, np.nan, np.nan]]
-            results = pd.DataFrame(results,
-                                  columns = ['Sum of Squares', 'df', 'Mean Square', 'F', 'p-value'],
-                                  index = ['Between Groups', 'Within Groups', 'Total'])
-        
+            results = [
+                [self.SSb, self.dof_b, self.MSb, self.F, self.pvalue],
+                [self.SSw, self.dof_w, self.MSw, np.nan, np.nan],
+                [self.SSt, self.dof_t, np.nan, np.nan, np.nan],
+            ]
+            results = pd.DataFrame(
+                results,
+                columns=["Sum of Squares", "df", "Mean Square", "F", "p-value"],
+                index=["Between Groups", "Within Groups", "Total"],
+            )
+
         return results
-    
+
     def show_results(self, n_decimals=3):
         """
         Show results of the analysis in a readable form.
-        
+
         Parameters
         ----------
         n_decimals : int
             Number of digits to round results when showing them
         """
 
-        
-        print('\nANOVA SUMMARY')
-        print('------------------')
-        display(self.summary().style\
-                    .format(None, na_rep="", precision=n_decimals)\
-                    .set_caption("method .summary()"))
-        
+        print("\nANOVA SUMMARY")
+        print("------------------")
+        display(
+            self.summary()
+            .style.format(None, na_rep="", precision=n_decimals)
+            .set_caption("method .summary()")
+        )
+
     def _perform_anova_for_several_variables(self):
         summary = pd.DataFrame(
-            columns = ['Sum of Squares', 'df', 'Mean Square', 'F', 'p-value']
+            columns=["Sum of Squares", "df", "Mean Square", "F", "p-value"]
         )
-        
+
         for var in self._dependent_variables:
-            aux_model = ANOVA(self._data, var, self._independent_variable, show_results=False)
+            aux_model = ANOVA(
+                self._data, var, self._independent_variable, show_results=False
+            )
             aux_model_summary = aux_model.summary()
-            aux_model_summary.index = [f'{var}: {res}' for res in ['Between Groups', 'Within Groups', 'Total']]
-#             aux_model_summary.index = pd.MultiIndex.from_product([[var]*3,
-#                                                     ['Between Groups', 'Within Groups', 'Total']])
+            aux_model_summary.index = [
+                f"{var}: {res}" for res in ["Between Groups", "Within Groups", "Total"]
+            ]
+            #             aux_model_summary.index = pd.MultiIndex.from_product([[var]*3,
+            #                                                     ['Between Groups', 'Within Groups', 'Total']])
             summary = pd.concat([summary, aux_model_summary])
-            
-        return summary 
+
+        return summary
