@@ -158,37 +158,23 @@ def getMoExData(market="bonds", path=coLabFolder, returnDfs=False):
         securitieS = pandas.DataFrame()
         marketdata_yieldS = pandas.DataFrame()
         marketdata = pandas.DataFrame()
-        # display("boardS['boardid']:", boardS['boardid']) # для отладки
-        for board in boardS["boardid"]:
-            # for board in ['TQOB']: # для отладки
-            print("board:", board)
-            securitieS_additional = pseudojson2df(
-                headerS, 0, url + f"/boards/{board}/securities"
-            )
-            securitieS = pandas.concat(
-                [securitieS, securitieS_additional], ignore_index=True
-            )
-            if market == "bonds":
-                marketdata_yieldS_additional = pseudojson2df(
-                    headerS, -1, url + f"/boards/{board}/securities"
-                )
-                marketdata_yieldS = pandas.concat(
-                    [marketdata_yieldS, marketdata_yieldS_additional], ignore_index=True
-                )
+        # display("boardS['boardid']:", boardS['boardid']) # для отладки        
+        for board in boardS['boardid']:
+        # for board in ['TQOB']: # для отладки   
+            print('board:', board)
+            securitieS_additional = pseudojson2df(headerS, 0, url + f'/boards/{board}/securities')
+            securitieS = pandas.concat([securitieS, securitieS_additional], ignore_index=True)
+            if market == 'bonds':
+                marketdata_yieldS_additional = pseudojson2df(headerS, -1, url + f'/boards/{board}/securities')
+                marketdata_yieldS = pandas.concat([marketdata_yieldS, marketdata_yieldS_additional], ignore_index=True)
 
-            if market == "forts":
-                marketdata_additional = pseudojson2df(
-                    headerS, 1, url + f"/boards/{board}/securities"
-                )
-                display("marketdata_additional:", marketdata_additional)  # для отладки
-                marketdata = pandas.concat(
-                    [marketdata, marketdata_additional], ignore_index=True
-                )
+            if market == 'forts':
+                marketdata_additional = pseudojson2df(headerS, 1, url + f'/boards/{board}/securities')
+                # display('marketdata_additional:', marketdata_additional) # для отладки
+                marketdata = pandas.concat([marketdata, marketdata_additional], ignore_index=True)
 
-        if os.path.exists(path + market + "ColumnsDescriptionsSelected.xlsx"):
-            columnsDescriptionS = pandas.read_excel(
-                path + market + "ColumnsDescriptionsSelected.xlsx"
-            )
+        if os.path.exists(path + market + 'ColumnsDescriptionsSelected.xlsx'):
+            columnsDescriptionS = pandas.read_excel(path + market + 'ColumnsDescriptionsSelected.xlsx')
         else:
             columnsDescriptionS = pandas.read_excel(
                 path + market + "ColumnsDescriptionS.xlsx"
@@ -246,3 +232,4 @@ def getMoExData(market="bonds", path=coLabFolder, returnDfs=False):
 
 # https://iss.moex.com/iss/reference/
 # https://iss.moex.com/iss/engines/stock/markets/qnv
+# https://iss.moex.com/iss/engines/stock/markets/bonds/boards/tqcb/securities
