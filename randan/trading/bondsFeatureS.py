@@ -34,11 +34,11 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
 
 # 1. Авторская функция исполнения скрипта
 
-def bondsCharacteristicsProcessor(
-                                  bondsIn,
-                                  path=coLabFolder,
-                                  returnDfs=False
-                                  ):
+def bondsFeaturesProcessor(
+                           bondsIn,
+                           path=coLabFolder,
+                           returnDfs=False
+                           ):
     """
     Функция для выяснения, какие облигации есть в портфеле, на основе брокерских отчётов
 
@@ -233,11 +233,13 @@ def bondsCharacteristicsProcessor(
 
 # 1.6 Интегральная переменная Специфика
     bondS.loc[(bondS['Сектор рынка'] == 'Гос') | (bondS['SECNAME'].str.contains('ОФЗ|Россия', case=False)), 'Сектор рынка'] = 'Гос'
-    bondS.loc[(bondS['Сектор рынка'].str.contains('Гос|Корп|Мун', case=False) != True), 'Сектор рынка'] = '~Корп'
+    bondS.loc[(bondS['Сектор рынка'].str.contains('Гос|Корп|Мун', case=False) != True), 'Сектор рынка'] = 'Корп'
+    bondS.loc[(bondS['COUPONPERCENT'].isna()), 'Купон определён'] = 0
+    bondS.loc[(bondS['COUPONPERCENT'].notna()), 'Купон определён'] = 1
     bondS['Специфика'] = bondS['FACEUNIT'].str[:2]
-    for column in ['Сектор рынка', 'Амортизация', 'Тип купона', 'Тип текущего купона', 'Структурный параметр', 'Субординированность']:
+    for column in ['Сектор рынка', 'Амортизация', 'Купон определён']:
         bondS[column] = bondS[column].fillna('--')
-        bondS['Специфика'] += ' ' + bondS[column].str[:2]
-    display(bondS['Специфика'].value_counts())
+        bondS['Специфика'] += ' ' + bondS[column].astype(str).str[:1]
+    display(bondS['Специфика'].value_counts().sort_index())
 
     if returnDfs: return bondS
