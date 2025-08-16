@@ -67,7 +67,41 @@ def bondsFeaturesProcessor(
     bondS = bondS[bondS['SECNAME'].notna()] # убрать акции
     # display(bondS) # для отладки
 
-# 1.2 Фильтры по датам
+# 1.2 Рейтинг и другие важные характеристики из bondsRatingS
+    if os.path.exists(path + 'Замеры рейтингов'):
+        # print("Директория 'Замеры рейтингов' существует") # для отладки
+        fileNameS_inDirectory = os.listdir('Замеры рейтингов')
+        fileNameS_inDirectory.sort(reverse=True)        
+        fileNameS_forUse = []
+        for fileName in fileNameS_inDirectory:
+            if 'bondsRatingS_' in fileName:
+                # print(f"Работаю с файлом '{fileName}'") # для отладки
+                fileNameS_forUse.append(fileName)
+                if len(fileNameS_forUse) == 2: break
+        print(f"\nРаботаю с файлом bondsRatingS_previous:'{fileName}'")
+        bondsRatingS = pandas.read_excel('Замеры рейтингов' + slash + fileNameS_forUse[0], index_col=0)
+        # display('bondsRatingS:', bondsRatingS) # для отладки
+        bondsRatingS_previous = pandas.read_excel('Замеры рейтингов' + slash + fileNameS_forUse[1], index_col=0)
+        # display('bondsRatingS_previous:', bondsRatingS_previous) # для отладки
+        # display('bondS:', bondS) # для отладки
+        bondsRatingS = bondsRatingS[bondsRatingS['ISIN'].isin(bondS['ISIN'])]
+        # display('bondsRatingS:', bondsRatingS) # для отладки
+        bondsRatingS = bondsRatingS.merge(bondsRatingS_previous[['ISIN', 'rating']], on='ISIN', suffixes=("", "_previous"), how="left")
+        # display('bondsRatingS:', bondsRatingS) # для отладки
+        bondsRatingS.loc[bondsRatingS['rating'] != bondsRatingS['rating_previous'], 'С прошлого замера'] = 'Рейтинг изменился'
+        print('\n Изменение лейтинга с прошлого замера:')
+        display(bondsRatingS[bondsRatingS['С прошлого замера'] == 'Рейтинг изменился'][['ISIN', 'rating', 'rating_previous']])
+
+        # display('bondS:', bondS) # для отладки
+        # display('bondsRatingS:', bondsRatingS) # для отладки
+        bondS = bondS.merge(bondsRatingS, on='ISIN', suffixes=("_drop", ""), how="left")
+        bondS = bondS[[column for column in bondS.columns if not column.endswith("_drop")]]
+    else:
+        print("Найдите и запустите скрипт bondsRatingS")
+        bondsRatingS = pandas.DataFrame()
+    # display('bondS:', bondS) # для отладки
+
+# 1.3 Фильтры по датам
     # bondS = bondS[bondS['MATDATE'] != '0000-00-00'] # исключаются "вечные" облигации; обычно они субординорованные
     # bondS = bondS[bondS['NEXTCOUPON'] != '0000-00-00']
     # bondS = bondS[bondS['SETTLEDATE'] != '0000-00-00']
@@ -121,10 +155,10 @@ def bondsFeaturesProcessor(
     bondS = pandas.concat([bondS_offer, bondS_other])
     # display(bondS) # для отладки
 
-# 1.3 Предобрабока столбцов с финансовой информацией
+# 1.4 Предобрабока столбцов с финансовой информацией
     for column in ['ACCRUEDINT', 'COUPONPERCENT', 'FACEVALUE', 'PRICE']:
-        bondS = bondS[bondS[column] != '']
-        bondS[column] = bondS[column].astype(float)
+        # bondS = bondS[bondS[column] != '']
+        bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column] = bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column].astype(float)
 
     # Умножение FACEVALUE и ACCRUEDINT на цену валюты в рублях
     boardS, columnsDescriptionS, exchangesRaw = getMoExData.getMoExData(market='forts', returnDfs=True)
@@ -173,14 +207,20 @@ def bondsFeaturesProcessor(
         # print('type(currencyExchangeValue):', type(currencyExchangeValue)) # для отладки        
         bondS.loc[bondS['FACEUNIT'] == currency, 'FACEVALUE'] *= currencyExchangeValue
         bondS.loc[bondS['CURRENCYID'] == currency, 'ACCRUEDINT'] *= currencyExchangeValue # валюта расчётов
+    # display(bondS) # для отладки
 
-# 1.4 Расчёт доходности в день до возможности погасить 
+# 1.5 Расчёт доходности в день до возможности погасить 
     # Если купить примерно на 1000 единиц валюты, то придётся заплатить
     bondS['Полная цена покупки'] = 1000 + 1000 / bondS['FACEVALUE'] * bondS['ACCRUEDINT']
     bondS['Полная цена покупки'] = bondS['Полная цена покупки'].astype(float).round(2)
     
     # На 1000 единиц валюты к погашению будет начислен купоный доход
-    bondS['Купоный доход к погашению'] = 1000 * bondS['COUPONPERCENT'] / 36500 * bondS['До возможности погасить']
+    bondS.loc[(bondS['COUPONPERCENT'].isna()) | (bondS['COUPONPERCENT'] == ''), 'Сводный купон'] =\
+        bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'Купон RB']
+    bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'Сводный купон'] =\
+        bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'COUPONPERCENT']
+    
+    bondS['Купоный доход к погашению'] = 1000 * bondS['Сводный купон'] / 36500 * bondS['До возможности погасить']
     bondS['Купоный доход к погашению'] = bondS['Купоный доход к погашению'].astype(float).round(2)
     
     # Плюс 1000 единиц валюты изменятся к погашению в связи с приведением цены к номиналу
@@ -197,45 +237,15 @@ def bondsFeaturesProcessor(
 
     # !!! Стоимость!!!
     bondS['Стоимость'] = bondS['Лотов'] * bondS['PRICE'] * 10 * bondS['FACEVALUE'] / 1000
-
-# 1.5 Рейтинг и другие важные характеристики из bondsRatingS
-    if os.path.exists(path + 'Замеры рейтингов'):
-        # print("Директория 'Замеры рейтингов' существует") # для отладки
-        fileNameS_inDirectory = os.listdir('Замеры рейтингов')
-        fileNameS_inDirectory.sort(reverse=True)        
-        fileNameS_forUse = []
-        for fileName in fileNameS_inDirectory:
-            if 'bondsRatingS_' in fileName:
-                # print(f"Работаю с файлом '{fileName}'") # для отладки
-                fileNameS_forUse.append(fileName)
-                if len(fileNameS_forUse) == 2: break
-        print(f"\nРаботаю с файлом bondsRatingS_previous:'{fileName}'")
-        bondsRatingS = pandas.read_excel('Замеры рейтингов' + slash + fileNameS_forUse[0], index_col=0)
-        # display('bondsRatingS:', bondsRatingS) # для отладки
-        bondsRatingS_previous = pandas.read_excel('Замеры рейтингов' + slash + fileNameS_forUse[1], index_col=0)
-        # display('bondsRatingS_previous:', bondsRatingS_previous) # для отладки
-        # display('bondS:', bondS) # для отладки
-        bondsRatingS = bondsRatingS[bondsRatingS['ISIN'].isin(bondS['ISIN'])]
-        # display('bondsRatingS:', bondsRatingS) # для отладки
-        bondsRatingS = bondsRatingS.merge(bondsRatingS_previous[['ISIN', 'rating']], on='ISIN', suffixes=("", "_previous"), how="left")
-        # display('bondsRatingS:', bondsRatingS) # для отладки
-        bondsRatingS.loc[bondsRatingS['rating'] != bondsRatingS['rating_previous'], 'С прошлого замера'] = 'Рейтинг изменился'
-        print('\n Изменение лейтинга с прошлого замера:')
-        display(bondsRatingS[bondsRatingS['С прошлого замера'] == 'Рейтинг изменился'][['ISIN', 'rating', 'rating_previous']])
-
-        # display('bondS:', bondS) # для отладки
-        # display('bondsRatingS:', bondsRatingS) # для отладки
-        bondS = bondS.merge(bondsRatingS, on='ISIN', suffixes=("_drop", ""), how="left")
-        bondS = bondS[[column for column in bondS.columns if not column.endswith("_drop")]]
-    else:
-        print("Найдите и запустите скрипт bondsRatingS")
-        bondsRatingS = pandas.DataFrame()
+    # display(bondS) # для отладки
 
 # 1.6 Интегральная переменная Специфика
     bondS.loc[(bondS['Сектор рынка'] == 'Гос') | (bondS['SECNAME'].str.contains('ОФЗ|Россия', case=False)), 'Сектор рынка'] = 'Гос'
     bondS.loc[(bondS['Сектор рынка'].str.contains('Гос|Корп|Мун', case=False) != True), 'Сектор рынка'] = 'Корп'
-    bondS.loc[(bondS['COUPONPERCENT'].isna()), 'Купон определён'] = 0
-    bondS.loc[(bondS['COUPONPERCENT'].notna()), 'Купон определён'] = 1
+    bondS.loc[(bondS['COUPONPERCENT'].isna()) | (bondS['COUPONPERCENT'] == ''), 'Купон определён'] = 0
+    bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'Купон определён'] = 1
+    # display("bondS['Купон определён']:", bondS['Купон определён'].value_counts()) # для отладки
+    
     bondS['Специфика'] = bondS['FACEUNIT'].str[:2]
     for column in ['Сектор рынка', 'Амортизация', 'Купон определён']:
         bondS[column] = bondS[column].fillna('--')
