@@ -162,12 +162,12 @@ def getMoExData(
         if market == 'bonds':# securitieS = securitieS.merge(marketdata_yieldS, on='SECID')
             securitieS = securitieS.merge(marketdata_yieldS, on='SECID', suffixes=("", "_drop"), how="left")
             securitieS = securitieS[[column for column in securitieS.columns if not column.endswith("_drop")]]
-            print('securitieS.columns:', securitieS.columns) # для отладки   
+            # print('securitieS.columns:', securitieS.columns) # для отладки
 
         if market == 'forts':
             securitieS = securitieS.merge(marketdata, on='SECID', suffixes=("", "_drop"), how="left")
             securitieS = securitieS[[column for column in securitieS.columns if not column.endswith("_drop")]]
-            print('securitieS.columns:', securitieS.columns) # для отладки   
+            # print('securitieS.columns:', securitieS.columns) # для отладки
 
         securitieS = securitieS.groupby('SECID', as_index=False).first()
         if market == 'bonds': securitieS['URL'] = 'https://www.moex.com/ru/issue.aspx?code=' + securitieS['ISIN']
