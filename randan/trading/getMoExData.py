@@ -135,6 +135,7 @@ def getMoExData(
             print('board:', board)
             securitieS_additional = pseudojson2df(headerS, 0, url + f'/boards/{board}/securities')
             securitieS = pandas.concat([securitieS, securitieS_additional], ignore_index=True)
+
             if market == 'bonds':
                 marketdata_yieldS_additional = pseudojson2df(headerS, -1, url + f'/boards/{board}/securities')
                 marketdata_yieldS = pandas.concat([marketdata_yieldS, marketdata_yieldS_additional], ignore_index=True)
@@ -155,13 +156,19 @@ def getMoExData(
         columnsDescriptionS = columnsDescriptionS['name'].tolist()
         if market == 'bonds': columnsDescriptionS.append('URL')
     
-        # print('securitieS.columns:', securitieS.columns) # для отладки   
         # print('marketdata_yieldS.columns:', marketdata_yieldS.columns) # для отладки   
         # print('marketdata.columns:', marketdata_yieldS.columns) # для отладки   
-        if market == 'bonds': securitieS = securitieS.merge(marketdata_yieldS, on='SECID')
+
+        if market == 'bonds':# securitieS = securitieS.merge(marketdata_yieldS, on='SECID')
+            securitieS = securitieS.merge(marketdata_yieldS, on='SECID', suffixes=("", "_drop"), how="left")
+            securitieS = securitieS[[column for column in securitieS.columns if not column.endswith("_drop")]]
+            print('securitieS.columns:', securitieS.columns) # для отладки   
+
         if market == 'forts':
             securitieS = securitieS.merge(marketdata, on='SECID', suffixes=("", "_drop"), how="left")
             securitieS = securitieS[[column for column in securitieS.columns if not column.endswith("_drop")]]
+            print('securitieS.columns:', securitieS.columns) # для отладки   
+
         securitieS = securitieS.groupby('SECID', as_index=False).first()
         if market == 'bonds': securitieS['URL'] = 'https://www.moex.com/ru/issue.aspx?code=' + securitieS['ISIN']
         # print('securitieS.columns:', securitieS.columns) # для отладки
