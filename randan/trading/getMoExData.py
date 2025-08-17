@@ -158,7 +158,7 @@ def getMoExData(
         columnsDescriptionS = columnsDescriptionS['name'].drop_duplicates().tolist()
         if market == 'bonds': columnsDescriptionS.append('URL')
     
-        if market == 'bonds':# securitieS = securitieS.merge(marketdata_yieldS, on='SECID')
+        if market == 'bonds':
             securitieS = securitieS.merge(marketdata_yieldS, on='SECID', suffixes=("", "_drop"), how="left")
             securitieS = securitieS[[column for column in securitieS.columns if not column.endswith("_drop")]]
             # print('securitieS.columns:', securitieS.columns) # для отладки
