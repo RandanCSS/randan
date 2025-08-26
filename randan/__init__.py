@@ -1,9 +1,9 @@
 from . import (
-    bivariate_association,
-    clustering,
-    comparison_of_central_tendency,
     descriptive_statistics,
-    dimension_reduction,
+    bivariate_association, 
+    tree, 
+    comparison_of_central_tendency,
     regression,
-    tree,
+    clustering,
+    dimension_reduction
 )
