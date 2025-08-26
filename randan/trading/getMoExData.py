@@ -164,14 +164,17 @@ def getMoExData(market="bonds", path=coLabFolder, returnDfs=False):
             print('board:', board)
             securitieS_additional = pseudojson2df(headerS, 0, url + f'/boards/{board}/securities')
             securitieS = pandas.concat([securitieS, securitieS_additional], ignore_index=True)
+
             if market == 'bonds':
                 marketdata_yieldS_additional = pseudojson2df(headerS, -1, url + f'/boards/{board}/securities')
                 marketdata_yieldS = pandas.concat([marketdata_yieldS, marketdata_yieldS_additional], ignore_index=True)
+                # print('marketdata_yieldS.columns:', marketdata_yieldS.columns) # для отладки   
 
             if market == 'forts':
                 marketdata_additional = pseudojson2df(headerS, 1, url + f'/boards/{board}/securities')
                 # display('marketdata_additional:', marketdata_additional) # для отладки
                 marketdata = pandas.concat([marketdata, marketdata_additional], ignore_index=True)
+                # print('marketdata.columns:', marketdata.columns) # для отладки   
 
         if os.path.exists(path + market + 'ColumnsDescriptionsSelected.xlsx'):
             columnsDescriptionS = pandas.read_excel(path + market + 'ColumnsDescriptionsSelected.xlsx')
@@ -180,36 +183,26 @@ def getMoExData(market="bonds", path=coLabFolder, returnDfs=False):
                 path + market + "ColumnsDescriptionS.xlsx"
             )
             # display('columnsDescriptionS:', columnsDescriptionS) # для отладки
-            columnsDescriptionS = columnsDescriptionS[
-                columnsDescriptionS["name"] != "BOARDID"
-            ]
 
-        columnsDescriptionS = columnsDescriptionS[columnsDescriptionS["name"].notna()]
-        columnsDescriptionS = columnsDescriptionS["name"].tolist()
-        if market == "bonds":
-            columnsDescriptionS.append("URL")
+            columnsDescriptionS = columnsDescriptionS[columnsDescriptionS['name'] !='BOARDID']
 
+        columnsDescriptionS = columnsDescriptionS[columnsDescriptionS['name'].notna()]
+        columnsDescriptionS = columnsDescriptionS['name'].drop_duplicates().tolist()
+        if market == 'bonds': columnsDescriptionS.append('URL')
+    
+        if market == 'bonds':
+            securitieS = securitieS.merge(marketdata_yieldS, on='SECID', suffixes=("", "_drop"), how="left")
+            securitieS = securitieS[[column for column in securitieS.columns if not column.endswith("_drop")]]
+            # print('securitieS.columns:', securitieS.columns) # для отладки
+
+        if market == 'forts':
+            securitieS = securitieS.merge(marketdata, on='SECID', suffixes=("", "_drop"), how="left")
+            securitieS = securitieS[[column for column in securitieS.columns if not column.endswith("_drop")]]
+            # print('securitieS.columns:', securitieS.columns) # для отладки
+
+        securitieS = securitieS.groupby('SECID', as_index=False).first()
         # print('securitieS.columns:', securitieS.columns) # для отладки
-        # print('marketdata_yieldS.columns:', marketdata_yieldS.columns) # для отладки
-        # print('marketdata.columns:', marketdata_yieldS.columns) # для отладки
-        if market == "bonds":
-            securitieS = securitieS.merge(marketdata_yieldS, on="SECID")
-        if market == "forts":
-            securitieS = securitieS.merge(
-                marketdata, on="SECID", suffixes=("", "_drop"), how="left"
-            )
-            securitieS = securitieS[
-                [
-                    column
-                    for column in securitieS.columns
-                    if not column.endswith("_drop")
-                ]
-            ]
-        securitieS = securitieS.groupby("SECID", as_index=False).first()
-        if market == "bonds":
-            securitieS["URL"] = (
-                "https://www.moex.com/ru/issue.aspx?code=" + securitieS["ISIN"]
-            )
+        if market == 'bonds': securitieS['URL'] = 'https://www.moex.com/ru/issue.aspx?code=' + securitieS['ISIN']
         # print('securitieS.columns:', securitieS.columns) # для отладки
         securitieS = securitieS[columnsDescriptionS]
         securitieS.to_excel(path + market + "SecuritieS.xlsx", index=False)
