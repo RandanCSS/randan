@@ -15,7 +15,7 @@ from subprocess import check_call
 attempt = 0
 while True:
     try:
-        from pandas import DataFrame
+        import selenium.common.exceptions
         break
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
@@ -35,7 +35,7 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
                   )
             break
             
-def blockSearch(attemptsMax, text, xPathS):
+def blockSearch(attemptsMax, driver, text, xPathS):
     block = None 
     trCounter = 1
     while True:
@@ -50,7 +50,7 @@ def blockSearch(attemptsMax, text, xPathS):
             if trCounter > attemptsMax: break # против бесконечного цикла при пустом блоке страницы
     return block if text in block else None
 
-def tryerSleeper(attemptsMax, boundarieS, pause, xPathS):
+def tryerSleeper(attemptsMax, boundarieS, driver, pause, xPathS):
     goS = True
     goC = True
     
