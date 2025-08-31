@@ -49,3 +49,37 @@ def blockSearch(attemptsMax, text, xPathS):
             trCounter += 1
             if trCounter > attemptsMax: break # против бесконечного цикла при пустом блоке страницы
     return block if text in block else None
+
+def tryerSleeper(attemptsMax, boundarieS, pause, xPathS):
+    goS = True
+    goC = True
+    
+    attempt = 1
+    while (attempt < attemptsMax) & goC:
+        if boundarieS != None:
+            for i in range(boundarieS[0], boundarieS[1]): # цикл на случай вариативности дивов
+                xPath = xPathS[0] + str(i) + xPathS[1]
+                try:
+                    driver.find_element(By.XPATH, xPath)
+                    goC = False
+                    break
+                except selenium.common.exceptions.NoSuchElementException:
+                    errorDescription = sys.exc_info()
+                    print(f'Попытка tryerSleeper № {attempt} . Ошибка:', errorDescription, '          ', end='\r') # , end='\r'
+                    time.sleep(pause)
+                    attempt += 1
+                    if attempt == attemptsMax: goS = False
+        else:
+            xPath = xPathS[0]
+            try:
+                driver.find_element(By.XPATH, xPath)
+                goC = False
+                break
+            except selenium.common.exceptions.NoSuchElementException:
+                errorDescription = sys.exc_info()
+                print(f'Попытка tryerSleeper № {attempt} . Ошибка:', errorDescription, '          ', end='\r') # , end='\r')
+                time.sleep(pause)
+                attempt += 1
+                if attempt == attemptsMax: goS = False
+    print('                                                                                                                                                                                                                                                ', end='\r')
+    return goS, xPath
