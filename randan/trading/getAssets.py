@@ -6,7 +6,7 @@ from subprocess import check_call
 # --- остальные модули и пакеты
 while True:
     try:
-        from datetime import date, datetime
+        from datetime import date
         from randan.trading import bondsFeaturesProcessor # авторский модуль для гармонизации и обработки характеристик облигаций
         from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
         import os, pandas, re, warnings
