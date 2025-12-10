@@ -9,8 +9,8 @@ from subprocess import check_call
 while True:
     try:
         from datetime import date
-        from randan.trading import bondsFeaturesProcessor # авторский модуль для гармонизации и обработки характеристик облигаций
         from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
+        from randan.trading import bondsFeaturesProcessor # авторский модуль для гармонизации и обработки характеристик облигаций
         import os, pandas, re, warnings
         break
     except ModuleNotFoundError:
