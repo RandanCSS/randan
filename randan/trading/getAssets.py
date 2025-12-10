@@ -118,7 +118,6 @@ def sectionFinder(assetS, name, nameNext):
     return assetS, lower_bound, upper_bound
 
 # 1.1 Авторские функции-адаптеры по брокерам
-
 def ВТБ(assetS):
     # display(assetS) # для отладки
     # Найти срез датафрейма, соответствующий искомому разделу (раздел предполагает свои наименования столбцов)
@@ -203,7 +202,6 @@ def УралСиб(assetS):
     return assetS
 
 # 2. Авторская функция исполнения скрипта
-
 def getAssets(
               brokerS=['ВТБ', 'Тинькофф', 'УралСиб'],
               path=coLabFolder,
