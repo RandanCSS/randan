@@ -104,20 +104,22 @@ def bondsFeaturesProcessor(
     # display('bondS:', bondS) # для отладки
 
 # 1.3 Фильтры по датам
+    bondS.loc[bondS['NEXTCOUPON'] == '0000-00-00', 'NEXTCOUPON'] =\
+        bondS.loc[bondS['NEXTCOUPON'] == '0000-00-00', 'SETTLEDATE'] # иначе к NEXTCOUPON не применяется .astype('datetime64[ns]')
+
     # bondS = bondS[bondS['MATDATE'] != '0000-00-00'] # исключаются "вечные" облигации; обычно они субординорованные
-    # bondS = bondS[bondS['NEXTCOUPON'] != '0000-00-00']
     # bondS = bondS[bondS['SETTLEDATE'] != '0000-00-00']
     # display(bondS) # для отладки
 
     # Сколько дней до купона?
     # bondS = bondS[bondS['NEXTCOUPON'] != bondS['SETTLEDATE']] # исключить облигации, по которым купон уже на след.день
+    # display(bondS[['NEXTCOUPON', 'SETTLEDATE']].head(50)) # для отладки
+    # display(bondS[['NEXTCOUPON', 'SETTLEDATE']].tail(50)) # для отладки
     bondS['До купона'] = bondS['NEXTCOUPON'].astype('datetime64[ns]') - bondS['SETTLEDATE'].astype('datetime64[ns]')
     bondS['До купона'] = bondS['До купона'].astype(str)
     bondS['До купона'] = bondS['До купона'].str.split(' ').str[0]
     bondS['До купона'] = bondS['До купона'].astype(int)
     # display(bondS) # для отладки
-    # display(bondS[bondS['ISIN'] == 'RU000A10B347']) # для отладки
-    # display(сharacteristicsFromMoEx[сharacteristicsFromMoEx['ISIN'] == 'RU000A10B347']) # для отладки
     
     # Сколько дней до возможности погасить?
     bondS_offer = bondS[bondS['BUYBACKDATE'] != '0000-00-00'] # облигации С офертой
