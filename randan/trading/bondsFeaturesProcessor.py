@@ -91,7 +91,7 @@ def bondsFeaturesProcessor(
         bondsRatingS = bondsRatingS.merge(bondsRatingS_previous[['ISIN', 'rating']], on='ISIN', suffixes=("", "_previous"), how="left")
         # display('bondsRatingS:', bondsRatingS) # для отладки
         bondsRatingS.loc[bondsRatingS['rating'] != bondsRatingS['rating_previous'], 'С прошлого замера'] = 'Рейтинг изменился'
-        print('\n Изменение лейтинга с прошлого замера:')
+        print('\n Изменение рейтинга с прошлого замера:')
         display(bondsRatingS[bondsRatingS['С прошлого замера'] == 'Рейтинг изменился'][['ISIN', 'rating', 'rating_previous']])
 
         # display('bondS:', bondS) # для отладки
