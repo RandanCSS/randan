@@ -36,6 +36,7 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
     # компановки информации об эмитентах торгуемых на МосБирже облигаций в датафрейм (словарь)
 def issuersComposer(bondS, issuersIn):
     issuerS = issuersIn.copy()
+    issuerS = bondS[['Эмитент']].sort_values('Эмитент').drop_duplicates().reset_index(drop=True)
     rowS_toDrop = []
     for row in issuerS.index:
         # print('row:', row) # для отладки
