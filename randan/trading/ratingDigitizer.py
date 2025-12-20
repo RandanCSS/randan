@@ -8,8 +8,8 @@ from subprocess import check_call
 # --- остальные модули и пакеты
 while True:
     try:
-        from randan.tools import coLabAdaptor, textPreprocessor # авторские модули для (а) адаптации текущего скрипта к файловой системе CoLab и (б) предобработки нестандартизированнрого текста
-        import os, pandas, re
+        from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
+        import re
         break
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
