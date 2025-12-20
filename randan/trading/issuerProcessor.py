@@ -40,7 +40,7 @@ def issuersComposer(bondS, issuersIn):
     rowS_toDrop = []
     for row in issuerS.index:
         # print('row:', row) # для отладки
-        rowS_detected = bondS[bondS['Эмитент'].str.contains(issuerS['Эмитент'][row], case=False)].index
+        rowS_detected = bondS[bondS['Эмитент'].str.contains(issuerS['Эмитент'][row], case=False)].index # обрабатываемые строчки bondS ; они затем фиксируются в rowS_toDrop
         secNameS = bondS['SECNAME'][rowS_detected].tolist()
         issuerS.loc[row, 'Count'] = len(secNameS)
         issuerS.loc[row, 'SecNameS'] = ''
