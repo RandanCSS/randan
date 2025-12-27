@@ -37,15 +37,17 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
 def issuersComposer(bondS):
     issuerS = bondS[['Эмитент']].sort_values('Эмитент').drop_duplicates().reset_index(drop=True) # заготовка для датафрейма с актуальными эмитентами
     for row_issuerS in issuerS.index:
+    # for row_issuerS in issuerS.index[:1]: # для отладки
         # print('row_issuerS:', row_issuerS) # для отладки
-        rowS_bondS = bondS[bondS['Эмитент'] == row_issuerS].index # обрабатываемые строчки bondS ; они затем фиксируются в rowS_toDrop
+        rowS_bondS = bondS[bondS['Эмитент'] == issuerS['Эмитент'][row_issuerS]].index # обрабатываемые строчки bondS
         secNameS = bondS['SECNAME'][rowS_bondS].tolist()
+        # print('secNameS:', secNameS) # для отладки
         issuerS.loc[row_issuerS, 'Count'] = len(secNameS)
         issuerS.loc[row_issuerS, 'SecNameS'] = ''
         issuerS.at[row_issuerS, 'SecNameS'] = secNameS
 
         if 'Rating D' in bondS.columns:
-            ratingS = bondS['Rating D'][rowS_detected].dropna().tolist()
+            ratingS = bondS['Rating D'][rowS_bondS].dropna().tolist()
             ratingS = list(set(ratingS))
             # print('ratingS:', ratingS) # для отладки
             issuerS.loc[row_issuerS, 'RatingS'] = ''
