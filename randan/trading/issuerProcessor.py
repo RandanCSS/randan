@@ -34,28 +34,46 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
 
 # 1. Авторские функции
     # компановки информации об эмитентах торгуемых на МосБирже облигаций в датафрейм (словарь)
-def issuersComposer(bondS, issuersIn):
-    issuerS = issuersIn.copy()
-    issuerS = bondS[['Эмитент']].sort_values('Эмитент').drop_duplicates().reset_index(drop=True)
-    rowS_toDrop = []
-    for row in issuerS.index:
-        # print('row:', row) # для отладки
-        rowS_detected = bondS[bondS['Эмитент'].str.contains(issuerS['Эмитент'][row], case=False)].index # обрабатываемые строчки bondS ; они затем фиксируются в rowS_toDrop
-        secNameS = bondS['SECNAME'][rowS_detected].tolist()
-        issuerS.loc[row, 'Count'] = len(secNameS)
-        issuerS.loc[row, 'SecNameS'] = ''
-        issuerS.at[row, 'SecNameS'] = secNameS
+def issuersComposer(bondS):
+    issuerS = bondS[['Эмитент']].sort_values('Эмитент').drop_duplicates().reset_index(drop=True) # заготовка для датафрейма с актуальными эмитентами
+    for row_issuerS in issuerS.index:
+        # print('row_issuerS:', row_issuerS) # для отладки
+        rowS_bondS = bondS[bondS['Эмитент'] == row_issuerS].index # обрабатываемые строчки bondS ; они затем фиксируются в rowS_toDrop
+        secNameS = bondS['SECNAME'][rowS_bondS].tolist()
+        issuerS.loc[row_issuerS, 'Count'] = len(secNameS)
+        issuerS.loc[row_issuerS, 'SecNameS'] = ''
+        issuerS.at[row_issuerS, 'SecNameS'] = secNameS
 
         if 'Rating D' in bondS.columns:
             ratingS = bondS['Rating D'][rowS_detected].dropna().tolist()
             ratingS = list(set(ratingS))
             # print('ratingS:', ratingS) # для отладки
-            issuerS.loc[row, 'RatingS'] = ''
-            issuerS.at[row, 'RatingS'] = ratingS[0] if len(ratingS) == 1 else ratingS
+            issuerS.loc[row_issuerS, 'RatingS'] = ''
+            issuerS.at[row_issuerS, 'RatingS'] = ratingS[0] if len(ratingS) == 1 else ratingS
 
-        rowS_toDrop.extend(rowS_detected)
     # display('issuerS:', issuerS) # для отладки
-    return issuerS, rowS_toDrop
+    return issuerS
+
+#     issuerS_withActualRating = bondS[['Эмитент']].sort_values('Эмитент').drop_duplicates().reset_index(drop=True)
+#     rowS_toDrop = []
+#     for row in issuerS.index:
+#         # print('row:', row) # для отладки
+#         rowS_detected = bondS[bondS['Эмитент'].str.contains(issuerS['Эмитент'][row], case=False)].index # обрабатываемые строчки bondS ; они затем фиксируются в rowS_toDrop
+#         secNameS = bondS['SECNAME'][rowS_detected].tolist()
+#         issuerS.loc[row, 'Count'] = len(secNameS)
+#         issuerS.loc[row, 'SecNameS'] = ''
+#         issuerS.at[row, 'SecNameS'] = secNameS
+
+#         if 'Rating D' in bondS.columns:
+#             ratingS = bondS['Rating D'][rowS_detected].dropna().tolist()
+#             ratingS = list(set(ratingS))
+#             # print('ratingS:', ratingS) # для отладки
+#             issuerS.loc[row, 'RatingS'] = ''
+#             issuerS.at[row, 'RatingS'] = ratingS[0] if len(ratingS) == 1 else ratingS
+
+#         rowS_toDrop.extend(rowS_detected)
+#     # display('issuerS:', issuerS) # для отладки
+#     return issuerS, rowS_toDrop
 
     # извлечения из SECNAME торгуемых на МосБирже облигаций названий их эмитентов
 def issuerExtractor(dfIn):
