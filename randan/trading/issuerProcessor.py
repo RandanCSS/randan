@@ -81,6 +81,7 @@ def issuersComposer(bondS):
 def issuerExtractor(dfIn):
     df = dfIn.copy()
     df['Эмитент'] = df['SECNAME'].str.replace('_', ' ').str.replace('-', ' ')
+    df['Эмитент'] = df['Эмитент'].str.replace('ЯНАО', 'ЯНАвОк')
     df['Эмитент'] = df['Эмитент'].apply(lambda text: re.sub(r' [БЗ][OОPР]П?.+', '', text))
     df['Эмитент'] = df['Эмитент'].apply(lambda text: re.sub(r'Б\d+', '', text))
     df['Эмитент'] = df['Эмитент'].apply(lambda text: re.sub(r' 0\d+.*', '', text))
