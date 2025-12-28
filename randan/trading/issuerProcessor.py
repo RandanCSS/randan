@@ -82,7 +82,7 @@ def issuerExtractor(dfIn):
     df = dfIn.copy()
     df['Эмитент'] = df['SECNAME'].str.replace('_', ' ').str.replace('-', ' ')
     df['Эмитент'] = df['Эмитент'].str.replace('ЯНАО', 'ЯНАвОк')
-    df.loc[df['Эмитент'].str.contains('СберИОС'), 'Эмитент'] = 'СберИОС'
+    df.loc[df['Эмитент'].str.contains('ИОС'), 'Эмитент'] = 'СберИОС'
     df['Эмитент'] = df['Эмитент'].apply(lambda cellContent: re.sub(r' [БЗ][OОPР]П?.+', '', cellContent))
     df['Эмитент'] = df['Эмитент'].apply(lambda cellContent: re.sub(r'Б\d+', '', cellContent))
     df['Эмитент'] = df['Эмитент'].apply(lambda cellContent: re.sub(r' 0\d+.*', '', cellContent))
