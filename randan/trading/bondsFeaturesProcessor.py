@@ -269,4 +269,4 @@ def bondsFeaturesProcessor(
         bondS['Специфика'] += ' ' + bondS[column].astype(str).str[:1]
     display(bondS['Специфика'].value_counts().sort_index())
 
-    if returnDfs: return bondsFeatureS, bondsRatingS
+    if returnDfs: return bondS, bondsRatingS
