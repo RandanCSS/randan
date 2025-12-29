@@ -216,7 +216,7 @@ def ratingMoEx(bondS_in):
             oneBondRating = pandas.DataFrame(rating_data)
             # display(oneBondRating) # для отладки
             oneBondRating = oneBondRating[oneBondRating['Значение кредитного рейтинга'].str.contains('Отозван', case=False) != True] # не интересует, если рейтинг отозван
-            oneBondRating['Rating D'] = oneBondRating['Значение кредитного рейтинга'].apply(ratingDigitizer.ratingDigitizer, args=('RB',))
+            oneBondRating['Rating D'] = oneBondRating['Значение кредитного рейтинга'].apply(ratingDigitizer, args=('RB',))
             # display(oneBondRating) # для отладки
             bondS.loc[bondS['Эмитент'] == issuer, 'Rating D'] = oneBondRating['Rating D'].mean()
             print("="*60 + "\n")
