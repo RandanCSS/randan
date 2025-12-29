@@ -70,38 +70,42 @@ def bondsFeaturesProcessor(
     # display(bondS) # для отладки
 
 # 1.2 Рейтинг и другие важные характеристики из bondsRatingS
-    if os.path.exists(path + 'Замеры рейтингов'):
-        # print("Директория 'Замеры рейтингов' существует") # для отладки
-        fileNameS_inDirectory = os.listdir('Замеры рейтингов')
-        fileNameS_inDirectory.sort(reverse=True)        
-        fileNameS_forUse = []
-        for fileName in fileNameS_inDirectory:
-            if 'bondsRatingS_' in fileName:
-                # print(f"Работаю с файлом '{fileName}'") # для отладки
-                fileNameS_forUse.append(fileName)
-                if len(fileNameS_forUse) == 2: break
-        print(f"\nРаботаю с файлом bondsRatingS_previous:'{fileName}'")
-        bondsRatingS = pandas.read_excel('Замеры рейтингов' + slash + fileNameS_forUse[0], index_col=0)
-        # display('bondsRatingS:', bondsRatingS) # для отладки
-        bondsRatingS_previous = pandas.read_excel('Замеры рейтингов' + slash + fileNameS_forUse[1], index_col=0)
-        # display('bondsRatingS_previous:', bondsRatingS_previous) # для отладки
-        # display('bondS:', bondS) # для отладки
-        bondsRatingS = bondsRatingS[bondsRatingS['ISIN'].isin(bondS['ISIN'])]
-        # display('bondsRatingS:', bondsRatingS) # для отладки
-        bondsRatingS = bondsRatingS.merge(bondsRatingS_previous[['ISIN', 'rating']], on='ISIN', suffixes=("", "_previous"), how="left")
-        # display('bondsRatingS:', bondsRatingS) # для отладки
-        bondsRatingS.loc[bondsRatingS['rating'] != bondsRatingS['rating_previous'], 'С прошлого замера'] = 'Рейтинг изменился'
-        print('\n Изменение рейтинга с прошлого замера:')
-        display(bondsRatingS[bondsRatingS['С прошлого замера'] == 'Рейтинг изменился'][['ISIN', 'rating', 'rating_previous']])
+    FileUptodateName_0 = files2df.getFileUptodateName('_bondsRatingS', None, path + 'Замеры рейтингов')
+    FileUptodateName_1 = files2df.getFileUptodateName('_bondsRatingS', [FileUptodateName_0], path + 'Замеры рейтингов')
 
-        # display('bondS:', bondS) # для отладки
-        # display('bondsRatingS:', bondsRatingS) # для отладки
-        bondS = bondS.merge(bondsRatingS, on='ISIN', suffixes=("_drop", ""), how="left")
-        bondS = bondS[[column for column in bondS.columns if not column.endswith("_drop")]]
-    else:
-        print("Найдите и запустите скрипт bondsRatingS")
-        bondsRatingS = pandas.DataFrame()
+    # if os.path.exists(path + 'Замеры рейтингов'):
+    #     # print("Директория 'Замеры рейтингов' существует") # для отладки
+    #     fileNameS_inDirectory = os.listdir('Замеры рейтингов')
+    #     fileNameS_inDirectory.sort(reverse=True)        
+    #     fileNameS_forUse = []
+    #     for fileName in fileNameS_inDirectory:
+    #         if '_bondsRatingS' in fileName:
+    #             # print(f"Работаю с файлом '{fileName}'") # для отладки
+    #             fileNameS_forUse.append(fileName)
+    #             if len(fileNameS_forUse) == 2: break
+    #     print(f"\nРаботаю с файлом bondsRatingS_previous:'{fileName}'")
+
+    bondsRatingS = pandas.read_excel(path + 'Замеры рейтингов' + slash + FileUptodateName_0)
+    # display('bondsRatingS:', bondsRatingS) # для отладки
+    bondsRatingS_previous = pandas.read_excel(path + 'Замеры рейтингов' + slash + FileUptodateName_1)
+    # display('bondsRatingS_previous:', bondsRatingS_previous) # для отладки
     # display('bondS:', bondS) # для отладки
+    bondsRatingS = bondsRatingS[bondsRatingS['ISIN'].isin(bondS['ISIN'])]
+    # display('bondsRatingS:', bondsRatingS) # для отладки
+    bondsRatingS = bondsRatingS.merge(bondsRatingS_previous[['ISIN', 'Rating D']], on='ISIN', suffixes=("", " Previous"), how="left")
+    # display('bondsRatingS:', bondsRatingS) # для отладки
+    bondsRatingS.loc[bondsRatingS['Rating D'] != bondsRatingS['Rating D Previous'], 'С прошлого замера'] = 'Рейтинг изменился'
+    print('\n Изменение рейтинга с прошлого замера:')
+    display(bondsRatingS[bondsRatingS['С прошлого замера'] == 'Рейтинг изменился'][['ISIN', 'Rating D', 'Rating D Previous']])
+
+    # display('bondS:', bondS) # для отладки
+    # display('bondsRatingS:', bondsRatingS) # для отладки
+    bondS = bondS.merge(bondsRatingS, on='ISIN', suffixes=("_drop", ""), how="left")
+    bondS = bondS[[column for column in bondS.columns if not column.endswith("_drop")]]
+    # else:
+    #     print("Найдите и запустите скрипт bondsRatingS")
+    #     bondsRatingS = pandas.DataFrame()
+    # # display('bondS:', bondS) # для отладки
 
 # 1.3 Фильтры по датам
     for column in ['MATDATE', 'NEXTCOUPON']:
@@ -172,7 +176,7 @@ def bondsFeaturesProcessor(
     boardS, columnsDescriptionS, exchangesRaw = getMoExData.getMoExData(market='forts', returnDfs=True)
     exchangesRaw = exchangesRaw[['SHORTNAME', 'LAST', 'SETTLEPRICE']]
     exchangesRaw.columns = ['Unnamed: 0', 'Цена послед.', 'Цена закр.']
-    # display(futureS) # для отладки
+    display(exchangesRaw) # для отладки
     
     # Из QUIK
     # exchangesRaw = pandas(r'C:\Users\Alexey\Dropbox\QUIK_УралСиб_Driver\Текущие_торги.xlsx', usecols='A, D, F')
@@ -192,30 +196,29 @@ def bondsFeaturesProcessor(
         exchangesAdditional['Валюта'] = currency
         exchangeS = pandas.concat([exchangeS, exchangesAdditional])
 
-    if 'Цена послед.' in bondS.columns: # если поданы на вход облигации из портфеля (уже купленные)
-        for column in ['Цена послед.', 'Цена закр.']:
-            exchangeS[column] = exchangeS[column].astype(float)
+    for column in ['Цена послед.', 'Цена закр.']:
+        exchangeS[column] = exchangeS[column].astype(float)
 
-        display('exchangeS:', exchangeS[['Цена послед.', 'Цена закр.', 'Валюта']]) # для отладки
+    display('exchangeS:', exchangeS[['Цена послед.', 'Цена закр.', 'Валюта']]) # для отладки
 
-        exchangeS.loc[exchangeS['Цена послед.'] == 0, 'Цена послед.'] = exchangeS.loc[exchangeS['Цена послед.'] == 0, 'Цена закр.'] # на случай нулей в столбце 'Цена послед.'
-        exchangeS = exchangeS.drop(['Unnamed: 0', 'Цена закр.'], axis=1)
+    exchangeS.loc[exchangeS['Цена послед.'] == 0, 'Цена послед.'] = exchangeS.loc[exchangeS['Цена послед.'] == 0, 'Цена закр.'] # на случай нулей в столбце 'Цена послед.'
+    exchangeS = exchangeS.drop(['Unnamed: 0', 'Цена закр.'], axis=1)
 
-        # Поскольку исходно CHF в паре с USD
-        if (exchangeS['Валюта'] == 'CHF').sum() > 0:
-            exchangeS.loc[exchangeS['Валюта'] == 'CHF', 'Цена послед.'] =\
-                exchangeS.loc[exchangeS['Валюта'] == 'USD', 'Цена послед.'][exchangeS[exchangeS['Валюта'] == 'USD'].index[0]]\
-                / exchangeS.loc[exchangeS['Валюта'] == 'CHF', 'Цена послед.'][exchangeS[exchangeS['Валюта'] == 'CHF'].index[0]]
+    # Поскольку исходно CHF в паре с USD
+    if (exchangeS['Валюта'] == 'CHF').sum() > 0:
+        exchangeS.loc[exchangeS['Валюта'] == 'CHF', 'Цена послед.'] =\
+            exchangeS.loc[exchangeS['Валюта'] == 'USD', 'Цена послед.'][exchangeS[exchangeS['Валюта'] == 'USD'].index[0]]\
+            / exchangeS.loc[exchangeS['Валюта'] == 'CHF', 'Цена послед.'][exchangeS[exchangeS['Валюта'] == 'CHF'].index[0]]
 
-        exchangeS = exchangeS.sort_values('Валюта').reset_index(drop=True)
-        # display('exchangeS:', exchangeS) # для отладки
+    exchangeS = exchangeS.sort_values('Валюта').reset_index(drop=True)
+    # display('exchangeS:', exchangeS) # для отладки
 
-        for currency in currencieS:
-            currencyExchangeValue = exchangeS.loc[exchangeS['Валюта'] == currency, 'Цена послед.'][exchangeS[exchangeS['Валюта'] == currency].index[0]]
-            # print('currencyExchangeValue:', currencyExchangeValue) # для отладки        
-            # print('type(currencyExchangeValue):', type(currencyExchangeValue)) # для отладки        
-            bondS.loc[bondS['FACEUNIT'] == currency, 'FACEVALUE'] *= currencyExchangeValue
-            bondS.loc[bondS['CURRENCYID'] == currency, 'ACCRUEDINT'] *= currencyExchangeValue # валюта расчётов
+    for currency in currencieS:
+        currencyExchangeValue = exchangeS.loc[exchangeS['Валюта'] == currency, 'Цена послед.'][exchangeS[exchangeS['Валюта'] == currency].index[0]]
+        # print('currencyExchangeValue:', currencyExchangeValue) # для отладки        
+        # print('type(currencyExchangeValue):', type(currencyExchangeValue)) # для отладки        
+        bondS.loc[bondS['FACEUNIT'] == currency, 'FACEVALUE'] *= currencyExchangeValue
+        bondS.loc[bondS['CURRENCYID'] == currency, 'ACCRUEDINT'] *= currencyExchangeValue # валюта расчётов
 
     # display(bondS) # для отладки
 
