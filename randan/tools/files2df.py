@@ -2,6 +2,7 @@
 
 '''
 A module for formatting to a dataframe files of the formats: CSV, Excel and JSON. It facilitates working with data from social media
+Авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
 '''
 
 # sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
