@@ -73,7 +73,7 @@ def bondsFeaturesProcessor(
 
 # 1.2 Рейтинг и другие важные характеристики из bondsRatingS
     fileUptodateName_0 = files2df.getFileUptodateName('_bondsRatingS', None, path + 'Замеры рейтингов')
-    print('fileUptodateName_0:', fileUptodateName_0) # для отладки
+    # print('fileUptodateName_0:', fileUptodateName_0) # для отладки
     fileUptodateName_1 = files2df.getFileUptodateName('_bondsRatingS', [fileUptodateName_0], path + 'Замеры рейтингов')
 
     # if os.path.exists(path + 'Замеры рейтингов'):
