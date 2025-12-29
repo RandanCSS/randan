@@ -221,6 +221,6 @@ def ratingMoEx(bondS_in):
             bondS.loc[bondS['Эмитент'] == issuer, 'Rating D'] = oneBondRating['Rating D'].mean()
             print("="*60 + "\n")
     
-    print('Остались ли облигации без рейтинга?')
+    print('На сайте moex.com могут оказаться рейтинги не для всех облигаций, поэтому следует проверить визуально:')
     display(bondS[bondS['Rating D'].isna()])
     return bondS
