@@ -47,8 +47,8 @@ def getFileUptodateName(fileNameMask, fileS_toDrop, path):
             fileNameS_inDirectory = [fileName for fileName in fileNameS_inDirectory if fileName not in fileS_toDrop]
         fileNameS_inDirectory.sort(reverse=True)        
         for fileName in fileNameS_inDirectory:
-            if 'fileNameMask' in fileName:
-                print("Нашёл файл с названием:", fileName) # для отладки
+            if fileNameMask in fileName:
+                print("Найден файл с названием:", fileName) # для отладки
                 return fileName
                 break
         # fileUptodate = pandas.read_excel('Замеры рейтингов' + slash + fileName)
