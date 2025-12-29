@@ -104,17 +104,21 @@ def bondsFeaturesProcessor(
     # display('bondS:', bondS) # для отладки
 
 # 1.3 Фильтры по датам
-    bondS.loc[bondS['NEXTCOUPON'] == '0000-00-00', 'NEXTCOUPON'] =\
-        bondS.loc[bondS['NEXTCOUPON'] == '0000-00-00', 'SETTLEDATE'] # иначе к NEXTCOUPON не применяется .astype('datetime64[ns]')
+    for column in ['MATDATE', 'NEXTCOUPON']:
+        bondS = bondS[bondS[column].notna()]
+        bondS.loc[bondS[column] == '0000-00-00', column] =\
+            bondS.loc[bondS[column] == '0000-00-00', 'SETTLEDATE'] # иначе к столбцу не применяется .astype('datetime64[ns]')
 
     # bondS = bondS[bondS['MATDATE'] != '0000-00-00'] # исключаются "вечные" облигации; обычно они субординорованные
     # bondS = bondS[bondS['SETTLEDATE'] != '0000-00-00']
     # display(bondS) # для отладки
 
     # Сколько дней до купона?
-    # bondS = bondS[bondS['NEXTCOUPON'] != bondS['SETTLEDATE']] # исключить облигации, по которым купон уже на след.день
-    # display(bondS[['NEXTCOUPON', 'SETTLEDATE']].head(50)) # для отладки
-    # display(bondS[['NEXTCOUPON', 'SETTLEDATE']].tail(50)) # для отладки
+    bondS = bondS[bondS['MATDATE'] != bondS['SETTLEDATE']] # исключить облигации, по которым погашение уже на след.день
+    bondS = bondS[bondS['NEXTCOUPON'] != bondS['SETTLEDATE']] # исключить облигации, по которым купон уже на след.день
+    # display(bondS['MATDATE'].sort_values()) # для отладки
+    # display(bondS[['MATDATE', 'NEXTCOUPON', 'SETTLEDATE']].head(50)) # для отладки
+    # display(bondS[['MATDATE', 'NEXTCOUPON', 'SETTLEDATE']].tail(50)) # для отладки
     bondS['До купона'] = bondS['NEXTCOUPON'].astype('datetime64[ns]') - bondS['SETTLEDATE'].astype('datetime64[ns]')
     bondS['До купона'] = bondS['До купона'].astype(str)
     bondS['До купона'] = bondS['До купона'].str.split(' ').str[0]
@@ -127,8 +131,8 @@ def bondsFeaturesProcessor(
     # display(bondS) # для отладки
 
     # Сколько дней до оферты
-    # Вычесть из даты оферты след.день 
-    bondS_offer['До возможности погасить'] = (bondS_offer['BUYBACKDATE'] + '--' + bondS_offer['SETTLEDATE']).apply(lambda text:\
+    # Вычесть из даты оферты след.день
+    bondS_offer['До возможности погасить'] = (bondS_offer['BUYBACKDATE'].astype(str) + '--' + bondS_offer['SETTLEDATE'].astype(str)).apply(lambda text:\
         str(date(int(text.split('--')[0].split('-')[0]), int(text.split('--')[0].split('-')[1]), int(text.split('--')[0].split('-')[2]))\
             - date(int(text.split('--')[1].split('-')[0]), int(text.split('--')[1].split('-')[1]), int(text.split('--')[1].split('-')[2]))
             ).split(' ')[0]
@@ -144,8 +148,8 @@ def bondsFeaturesProcessor(
     # display(bondS_other) # для отладки
     
     # До погашения
-    # Вычесть из даты погашения след.день 
-    bondS_other['До возможности погасить'] = (bondS_other['MATDATE'] + '--' + bondS_other['SETTLEDATE']).apply(lambda text:\
+    # Вычесть из даты погашения след.день
+    bondS_other['До возможности погасить'] = (bondS_other['MATDATE'].astype(str) + '--' + bondS_other['SETTLEDATE'].astype(str)).apply(lambda text:\
         str(date(int(text.split('--')[0].split('-')[0]), int(text.split('--')[0].split('-')[1]), int(text.split('--')[0].split('-')[2]))\
             - date(int(text.split('--')[1].split('-')[0]), int(text.split('--')[1].split('-')[1]), int(text.split('--')[1].split('-')[2]))
             ).split(' ')[0]
@@ -171,7 +175,7 @@ def bondsFeaturesProcessor(
     # display(futureS) # для отладки
     
     # Из QUIK
-    # exchangesRaw = pandas.read_excel(r'C:\Users\Alexey\Dropbox\QUIK_УралСиб_Driver\Текущие_торги.xlsx', usecols='A, D, F')
+    # exchangesRaw = pandas(r'C:\Users\Alexey\Dropbox\QUIK_УралСиб_Driver\Текущие_торги.xlsx', usecols='A, D, F')
     # display(exchangesRaw) # для отладки
     
     currencieS = list(bondS['FACEUNIT'].unique()) # валюта номинала
@@ -188,29 +192,31 @@ def bondsFeaturesProcessor(
         exchangesAdditional['Валюта'] = currency
         exchangeS = pandas.concat([exchangeS, exchangesAdditional])
 
-    for column in ['Цена послед.', 'Цена закр.']:
-        exchangeS[column] = exchangeS[column].astype(float)
-        
-    display('exchangeS:', exchangeS[['Цена послед.', 'Цена закр.', 'Валюта']]) # для отладки
-        
-    exchangeS.loc[exchangeS['Цена послед.'] == 0, 'Цена послед.'] = exchangeS.loc[exchangeS['Цена послед.'] == 0, 'Цена закр.'] # на случай нулей в столбце 'Цена послед.'
-    exchangeS = exchangeS.drop(['Unnamed: 0', 'Цена закр.'], axis=1)
-    
-    # Поскольку исходно CHF в паре с USD
-    if (exchangeS['Валюта'] == 'CHF').sum() > 0:
-        exchangeS.loc[exchangeS['Валюта'] == 'CHF', 'Цена послед.'] =\
-            exchangeS.loc[exchangeS['Валюта'] == 'USD', 'Цена послед.'][exchangeS[exchangeS['Валюта'] == 'USD'].index[0]]\
-            / exchangeS.loc[exchangeS['Валюта'] == 'CHF', 'Цена послед.'][exchangeS[exchangeS['Валюта'] == 'CHF'].index[0]]
-    
-    exchangeS = exchangeS.sort_values('Валюта').reset_index(drop=True)
-    # display('exchangeS:', exchangeS) # для отладки
-    
-    for currency in currencieS:
-        currencyExchangeValue = exchangeS.loc[exchangeS['Валюта'] == currency, 'Цена послед.'][exchangeS[exchangeS['Валюта'] == currency].index[0]]
-        # print('currencyExchangeValue:', currencyExchangeValue) # для отладки        
-        # print('type(currencyExchangeValue):', type(currencyExchangeValue)) # для отладки        
-        bondS.loc[bondS['FACEUNIT'] == currency, 'FACEVALUE'] *= currencyExchangeValue
-        bondS.loc[bondS['CURRENCYID'] == currency, 'ACCRUEDINT'] *= currencyExchangeValue # валюта расчётов
+    if 'Цена послед.' in bondS.columns: # если поданы на вход облигации из портфеля (уже купленные)
+        for column in ['Цена послед.', 'Цена закр.']:
+            exchangeS[column] = exchangeS[column].astype(float)
+
+        display('exchangeS:', exchangeS[['Цена послед.', 'Цена закр.', 'Валюта']]) # для отладки
+
+        exchangeS.loc[exchangeS['Цена послед.'] == 0, 'Цена послед.'] = exchangeS.loc[exchangeS['Цена послед.'] == 0, 'Цена закр.'] # на случай нулей в столбце 'Цена послед.'
+        exchangeS = exchangeS.drop(['Unnamed: 0', 'Цена закр.'], axis=1)
+
+        # Поскольку исходно CHF в паре с USD
+        if (exchangeS['Валюта'] == 'CHF').sum() > 0:
+            exchangeS.loc[exchangeS['Валюта'] == 'CHF', 'Цена послед.'] =\
+                exchangeS.loc[exchangeS['Валюта'] == 'USD', 'Цена послед.'][exchangeS[exchangeS['Валюта'] == 'USD'].index[0]]\
+                / exchangeS.loc[exchangeS['Валюта'] == 'CHF', 'Цена послед.'][exchangeS[exchangeS['Валюта'] == 'CHF'].index[0]]
+
+        exchangeS = exchangeS.sort_values('Валюта').reset_index(drop=True)
+        # display('exchangeS:', exchangeS) # для отладки
+
+        for currency in currencieS:
+            currencyExchangeValue = exchangeS.loc[exchangeS['Валюта'] == currency, 'Цена послед.'][exchangeS[exchangeS['Валюта'] == currency].index[0]]
+            # print('currencyExchangeValue:', currencyExchangeValue) # для отладки        
+            # print('type(currencyExchangeValue):', type(currencyExchangeValue)) # для отладки        
+            bondS.loc[bondS['FACEUNIT'] == currency, 'FACEVALUE'] *= currencyExchangeValue
+            bondS.loc[bondS['CURRENCYID'] == currency, 'ACCRUEDINT'] *= currencyExchangeValue # валюта расчётов
+
     # display(bondS) # для отладки
 
 # 1.5 Расчёт доходности в день до возможности погасить 
@@ -240,7 +246,8 @@ def bondsFeaturesProcessor(
     bondS['% доходности в день к погашению'] = bondS['% доходности в день к погашению'].astype(float).round(4)
 
     # !!! Стоимость!!!
-    bondS['Стоимость'] = bondS['Лотов'] * bondS['PRICE'] * 10 * bondS['FACEVALUE'] / 1000
+    if 'Лотов' in bondS.columns: bondS['Стоимость'] = bondS['Лотов'] * bondS['PRICE'] * 10 * bondS['FACEVALUE'] / 1000
+        # если поданы на вход облигации из портфеля (уже купленные)
     # display(bondS) # для отладки
 
 # 1.6 Интегральная переменная Специфика
