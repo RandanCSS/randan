@@ -33,6 +33,25 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
 # 1. Авторские функции
+    # импорта актуального словаря эмитентов (в т.ч.) с рейтингами
+def get_issuerS_withActualRating(fileNameMask, path):
+    if os.path.exists(path + 'Замеры рейтингов'):
+        # print("Директория 'Замеры рейтингов' существует") # для отладки
+        fileNameS_inDirectory = os.listdir('Замеры рейтингов')
+        fileNameS_inDirectory.sort(reverse=True)        
+        for fileName in fileNameS_inDirectory:
+            if 'fileNameMask' in fileName:
+                # print(f"Работаю с файлом '{fileName}'") # для отладки
+                break
+        print(f"\nРаботаю с файлом fileNameMask:'{fileName}'")
+        issuerS_withActualRating = pandas.read_excel('Замеры рейтингов' + slash + fileName)
+        # display('issuerS_withActualRating:', issuerS_withActualRating) # для отладки
+    else:
+        print("Найдите и запустите скрипт bondsRatingS")
+        issuerS_withActualRating = pandas.DataFrame()
+
+    return issuerS_withActualRating
+
     # компановки информации об эмитентах торгуемых на МосБирже облигаций в датафрейм (словарь)
 def issuersComposer(bondS):
     issuerS = bondS[['Эмитент']].sort_values('Эмитент').drop_duplicates().reset_index(drop=True) # заготовка для датафрейма с актуальными эмитентами
