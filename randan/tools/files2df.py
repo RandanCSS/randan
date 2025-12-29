@@ -38,11 +38,13 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 
 # Авторские функции..
     # импорта наиболее свежего файла (в т.ч. словаря эмитентов, в т.ч. с рейтингами)
-def getFileUptodateName(fileNameMask, path):
+def getFileUptodateName(fileNameMask, fileS_toDrop, path):
     # print("Работаю с fileNameMask:", fileNameMask) # для отладки
     if os.path.exists(path):
         # print(f"Путь '{path}' существует") # для отладки
         fileNameS_inDirectory = os.listdir(path)
+        if fileS_toDrop:
+            fileNameS_inDirectory = [fileName for fileName in fileNameS_inDirectory if fileName not in fileS_toDrop]
         fileNameS_inDirectory.sort(reverse=True)        
         for fileName in fileNameS_inDirectory:
             if 'fileNameMask' in fileName:
