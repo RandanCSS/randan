@@ -13,7 +13,7 @@ attempt = 0
 while True:
     try:
         # from google_drive_downloader import GoogleDriveDownloader
-        import os, pandas
+        import os, pandas, warnings
         break
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
@@ -34,6 +34,28 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 '''
                   )
             break
+
+# Авторские функции..
+    # импорта наиболее свежего файла (в т.ч. словаря эмитентов, в т.ч. с рейтингами)
+def getFileUptodateName(fileNameMask, path):
+    # print("Работаю с fileNameMask:", fileNameMask) # для отладки
+    if os.path.exists(path):
+        # print(f"Путь '{path}' существует") # для отладки
+        fileNameS_inDirectory = os.listdir(path)
+        fileNameS_inDirectory.sort(reverse=True)        
+        for fileName in fileNameS_inDirectory:
+            if 'fileNameMask' in fileName:
+                print("Нашёл файл с названием:", fileName) # для отладки
+                return fileName
+                break
+        # fileUptodate = pandas.read_excel('Замеры рейтингов' + slash + fileName)
+        # # display('fileUptodate:', fileUptodate) # для отладки
+    else:
+        print(f"Путь '{path}' НЕ существует, поэтому исполнение скрипта приостанавливается")
+        print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть')
+        input()
+        warnings.filterwarnings("ignore")
+        sys.exit()
 
 def getFolder():
     folder = input('--- С какой директорией хотите работать? Укажите полный путь к ней, включая её саму:')
