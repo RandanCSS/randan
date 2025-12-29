@@ -10,7 +10,9 @@ while True:
     try:
         from datetime import date
         from randan.trading import getMoExData # авторский модуль для выгрузки характеристик торгуемых на МосБирже облигаций
-        from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
+        from randan.tools import coLabAdaptor, files2df # авторские модули для
+            # (а) адаптации текущего скрипта к файловой системе CoLab,
+            # (б) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
         import os, pandas, warnings
         break
     except ModuleNotFoundError:
@@ -70,8 +72,9 @@ def bondsFeaturesProcessor(
     # display(bondS) # для отладки
 
 # 1.2 Рейтинг и другие важные характеристики из bondsRatingS
-    FileUptodateName_0 = files2df.getFileUptodateName('_bondsRatingS', None, path + 'Замеры рейтингов')
-    FileUptodateName_1 = files2df.getFileUptodateName('_bondsRatingS', [FileUptodateName_0], path + 'Замеры рейтингов')
+    fileUptodateName_0 = files2df.getFileUptodateName('_bondsRatingS', None, path + 'Замеры рейтингов')
+    print('fileUptodateName_0:', fileUptodateName_0) # для отладки
+    fileUptodateName_1 = files2df.getFileUptodateName('_bondsRatingS', [fileUptodateName_0], path + 'Замеры рейтингов')
 
     # if os.path.exists(path + 'Замеры рейтингов'):
     #     # print("Директория 'Замеры рейтингов' существует") # для отладки
@@ -85,9 +88,9 @@ def bondsFeaturesProcessor(
     #             if len(fileNameS_forUse) == 2: break
     #     print(f"\nРаботаю с файлом bondsRatingS_previous:'{fileName}'")
 
-    bondsRatingS = pandas.read_excel(path + 'Замеры рейтингов' + slash + FileUptodateName_0)
+    bondsRatingS = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_0)
     # display('bondsRatingS:', bondsRatingS) # для отладки
-    bondsRatingS_previous = pandas.read_excel(path + 'Замеры рейтингов' + slash + FileUptodateName_1)
+    bondsRatingS_previous = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_1)
     # display('bondsRatingS_previous:', bondsRatingS_previous) # для отладки
     # display('bondS:', bondS) # для отладки
     bondsRatingS = bondsRatingS[bondsRatingS['ISIN'].isin(bondS['ISIN'])]
@@ -266,4 +269,4 @@ def bondsFeaturesProcessor(
         bondS['Специфика'] += ' ' + bondS[column].astype(str).str[:1]
     display(bondS['Специфика'].value_counts().sort_index())
 
-    if returnDfs: return bondS
+    if returnDfs: return bondsFeatureS, bondsRatingS
