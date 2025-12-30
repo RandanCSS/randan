@@ -116,9 +116,9 @@ def ratingMoEx(bondS_in):
             try:
                 # Стратегия 1.1: Найти таблицу по её характерному классу
                 data_table = WebDriverWait(driver, 5).until(
-                    EC.presence_of_element_located((By.XPATH, 
-                        f"//h2[contains(., '{header_text[:15]}')]/following::table[contains(@class, 'emitent-credit-rating-table')]"))
-                )
+                    expected_conditions.presence_of_element_located((By.XPATH, 
+                                                                     f"//h2[contains(., '{header_text[:15]}')]/following::table[contains(@class, 'emitent-credit-rating-table')]"))
+                                                            )
                 print("  Стратегия 1.1: Таблица найдена по классу 'emitent-credit-rating-table'")
             except TimeoutException:
                 try:
