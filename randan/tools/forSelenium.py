@@ -62,7 +62,9 @@ def pathRelative(driver, pathAnchor, pathTarget, pause, textAnchor, textTarget):
 
     if len(re.findall(textAnchor, driver.find_element("tag name", "body").text, re.IGNORECASE)) == 1: # проверить уникальность
         elementAnchor = WebDriverWait(driver, pause).until(expected_conditions.presence_of_element_located((By.XPATH, pathAnchor))) # найти якорь
+        # print('elementAnchor:', elementAnchor) # для отладки
         elementTarget = elementAnchor if pathAnchor == pathTarget else elementAnchor.find_element(By.XPATH, pathTarget) # от якоря к кнопке
+        # print('elementTarget:', elementTarget) # для отладки
 
     return elementTarget
 
