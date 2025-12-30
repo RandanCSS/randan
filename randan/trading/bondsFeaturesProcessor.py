@@ -96,9 +96,9 @@ def bondsFeaturesProcessor(
     # display('bondsRatingS:', bondsRatingS) # для отладки
     bondsRatingS = bondsRatingS.merge(bondsRatingS_previous[['ISIN', 'Rating D']], on='ISIN', suffixes=("", " Previous"), how="left")
     # display('bondsRatingS:', bondsRatingS) # для отладки
-    # bondsRatingS.loc[bondsRatingS['Rating D'] != bondsRatingS['Rating D Previous'], 'С прошлого замера'] = 'Рейтинг изменился'
-    # print('\n Изменение рейтинга с прошлого замера:')
-    # display(bondsRatingS[bondsRatingS['С прошлого замера'] == 'Рейтинг изменился'][['ISIN', 'Rating D', 'Rating D Previous']])
+    bondsRatingS.loc[bondsRatingS['Rating D'] != bondsRatingS['Rating D Previous'], 'С прошлого замера'] = 'Рейтинг изменился'
+    print('\n Изменение рейтинга с прошлого замера:')
+    display(bondsRatingS[bondsRatingS['С прошлого замера'] == 'Рейтинг изменился'][['ISIN', 'Rating D', 'Rating D Previous']])
 
     # bondS = bondS.merge(bondsRatingS, on='ISIN', suffixes=("_drop", ""), how="left")
     # bondS = bondS[[column for column in bondS.columns if not column.endswith("_drop")]]
