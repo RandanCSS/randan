@@ -56,6 +56,7 @@ def bondsFeaturesProcessor(
         
 # 1.0 Настройки
     bondS = bondsIn.copy()
+    bondS = bondS.drop_duplicates('ISIN', keep='last', ignore_index=True)
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     if path == None: path = ''
     else: path += slash
@@ -89,8 +90,10 @@ def bondsFeaturesProcessor(
     #     print(f"\nРаботаю с файлом bondsRatingS_previous:'{fileName}'")
 
     bondsRatingS = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_0)
+    bondsRatingS = bondsRatingS.drop_duplicates('ISIN', keep='last', ignore_index=True)
     # display('bondsRatingS:', bondsRatingS) # для отладки
     bondsRatingS_previous = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_1)
+    bondsRatingS_previous = bondsRatingS_previous.drop_duplicates('ISIN', keep='last', ignore_index=True)
     # display('bondsRatingS_previous:', bondsRatingS_previous) # для отладки
     # bondsRatingS = bondsRatingS[bondsRatingS['ISIN'].isin(bondS['ISIN'])]
     # display('bondsRatingS:', bondsRatingS) # для отладки
