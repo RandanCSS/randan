@@ -2,8 +2,8 @@
 # coding: utf-8
 
 '''
-A proprietary module for formatting to a dataframe files of the formats: CSV, Excel and JSON. It facilitates working with data from social media
-Авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
+A proprietary module for facilitating the use of selenium
+Авторский модуль для упрощения некоторых оперций в selenium
 '''
 # import sys
 # sys.path.append(r"C:\Users\Alexey\Dropbox\Мои\RAnDan\myModules")
@@ -51,6 +51,17 @@ def blockSearch(attemptsMax, driver, text, xPathS):
             trCounter += 1
             if trCounter > attemptsMax: break # против бесконечного цикла при пустом блоке страницы
     return block if text in block else None
+    
+def pathRelative(driver, pathAnchor, pathTarget, pause, textAnchor, textTarget):
+    if (pathAnchor == None) & (textAnchor == None):
+        pathAnchor = pathTarget
+        textAnchor = textTarget
+
+    if len(re.findall(textAnchor, driver.find_element("tag name", "body").text, re.IGNORECASE)) == 1: # проверить уникальность
+        elementAnchor = WebDriverWait(driver, pause).until(expected_conditions.presence_of_element_located((By.XPATH, pathAnchor))) # найти якорь
+        elementTarget = elementAnchor if pathAnchor == pathTarget else elementAnchor.find_element(By.XPATH, pathTarget) # от якоря к кнопке
+
+    return elementTarget
 
 def tryerSleeper(attemptsMax, boundarieS, driver, pause, xPathS):
     goS = True
