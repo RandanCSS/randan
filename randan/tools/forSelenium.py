@@ -16,8 +16,11 @@ from subprocess import check_call
 attempt = 0
 while True:
     try:
+        from selenium import webdriver
         from selenium.webdriver.common.by import By # для поиска элементов HTML-кода
-        import selenium.common.exceptions, time
+        from selenium.webdriver.support import expected_conditions
+        from selenium.webdriver.support.ui import WebDriverWait
+        import re, selenium.common.exceptions, time
         break
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
