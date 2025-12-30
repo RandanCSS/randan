@@ -2,7 +2,8 @@
 # coding: utf-8
 
 '''
-A module for facilitating the use of selenium
+A proprietary module for formatting to a dataframe files of the formats: CSV, Excel and JSON. It facilitates working with data from social media
+Авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
 '''
 # import sys
 # sys.path.append(r"C:\Users\Alexey\Dropbox\Мои\RAnDan\myModules")
