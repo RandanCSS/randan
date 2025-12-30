@@ -92,19 +92,16 @@ def bondsFeaturesProcessor(
     # display('bondsRatingS:', bondsRatingS) # для отладки
     bondsRatingS_previous = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_1)
     # display('bondsRatingS_previous:', bondsRatingS_previous) # для отладки
-    # display('bondS:', bondS) # для отладки
-    bondsRatingS = bondsRatingS[bondsRatingS['ISIN'].isin(bondS['ISIN'])]
+    # bondsRatingS = bondsRatingS[bondsRatingS['ISIN'].isin(bondS['ISIN'])]
     # display('bondsRatingS:', bondsRatingS) # для отладки
     bondsRatingS = bondsRatingS.merge(bondsRatingS_previous[['ISIN', 'Rating D']], on='ISIN', suffixes=("", " Previous"), how="left")
     # display('bondsRatingS:', bondsRatingS) # для отладки
-    bondsRatingS.loc[bondsRatingS['Rating D'] != bondsRatingS['Rating D Previous'], 'С прошлого замера'] = 'Рейтинг изменился'
-    print('\n Изменение рейтинга с прошлого замера:')
-    display(bondsRatingS[bondsRatingS['С прошлого замера'] == 'Рейтинг изменился'][['ISIN', 'Rating D', 'Rating D Previous']])
+    # bondsRatingS.loc[bondsRatingS['Rating D'] != bondsRatingS['Rating D Previous'], 'С прошлого замера'] = 'Рейтинг изменился'
+    # print('\n Изменение рейтинга с прошлого замера:')
+    # display(bondsRatingS[bondsRatingS['С прошлого замера'] == 'Рейтинг изменился'][['ISIN', 'Rating D', 'Rating D Previous']])
 
-    # display('bondS:', bondS) # для отладки
-    # display('bondsRatingS:', bondsRatingS) # для отладки
-    bondS = bondS.merge(bondsRatingS, on='ISIN', suffixes=("_drop", ""), how="left")
-    bondS = bondS[[column for column in bondS.columns if not column.endswith("_drop")]]
+    # bondS = bondS.merge(bondsRatingS, on='ISIN', suffixes=("_drop", ""), how="left")
+    # bondS = bondS[[column for column in bondS.columns if not column.endswith("_drop")]]
     # else:
     #     print("Найдите и запустите скрипт bondsRatingS")
     #     bondsRatingS = pandas.DataFrame()
