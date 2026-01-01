@@ -50,7 +50,7 @@ def ratingDigitizer(letters, raitingSource):
         letters = letters.replace(' ГМ', '').replace(' Неквалы', '').replace(' Остальные', '')
         if letters == 'ГМ':
             return 18
-        letters = re.findall(r'[ABАВ]+.?', letters)[0]
+        letters = re.findall(r'[ABАВ]+', letters)[0]
         # print('letters :', letters) # для отладки
         subtracted = 1 if ('-' in letters) | ('+' in letters) else 0
         # print('subtracted :', subtracted) # для отладки
