@@ -100,8 +100,19 @@ def bondsFeaturesProcessor(
     bondsRatingS = bondsRatingS.merge(bondsRatingS_previous[['ISIN', 'Rating D']], on='ISIN', suffixes=("", " Previous"), how="left")
     # display('bondsRatingS:', bondsRatingS) # для отладки
     bondsRatingS.loc[bondsRatingS['Rating D'] != bondsRatingS['Rating D Previous'], 'С прошлого замера'] = 'Рейтинг изменился'
-    print('\n Изменение рейтинга с прошлого замера:')
-    display(bondsRatingS[bondsRatingS['С прошлого замера'] == 'Рейтинг изменился'][['ISIN', 'Rating D', 'Rating D Previous']])
+
+    print('\n Изменения рейтинга с прошлого замера:')
+    print('  Повышение')
+    bondsRatingS_up = bondsRatingS[(bondsRatingS['Rating D'].notna()) & (bondsRatingS['Rating D Previous'].notna()) &\
+                                   (bondsRatingS['Rating D'] > bondsRatingS['Rating D Previous'])
+                                   ][['SECNAME', 'ISIN', 'Rating D Previous', 'Rating D', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL']]
+    display(bondsRatingS_up)
+    print('  Понижение')
+    bondsRatingS_down = bondsRatingS[(bondsRatingS['Rating D'].notna()) & (bondsRatingS['Rating D Previous'].notna()) &\
+                                     (bondsRatingS['Rating D'] < bondsRatingS['Rating D Previous'])
+                                     ][['SECNAME', 'ISIN', 'Rating D Previous', 'Rating D', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL']]
+    display(bondsRatingS_down)
+    bondsRatingS_change = pandas.concat([bondsRatingS_up, bondsRatingS_down])
 
     # bondS = bondS.merge(bondsRatingS, on='ISIN', suffixes=("_drop", ""), how="left")
     # bondS = bondS[[column for column in bondS.columns if not column.endswith("_drop")]]
@@ -269,4 +280,4 @@ def bondsFeaturesProcessor(
         bondS['Специфика'] += ' ' + bondS[column].astype(str).str[:1]
     display(bondS['Специфика'].value_counts().sort_index())
 
-    if returnDfs: return bondS, bondsRatingS
+    if returnDfs: return bondS, bondsRatingS, bondsRatingS_change
