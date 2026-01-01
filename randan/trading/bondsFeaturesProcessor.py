@@ -190,7 +190,7 @@ def bondsFeaturesProcessor(
     boardS, columnsDescriptionS, exchangesRaw = getMoExData.getMoExData(market='forts', returnDfs=True)
     exchangesRaw = exchangesRaw[['SHORTNAME', 'LAST', 'SETTLEPRICE']]
     exchangesRaw.columns = ['Unnamed: 0', 'Цена послед.', 'Цена закр.']
-    display(exchangesRaw) # для отладки
+    # display(exchangesRaw) # для отладки
     
     # Из QUIK
     # exchangesRaw = pandas(r'C:\Users\Alexey\Dropbox\QUIK_УралСиб_Driver\Текущие_торги.xlsx', usecols='A, D, F')
