@@ -65,8 +65,7 @@ def pathRelative(driver, pathAnchor, pathTarget, pause, textAnchor, textTarget):
         # print('elementAnchor:', elementAnchor) # для отладки
         elementTarget = elementAnchor if pathAnchor == pathTarget else elementAnchor.find_element(By.XPATH, pathTarget) # от якоря к кнопке
         # print('elementTarget:', elementTarget) # для отладки
-
-    return elementTarget
+        return elementTarget
 
 def tryerSleeper(attemptsMax, boundarieS, driver, pause, xPathS):
     goS = True
