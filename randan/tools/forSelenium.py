@@ -56,9 +56,13 @@ def blockSearch(attemptsMax, driver, text, xPathS):
     return block if text in block else None
     
 def pathRelative(driver, pathAnchor, pathTarget, pause, textAnchor, textTarget):
-    if (pathAnchor == None) & (textAnchor == None):
-        pathAnchor = pathTarget
-        textAnchor = textTarget
+    if pathAnchor == None: pathAnchor = pathTarget
+    if textAnchor == None: textAnchor = textTarget
+
+    # print('pathAnchor:', pathAnchor) # для отладки
+    # print('pathTarget:', pathTarget) # для отладки
+    # print('textAnchor:', textAnchor) # для отладки
+    # print('textTarget:', textTarget) # для отладки
 
     if len(re.findall(textAnchor, driver.find_element("tag name", "body").text, re.IGNORECASE)) == 1: # проверить уникальность
         elementAnchor = WebDriverWait(driver, pause).until(expected_conditions.presence_of_element_located((By.XPATH, pathAnchor))) # найти якорь
