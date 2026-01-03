@@ -48,7 +48,6 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
 def getRatingFromMoEx(bondS_in, columnWithRating, driver, isin, issuer, textTarget):
     bondS = bondS_in.copy()
 
-    driver = undetected_chromedriver.Chrome()
     driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
 
     # Ждём появления заголовка (любого из двух типов)
@@ -211,7 +210,9 @@ def ratingMoExForBondsWithoutRating(bondS_in):
     bondS = bondS_in.copy()
     bondS_withoutRating = bondS[bondS['Rating D'].isna()]
     # display(bondS_withoutRating) # для отладки
-    
+
+    driver = undetected_chromedriver.Chrome()
+
     issuerS_withoutRating = bondS_withoutRating.drop_duplicates('Эмитент')['Эмитент'].tolist()
     issuerS_withoutRating.sort()
     # print('issuerS_withoutRating:', issuerS_withoutRating) # для отладки
