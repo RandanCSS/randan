@@ -45,9 +45,11 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
 
 # Авторские функции..
     # импорта рейтинга с сайта moex.com
-def getRatingFromMoEx(bondS_in, columnWithRating, textTarget):
+def getRatingFromMoEx(bondS_in, columnWithRating, isin, textTarget):
     bondS = bondS_in.copy()
+
     driver = undetected_chromedriver.Chrome()
+    driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
 
     # Ждём появления заголовка (любого из двух типов)
     print("  ⏳ Ожидаю загрузки блока с рейтингами...", end='\r')
@@ -218,11 +220,10 @@ def ratingMoExForBondsWithoutRating(bondS_in):
     # for issuer in issuerS_withoutRating[0:2]: # для отладки
         isin = bondS_withoutRating[bondS_withoutRating['Эмитент'] == issuer]['ISIN'].tolist()[-1] # последний попавшийся ISIN итерируемого эмитента
         print('issuer', issuer, '; ISIN', isin)    
-        driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
 
         textTargetDict = {'Кредитный рейтинг эмитента': 'Rating D', 'Кредитный рейтинг выпуска облигаций': 'Bond Rating D'}
         for textTarget in textTargetDict.keys():
-            bondS = getRatingFromMoEx(bondS_in, textTargetDict[textTarget], textTarget)
+            bondS = getRatingFromMoEx(bondS_in, textTargetDict[textTarget], isin, textTarget)
         print("="*60 + "\n")
     
     print('На сайте moex.com могут оказаться рейтинги не для всех облигаций, поэтому следует проверить визуально:')
