@@ -45,7 +45,7 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
 
 # Авторские функции..
     # импорта рейтинга с сайта moex.com
-def getRatingFromMoEx(bondS_in, columnWithRating, isin, textTarget):
+def getRatingFromMoEx(bondS_in, columnWithRating, driver, isin, issuer, textTarget):
     bondS = bondS_in.copy()
 
     driver = undetected_chromedriver.Chrome()
@@ -174,7 +174,7 @@ def getRatingFromMoEx(bondS_in, columnWithRating, isin, textTarget):
         oneBondRating = oneBondRating[oneBondRating['Значение кредитного рейтинга'].str.contains('Отозван', case=False) != True] # не интересует, если рейтинг отозван
         oneBondRating[columnWithRating] = oneBondRating['Значение кредитного рейтинга'].apply(ratingDigitizer, args=('RB',))
         # display(oneBondRating) # для отладки
-        bondS.loc[bondS['Эмитент'] == issuer, columnWithRating] = oneBondRating['Rating D'].mean()
+        bondS.loc[bondS['Эмитент'] == issuer, columnWithRating] = oneBondRating[columnWithRating].mean()
 
     return bondS
 
@@ -224,7 +224,7 @@ def ratingMoExForBondsWithoutRating(bondS_in):
 
         textTargetDict = {'Кредитный рейтинг эмитента': 'Rating D', 'Кредитный рейтинг выпуска облигаций': 'Bond Rating D'}
         for textTarget in textTargetDict.keys():
-            bondS = getRatingFromMoEx(bondS_in, textTargetDict[textTarget], isin, textTarget)
+            bondS = getRatingFromMoEx(bondS_in, textTargetDict[textTarget], driver, isin, issuer, textTarget)
         print("="*60 + "\n")
     
     print('На сайте moex.com могут оказаться рейтинги не для всех облигаций, поэтому следует проверить визуально:')
