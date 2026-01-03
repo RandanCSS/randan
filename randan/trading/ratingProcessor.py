@@ -53,8 +53,8 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, text
     # Ждём появления заголовка (любого из двух типов)
     print("  ⏳ Ожидаю загрузки блока с рейтингами...", end='\r')
     rating_header = WebDriverWait(driver, 10)#.until(
-        expected_conditions.presence_of_element_located((By.XPATH, f"//h2[contains(., '{textTarget}')]"))
-                                                    )
+        # expected_conditions.presence_of_element_located((By.XPATH, f"//h2[contains(., '{textTarget}')]"))
+        #                                             )
 
     # print(f'{textTarget}\nРейтинг не присвоен' in driver.find_element("tag name", "body").text in driver.find_element("tag name", "body").text) # для отладки
     if f'{textTarget}\nРейтинг не присвоен' in driver.find_element("tag name", "body").text in driver.find_element("tag name", "body").text:
