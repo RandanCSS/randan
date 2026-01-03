@@ -52,7 +52,7 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, text
 
     # Ждём появления заголовка (любого из двух типов)
     print("  ⏳ Ожидаю загрузки блока с рейтингами...", end='\r')
-    rating_header = WebDriverWait(driver, 10).until(
+    rating_header = WebDriverWait(driver, 10)#.until(
         expected_conditions.presence_of_element_located((By.XPATH, f"//h2[contains(., '{textTarget}')]"))
                                                     )
 
