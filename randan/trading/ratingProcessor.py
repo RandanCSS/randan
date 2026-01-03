@@ -45,7 +45,7 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
 
 # Авторские функции..
     # импорта рейтинга с сайта moex.com
-def getRatingFromMoEx(bondS_in, columnWithRating, driver, isin, issuer, textTarget):
+def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, textTarget):
     bondS = bondS_in.copy()
 
     driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
@@ -173,8 +173,8 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, isin, issuer, textTarg
         oneBondRating = oneBondRating[oneBondRating['Значение кредитного рейтинга'].str.contains('Отозван', case=False) != True] # не интересует, если рейтинг отозван
         oneBondRating[columnWithRating] = oneBondRating['Значение кредитного рейтинга'].apply(ratingDigitizer, args=('RB',))
         # display(oneBondRating) # для отладки
-        bondS.loc[bondS['Эмитент'] == issuer, columnWithRating] = oneBondRating[columnWithRating].mean()
-
+        if identifier != isin: bondS.loc[bondS['Эмитент'] == identifier, columnWithRating] = oneBondRating[columnWithRating].mean()
+        else: bondS.loc[bondS['ISIN'] == identifier, columnWithRating] = oneBondRating[columnWithRating].mean()
     return bondS
 
     # перевода в число рейтинга с эмитентов торгуемых на МосБирже облигаций
@@ -206,26 +206,32 @@ def ratingDigitizer(letters, raitingSource):
     return (3 * (len(letters) - subtracted) + y) + 9 * x
 
     # обработки эмитентов и их облигаций, оставшихся без рейтинга
-def ratingMoExForBondsWithoutRating(bondS_in):
+def ratingMoExForBondsWithoutRating(bondS_in, byIssuer=True):
     bondS = bondS_in.copy()
     bondS_withoutRating = bondS[bondS['Rating D'].isna()]
     # display(bondS_withoutRating) # для отладки
 
     driver = undetected_chromedriver.Chrome()
 
-    issuerS_withoutRating = bondS_withoutRating.drop_duplicates('Эмитент')['Эмитент'].tolist()
-    issuerS_withoutRating.sort()
-    # print('issuerS_withoutRating:', issuerS_withoutRating) # для отладки
+    if byIssuer: identifierS = bondS_withoutRating.drop_duplicates('Эмитент')['Эмитент'].tolist()
+    else: identifierS = bondS_withoutRating['ISIN'].tolist()
+
+    identifierS.sort()
+    # print('identifierS:', identifierS) # для отладки
     
 # Импорт рейтинга с сайта moex.com    
-    for issuer in issuerS_withoutRating:
-    # for issuer in issuerS_withoutRating[0:2]: # для отладки
-        isin = bondS_withoutRating[bondS_withoutRating['Эмитент'] == issuer]['ISIN'].tolist()[-1] # последний попавшийся ISIN итерируемого эмитента
-        print('issuer', issuer, '; ISIN', isin)    
+    for identifier in identifierS:
+    # for identifier in identifierS[0:2]: # для отладки
+        if byIssuer:
+            isin = bondS_withoutRating[bondS_withoutRating['Эмитент'] == identifier]['ISIN'].tolist()[-1] # последний попавшийся ISIN итерируемого эмитента
+            print('issuer', identifier, '; ISIN', isin)  
+        else:
+            isin = identifier
+            print('ISIN', isin)    
 
         textTargetDict = {'Кредитный рейтинг эмитента': 'Rating D', 'Кредитный рейтинг выпуска облигаций': 'Bond Rating D'}
         for textTarget in textTargetDict.keys():
-            bondS = getRatingFromMoEx(bondS_in, textTargetDict[textTarget], driver, isin, issuer, textTarget)
+            bondS = getRatingFromMoEx(bondS_in, textTargetDict[textTarget], driver, identifier, isin, textTarget)
         print("="*60 + "\n")
     
     print('На сайте moex.com могут оказаться рейтинги не для всех облигаций, поэтому следует проверить визуально:')
