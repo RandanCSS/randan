@@ -50,19 +50,21 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, text
 
     driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
 
-    # Ждём появления заголовка (любого из двух типов)
-    print("  ⏳ Ожидаю загрузки блока с рейтингами...", end='\r')
-    rating_header = WebDriverWait(driver, 10)#.until(
-        # expected_conditions.presence_of_element_located((By.XPATH, f"//h2[contains(., '{textTarget}')]"))
-        #                                             )
+    # # Ждём появления заголовка (любого из двух типов)
+    # print("  ⏳ Ожидаю загрузки блока с рейтингами...", end='\r')
+    # driver.set_page_load_timeout(100) # включить ограниченный таймаут загрузки
+    # rating_header = WebDriverWait(driver, 5)#.until(
+    #     expected_conditions.presence_of_element_located((By.XPATH, f"//h2[contains(., '{textTarget}')]"))
+    #                                                 )
 
     # print(f'{textTarget}\nРейтинг не присвоен' in driver.find_element("tag name", "body").text in driver.find_element("tag name", "body").text) # для отладки
     if f'{textTarget}\nРейтинг не присвоен' in driver.find_element("tag name", "body").text in driver.find_element("tag name", "body").text:
         print(f'  ❌ {textTarget} не присвоен') # для отладки        
     else:
         # Определяем тип рейтинга
+        rating_header = WebDriverWait(driver, 5).until(expected_conditions.presence_of_element_located((By.XPATH, f"//h2[contains(., '{textTarget}')]")))
         header_text = rating_header.text
-        print('  ✅ Найден заголовок:', header_text)
+        print('  ✅ Найден заголовок:', header_text, end='\r')
 
 # НАЙТИ ТАБЛИЦУ по структуре из HTML
         # Ищем ближайшую таблицу после заголовка, используя структуру страницы
