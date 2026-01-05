@@ -57,10 +57,10 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, text
     #     expected_conditions.presence_of_element_located((By.XPATH, f"//h2[contains(., '{textTarget}')]"))
     #                                                 )
 
-    # print(f'{textTarget}\nРейтинг не присвоен' in driver.find_element("tag name", "body").text in driver.find_element("tag name", "body").text) # для отладки
-    if f'{textTarget}\nРейтинг не присвоен' in driver.find_element("tag name", "body").text in driver.find_element("tag name", "body").text:
-        print(f'  ❌ {textTarget} не присвоен') # для отладки        
-    else:
+    # print(f'\n{textTarget}\n' in driver.find_element("tag name", "body").text) # для отладки
+    if f'\n{textTarget}\n' in driver.find_element("tag name", "body").text:
+        print(f'  ❌ {textTarget} не присвоен') # для отладки
+
         # Определяем тип рейтинга
         rating_header = WebDriverWait(driver, 5).until(expected_conditions.presence_of_element_located((By.XPATH, f"//h2[contains(., '{textTarget}')]")))
         header_text = rating_header.text
@@ -171,7 +171,7 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, text
                 rating_data.append(record)
     
         oneBondRating = pandas.DataFrame(rating_data)
-        # display(oneBondRating) # для отладки
+        display('oneBondRating:', oneBondRating) # для отладки
         oneBondRating = oneBondRating[oneBondRating['Значение кредитного рейтинга'].str.contains('Отозван', case=False) != True] # не интересует, если рейтинг отозван
         oneBondRating[columnWithRating] = oneBondRating['Значение кредитного рейтинга'].apply(ratingDigitizer, args=('RB',))
         # display(oneBondRating) # для отладки
