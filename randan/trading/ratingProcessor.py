@@ -195,17 +195,16 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, text
 
         except (KeyError, TimeoutException): # на случай появления Cookie и дисклеймера
             # Предупреждение про Cookie закрыть
-            # 
-            textTarget = 'Согласен'
-            elementTarget = forSelenium.pathRelative(driver, None, f"//p[text()='{textTarget}']", 1, None, textTarget)
-            if elementTarget: elementTarget.click()
-            print('  ✅ Предупреждение про Cookie закрыто') # , end='\r'
-
+            # /html/body/div[9]/div/div/div/div/div/div/button[2]/div/p
+            if '\nСогласен\n' in driver.find_element("tag name", "body").text:
+                driver.find_element(By.XPATH, "//p[text()='Согласен']").click()
+                print('  ✅ Предупреждение про Cookie закрыто') # , end='\r'
+            
             # Дисклеймер закрыть
             # /html/body/div[14]/div[3]/div/button[1]
-            elementTarget = forSelenium.pathRelative(driver, None, f"//button[text()='{textTarget}']", 1, None, textTarget)
-            if elementTarget: elementTarget.click()
-            print('  ✅ Дисклеймер закрыт') # , end='\r'
+            if '\nСогласенНе согласен' in driver.find_element("tag name", "body").text:
+                driver.find_element(By.XPATH, "//button[text()='Согласен']").click()
+                print('  ✅ Дисклеймер закрыт') # , end='\r'
 
             tryer += 1
 
