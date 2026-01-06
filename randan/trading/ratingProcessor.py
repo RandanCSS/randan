@@ -55,7 +55,7 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, text
 
     tryer = 0
     while tryer < 2: # на случай появления Cookie и дисклеймера
-        print('tryer:', tryer) # для отладки
+        # print('tryer:', tryer) # для отладки
         try: # на случай появления Cookie и дисклеймера
             textOfTheBody = driver.find_element("tag name", "body").text
             # print(f'\n{textTarget}\n' in textOfTheBody) # для отладки
