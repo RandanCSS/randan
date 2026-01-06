@@ -186,7 +186,7 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, text
                     break # на случай появления Cookie и дисклеймера
 
             else:
-                print(f'  ❌ Упоминание о рейтинге отсутствует на странице') # для отладки
+                print(f'  ❌ Упоминание о '{textTarget}' отсутствует на странице') # для отладки
                 break # на случай появления Cookie и дисклеймера
 
         except (KeyError, TimeoutException): # на случай появления Cookie и дисклеймера
