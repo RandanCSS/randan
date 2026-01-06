@@ -53,94 +53,93 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, text
 
     driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
 
-    # # Ждём появления заголовка (любого из двух типов)
-    # print("  ⏳ Ожидаю загрузки блока с рейтингами...", end='\r')
-    # driver.set_page_load_timeout(100) # включить ограниченный таймаут загрузки
-    # rating_header = WebDriverWait(driver, 5)#.until(
-    #     expected_conditions.presence_of_element_located((By.XPATH, f"//h2[contains(., '{textTarget}')]"))
-    #                                                 )
-
-    print(f'\n{textTarget}\n' in driver.find_element("tag name", "body").text) # для отладки
-    if f'\n{textTarget}\n' in driver.find_element("tag name", "body").text:
-        # print(f'  ❌ {textTarget} не присвоен') # для отладки
-
-        # Дисклеймер закрыть
-        # /html/body/div[14]/div[3]/div/button[1]
-        textTarget = 'Согласен'
-        elementTarget = forSelenium.pathRelative(driver, None, f"//button[text()='{textTarget}']", 1, None, textTarget)
-        if elementTarget: elementTarget.click()
-        
-        # Определяем тип рейтинга
-        rating_header = WebDriverWait(driver, 5).until(expected_conditions.presence_of_element_located((By.XPATH, f"//h2[contains(., '{textTarget}')]")))
-        header_text = rating_header.text
-        print('  ✅ Найден заголовок:', header_text, end='\r')
-
-        # Дисклеймер закрыть
-        # /html/body/div[14]/div[3]/div/button[1]
-        textTarget = 'Согласен'
-        elementTarget = forSelenium.pathRelative(driver, None, f"//button[text()='{textTarget}']", 1, None, textTarget)
-        if elementTarget: elementTarget.click()
-        
-# НАЙТИ ТАБЛИЦУ по структуре из HTML
-        # Ищем ближайшую таблицу после заголовка, используя структуру страницы
-        # Основной контейнер: div с классом 'widget desc-left' и id='creditRating'
-        try:
-            # Стратегия 1.1: Найти таблицу по её характерному классу
-            data_table = WebDriverWait(driver, 5).until(
-                expected_conditions.presence_of_element_located(
-                    (By.XPATH, f"//h2[contains(., '{header_text[:15]}')]/following::table[contains(@class, 'emitent-credit-rating-table')]")
-                                                                )
-                                                        )
-            print("  Стратегия 1.1: Таблица найдена по классу 'emitent-credit-rating-table'")
-        except TimeoutException:
-            try:
-                # Стратегия 1.2: Найти ближайший контейнер-виджет с таблицей внутри
-                print("  Стратегия 1.1 не сработала, пробую Стратегию 1.2...")
-                widget_container = rating_header.find_element(By.XPATH, "./following::div[@id='creditRating' or contains(@class, 'widget')][1]")
-                data_table = widget_container.find_element(By.TAG_NAME, "table")
-                print("  Стратегия 1.2: Таблица найдена через контейнер-виджет")
-
-            except NoSuchElementException:
-                print('  ❌ Ошибка поиска таблицы по структуре из HTML:', sys.exc_info()) # для отладки
-
-# АЛЬТЕРНАТИВНЫЙ ПОИСК контейнера с данными
-                # Поднимаемся от заголовка на несколько уровней вверх, чтобы найти контейнер с данными
-                print('  Стратегия 2: Поиск контейнера с данными:', sys.exc_info()) # для отладки
-                data_table = None
-                max_levels = 5  # Максимальная глубина поиска родительских контейнеров
-
-                for level in range(1, max_levels + 1):
-                    try:
-                        # Создаем XPath для поднятия на level уровней вверх
-                        xpath_parent = "./" + "/".join(["parent::*"] * level)
-                        potential_container = rating_header.find_element(By.XPATH, xpath_parent)
-
-                        # Проверяем, есть ли в контейнере строки с данными
-                        rows_inside = potential_container.find_elements(
-                            By.XPATH, ".//div[contains(@class, 'row') or contains(@class, 'tr')] | .//tr"
-                        )
-                    
-                        if len(rows_inside) >= 2:  # Если есть хотя бы 2 строки (включая возможные заголовки)
-                            data_table = potential_container
-                            print(f"  Найден контейнер уровня {level}: тег <{data_table.tag_name}>, "
-                                  f"класс '{data_table.get_attribute('class')}'")
-                            break
-                    except Exception:
-                        continue
-            
-                if not data_table:
-                    # Если не нашли по уровням, попробуем альтернативные подходы
-                    print("  ⚠️ Контейнер не найден по иерархии, использую альтернативные методы...")
+    tryer = 0
+    while tryer < 2: # на случай появления Cookie и дисклеймера
+        try: # на случай появления Cookie и дисклеймера
+            print(f'\n{textTarget}\n' in driver.find_element("tag name", "body").text) # для отладки
+            if f'\n{textTarget}\n' in driver.find_element("tag name", "body").text:
+                # print(f'  ❌ {textTarget} не присвоен') # для отладки
                 
-                    # Способ 1: Ищем ближайший div с типичными классами
+                # Определяем тип рейтинга
+                rating_header = WebDriverWait(driver, 5).until(expected_conditions.presence_of_element_located((By.XPATH, f"//h2[contains(., '{textTarget}')]")))
+                header_text = rating_header.text
+                print('  ✅ Найден заголовок:', header_text, end='\r')
+                
+        # НАЙТИ ТАБЛИЦУ по структуре из HTML
+                # Ищем ближайшую таблицу после заголовка, используя структуру страницы
+                # Основной контейнер: div с классом 'widget desc-left' и id='creditRating'
+                try:
+                    # Стратегия 1.1: Найти таблицу по её характерному классу
+                    data_table = WebDriverWait(driver, 5).until(
+                        expected_conditions.presence_of_element_located(
+                            (By.XPATH, f"//h2[contains(., '{header_text[:15]}')]/following::table[contains(@class, 'emitent-credit-rating-table')]")
+                                                                        )
+                                                                )
+                    print("  Стратегия 1.1: Таблица найдена по классу 'emitent-credit-rating-table'")
+                except TimeoutException:
                     try:
-                        data_table = driver.find_element(By.XPATH,
-                            f"//div[contains(@class, 'col-md-') or contains(@class, 'rating')][.//h2[contains(., '{header_text[:20]}')]]")
-                        print(f"   Найден контейнер по классу: {data_table.get_attribute('class')}")
-                    except:
-                        # Способ 2: Просто используем родителя h2
-                        data_table = rating_header.find_element(By.XPATH, "./parent::*")
-                        print(f"   Использую непосредственного родителя: тег <{data_table.tag_name}>")
+                        # Стратегия 1.2: Найти ближайший контейнер-виджет с таблицей внутри
+                        print("  Стратегия 1.1 не сработала, пробую Стратегию 1.2...")
+                        widget_container = rating_header.find_element(By.XPATH, "./following::div[@id='creditRating' or contains(@class, 'widget')][1]")
+                        data_table = widget_container.find_element(By.TAG_NAME, "table")
+                        print("  Стратегия 1.2: Таблица найдена через контейнер-виджет")
+        
+                    except NoSuchElementException:
+                        print('  ❌ Ошибка поиска таблицы по структуре из HTML:', sys.exc_info()) # для отладки
+        
+        # АЛЬТЕРНАТИВНЫЙ ПОИСК контейнера с данными
+                        # Поднимаемся от заголовка на несколько уровней вверх, чтобы найти контейнер с данными
+                        print('  Стратегия 2: Поиск контейнера с данными:', sys.exc_info()) # для отладки
+                        data_table = None
+                        max_levels = 5  # Максимальная глубина поиска родительских контейнеров
+        
+                        for level in range(1, max_levels + 1):
+                            try:
+                                # Создаем XPath для поднятия на level уровней вверх
+                                xpath_parent = "./" + "/".join(["parent::*"] * level)
+                                potential_container = rating_header.find_element(By.XPATH, xpath_parent)
+        
+                                # Проверяем, есть ли в контейнере строки с данными
+                                rows_inside = potential_container.find_elements(
+                                    By.XPATH, ".//div[contains(@class, 'row') or contains(@class, 'tr')] | .//tr"
+                                )
+                            
+                                if len(rows_inside) >= 2:  # Если есть хотя бы 2 строки (включая возможные заголовки)
+                                    data_table = potential_container
+                                    print(f"  Найден контейнер уровня {level}: тег <{data_table.tag_name}>, "
+                                          f"класс '{data_table.get_attribute('class')}'")
+                                    break
+                            except Exception:
+                                continue
+                    
+                        if not data_table:
+                            # Если не нашли по уровням, попробуем альтернативные подходы
+                            print("  ⚠️ Контейнер не найден по иерархии, использую альтернативные методы...")
+                        
+                            # Способ 1: Ищем ближайший div с типичными классами
+                            try:
+                                data_table = driver.find_element(By.XPATH,
+                                    f"//div[contains(@class, 'col-md-') or contains(@class, 'rating')][.//h2[contains(., '{header_text[:20]}')]]")
+                                print(f"   Найден контейнер по классу: {data_table.get_attribute('class')}")
+                            except:
+                                # Способ 2: Просто используем родителя h2
+                                data_table = rating_header.find_element(By.XPATH, "./parent::*")
+                                print(f"   Использую непосредственного родителя: тег <{data_table.tag_name}>")
+
+            break # на случай появления Cookie и дисклеймера
+        except TimeoutException: # на случай появления Cookie и дисклеймера
+            # Предупреждение про Cookie закрыть
+            # 
+            textTarget = 'Согласен'
+            elementTarget = forSelenium.pathRelative(driver, None, f"//p[text()='{textTarget}']", 1, None, textTarget)
+            if elementTarget: elementTarget.click()
+
+            # Дисклеймер закрыть
+            # /html/body/div[14]/div[3]/div/button[1]
+            elementTarget = forSelenium.pathRelative(driver, None, f"//button[text()='{textTarget}']", 1, None, textTarget)
+            if elementTarget: elementTarget.click()
+
+            tryer += 1
 
 # УНИВЕРСАЛЬНЫЙ ПАРСИНГ ТАБЛИЦЫ (работает с любым количеством столбцов)
         print("  📊 Извлекаю данные из таблицы...")
