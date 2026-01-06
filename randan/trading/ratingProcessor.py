@@ -15,7 +15,10 @@ from subprocess import check_call
 # --- остальные модули и пакеты
 while True:
     try:
-        from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
+        from randan.tools import coLabAdaptor, forSelenium # авторские модули для
+            # (а) адаптации текущего скрипта к файловой системе CoLab
+            # (б) упрощения некоторых оперций в selenium
+
         from selenium.common.exceptions import NoSuchElementException, TimeoutException
         from selenium.webdriver.common.by import By
         from selenium.webdriver.support import expected_conditions
@@ -57,15 +60,27 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, text
     #     expected_conditions.presence_of_element_located((By.XPATH, f"//h2[contains(., '{textTarget}')]"))
     #                                                 )
 
-    # print(f'\n{textTarget}\n' in driver.find_element("tag name", "body").text) # для отладки
+    print(f'\n{textTarget}\n' in driver.find_element("tag name", "body").text) # для отладки
     if f'\n{textTarget}\n' in driver.find_element("tag name", "body").text:
-        print(f'  ❌ {textTarget} не присвоен') # для отладки
+        # print(f'  ❌ {textTarget} не присвоен') # для отладки
 
+        # Дисклеймер закрыть
+        # /html/body/div[14]/div[3]/div/button[1]
+        textTarget = 'Согласен'
+        elementTarget = forSelenium.pathRelative(driver, None, f"//button[text()='{textTarget}']", 1, None, textTarget)
+        if elementTarget: elementTarget.click()
+        
         # Определяем тип рейтинга
         rating_header = WebDriverWait(driver, 5).until(expected_conditions.presence_of_element_located((By.XPATH, f"//h2[contains(., '{textTarget}')]")))
         header_text = rating_header.text
         print('  ✅ Найден заголовок:', header_text, end='\r')
 
+        # Дисклеймер закрыть
+        # /html/body/div[14]/div[3]/div/button[1]
+        textTarget = 'Согласен'
+        elementTarget = forSelenium.pathRelative(driver, None, f"//button[text()='{textTarget}']", 1, None, textTarget)
+        if elementTarget: elementTarget.click()
+        
 # НАЙТИ ТАБЛИЦУ по структуре из HTML
         # Ищем ближайшую таблицу после заголовка, используя структуру страницы
         # Основной контейнер: div с классом 'widget desc-left' и id='creditRating'
