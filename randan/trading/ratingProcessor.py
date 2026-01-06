@@ -268,7 +268,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, byIssuer=True):
         for textTarget in textTargetDict.keys():
             bondS = getRatingFromMoEx(bondS, textTargetDict[textTarget], driver, identifier, isin, textTarget)
         counter += 1
-        print(counter, 'из', len(identifierS), 'элементов множества обработан')
+        print('Элементов множества обработано:', counter, 'из', len(identifierS))
         print("="*60 + "\n")
     
     print('На сайте moex.com могут оказаться рейтинги не для всех облигаций, поэтому следует проверить визуально:')
