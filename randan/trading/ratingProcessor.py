@@ -251,8 +251,8 @@ def ratingMoExForBondsWithoutRating(bondS_in, byIssuer=True):
     
 # Импорт рейтинга с сайта moex.com    
     counter = 0
-    for identifier in identifierS:
-    # for identifier in identifierS[0:2]: # для отладки
+    # for identifier in identifierS:
+    for identifier in identifierS[0:2]: # для отладки
         if byIssuer:
             isin = bondS_withoutRating[bondS_withoutRating['Эмитент'] == identifier]['ISIN'].tolist()[-1] # последний попавшийся ISIN итерируемого эмитента
             print('issuer', identifier, '; ISIN', isin)  
@@ -262,7 +262,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, byIssuer=True):
 
         textTargetDict = {'Кредитный рейтинг эмитента': 'Rating D', 'Кредитный рейтинг выпуска облигаций': 'Bond Rating D'}
         for textTarget in textTargetDict.keys():
-            bondS = getRatingFromMoEx(bondS_in, textTargetDict[textTarget], driver, identifier, isin, textTarget)
+            bondS = getRatingFromMoEx(bondS, textTargetDict[textTarget], driver, identifier, isin, textTarget)
         counter += 1
         print(counter, 'из', len(identifierS), 'элементов множества обработан')
         print("="*60 + "\n")
