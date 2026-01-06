@@ -177,11 +177,11 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, text
                     oneBondRating[columnWithRating] = oneBondRating['Значение кредитного рейтинга'].apply(ratingDigitizer, args=('RB',))
                     # display(oneBondRating) # для отладки
                     if identifier != isin:
-                        print('identifier != isin') # для отладки
+                        # print('identifier != isin') # для отладки
                         bondS.loc[bondS['Эмитент'] == identifier, columnWithRating] = oneBondRating[columnWithRating].mean()
                     else:
+                        # print('identifier == isin') # для отладки
                         bondS.loc[bondS['ISIN'] == identifier, columnWithRating] = oneBondRating[columnWithRating].mean()
-                        print('identifier == isin') # для отладки
 
                     break # на случай появления Cookie и дисклеймера
 
@@ -255,8 +255,8 @@ def ratingMoExForBondsWithoutRating(bondS_in, byIssuer=True):
     
 # Импорт рейтинга с сайта moex.com    
     counter = 0
-    # for identifier in identifierS:
-    for identifier in identifierS[0:10]: # для отладки
+    for identifier in identifierS:
+    # for identifier in identifierS[0:10]: # для отладки
         if byIssuer:
             isin = bondS_withoutRating[bondS_withoutRating['Эмитент'] == identifier]['ISIN'].tolist()[-1] # последний попавшийся ISIN итерируемого эмитента
             print('issuer', identifier, '; ISIN', isin)  
