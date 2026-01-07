@@ -105,12 +105,12 @@ def bondsFeaturesProcessor(
     print('  Повышение')
     bondsRatingS_up = bondsRatingS[(bondsRatingS['Rating D'].notna()) & (bondsRatingS['Rating D Previous'].notna()) &\
                                    (bondsRatingS['Rating D'] > bondsRatingS['Rating D Previous'])
-                                   ][['SECNAME', 'ISIN', 'Rating D Previous', 'Rating D', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL']]
+                                   ][['SECNAME', 'ISIN', 'Rating D Previous', 'Rating D', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL MoEx']]
     display(bondsRatingS_up)
     print('  Понижение')
     bondsRatingS_down = bondsRatingS[(bondsRatingS['Rating D'].notna()) & (bondsRatingS['Rating D Previous'].notna()) &\
                                      (bondsRatingS['Rating D'] < bondsRatingS['Rating D Previous'])
-                                     ][['SECNAME', 'ISIN', 'Rating D Previous', 'Rating D', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL']]
+                                     ][['SECNAME', 'ISIN', 'Rating D Previous', 'Rating D', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL MoEx']]
     display(bondsRatingS_down)
     bondsRatingS_change = pandas.concat([bondsRatingS_up, bondsRatingS_down])
 
