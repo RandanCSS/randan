@@ -40,20 +40,20 @@ def dictionariesHarmonizer(df_editing, df_standard, columnName):
 
     # Шаг № 1. Грубая сверка
     df_editing_matching = df_editing[df_editing[columnName].isin(df_standard[columnName])]
-    df_editing_New_1 = df_editing[df_editing[columnName].isin(df_standard[columnName]) != True]
+    df_editing_new_1 = df_editing[df_editing[columnName].isin(df_standard[columnName]) != True]
 
     # Шаг № 2. Тонкая сверка
     rowS_toDrop = []
-    df_editing_New_2 = df_editing_New_1.copy()
-    elementS_editing = df_editing_New_1[columnName]
+    df_editing_new_2 = df_editing_new_1.copy()
+    elementS_editing = df_editing_new_1[columnName]
     for element_editing in elementS_editing:
         # print('element_editing:', element_editing, end='\r') # для отладки
         for element_standard in df_standard[columnName]:
             # print('element_standard:', element_standard, end='\r') # для отладки
             if element_standard in element_editing:
-                df_editing_New_1.loc[df_editing_New_1[columnName] == element_editing, columnName] = element_standard # заменить element_editing на element_standard ,
-                    # что обеспечивает совместимость обрабатываемых тут строчек df_editing_New_1 и df_standard
-                df_editing_New_2 = df_editing_New_2[df_editing_New_2[columnName] != element_editing] 
+                df_editing_new_1.loc[df_editing_new_1[columnName] == element_editing, columnName] = element_standard # заменить element_editing на element_standard ,
+                    # что обеспечивает совместимость обрабатываемых тут строчек df_editing_new_1 и df_standard
+                df_editing_new_2 = df_editing_new_2[df_editing_new_2[columnName] != element_editing] 
     return df_editing_matching, df_editing_New_1, df_editing_New_2
-    # df_editing_New_1 -- часть редактируемого датафрейма (df_editing), которая не прошла грубую сверку, но прошла тонкую сверку
-    # df_editing_New_2 -- часть редактируемого датафрейма (df_editing), которая не прошла ни грубую, ни тонкую сверку
+    # df_editing_new_1 -- часть редактируемого датафрейма (df_editing), которая не прошла грубую сверку, но прошла тонкую сверку
+    # df_editing_new_2 -- часть редактируемого датафрейма (df_editing), которая не прошла ни грубую, ни тонкую сверку
