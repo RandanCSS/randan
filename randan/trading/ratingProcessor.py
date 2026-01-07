@@ -47,7 +47,7 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
 # Авторские функции..
-    # импорта рейтинга с сайта moex.com
+    # .. импорта рейтинга с сайта moex.com
 def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, textTarget):
     bondS = bondS_in.copy()
 
