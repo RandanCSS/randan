@@ -35,8 +35,8 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
                   )
             break
 
-def dictionariesHarmonizer(df_standard, dfIn_Small, columnName):
-    df_editing = dfIn_Small.copy() # df_editing -- датафрейм, редактируемый в столбце columnName на основе того же столбца датафрейма df_standard
+def dictionariesHarmonizer(df_editing, df_standard, columnName):
+    df_editing = df_editing.copy() # df_editing -- датафрейм, редактируемый в столбце columnName на основе того же столбца датафрейма df_standard
 
     # Шаг № 1. Грубая сверка
     df_editing_matching = df_editing[df_editing[columnName].isin(df_standard[columnName])]
@@ -45,13 +45,15 @@ def dictionariesHarmonizer(df_standard, dfIn_Small, columnName):
     # Шаг № 2. Тонкая сверка
     rowS_toDrop = []
     df_editing_New_2 = df_editing_New_1.copy()
-    elementS_Small = df_editing_New_1[columnName]
-    for element_Small in elementS_Small:
-        for element_Large in df_standard[columnName]:
-            if element_Large in element_Small:
-                df_editing_New_1.loc[df_editing_New_1[columnName] == element_Small, columnName] = element_Large # заменить element_Small на element_Large ,
-                    # что обеспечивает совместимость обрабатываемых тут строчек df_editing_New_1 b df_standard
-                df_editing_New_2 = df_editing_New_2[df_editing_New_2[columnName] != element_Small] 
+    elementS_editing = df_editing_New_1[columnName]
+    for element_editing in elementS_editing:
+        print('element_editing:', element_editing) # для отладки
+        for element_standard in df_standard[columnName]:
+            print('element_standard:', element_standard) # для отладки
+            if element_standard in element_editing:
+                df_editing_New_1.loc[df_editing_New_1[columnName] == element_editing, columnName] = element_standard # заменить element_editing на element_standard ,
+                    # что обеспечивает совместимость обрабатываемых тут строчек df_editing_New_1 и df_standard
+                df_editing_New_2 = df_editing_New_2[df_editing_New_2[columnName] != element_editing] 
     return df_editing_matching, df_editing_New_1, df_editing_New_2
     # df_editing_New_1 -- часть редактируемого датафрейма (df_editing), которая не прошла грубую сверку, но прошла тонкую сверку
     # df_editing_New_2 -- часть редактируемого датафрейма (df_editing), которая не прошла ни грубую, ни тонкую сверку
