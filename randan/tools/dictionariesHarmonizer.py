@@ -43,17 +43,24 @@ def dictionariesHarmonizer(df_editing, df_standard, columnName):
     df_editing_new_1 = df_editing[df_editing[columnName].isin(df_standard[columnName]) != True]
 
     # Шаг № 2. Тонкая сверка
-    rowS_toDrop = []
+    rowS_detected = [] # только эти строки датафрейма останутся в df_editing_new_1
     df_editing_new_2 = df_editing_new_1.copy()
     elementS_editing = df_editing_new_1[columnName]
     for element_editing in elementS_editing:
-        # print('element_editing:', element_editing, end='\r') # для отладки
+        # print('element_editing:', element_editing) # для отладки , end='\r'
         for element_standard in df_standard[columnName]:
-            # print('element_standard:', element_standard, end='\r') # для отладки
+            # print('element_standard:', element_standard) # для отладки , end='\r'
             if element_standard in element_editing:
+                # print('element_standard in element_editing:', element_standard in element_editing) # для отладки , end='\r'
+                rowS_detected.extend(df_editing_new_1[df_editing_new_1[columnName] == element_editing].index)
                 df_editing_new_1.loc[df_editing_new_1[columnName] == element_editing, columnName] = element_standard # заменить element_editing на element_standard ,
                     # что обеспечивает совместимость обрабатываемых тут строчек df_editing_new_1 и df_standard
-                df_editing_new_2 = df_editing_new_2[df_editing_new_2[columnName] != element_editing] 
+                df_editing_new_2 = df_editing_new_2[df_editing_new_2[columnName] != element_editing]
+
+    rowS_detected = list(set(rowS_detected))
+    rowS_detected.sort
+    df_editing_new_1 = df_editing_new_1.loc[rowS_detected, :]
+
     return df_editing_matching, df_editing_new_1, df_editing_new_2
     # df_editing_new_1 -- часть редактируемого датафрейма (df_editing), которая не прошла грубую сверку, но прошла тонкую сверку
     # df_editing_new_2 -- часть редактируемого датафрейма (df_editing), которая не прошла ни грубую, ни тонкую сверку
