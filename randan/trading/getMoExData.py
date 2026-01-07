@@ -34,8 +34,8 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
-# 1. Авторские функции
-    # выгрузки имён полей БД МосБиржи
+# 1. Авторские функции..
+    # .. выгрузки имён полей БД МосБиржи
 def getColumnNameS(text):
     columnS = BeautifulSoup(text, features='xml').find_all('column')
     # print('columnS:', columnS) # для отладки
@@ -44,7 +44,7 @@ def getColumnNameS(text):
         columnNameS.append(column.get('name'))
     return columnNameS
 
-    # выгрузки данных из БД МосБиржи
+    # .. выгрузки данных из БД МосБиржи
 def pseudojson2df(headerS, index, url):
     df = pandas.DataFrame()
     text = re.findall(r'<data.+?/data>', requests.get(url, headers=headerS).text, re.DOTALL)[index]
@@ -61,7 +61,6 @@ def pseudojson2df(headerS, index, url):
     return df
 
 # 2. Авторская функция исполнения скрипта
-
 def getMoExData(
                 market='bonds',
                 path=coLabFolder,
@@ -83,7 +82,6 @@ def getMoExData(
     else: path += slash
 
 # Формирование файла с режимами торгов
-    
 # 1.0 Если нет файла с режимами торгов    
     print('Создаю файл с режимами торгов')
     if market == 'bonds': url = f'https://iss.moex.com/iss/engines/stock/markets/{market}'
@@ -92,7 +90,7 @@ def getMoExData(
         , 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0'}
     boardS = pseudojson2df(headerS, 0, url)        
     # display('boardS:', boardS) # для отладки
-    
+
 # 1.1 Если облигации: нужны именно торгуемые и не Д , и не ПИР
     if market == 'bonds':
         boardS['is_traded'] = boardS['is_traded'].astype(int)
@@ -101,9 +99,9 @@ def getMoExData(
             & (boardS['title'].str.contains('ПИР ') != True) & (boardS['title'].str.contains('Д ') != True)
                         ]
     # display('boardS:', boardS) # для отладки
-    
+
 # Формирование файла с доступными облигациями
-    
+
 # 2.1 Формирование словаря полей БД МосБиржи
     print('Создаю файл со словарём полей БД МосБиржи')
     columnsDescriptionS = pandas.DataFrame()
@@ -116,7 +114,7 @@ def getMoExData(
     columnsDescriptionS = columnsDescriptionS.drop_duplicates(['id', 'name'], ignore_index=True)
     # display('columnsDescriptionS:', columnsDescriptionS) # для отладки
     columnsDescriptionS.to_excel(market + 'ColumnsDescriptionS.xlsx', index=False)
-    
+
 # 2.2 Формирование файла с доступными облигациями в интересующих режимах торгов
     decision = ''
     if os.path.exists(path + market + 'SecuritieS.xlsx'):
@@ -159,7 +157,7 @@ def getMoExData(
         columnsDescriptionS = columnsDescriptionS[columnsDescriptionS['name'].notna()]
         columnsDescriptionS = columnsDescriptionS['name'].drop_duplicates().tolist()
         if market == 'bonds': columnsDescriptionS.append('URL MoEx')
-    
+
         if market == 'bonds':
             securitieS = securitieS.merge(marketdata_yieldS, on='SECID', suffixes=("", "_drop"), how="left")
             securitieS = securitieS[[column for column in securitieS.columns if not column.endswith("_drop")]]
