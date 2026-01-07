@@ -272,6 +272,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, byIssuer=True):
                 return bondS
                 print('--- Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть. Автоматическое исполнение скрипта приостанавливается. Далее вручную перезапустите текущий чанк и последующие')
                 input()
+                driver.quit()
                 sys.exit()
 
         counter += 1
@@ -280,4 +281,5 @@ def ratingMoExForBondsWithoutRating(bondS_in, byIssuer=True):
     
     print('На сайте moex.com могут оказаться рейтинги не для всех облигаций, поэтому следует проверить визуально:')
     display(bondS[bondS['Rating D'].isna()])
+    driver.quit()
     return bondS
