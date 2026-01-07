@@ -97,20 +97,20 @@ def bondsFeaturesProcessor(
     # display('bondsRatingS_previous:', bondsRatingS_previous) # для отладки
     # bondsRatingS = bondsRatingS[bondsRatingS['ISIN'].isin(bondS['ISIN'])]
     # display('bondsRatingS:', bondsRatingS) # для отладки
-    bondsRatingS = bondsRatingS.merge(bondsRatingS_previous[['ISIN', 'Rating D']], on='ISIN', suffixes=("", " Previous"), how="left")
+    bondsRatingS = bondsRatingS.merge(bondsRatingS_previous[['ISIN', 'Issuer D Rating']], on='ISIN', suffixes=("", " Previous"), how="left")
     # display('bondsRatingS:', bondsRatingS) # для отладки
-    bondsRatingS.loc[bondsRatingS['Rating D'] != bondsRatingS['Rating D Previous'], 'С прошлого замера'] = 'Рейтинг изменился'
+    bondsRatingS.loc[bondsRatingS['Issuer D Rating'] != bondsRatingS['Issuer D Rating Previous'], 'С прошлого замера'] = 'Рейтинг изменился'
 
     print('\n Изменения рейтинга с прошлого замера:')
     print('  Повышение')
-    bondsRatingS_up = bondsRatingS[(bondsRatingS['Rating D'].notna()) & (bondsRatingS['Rating D Previous'].notna()) &\
-                                   (bondsRatingS['Rating D'] > bondsRatingS['Rating D Previous'])
-                                   ][['SECNAME', 'ISIN', 'Rating D Previous', 'Rating D', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL MoEx']]
+    bondsRatingS_up = bondsRatingS[(bondsRatingS['Issuer D Rating'].notna()) & (bondsRatingS['Issuer D Rating Previous'].notna()) &\
+                                   (bondsRatingS['Issuer D Rating'] > bondsRatingS['Issuer D Rating Previous'])
+                                   ][['SECNAME', 'ISIN', 'Issuer D Rating Previous', 'Issuer D Rating', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL MoEx']]
     display(bondsRatingS_up)
     print('  Понижение')
-    bondsRatingS_down = bondsRatingS[(bondsRatingS['Rating D'].notna()) & (bondsRatingS['Rating D Previous'].notna()) &\
-                                     (bondsRatingS['Rating D'] < bondsRatingS['Rating D Previous'])
-                                     ][['SECNAME', 'ISIN', 'Rating D Previous', 'Rating D', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL MoEx']]
+    bondsRatingS_down = bondsRatingS[(bondsRatingS['Issuer D Rating'].notna()) & (bondsRatingS['Issuer D Rating Previous'].notna()) &\
+                                     (bondsRatingS['Issuer D Rating'] < bondsRatingS['Issuer D Rating Previous'])
+                                     ][['SECNAME', 'ISIN', 'Issuer D Rating Previous', 'Issuer D Rating', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL MoEx']]
     display(bondsRatingS_down)
     bondsRatingS_change = pandas.concat([bondsRatingS_up, bondsRatingS_down])
 
@@ -127,13 +127,9 @@ def bondsFeaturesProcessor(
         bondS.loc[bondS[column] == '0000-00-00', column] =\
             bondS.loc[bondS[column] == '0000-00-00', 'SETTLEDATE'] # иначе к столбцу не применяется .astype('datetime64[ns]')
 
-    # bondS = bondS[bondS['MATDATE'] != '0000-00-00'] # исключаются "вечные" облигации; обычно они субординорованные
-    # bondS = bondS[bondS['SETTLEDATE'] != '0000-00-00']
-    # display(bondS) # для отладки
-
     # Сколько дней до купона?
     bondS = bondS[bondS['MATDATE'] != bondS['SETTLEDATE']] # исключить облигации, по которым погашение уже на след.день
-    bondS = bondS[bondS['NEXTCOUPON'] != bondS['SETTLEDATE']] # исключить облигации, по которым купон уже на след.день
+    # bondS = bondS[bondS['NEXTCOUPON'] != bondS['SETTLEDATE']] # исключить облигации, по которым купон уже на след.день
     # display(bondS['MATDATE'].sort_values()) # для отладки
     # display(bondS[['MATDATE', 'NEXTCOUPON', 'SETTLEDATE']].head(50)) # для отладки
     # display(bondS[['MATDATE', 'NEXTCOUPON', 'SETTLEDATE']].tail(50)) # для отладки
@@ -183,7 +179,6 @@ def bondsFeaturesProcessor(
 
 # 1.4 Предобрабока столбцов с финансовой информацией
     for column in ['ACCRUEDINT', 'COUPONPERCENT', 'FACEVALUE', 'PRICE']:
-        # bondS = bondS[bondS[column] != '']
         bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column] = bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column].astype(float)
 
     # Умножение FACEVALUE и ACCRUEDINT на цену валюты в рублях
