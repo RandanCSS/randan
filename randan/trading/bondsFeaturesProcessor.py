@@ -275,7 +275,7 @@ def bondsFeaturesProcessor(
     # display("bondS['Купон определён']:", bondS['Купон определён'].value_counts()) # для отладки
     
     bondS['Специфика'] = bondS['FACEUNIT'].str[:2]
-    for column in ['Сектор рынка', 'Амортизация', 'Купон определён']:
+    for column in ['Сектор рынка', 'Амортизация FinAm' if 'Амортизация FinAm' in bondS.columns else 'Амортизация T', 'Купон определён']:
         bondS[column] = bondS[column].fillna('--')
         bondS['Специфика'] += ' ' + bondS[column].astype(str).str[:1]
     display(bondS['Специфика'].value_counts().sort_index())
