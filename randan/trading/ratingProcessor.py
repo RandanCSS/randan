@@ -265,7 +265,15 @@ def ratingMoExForBondsWithoutRating(bondS_in, byIssuer=True):
 
         textTargetDict = {'Кредитный рейтинг эмитента': 'Rating D', 'Кредитный рейтинг выпуска облигаций': 'Bond Rating D'}
         for textTarget in textTargetDict.keys():
-            bondS = getRatingFromMoEx(bondS, textTargetDict[textTarget], driver, identifier, isin, textTarget)
+            try: # на случай обрыва связи
+                bondS = getRatingFromMoEx(bondS, textTargetDict[textTarget], driver, identifier, isin, textTarget)
+            except: # на случай обрыва связи
+                print(sys.exc_info())
+                return bondS
+                print('--- Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть. Автоматическое исполнение скрипта приостанавливается. Далее вручную перезапустите текущий чанк и последующие')
+                input()
+                sys.exit()
+
         counter += 1
         print('Элементов множества обработано:', counter, 'из', len(identifierS))
         print("="*60 + "\n")
