@@ -33,7 +33,7 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
 # Авторские функции..
-    # компановки информации об эмитентах торгуемых на МосБирже облигаций в датафрейм (словарь)
+    # .. компановки информации об эмитентах торгуемых на МосБирже облигаций в датафрейм (словарь)
 def issuersComposer(bondS):
     issuerS = bondS[['Эмитент']].sort_values('Эмитент').drop_duplicates().reset_index(drop=True) # заготовка для датафрейма с актуальными эмитентами
     for row_issuerS in issuerS.index:
@@ -46,38 +46,19 @@ def issuersComposer(bondS):
         issuerS.loc[row_issuerS, 'SecNameS'] = ''
         issuerS.at[row_issuerS, 'SecNameS'] = secNameS
 
-        if 'Rating D' in bondS.columns:
-            ratingS = bondS['Rating D'][rowS_bondS].dropna().tolist()
-            ratingS = list(set(ratingS))
+        if 'Bond D Rating' in bondS.columns:
+            ratingS = bondS['Bond D Rating'][rowS_bondS].dropna().tolist()
             # print('ratingS:', ratingS) # для отладки
+            ratingS_mean = bondS['Bond D Rating'][rowS_bondS].dropna().mean()
+            # print('ratingS_mean:', ratingS_mean) # для отладки
             issuerS.loc[row_issuerS, 'RatingS'] = ''
             issuerS.at[row_issuerS, 'RatingS'] = ratingS[0] if len(ratingS) == 1 else ratingS
+            issuerS.loc[row_issuerS, 'Issuer D Rating'] = ratingS_mean
 
     # display('issuerS:', issuerS) # для отладки
     return issuerS
 
-#     issuerS_withActualRating = bondS[['Эмитент']].sort_values('Эмитент').drop_duplicates().reset_index(drop=True)
-#     rowS_toDrop = []
-#     for row in issuerS.index:
-#         # print('row:', row) # для отладки
-#         rowS_detected = bondS[bondS['Эмитент'].str.contains(issuerS['Эмитент'][row], case=False)].index # обрабатываемые строчки bondS ; они затем фиксируются в rowS_toDrop
-#         secNameS = bondS['SECNAME'][rowS_detected].tolist()
-#         issuerS.loc[row, 'Count'] = len(secNameS)
-#         issuerS.loc[row, 'SecNameS'] = ''
-#         issuerS.at[row, 'SecNameS'] = secNameS
-
-#         if 'Rating D' in bondS.columns:
-#             ratingS = bondS['Rating D'][rowS_detected].dropna().tolist()
-#             ratingS = list(set(ratingS))
-#             # print('ratingS:', ratingS) # для отладки
-#             issuerS.loc[row, 'RatingS'] = ''
-#             issuerS.at[row, 'RatingS'] = ratingS[0] if len(ratingS) == 1 else ratingS
-
-#         rowS_toDrop.extend(rowS_detected)
-#     # display('issuerS:', issuerS) # для отладки
-#     return issuerS, rowS_toDrop
-
-    # извлечения из SECNAME торгуемых на МосБирже облигаций названий их эмитентов
+    # .. извлечения из SECNAME торгуемых на МосБирже облигаций названий их эмитентов
 def issuerExtractor(dfIn):
     df = dfIn.copy()
     df['Эмитент'] = df['SECNAME'].str.replace('_', ' ').str.replace('-', ' ')
