@@ -54,6 +54,6 @@ def dictionariesHarmonizer(df_editing, df_standard, columnName):
                 df_editing_new_1.loc[df_editing_new_1[columnName] == element_editing, columnName] = element_standard # заменить element_editing на element_standard ,
                     # что обеспечивает совместимость обрабатываемых тут строчек df_editing_new_1 и df_standard
                 df_editing_new_2 = df_editing_new_2[df_editing_new_2[columnName] != element_editing] 
-    return df_editing_matching, df_editing_New_1, df_editing_New_2
+    return df_editing_matching, df_editing_new_1, df_editing_new_2
     # df_editing_new_1 -- часть редактируемого датафрейма (df_editing), которая не прошла грубую сверку, но прошла тонкую сверку
     # df_editing_new_2 -- часть редактируемого датафрейма (df_editing), которая не прошла ни грубую, ни тонкую сверку
