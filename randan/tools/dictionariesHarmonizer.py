@@ -47,9 +47,9 @@ def dictionariesHarmonizer(df_editing, df_standard, columnName):
     df_editing_New_2 = df_editing_New_1.copy()
     elementS_editing = df_editing_New_1[columnName]
     for element_editing in elementS_editing:
-        print('element_editing:', element_editing) # для отладки
+        # print('element_editing:', element_editing, end='\r') # для отладки
         for element_standard in df_standard[columnName]:
-            print('element_standard:', element_standard) # для отладки
+            # print('element_standard:', element_standard, end='\r') # для отладки
             if element_standard in element_editing:
                 df_editing_New_1.loc[df_editing_New_1[columnName] == element_editing, columnName] = element_standard # заменить element_editing на element_standard ,
                     # что обеспечивает совместимость обрабатываемых тут строчек df_editing_New_1 и df_standard
