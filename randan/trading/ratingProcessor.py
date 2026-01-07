@@ -284,4 +284,5 @@ def ratingMoExForBondsWithoutRating(bondS_in, byIssuer=True):
         print('На сайте moex.com могут оказаться рейтинги не для всех облигаций, поэтому следует проверить визуально:')
         display(bondS[bondS['Rating D'].isna()])
         driver.quit()
+
     return bondS
