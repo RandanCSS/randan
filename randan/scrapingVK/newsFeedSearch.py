@@ -88,6 +88,7 @@ def bigSearch(
               'start_time': start_time, # опциональный параметр
               'v': '5.199' # обязательный параметр
               }
+    tryer = 0
     while True:
         response = requests.get('https://api.vk.ru/method/newsfeed.search', params=params)
         response = response.json() # отобразить выдачу метода get в виде JSON
@@ -103,8 +104,14 @@ def bigSearch(
                 keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
                 print(f'\nПохоже, ключ попал под ограничение вследствие блокировки приложения, к которому он относится; пробую перейти к следующему ключу (№ {keyOrder})')
                 # print('  keyOrder после замены', keyOrder, '                    ') # для отладки
+                tryer += 1
+                if tryer >= len(API_keyS):
+                    print(f'\nПопробовал все располагаемые ключи; все относятся к заблокированным приложениям')
+                    # response = {'items': [], 'total_count': 0} # принудительная выдача для response
+                    goS = False # нет смысла продолжать исполнение скрипта
+                    break # и, следовательно, нет смысла в новых итерациях цикла
 
-            if 'Too many requests per second' in response['error']['error_msg']:
+            elif 'Too many requests per second' in response['error']['error_msg']:
                 # print('  keyOrder до замены', '                    ') # для отладки
                 keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
                 print(f'\nПохоже, ключ попал под ограничение вследствие слишком высокой частоты обращения скрипта к API; пробую перейти к следующему ключу (№ {keyOrder}) и снизить частоту')
@@ -120,7 +127,7 @@ def bigSearch(
 
             elif 'Internal server error: Unknown error, try later' in response['error']['error_msg']:
                 print('\nПохоже, ошибка на сервере ВК; подождите и запустите скрипт с начала')
-                response = {'items': [], 'total_count': 0} # принудительная выдача для response
+                # response = {'items': [], 'total_count': 0} # принудительная выдача для response
                 goS = False # нет смысла продолжать исполнение скрипта
                 break # и, следовательно, нет смысла в новых итерациях цикла
 
@@ -136,27 +143,29 @@ def bigSearch(
             else:
                 print('  Похоже, проблема НЕ в слишком высокой частоте обращения скрипта к API((')
                 print('  ', response['error']['error_msg'])
+                response = {'items': [], 'total_count': 0} # принудительная выдача для response
                 goS = False # нет смысла продолжать исполнение скрипта
                 break # и, следовательно, нет смысла в новых итерациях цикла
 
-    # Для визуализации процесса
-    print('    Итерация №', iteration, ', number of items', len(response['items']), '                    ', end='\r')
-    iteration += 1
-
-    # Сменить формат представления дат, класс данных столбцов с id, создать столбец с кликабельными ссылками на контент
-        # Здесь, а не в конце, поскольку нужна совместимость с itemS из Temporal и от пользователя
-    if len(dfAdd) > 0:
-        # display(dfAdd) # для отладки
-        # print('dfAdd.columns', dfAdd.columns) # для отладки
-        dfAdd['date'] = dfAdd['date'].apply(lambda content: datetime.fromtimestamp(content).strftime('%Y.%m.%d'))
-        dfAdd['URL'] = dfAdd['from_id'].astype(str)
-        dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL'] = 'id' + dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL']
-        dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'] = dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'].str.replace('-', 'public')
-        dfAdd['URL'] = 'https://vk.com' + '/' + dfAdd['URL'] + '?w=' + dfAdd['inner_type'].str.split('_').str[0] + dfAdd['owner_id'].astype(str) + '_' + dfAdd['id'].astype(str)
-
-        if fields != None:
-            for fieldsColumn in ['groups', 'profiles']:
-                if fieldsColumn in response.keys(): dfAdd = fieldsProcessor(dfIn=dfAdd, fieldsColumn=fieldsColumn, response=response)
+    if goS:
+        # Для визуализации процесса
+        print('    Итерация №', iteration, ', number of items', len(response['items']), '                    ', end='\r')
+        iteration += 1
+    
+        # Сменить формат представления дат, класс данных столбцов с id, создать столбец с кликабельными ссылками на контент
+            # Здесь, а не в конце, поскольку нужна совместимость с itemS из Temporal и от пользователя
+        if len(dfAdd) > 0:
+            # display(dfAdd) # для отладки
+            # print('dfAdd.columns', dfAdd.columns) # для отладки
+            dfAdd['date'] = dfAdd['date'].apply(lambda content: datetime.fromtimestamp(content).strftime('%Y.%m.%d'))
+            dfAdd['URL'] = dfAdd['from_id'].astype(str)
+            dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL'] = 'id' + dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL']
+            dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'] = dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'].str.replace('-', 'public')
+            dfAdd['URL'] = 'https://vk.com' + '/' + dfAdd['URL'] + '?w=' + dfAdd['inner_type'].str.split('_').str[0] + dfAdd['owner_id'].astype(str) + '_' + dfAdd['id'].astype(str)
+    
+            if fields != None:
+                for fieldsColumn in ['groups', 'profiles']:
+                    if fieldsColumn in response.keys(): dfAdd = fieldsProcessor(dfIn=dfAdd, fieldsColumn=fieldsColumn, response=response)
 
     return dfAdd, goS, iteration, keyOrder, pause, response
 
@@ -206,12 +215,13 @@ f'Поскольку исполнение скрипта натолкнулос�
         file.close()
     
         file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}stageTarget.txt', 'w+')
-        file.write(str(stageTarget)) # stageTarget принимает значения [0; 3]
+        file.write(str(stage)) # stage и stageTarget принимает значения [0; 3]
         file.close()
     
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}targetCount.txt', 'w+')
-        file.write(str(targetCount))
-        file.close()
+        if targetCount:
+            file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}targetCount.txt', 'w+')
+            file.write(str(targetCount))
+            file.close()
     
         file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}year.txt', 'w+')
         file.write(str(year)) # год, на котором остановилось исполнение скрипта
@@ -454,30 +464,30 @@ def newsFeedSearch(
                 targetCount = file.read()
                 file.close()
                 targetCount = int(targetCount)
-    
+
                 file = open(f'{rootName}{slash}method.txt')
                 method = file.read()
                 file.close()
-    
+
                 file = open(f'{rootName}{slash}year.txt')
                 year = file.read()
                 file.close()
                 year = int(year)
-    
+
                 file = open(f'{rootName}{slash}q.txt', encoding='utf-8') # 
                 q = file.read()
                 file.close()
                 if q == '': q = None # для единообразия
-    
+
                 file = open(f'{rootName}{slash}yearsRange.txt')
                 yearsRange = file.read()
                 file.close()
-    
+
                 file = open(f'{rootName}{slash}stageTarget.txt')
                 stageTarget = file.read()
                 file.close()
                 stageTarget = int(stageTarget)
-    
+
                 print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:'
                       # , '\n- было выявлено целевое число объектов (targetCount)', targetCount
                       , '\n- скрипт остановился на методе', method)
@@ -488,25 +498,26 @@ def newsFeedSearch(
 '''--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
 --- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите "R" и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter'''
-                  )
+                      )
                 decision = input()
                 if len(decision) == 0:
                     temporalNameS = os.listdir(rootName)
                     for temporalName in temporalNameS:
                         if '.xlsx' in temporalName: break
                     itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
-    
+
                     for temporalName in temporalNameS:
                         if '.json' in temporalName:
                             itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
                             break
-    
+
                     if yearsRange != None:
                         yearsRange = yearsRange.split('-')
                         yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
 # Данные, сохранённые при прошлом запуске скрипта, загружены; их метаданные (q, yearsRange, stageTarget) будут использоваться при исполнении скрипта
                     break
                 elif decision == 'R': shutil.rmtree(rootName, ignore_errors=True)
+            else: shutil.rmtree(rootName, ignore_errors=True) # в директории Temporal не 7 файлов => либо она повреждена, либо создалась при безрезультатном запуске
 
 # 2.0.3 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
     if temporalName == None: # если itemsTemporal, в т.ч. пустой, не существует
@@ -634,17 +645,19 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                                                                start_from=None,
                                                                                start_time=start_time
                                                                                )
-        targetCount = response['total_count']
-        if targetCount == 0:
-            print(
+        if goS: # проверка, что функция bigSearch завершилась успехом
+            targetCount = response['total_count']
+            if targetCount == 0:
+                print(
 '  Искомых объектов на серверах ВК по Вашему запросу, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта. Что делать? Поменяйте настройки запроса и запустите скрипт с начала'
-                  )
-            warnings.filterwarnings("ignore")
-            print(
+                      )
+                warnings.filterwarnings("ignore")
+                print(
 'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
 'Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'
-                  )
-            sys.exit()
+                      )
+                sys.exit()
+        else: targetCount = None # проверка, что функция bigSearch завершилась успехом
 
         # if len(itemS) < targetCount: # на случай достаточности
         itemS = dfsProcessor(
