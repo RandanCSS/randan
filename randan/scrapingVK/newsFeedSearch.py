@@ -98,6 +98,12 @@ def bigSearch(
             dfAdd = pandas.json_normalize(response['items'])
             break
         elif 'error' in response.keys():
+            if 'Application is blocked' in response['error']['error_msg']:
+                # print('  keyOrder до замены', '                    ') # для отладки
+                keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
+                print(f'\nПохоже, ключ попал под ограничение вследствие блокировки приложения, к которому он относится; пробую перейти к следующему ключу (№ {keyOrder})')
+                # print('  keyOrder после замены', keyOrder, '                    ') # для отладки
+
             if 'Too many requests per second' in response['error']['error_msg']:
                 # print('  keyOrder до замены', '                    ') # для отладки
                 keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
