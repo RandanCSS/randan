@@ -48,9 +48,12 @@ setup(
         'regex>=2024.9.11',
         'requests>=2.32.3',
         'scikit-learn>=0.23.1',
+        'selenium>=4.33.0',
         'statsmodels>=0.11.1',
         'stop-words>=2018.7.23',
-        'tqdm>=4.66.5'
+        'tqdm>=4.66.5',
+        'undetected-chromedriver>=3.5.5'
     ],
     python_requires='>=3.6',
 )
+
