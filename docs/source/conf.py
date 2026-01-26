@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 # -- Project information -----------------------------------------------------
 
 project = 'randan'
-copyright = '2020, Aleksei Rotmistrov, Svetlana Zhuchkova'
+copyright = '2026, Aleksei Rotmistrov, Svetlana Zhuchkova'
 author = 'Aleksei Rotmistrov, Svetlana Zhuchkova'
 
 # The full version, including alpha/beta/rc tags
@@ -35,6 +35,9 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon'
 ]
+
+source_suffix = ['.rst', '.md']
+
 napoleon_google_docstring = False
 napoleon_use_param = False
 napoleon_use_ivar = True
