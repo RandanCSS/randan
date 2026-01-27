@@ -21,11 +21,12 @@ attempt = 0
 while True:
     try:
         from datetime import date, datetime
-        from randan.tools import calendarWithinYear # авторский модуль для работы с календарём конкретного года
-        from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
-        from randan.tools import df2file # авторский модуль для сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
-        from randan.tools import files2df # авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
-        from randan.tools import varPreprocessor # авторский модуль для предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
+        from randan.tools import calendarWithinYear, coLabAdaptor, df2file, files2df, varPreprocessor # авторские модули для
+            # (а) работы с календарём конкретного года
+            # (б) адаптации текущего скрипта к файловой системе CoLab
+            # (в) сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
+            # (г) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
+            # (д) предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
         import numpy, os, pandas, re, shutil, time, requests, warnings
         break
     except ModuleNotFoundError:
