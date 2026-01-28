@@ -6,6 +6,18 @@ randan package
    :undoc-members:
    :show-inheritance:
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   randan.scrapingVK
+   randan.scrapingYouTube
+   randan.tools
+   randan.topicModeling
+   randan.trading
+
 Submodules
 ----------
 
