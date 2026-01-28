@@ -23,7 +23,7 @@ copyright = '2026, Aleksei Rotmistrov, Svetlana Zhuchkova'
 author = 'Aleksei Rotmistrov, Svetlana Zhuchkova'
 
 # The full version, including alpha/beta/rc tags
-release = '0.2.1'
+release = '1.4.6'
 
 
 # -- General configuration ---------------------------------------------------
