@@ -8,13 +8,13 @@ randan documentation
 
 Overview
 ==================
-``randan`` is a python package that aims to provide most of the functions presented in SPSS. Unlike the other python packages for data analysis, it has three main features, which make it attractive for social scientists:
+randan is a python package that aims to help social scientists, statisticians and financiers. For the former ones it provides twelve analytical modules that emulate the most popular options presented in SPSS. Unlike the other python packages for data analysis, it has three main features, which make it attractive for social scientists:
 
-1. it provides the results of the analysis in a readable and understandable form, similar to SPSS
-2. it gives you information about statistical significance of the parameters whenever possible
-3. it unites all the necessary methods so you do not need to switch between different packages and software anymore
+- it provides the results of the analysis in a readable and understandable form, similar to SPSS
+- it provides information about statistical significance of the parameters whenever possible
+- it meets the most popular analytical needs of social scientists; so, the switching among different packages and software stays in the past
 
-``randan`` should be used in Jupyter Notebook and your data should be stored in ``pandas`` DataFrames.
+New -- thirteenth and fourteenth -- modules provide data from YouTube and VK respectively literally by couple of clicks.
 
 This documentation aims to provide information about how ``randan``'s classes are organized.
 For examples of usage and detailed tutorials, go to `Github page <https://github.com/LanaLob/randan>`_ of this project.
