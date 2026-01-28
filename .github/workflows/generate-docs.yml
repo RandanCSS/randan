@@ -1,11 +1,9 @@
 name: Generate API Documentation
 
 on:
-  workflow_dispatch:  # Позволяет запускать вручную
+  workflow_dispatch:
   push:
     branches: [ master ]
-    paths:
-      - 'randan/**'  # Запускать при изменении кода пакета
 
 jobs:
   generate-docs:
@@ -24,10 +22,21 @@ jobs:
         run: |
           pip install sphinx sphinx-rtd-theme
           
-      - name: Generate API documentation
+      - name: Find and fix missing __init__.py files
+        run: |
+          # Создаём __init__.py в папках с Python файлами
+          find randan -type d -exec touch {}/__init__.py \;
+          
+      - name: Generate API documentation with verbose output
         run: |
           cd docs
-          sphinx-apidoc -o source/autoapi ../randan -f --separate --module-first
+          echo "Running sphinx-apidoc..."
+          sphinx-apidoc -o source/autoapi ../randan -f --separate --module-first -v
+          
+      - name: Show generated files
+        run: |
+          echo "Generated files:"
+          find docs/source/autoapi -name "*.rst" | head -20
           
       - name: Commit and push generated docs
         run: |
