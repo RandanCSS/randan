@@ -43,5 +43,14 @@ Use the links below to explore ``randan``'s functionality.
    regression
    tree
 
+   autoapi/modules
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
 .. note:: This project is still under development but you can use all the modules presented in this documentation.
 
