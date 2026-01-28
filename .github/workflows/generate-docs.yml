@@ -1,0 +1,38 @@
+name: Generate API Documentation
+
+on:
+  workflow_dispatch:  # Позволяет запускать вручную
+  push:
+    branches: [ master ]
+    paths:
+      - 'randan/**'  # Запускать при изменении кода пакета
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          
+      - name: Install dependencies
+        run: |
+          pip install sphinx sphinx-rtd-theme
+          
+      - name: Generate API documentation
+        run: |
+          cd docs
+          sphinx-apidoc -o source/autoapi ../randan -f --separate --module-first
+          
+      - name: Commit and push generated docs
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git add docs/source/autoapi/
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-generate API documentation"
+          git push
