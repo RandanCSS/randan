@@ -161,8 +161,6 @@ def bigSearch(
         # Сменить формат представления дат, класс данных столбцов с id, создать столбец с кликабельными ссылками на контент
             # Здесь, а не в конце, поскольку нужна совместимость с itemS из Temporal и от пользователя
         if len(dfAdd) > 0:
-            # display(dfAdd) # для отладки
-            # print('dfAdd.columns', dfAdd.columns) # для отладки
             dfAdd['date'] = dfAdd['date'].apply(lambda content: datetime.fromtimestamp(content).strftime('%Y.%m.%d'))
             dfAdd['URL'] = dfAdd['from_id'].astype(str)
             dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL'] = 'id' + dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL']
@@ -171,7 +169,10 @@ def bigSearch(
     
             if fields != None:
                 for fieldsColumn in ['groups', 'profiles']:
-                    if fieldsColumn in response.keys(): dfAdd = fieldsProcessor(dfIn=dfAdd, fieldsColumn=fieldsColumn, response=response)
+                    if fieldsColumn in response.keys():
+                        if response[fieldsColumn] != []:
+                            # print('fieldsColumn:', fieldsColumn) # для отладки
+                            dfAdd = fieldsProcessor(dfIn=dfAdd, fieldsColumn=fieldsColumn, response=response)
 
     return dfAdd, goS, iteration, keyOrder, pause, response
 
@@ -327,7 +328,7 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
 def newsFeedSearch(
                    access_token=None,
                    count=None,
-                   end_time=None,
+                   end_time=None, # !!! можно сделать 2 варианта подачи: год или Unix
                    fields=None,
                    latitude=None,
                    longitude=None,
@@ -345,14 +346,14 @@ def newsFeedSearch(
     Причём они могут быть поданы и в качестве самостоятельных аргументов функции, и в качестве словаря params , который обычно подаётся в метод get пакета requests
     access_token : str
            count : int
-        end_time : int
+        end_time : int -- формат Unix
           fields : list
         latitude : int
        longitude : int
           params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/newsfeed.search , чтобы не подавать эти аргументы по отдельности
                q : str
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
-      start_time : int
+      start_time : int -- формат Unix
     """
     if (params == None) & (access_token == None) & (count == None) & (end_time == None) & (fields == None) & (latitude == None) & (longitude == None) & (q == None) & (start_time == None) & (returnDfs == False):
         # print('Пользователь не подал аргументы') # для отладки
@@ -721,7 +722,7 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                  )
         print('  Искомых объектов', targetCount, ', а найденных БЕЗ сегментирования по годам и месяцам:', len(itemS))
 
-# 2.1.1 Этап сегментирования по годам и месяцам (stage = 1)
+# 2.1.1 Этап сегментирования по годам и месяцам (stage = 1) # !!! можно сделать динамическое определение периода, который наиболее приближает размер допустимой выдачи (1000) к бенчмарку
     stage = 1
     if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
         if len(itemS) < targetCount:
