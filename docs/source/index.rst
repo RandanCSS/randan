@@ -43,6 +43,10 @@ Use the links below to explore ``randan``'s functionality.
    regression
    tree
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Auto-Generated API Documentation:
+
    autoapi/modules
 
 Indices and tables
