@@ -170,7 +170,7 @@ def bigSearch(
             if fields != None:
                 for fieldsColumn in ['groups', 'profiles']:
                     if fieldsColumn in response.keys():
-                        if response[fieldsColumn] != []:
+                        if response[fieldsColumn] != []: # например, когда в основной таблице dfAdd нет групповых или, наоборот, персональных аккаунтов, тогда fieldsColumn есть, но с пустым содержимым
                             # print('fieldsColumn:', fieldsColumn) # для отладки
                             dfAdd = fieldsProcessor(dfIn=dfAdd, fieldsColumn=fieldsColumn, response=response)
 
