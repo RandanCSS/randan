@@ -899,3 +899,8 @@ for cellContent in Исходный_датафрейм[column].dropna():
 # print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть')
 # input()
 # sys.exit()
+
+
+# Сделать выход по кнопе остановки
+# Введённый аргумент end_time приравнять к текущему моменту, чтобы не было прохода по лишним месяцам
+# Сделать выбор временнОго диапазона динамическим
