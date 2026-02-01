@@ -411,6 +411,9 @@ def newsFeedSearch(
     folderFile = None
     goS = True
     itemS = pandas.DataFrame()
+    itemsAdditional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
+    itemsMonthlyAdditional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
+    itemsYearlyAdditional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных               
     keyOrder = 0
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     stageTarget = 0 # stageTarget принимает значения [0; 3] и относится к стадиям скрипта
