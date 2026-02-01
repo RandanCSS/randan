@@ -91,67 +91,74 @@ def bigSearch(
               }
     tryer = 0
     while True:
-        response = requests.get('https://api.vk.ru/method/newsfeed.search', params=params)
-        response = response.json() # отобразить выдачу метода get в виде JSON
-        # print('response', response) # для отладки
-        if 'response' in response.keys():
-            response = response['response']
-            # print('    response.keys() внутри bigSearch', response.keys()) # для отладки
-            dfAdd = pandas.json_normalize(response['items'])
-            break
-        elif 'error' in response.keys():
-            if 'Application is blocked' in response['error']['error_msg']:
-                # print('  keyOrder до замены', '                    ') # для отладки
-                keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
-                print(f'\nПохоже, ключ попал под ограничение вследствие блокировки приложения, к которому он относится; пробую перейти к следующему ключу (№ {keyOrder})')
-                # print('  keyOrder после замены', keyOrder, '                    ') # для отладки
-                tryer += 1
-                if tryer >= len(API_keyS):
-                    print(
+        try: # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
+            response = requests.get('https://api.vk.ru/method/newsfeed.search', params=params)
+            response = response.json() # отобразить выдачу метода get в виде JSON
+            # print('response', response) # для отладки
+            if 'response' in response.keys():
+                response = response['response']
+                # print('    response.keys() внутри bigSearch', response.keys()) # для отладки
+                dfAdd = pandas.json_normalize(response['items'])
+                break
+            elif 'error' in response.keys():
+                if 'Application is blocked' in response['error']['error_msg']:
+                    # print('  keyOrder до замены', '                    ') # для отладки
+                    keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
+                    print(f'\nПохоже, ключ попал под ограничение вследствие блокировки приложения, к которому он относится; пробую перейти к следующему ключу (№ {keyOrder})')
+                    # print('  keyOrder после замены', keyOrder, '                    ') # для отладки
+                    tryer += 1
+                    if tryer >= len(API_keyS):
+                        print(
 '''
 Попробовал все располагаемые ключи; все они заблокированны или неактивны(
 Попробуйте обновить сервисный ключ в Вашем приложении API ВК, после чего замените старые ключи новым в файле credentialsVK.txt и перезапустите этот скрипт
 '''
-                          )
-                    # response = {'items': [], 'total_count': 0} # принудительная выдача для response
+                              )
+                        # response = {'items': [], 'total_count': 0} # принудительная выдача для response
+                        goS = False # нет смысла продолжать исполнение скрипта
+                        break # и, следовательно, нет смысла в новых итерациях цикла
+
+                elif 'Too many requests per second' in response['error']['error_msg']:
+                    # print('  keyOrder до замены', '                    ') # для отладки
+                    keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
+                    print(f'\nПохоже, ключ попал под ограничение вследствие слишком высокой частоты обращения скрипта к API; пробую перейти к следующему ключу (№ {keyOrder}) и снизить частоту')
+                    # print('  keyOrder после замены', keyOrder, '                    ') # для отладки
+                    pause += 0.25
+
+                elif 'Unknown application: could not get application' in response['error']['error_msg']:
+                    # print('  keyOrder до замены', '                    ') # для отладки
+                    keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
+                    print('\nПохоже, Ваше ВК-приложение попало под ограничение; пробую перейти к следующему ключу (№ {keyOrder}) и снизить частоту')
+                    # print('  keyOrder после замены', keyOrder, '                    ') # для отладки
+                    pause += 0.25
+
+                elif 'Internal server error: Unknown error, try later' in response['error']['error_msg']:
+                    print('\nПохоже, ошибка на сервере ВК; подождите и запустите скрипт с начала')
+                    response = {'items': [], 'total_count': 0} # принудительная выдача для response
                     goS = False # нет смысла продолжать исполнение скрипта
                     break # и, следовательно, нет смысла в новых итерациях цикла
 
-            elif 'Too many requests per second' in response['error']['error_msg']:
-                # print('  keyOrder до замены', '                    ') # для отладки
-                keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
-                print(f'\nПохоже, ключ попал под ограничение вследствие слишком высокой частоты обращения скрипта к API; пробую перейти к следующему ключу (№ {keyOrder}) и снизить частоту')
-                # print('  keyOrder после замены', keyOrder, '                    ') # для отладки
-                pause += 0.25
-
-            elif 'Unknown application: could not get application' in response['error']['error_msg']:
-                # print('  keyOrder до замены', '                    ') # для отладки
-                keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
-                print('\nПохоже, Ваше ВК-приложение попало под ограничение; пробую перейти к следующему ключу (№ {keyOrder}) и снизить частоту')
-                # print('  keyOrder после замены', keyOrder, '                    ') # для отладки
-                pause += 0.25
-
-            elif 'Internal server error: Unknown error, try later' in response['error']['error_msg']:
-                print('\nПохоже, ошибка на сервере ВК; подождите и запустите скрипт с начала')
-                # response = {'items': [], 'total_count': 0} # принудительная выдача для response
-                goS = False # нет смысла продолжать исполнение скрипта
-                break # и, следовательно, нет смысла в новых итерациях цикла
-
-            elif 'User authorization failed' in response['error']['error_msg']:
-                print(
+                elif 'User authorization failed' in response['error']['error_msg']:
+                    print(
 '''
 Похоже, аккаунт попал под ограничение. Оно может быть снято с аккаунта сразу или спустя какое-то время. Подождите или подготовьте новый ключ в другом аккаунте. И запустите скрипт с начала'''
-                      )
-                response = {'items': [], 'total_count': 0} # принудительная выдача для response
-                goS = False # нет смысла продолжать исполнение скрипта
-                break # и, следовательно, нет смысла в новых итерациях цикла
+                          )
+                    response = {'items': [], 'total_count': 0} # принудительная выдача для response
+                    goS = False # нет смысла продолжать исполнение скрипта
+                    break # и, следовательно, нет смысла в новых итерациях цикла
 
-            else:
-                print('  Похоже, проблема НЕ в слишком высокой частоте обращения скрипта к API((')
-                print('  ', response['error']['error_msg'])
-                response = {'items': [], 'total_count': 0} # принудительная выдача для response
-                goS = False # нет смысла продолжать исполнение скрипта
-                break # и, следовательно, нет смысла в новых итерациях цикла
+                else:
+                    print('  Похоже, проблема НЕ в слишком высокой частоте обращения скрипта к API((')
+                    print('  ', response['error']['error_msg'])
+                    response = {'items': [], 'total_count': 0} # принудительная выдача для response
+                    goS = False # нет смысла продолжать исполнение скрипта
+                    break # и, следовательно, нет смысла в новых итерациях цикла
+
+        except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
+            response = {'items': [], 'total_count': 0} # принудительная выдача для response
+            goS = False # нет смысла продолжать исполнение скрипта
+            # print('goS bigSearch:', goS) # для отладки
+            break # и, следовательно, нет смысла в новых итерациях цикла            
 
     if goS:
         # Для визуализации процесса
@@ -655,11 +662,12 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                                                                    start_from=None,
                                                                                    start_time=start_time
                                                                                    )
-            if goS: # проверка, что функция bigSearch завершилась успехом
+            # print('goS 600:', goS) # для отладки
+            if goS: # проверка, что функция bigSearch завершилась успехом; обработка вилки с targetCount == 0
                 targetCount = response['total_count']
                 if targetCount == 0:
                     print(
-    '  Искомых объектов на серверах ВК по Вашему запросу,  ноль, поэтому нет смысла в продолжении исполнения скрипта. Что делать? Поменяйте настройки запроса и запустите скрипт с начала'
+    '  Искомых объектов на серверах ВК по Вашему запросу, ноль, поэтому нет смысла в продолжении исполнения скрипта. Что делать? Поменяйте настройки запроса и запустите скрипт с начала'
                           )
                     warnings.filterwarnings("ignore")
                     print(
@@ -669,7 +677,6 @@ f'-- можете подать их в скобки функции newsFeedSearc
                     sys.exit()
             else: targetCount = None # проверка, что функция bigSearch завершилась успехом
 
-            # if len(itemS) < targetCount: # на случай достаточности
             itemS = dfsProcessor(
                                  complicatedNamePart=complicatedNamePart,
                                  coLabFolder=coLabFolder,
@@ -688,9 +695,10 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                  yearsRange=yearsRange
                                  )
             print('  Проход по всем следующим страницам с выдачей          ')
-            while 'next_from' in response.keys():
+            while ('next_from' in response.keys()) & goS:
                 start_from = response['next_from']
                 # print('    start_from', start_from) # для отладки
+                # print('goS 700:', goS) # для отладки
                 itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
                                                                                        API_keyS=API_keyS,
                                                                                        count=count,
@@ -738,7 +746,7 @@ f'-- можете подать их в скобки функции newsFeedSearc
 --- Если НЕ хотите, нажмите пробел и затем Enter'''
                       )
                 if len(input()) == 0:
-                    while True:
+                    while goS:
                         # print('Ищу текст запроса-фильтра в контенте за', year, 'год')
                         calendar = calendarWithinYear.calendarWithinYear(year)
                         itemsYearlyAdditional = pandas.DataFrame()
@@ -784,7 +792,8 @@ f'-- можете подать их в скобки функции newsFeedSearc
                             # print('len(itemsYearlyAdditional):', len(itemsYearlyAdditional)) # для отладки
 
                             print('  Проход по всем следующим страницам с выдачей', '               ', end='\r')
-                            while 'next_from' in response.keys():
+
+                            while ('next_from' in response.keys()) & goS:
                                 start_from = response['next_from']
                                 # print('    start_from', start_from) # для отладки
                                 itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
@@ -842,8 +851,8 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                              yearsRange=yearsRange
                                              )
                         # print('len(itemS):', len(itemS)) # для отладки
-                        # display(itemS.head())
-                        # print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
+                        # display(itemS.head()) # для отладки
+                        # print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0]) # для отладки
 
                         if len(itemsYearlyAdditional) == 0:
                             print(f'\nВыдача для года {year} -- пуста'
@@ -900,7 +909,7 @@ for cellContent in Исходный_датафрейм[column].dropna():
         if returnDfs: return itemS
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
-        display(itemS)
+        # display(itemS)
         if len(itemS) > 0:
             if itemsYearlyAdditional:
                 dfAdd = itemsYearlyAdditional
@@ -935,6 +944,5 @@ for cellContent in Исходный_датафрейм[column].dropna():
                          yearsRange=yearsRange
                          )
 
-# Сделать выход по кнопе остановки
 # Введённый аргумент end_time приравнять к текущему моменту, чтобы не было прохода по лишним месяцам
 # Сделать выбор временнОго диапазона динамическим
