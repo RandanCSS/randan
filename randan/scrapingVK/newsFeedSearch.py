@@ -897,6 +897,7 @@ for cellContent in Исходный_датафрейм[column].dropna():
         if returnDfs: return itemS
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
+        display(itemS)
         if len(itemS) > 0:
             if itemsYearlyAdditional:
                 dfAdd = itemsYearlyAdditional
