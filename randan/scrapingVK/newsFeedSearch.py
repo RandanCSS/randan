@@ -204,7 +204,7 @@ def dfsProcessor(
 
     if goS == False:
         print(
-f'Поскольку исполнение скрипта натолкнулось на ошибку, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"'
+f'Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"'
               )
         if not os.path.exists(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal'):
                 os.makedirs(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal')
@@ -254,7 +254,6 @@ f'Поскольку исполнение скрипта натолкнулос�
         sys.exit()
 
     return df
-
 
 # 1.2 для обработки выдачи аргумента fields
 def fieldsProcessor(dfIn, fieldsColumn, response):
@@ -621,72 +620,23 @@ def newsFeedSearch(
 
 # 2.1 Первичный сбор контента методом search
 # 2.1.0 Первое обращение к API БЕЗ аргументов start_time, end_time (этап stage = 0)
-    stage = 0
-    method = 'newsfeed.search'
-    iteration = 0 # номер итерации применения текущего метода
-    pause = 0.25
-    print(
+    try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
+        stage = 0
+        method = 'newsfeed.search'
+        iteration = 0 # номер итерации применения текущего метода
+        pause = 0.25
+        print(
 f'В скрипте используются следующие аргументы метода {method} API ВК: q, start_from, start_time, end_time, expand.',
 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
 f'Если хотите добавить другие аргументы метода {method} API ВК, доступные по ссылке https://dev.vk.com/ru/method/newsfeed.search ,',
 f'-- можете подать их в скобки функции newsFeedSearch перед её запуском или скопировать код исполняемого сейчас скрипта и сделать это внутри кода внутри метода {method} в разделе 2'
-          )
-    # print('expiriencedMode:', expiriencedMode) # для отладки
-    if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-    print('') # для отступа
+              )
+        # print('expiriencedMode:', expiriencedMode) # для отладки
+        if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+        print('') # для отступа
 
-    if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
-        print('Первое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов')
-        # print('    start_from', start_from) # для отладки
-        itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
-                                                                               API_keyS=API_keyS,
-                                                                               count=count,
-                                                                               end_time=end_time,
-                                                                               fields=fields,
-                                                                               iteration=iteration,
-                                                                               keyOrder=keyOrder,
-                                                                               latitude=latitude,
-                                                                               longitude=longitude,
-                                                                               pause=pause,
-                                                                               q=q,
-                                                                               start_from=None,
-                                                                               start_time=start_time
-                                                                               )
-        if goS: # проверка, что функция bigSearch завершилась успехом
-            targetCount = response['total_count']
-            if targetCount == 0:
-                print(
-'  Искомых объектов на серверах ВК по Вашему запросу,  ноль, поэтому нет смысла в продолжении исполнения скрипта. Что делать? Поменяйте настройки запроса и запустите скрипт с начала'
-                      )
-                warnings.filterwarnings("ignore")
-                print(
-'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
-'Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'
-                      )
-                sys.exit()
-        else: targetCount = None # проверка, что функция bigSearch завершилась успехом
-
-        # if len(itemS) < targetCount: # на случай достаточности
-        itemS = dfsProcessor(
-                             complicatedNamePart=complicatedNamePart,
-                             coLabFolder=coLabFolder,
-                             fileFormatChoice=fileFormatChoice,
-                             goS=goS,
-                             dfAdd=itemsAdditional,
-                             dfFinal=itemS,
-                             dfIn=itemS,
-                             method=method,
-                             momentCurrent=momentCurrent,
-                             q=q,
-                             slash=slash,
-                             stage=stage,
-                             targetCount=targetCount,
-                             year=year,
-                             yearsRange=yearsRange
-                             )
-        print('  Проход по всем следующим страницам с выдачей          ')
-        while 'next_from' in response.keys():
-            start_from = response['next_from']
+        if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
+            print('Первое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов')
             # print('    start_from', start_from) # для отладки
             itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
                                                                                    API_keyS=API_keyS,
@@ -699,10 +649,24 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                                                                    longitude=longitude,
                                                                                    pause=pause,
                                                                                    q=q,
-                                                                                   start_from=start_from,
+                                                                                   start_from=None,
                                                                                    start_time=start_time
                                                                                    )
-            # print('''    response['next_from'] после bigSearch''', response['next_from']) # для отладки
+            if goS: # проверка, что функция bigSearch завершилась успехом
+                targetCount = response['total_count']
+                if targetCount == 0:
+                    print(
+    '  Искомых объектов на серверах ВК по Вашему запросу,  ноль, поэтому нет смысла в продолжении исполнения скрипта. Что делать? Поменяйте настройки запроса и запустите скрипт с начала'
+                          )
+                    warnings.filterwarnings("ignore")
+                    print(
+    'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
+    'Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'
+                          )
+                    sys.exit()
+            else: targetCount = None # проверка, что функция bigSearch завершилась успехом
+
+            # if len(itemS) < targetCount: # на случай достаточности
             itemS = dfsProcessor(
                                  complicatedNamePart=complicatedNamePart,
                                  coLabFolder=coLabFolder,
@@ -720,70 +684,67 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                  year=year,
                                  yearsRange=yearsRange
                                  )
-        print('  Искомых объектов', targetCount, ', а найденных БЕЗ сегментирования по годам и месяцам:', len(itemS))
+            print('  Проход по всем следующим страницам с выдачей          ')
+            while 'next_from' in response.keys():
+                start_from = response['next_from']
+                # print('    start_from', start_from) # для отладки
+                itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
+                                                                                       API_keyS=API_keyS,
+                                                                                       count=count,
+                                                                                       end_time=end_time,
+                                                                                       fields=fields,
+                                                                                       iteration=iteration,
+                                                                                       keyOrder=keyOrder,
+                                                                                       latitude=latitude,
+                                                                                       longitude=longitude,
+                                                                                       pause=pause,
+                                                                                       q=q,
+                                                                                       start_from=start_from,
+                                                                                       start_time=start_time
+                                                                                       )
+                # print('''    response['next_from'] после bigSearch''', response['next_from']) # для отладки
+                itemS = dfsProcessor(
+                                     complicatedNamePart=complicatedNamePart,
+                                     coLabFolder=coLabFolder,
+                                     fileFormatChoice=fileFormatChoice,
+                                     goS=goS,
+                                     dfAdd=itemsAdditional,
+                                     dfFinal=itemS,
+                                     dfIn=itemS,
+                                     method=method,
+                                     momentCurrent=momentCurrent,
+                                     q=q,
+                                     slash=slash,
+                                     stage=stage,
+                                     targetCount=targetCount,
+                                     year=year,
+                                     yearsRange=yearsRange
+                                     )
+            print('  Искомых объектов', targetCount, ', а найденных БЕЗ сегментирования по годам и месяцам:', len(itemS))
 
 # 2.1.1 Этап сегментирования по годам и месяцам (stage = 1) # !!! можно сделать динамическое определение периода, который наиболее приближает размер допустимой выдачи (1000) к бенчмарку
-    stage = 1
-    if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
-        if len(itemS) < targetCount:
-        # -- для остановки алгоритма, если все искомые объекты найдены БЕЗ сегментирования по годам и месяцам
-            print(
+        stage = 1
+        if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
+            if len(itemS) < targetCount:
+            # -- для остановки алгоритма, если все искомые объекты найдены БЕЗ сегментирования по годам и месяцам
+                print(
 '''Метод newsfeed.search выдаёт ограниченное количество объектов, причём наиболее приближенных к текущему моменту. Скрипт умеет внутри каждого года помесячно выгружать контент, двигаясь вглубь веков, пока не достигнет заданной пользователем левой границы временнОго диапазона или года с пустой выдачей'''
-                  )
-            print(
+                      )
+                print(
 '''--- Если хотите для поиска дополнительных объектов попробовать сегментирование по годам и месяцам, просто нажмите Enter, но учтите, что поиск может занять минуты и даже часы
 --- Если НЕ хотите, нажмите пробел и затем Enter'''
-                  )
-            if len(input()) == 0:
-                while True:
-                    # print('Ищу текст запроса-фильтра в контенте за', year, 'год')
-                    calendar = calendarWithinYear.calendarWithinYear(year)
-                    itemsYearlyAdditional = pandas.DataFrame()
-                    calendarColumnS = calendar.columns
-                    if year == int(momentCurrent.strftime("%Y")): calendarColumnS = calendarColumnS[:int(momentCurrent.strftime("%m"))]
-                            # чтобы исключить проход по будущим месяцам текущего года
-                    for month in calendarColumnS:
-                        print('Ищу текст запроса-фильтра в контенте за',  month, 'месяц', year, 'года', '               ') # , end='\r'
-                        print('  Заход на первую страницу выдачи', '               ', end='\r')
-                        itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
-                                                                                                      API_keyS=API_keyS,
-                                                                                                      count=count,
-                                                                                                      end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
-                                                                                                      fields=fields,
-                                                                                                      iteration=iteration,
-                                                                                                      keyOrder=keyOrder,
-                                                                                                      latitude=latitude,
-                                                                                                      longitude=longitude,
-                                                                                                      pause=pause,
-                                                                                                      q=q,
-                                                                                                      start_from=None,
-                                                                                                      start_time=int(datetime(year, int(month), 1).timestamp())
-                                                                                                      )
-                        # print('itemsMonthlyAdditional:') # для отладки
-                        # display(itemsMonthlyAdditional.sort_values('date')['date'].drop_duplicates()) # для отладки
-                        itemsYearlyAdditional = dfsProcessor(
-                                                             complicatedNamePart=complicatedNamePart,
-                                                             coLabFolder=coLabFolder,
-                                                             fileFormatChoice=fileFormatChoice,
-                                                             goS=goS,
-                                                             dfAdd=itemsMonthlyAdditional,
-                                                             dfFinal=itemS,
-                                                             dfIn=itemsYearlyAdditional,
-                                                             method=method,
-                                                             momentCurrent=momentCurrent,
-                                                             q=q,
-                                                             slash=slash,
-                                                             stage=stage,
-                                                             targetCount=targetCount,
-                                                             year=year,
-                                                             yearsRange=yearsRange
-                                                             )
-                        # print('len(itemsYearlyAdditional):', len(itemsYearlyAdditional)) # для отладки
-
-                        print('  Проход по всем следующим страницам с выдачей', '               ', end='\r')
-                        while 'next_from' in response.keys():
-                            start_from = response['next_from']
-                            # print('    start_from', start_from) # для отладки
+                      )
+                if len(input()) == 0:
+                    while True:
+                        # print('Ищу текст запроса-фильтра в контенте за', year, 'год')
+                        calendar = calendarWithinYear.calendarWithinYear(year)
+                        itemsYearlyAdditional = pandas.DataFrame()
+                        calendarColumnS = calendar.columns
+                        if year == int(momentCurrent.strftime("%Y")): calendarColumnS = calendarColumnS[:int(momentCurrent.strftime("%m"))]
+                                # чтобы исключить проход по будущим месяцам текущего года
+                        for month in calendarColumnS:
+                            print('Ищу текст запроса-фильтра в контенте за',  month, 'месяц', year, 'года', '               ') # , end='\r'
+                            print('  Заход на первую страницу выдачи', '               ', end='\r')
                             itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
                                                                                                           API_keyS=API_keyS,
                                                                                                           count=count,
@@ -795,7 +756,7 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                                                                                           longitude=longitude,
                                                                                                           pause=pause,
                                                                                                           q=q,
-                                                                                                          start_from=start_from,
+                                                                                                          start_from=None,
                                                                                                           start_time=int(datetime(year, int(month), 1).timestamp())
                                                                                                           )
                             # print('itemsMonthlyAdditional:') # для отладки
@@ -818,72 +779,111 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                                                  yearsRange=yearsRange
                                                                  )
                             # print('len(itemsYearlyAdditional):', len(itemsYearlyAdditional)) # для отладки
-                            time.sleep(pause)
-                    # print('itemsYearlyAdditional:') # для отладки
-                    # display(itemsYearlyAdditional.sort_values('date')['date'].drop_duplicates()) # для отладки
-                    itemS = dfsProcessor(
-                                         complicatedNamePart=complicatedNamePart,
-                                         coLabFolder=coLabFolder,
-                                         fileFormatChoice=fileFormatChoice,
-                                         goS=goS,
-                                         dfAdd=itemsYearlyAdditional,
-                                         dfFinal=itemS,
-                                         dfIn=itemS,
-                                         method=method,
-                                         momentCurrent=momentCurrent,
-                                         q=q,
-                                         slash=slash,
-                                         stage=stage,
-                                         targetCount=targetCount,
-                                         year=year,
-                                         yearsRange=yearsRange
-                                         )
-                    # print('len(itemS):', len(itemS)) # для отладки
-                    # display(itemS.head())
-                    # print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
 
-                    if len(itemsYearlyAdditional) == 0:
-                        print(f'\nВыдача для года {year} -- пуста'
-                              , '\n--- Если НЕ хотите для поиска дополнительных объектов попробовать двигаться к следующему месяцу вглубь веков, просто нажмите Enter'
-                              , '\n--- Если хотите, нажмите пробел и затем Enter')
-                        if len(input()) == 0:
-                            # print(f'\nЗавершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser}')
-                            break
+                            print('  Проход по всем следующим страницам с выдачей', '               ', end='\r')
+                            while 'next_from' in response.keys():
+                                start_from = response['next_from']
+                                # print('    start_from', start_from) # для отладки
+                                itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(
+                                                                                                              API_keyS=API_keyS,
+                                                                                                              count=count,
+                                                                                                              end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
+                                                                                                              fields=fields,
+                                                                                                              iteration=iteration,
+                                                                                                              keyOrder=keyOrder,
+                                                                                                              latitude=latitude,
+                                                                                                              longitude=longitude,
+                                                                                                              pause=pause,
+                                                                                                              q=q,
+                                                                                                              start_from=start_from,
+                                                                                                              start_time=int(datetime(year, int(month), 1).timestamp())
+                                                                                                              )
+                                # print('itemsMonthlyAdditional:') # для отладки
+                                # display(itemsMonthlyAdditional.sort_values('date')['date'].drop_duplicates()) # для отладки
+                                itemsYearlyAdditional = dfsProcessor(
+                                                                     complicatedNamePart=complicatedNamePart,
+                                                                     coLabFolder=coLabFolder,
+                                                                     fileFormatChoice=fileFormatChoice,
+                                                                     goS=goS,
+                                                                     dfAdd=itemsMonthlyAdditional,
+                                                                     dfFinal=itemS,
+                                                                     dfIn=itemsYearlyAdditional,
+                                                                     method=method,
+                                                                     momentCurrent=momentCurrent,
+                                                                     q=q,
+                                                                     slash=slash,
+                                                                     stage=stage,
+                                                                     targetCount=targetCount,
+                                                                     year=year,
+                                                                     yearsRange=yearsRange
+                                                                     )
+                                # print('len(itemsYearlyAdditional):', len(itemsYearlyAdditional)) # для отладки
+                                time.sleep(pause)
+                        # print('itemsYearlyAdditional:') # для отладки
+                        # display(itemsYearlyAdditional.sort_values('date')['date'].drop_duplicates()) # для отладки
+                        itemS = dfsProcessor(
+                                             complicatedNamePart=complicatedNamePart,
+                                             coLabFolder=coLabFolder,
+                                             fileFormatChoice=fileFormatChoice,
+                                             goS=goS,
+                                             dfAdd=itemsYearlyAdditional,
+                                             dfFinal=itemS,
+                                             dfIn=itemS,
+                                             method=method,
+                                             momentCurrent=momentCurrent,
+                                             q=q,
+                                             slash=slash,
+                                             stage=stage,
+                                             targetCount=targetCount,
+                                             year=year,
+                                             yearsRange=yearsRange
+                                             )
+                        # print('len(itemS):', len(itemS)) # для отладки
+                        # display(itemS.head())
+                        # print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
 
-                    elif yearMinByUser != None: # если пользователь ограничил временнОй диапазон
-                        if year <= yearMinByUser:
-                            print(f'Завершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser}')
-                            break
+                        if len(itemsYearlyAdditional) == 0:
+                            print(f'\nВыдача для года {year} -- пуста'
+                                  , '\n--- Если НЕ хотите для поиска дополнительных объектов попробовать двигаться к следующему месяцу вглубь веков, просто нажмите Enter'
+                                  , '\n--- Если хотите, нажмите пробел и затем Enter')
+                            if len(input()) == 0:
+                                # print(f'\nЗавершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser}')
+                                break
 
-                    print('  Искомых объектов', targetCount, ', а найденных после добавления контента', year, 'года:', len(itemS), '                    ')
-                    year -= 1
-                print('Искомых объектов', targetCount, ', а найденных:', len(itemS), '          ')
+                        elif yearMinByUser != None: # если пользователь ограничил временнОй диапазон
+                            if year <= yearMinByUser:
+                                print(f'Завершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser}')
+                                break
 
-        # pandas.set_option('display.max_columns', None)
-        display(itemS.head())
-        print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
+                        print('  Искомых объектов', targetCount, ', а найденных после добавления контента', year, 'года:', len(itemS), '                    ')
+                        year -= 1
+                    print('Искомых объектов', targetCount, ', а найденных:', len(itemS), '          ')
 
-    elif stage < stageTarget:
-        print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"')
+            # pandas.set_option('display.max_columns', None)
+            display(itemS.head())
+            print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
+
+        elif stage < stageTarget:
+            print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"')
 
 # 2.1.2 Экспорт выгрузки метода search и финальное завершение скрипта
-    df2file.df2fileShell(
-                         complicatedNamePart=complicatedNamePart,
-                         dfIn=itemS,
-                         fileFormatChoice=fileFormatChoice,
-                         method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                         coLabFolder=coLabFolder,
-                         currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                         )
+        df2file.df2fileShell(
+                             complicatedNamePart=complicatedNamePart,
+                             dfIn=itemS,
+                             fileFormatChoice=fileFormatChoice,
+                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                             coLabFolder=coLabFolder,
+                             currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                             )
 
-    print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
-    if os.path.exists(rootName):
-        print('rootName:', rootName)
-        print(
-'Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'
-              )
-        shutil.rmtree(rootName, ignore_errors=True)
-    if fields != None: print(
+        print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+        if os.path.exists(rootName):
+            print('rootName:', rootName)
+            print(
+    'Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'
+                  )
+            shutil.rmtree(rootName, ignore_errors=True)
+        if fields != None: print(
 '''
 Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
 import pandas
@@ -893,13 +893,43 @@ for cellContent in Исходный_датафрейм[column].dropna():
     JSONS.extend(cellContent)
 Новый_датафрейм = pandas.json_normalize(JSONS).drop_duplicates('id').reset_index(drop=True)
 '''
-                             )
-    if returnDfs: return itemS
-# warnings.filterwarnings("ignore")
-# print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть')
-# input()
-# sys.exit()
+                                 )
+        if returnDfs: return itemS
 
+    except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
+        if len(itemS) > 0:
+            if itemsYearlyAdditional:
+                dfAdd = itemsYearlyAdditional
+                dfFinal = itemS
+                dfIn = itemS
+    
+            elif itemsMonthlyAdditional:
+                dfAdd = itemsMonthlyAdditional
+                dfFinal = itemS
+                dfIn = itemsYearlyAdditional
+    
+            elif itemsAdditional:
+                dfAdd = itemsAdditional
+                dfFinal = itemS
+                dfIn = itemS
+
+            dfsProcessor(
+                         complicatedNamePart=complicatedNamePart,
+                         coLabFolder=coLabFolder,
+                         fileFormatChoice=fileFormatChoice,
+                         goS=False,
+                         dfAdd=dfAdd,
+                         dfFinal=itemS,
+                         dfIn=itemS,
+                         method=method,
+                         momentCurrent=momentCurrent,
+                         q=q,
+                         slash=slash,
+                         stage=stage,
+                         targetCount=targetCount,
+                         year=year,
+                         yearsRange=yearsRange
+                         )
 
 # Сделать выход по кнопе остановки
 # Введённый аргумент end_time приравнять к текущему моменту, чтобы не было прохода по лишним месяцам
