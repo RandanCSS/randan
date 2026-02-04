@@ -366,37 +366,61 @@ def newsFeedSearch(
         expiriencedMode = False
         count = 200
     else:
-        expiriencedMode = True
+        expiriencedMode = True        
         if params != None:
-            access_token = params['access_token'] if 'access_token' in params.keys() else None
-            q = params['q'] if 'q' in params.keys() else None
+            # if ('access_token' in params.keys()) & access_token:
+            #     if params['access_token'] != access_token:
+            #         print('Вы подали access_token и как аргумент, и через словарь params, причём Вы подали разные значения туда и туда; будет использовано значение, поданное в params')
+            #         access_token = params['access_token']
+            # elif ('access_token' in params.keys()) & (access_token == None): access_token = params['access_token']
+            # elif ('access_token' not in params.keys()) & access_token: continue # отдельный аргумент определён, поэтому запрос к пользователю не поступит
+            # else: continue # НИ ключ params , НИ отдельный аргумент НЕ определены, поэтому запрос к пользователю поступит
 
-            if 'start_time' in params.keys():
-                start_time = params['start_time']
-                if type(start_time) == str: start_time = int(start_time)
-            else: start_time = None
+            def argument_key_comparison(argument, key, params):
+                if (key in params.keys()) & (argument != None):
+                    if params[key] != argument:
+                        print(f'!!   Вы подали {key} и как аргумент, и через словарь params , причём Вы подали разные значения туда и туда; будет использовано значение, поданное в params !!\n')
+                        argument = params[key]
+                elif (key in params.keys()) & (argument == None): argument = params[key]
+                elif (key not in params.keys()) & (argument != None): pass # отдельный аргумент определён, поэтому запрос к пользователю не поступит
+                else: pass # НИ ключ params , НИ отдельный аргумент НЕ определены, поэтому запрос к пользователю поступит
+                return argument
 
-            if 'count' in params.keys():
-                count = params['count']
+            access_token = argument_key_comparison(access_token, 'access_token', params)
+            # print('access_token:', access_token) # для отладки
+
+            count = argument_key_comparison(count, 'count', params)
+            if count != None:
                 if type(count) == str: count = int(count)
-            else: count = None
+            # print('count:', count) # для отладки
 
-            if 'end_time' in params.keys():
-                end_time = params['end_time']
+            end_time = argument_key_comparison(end_time, 'end_time', params)
+            if end_time != None:
                 if type(end_time) == str: end_time = int(end_time)
-            else: end_time = None
+            # print('end_time:', end_time) # для отладки
 
-            fields = params['fields'] if 'fields' in params.keys() else None
+            fields = argument_key_comparison(fields, 'fields', params)
+            # print('fields:', fields) # для отладки
 
-            if 'latitude' in params.keys():
-                latitude = params['latitude']
+            latitude = argument_key_comparison(latitude, 'latitude', params)
+            if latitude != None:
                 if type(latitude) == str: latitude = int(latitude)
-            else: latitude = None
+            # print('latitude:', latitude) # для отладки
 
-            if 'longitude' in params.keys():
-                longitude = params['longitude']
+            longitude = argument_key_comparison(longitude, 'longitude', params)
+            if longitude != None:
                 if type(longitude) == str: longitude = int(longitude)
-            else: longitude = None
+            # print('longitude:', longitude) # для отладки
+
+            q = argument_key_comparison(q, 'q', params)
+            if q != None:
+                if type(q) != str: q = str(q)
+            # print('q:', q) # для отладки
+
+            start_time = argument_key_comparison(start_time, 'start_time', params)
+            if start_time != None:
+                if type(start_time) == str: start_time = int(start_time)
+            # print('start_time:', start_time) # для отладки
 
     if expiriencedMode == False:
         print(
