@@ -637,7 +637,7 @@ def searchByText(
            locationRadius : str
                regionCode : str
         relevanceLanguage : str
-                returnDfs : bool -- в случае True функция возвращает пять итоговые датафреймы с выдачей методов (1) search, (2) playlists и playlistItems, (3) videos, (4) commentThreads и comments, (5) channels
+                returnDfs : bool -- в случае True функция возвращает пять итоговых датафреймов с выдачей методов (1) search, (2) playlists и playlistItems (общий датафрейм), (3) videos, (4) commentThreads и comments (общий датафрейм), (5) channels
                safeSearch : str
                   topicId : str
              videoCaption : str
