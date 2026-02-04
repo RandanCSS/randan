@@ -942,5 +942,7 @@ for cellContent in Исходный_датафрейм[column].dropna():
                          yearsRange=yearsRange
                          )
 
+            if returnDfs: return itemS
+
 # Введённый аргумент end_time приравнять к текущему моменту, чтобы не было прохода по лишним месяцам
 # Сделать выбор временнОго диапазона динамическим
