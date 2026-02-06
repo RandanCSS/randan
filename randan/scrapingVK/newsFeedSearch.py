@@ -284,6 +284,8 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
         # print('idsCopyStr':, idsCopyStr) # для отладки
     
     def fieldsIdsChecker(cellContent): # функция, приминяемая ниже посредством apply , чтобы ускорить процесс (по сравнению с циклом по ячейкам)
+        if pandas.isna(cellContent):
+            return ''
         idsCopy = cellContent.split('idsCopy')[1].split(', ')
         cellContent = cellContent.split('idsCopy')[0]
         idsToItemS = []
