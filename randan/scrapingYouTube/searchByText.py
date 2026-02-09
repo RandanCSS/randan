@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+'''
+(EN) A proprietary module that simplifies and maximizes YouTube content extraction using the platform's official API method search
+(RU) Авторский модуль для упрощения выгрузки контента YouTube методом его API search и максимизации размера этой выгрузки
+'''
+
 # 0 Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
 # В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
 # sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
