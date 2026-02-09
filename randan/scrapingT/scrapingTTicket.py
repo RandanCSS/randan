@@ -157,7 +157,7 @@ display(airportS)
 airportS['Ближайшая дата начала поездки'] = airportS['Ближайшая дата начала поездки'].astype(str)
 direction = 0
 
-datePriceS_туда = pandas.DataFrame() # не внёс внутрь функции выгрузка_цен,
+datePriceS_туда = pandas.DataFrame(columns=['price']) # не внёс внутрь функции выгрузка_цен,
     # чтобы при прерывании исполнения функции можно было продолжить с места прерывания
 row = airportS.index[0]
 
@@ -174,7 +174,7 @@ display(airportS)
 airportS['Ближайшая дата начала поездки'] = airportS['Ближайшая дата начала поездки'].astype(str)
 direction = 1
 
-datePriceS_оттуда = pandas.DataFrame() # не внёс внутрь функции выгрузка_цен,
+datePriceS_оттуда = pandas.DataFrame(columns=['price']) # не внёс внутрь функции выгрузка_цен,
     # чтобы при прерывании исполнения функции можно было продолжить с места прерывания
 row = airportS.index[0]
 
