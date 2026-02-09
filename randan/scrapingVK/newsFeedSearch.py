@@ -12,12 +12,13 @@ attempt = 0
 while True:
     try:
         from datetime import date, datetime
-        from randan.tools import calendarWithinYear, coLabAdaptor, df2file, files2df, varPreprocessor # авторские модули для
+        from randan.tools import calendarWithinYear, coLabAdaptor, df2file, files2df, scrapingTools, varPreprocessor # авторские модули для
             # (а) работы с календарём конкретного года
             # (б) адаптации текущего скрипта к файловой системе CoLab
             # (в) сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
             # (г) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
-            # (д) предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
+            # (д) упрощения скрапинга
+            # (е) предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
         import numpy, os, pandas, re, shutil, time, requests, warnings
         break
     except ModuleNotFoundError:
@@ -344,38 +345,38 @@ def newsFeedSearch(
         expiriencedMode = True        
         if params != None:
 
-            access_token = argument_key_comparison(access_token, 'access_token', params)
+            access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
             # print('access_token:', access_token) # для отладки
 
-            count = argument_key_comparison(count, 'count', params)
+            count = scrapingTools.argument_key_comparison(count, 'count', params)
             if count != None:
                 if type(count) == str: count = int(count)
             # print('count:', count) # для отладки
 
-            end_time = argument_key_comparison(end_time, 'end_time', params)
+            end_time = scrapingTools.argument_key_comparison(end_time, 'end_time', params)
             if end_time != None:
                 if type(end_time) == str: end_time = int(end_time)
             # print('end_time:', end_time) # для отладки
 
-            fields = argument_key_comparison(fields, 'fields', params)
+            fields = scrapingTools.argument_key_comparison(fields, 'fields', params)
             # print('fields:', fields) # для отладки
 
-            latitude = argument_key_comparison(latitude, 'latitude', params)
+            latitude = scrapingTools.argument_key_comparison(latitude, 'latitude', params)
             if latitude != None:
                 if type(latitude) == str: latitude = int(latitude)
             # print('latitude:', latitude) # для отладки
 
-            longitude = argument_key_comparison(longitude, 'longitude', params)
+            longitude = scrapingTools.argument_key_comparison(longitude, 'longitude', params)
             if longitude != None:
                 if type(longitude) == str: longitude = int(longitude)
             # print('longitude:', longitude) # для отладки
 
-            q = argument_key_comparison(q, 'q', params)
+            q = scrapingTools.argument_key_comparison(q, 'q', params)
             if q != None:
                 if type(q) != str: q = str(q)
             # print('q:', q) # для отладки
 
-            start_time = argument_key_comparison(start_time, 'start_time', params)
+            start_time = scrapingTools.argument_key_comparison(start_time, 'start_time', params)
             if start_time != None:
                 if type(start_time) == str: start_time = int(start_time)
             # print('start_time:', start_time) # для отладки
