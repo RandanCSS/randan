@@ -1,16 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
-# In[ ]:
-
-
-# # 0. Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
-
-
-# In[ ]:
-
-
+# 0. Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
 # 0.0 В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
 # sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
 import sys
@@ -48,16 +39,7 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
                   )
             break
 
-
-# In[ ]:
-
-
-# # 1. Авторские функции
-
-
-# In[ ]:
-
-
+# 1. Авторские функции
 # 1.0 для метода search из API ВК, помогающая работе с ключами
 def bigSearch(
               API_keyS,
@@ -323,16 +305,7 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
 #     fieldsJSON.extend(cell)
 # pandas.json_normalize(fieldsJSON).drop_duplicates('id').reset_index(drop=True)
 
-
-# In[ ]:
-
-
-# # 2. Авторская функция исполнения скрипта
-
-
-# In[ ]:
-
-
+# 2. Авторская функция исполнения скрипта
 def newsFeedSearch(
                    access_token=None,
                    count=None,
@@ -370,23 +343,6 @@ def newsFeedSearch(
     else:
         expiriencedMode = True        
         if params != None:
-            # if ('access_token' in params.keys()) & access_token:
-            #     if params['access_token'] != access_token:
-            #         print('Вы подали access_token и как аргумент, и через словарь params, причём Вы подали разные значения туда и туда; будет использовано значение, поданное в params')
-            #         access_token = params['access_token']
-            # elif ('access_token' in params.keys()) & (access_token == None): access_token = params['access_token']
-            # elif ('access_token' not in params.keys()) & access_token: continue # отдельный аргумент определён, поэтому запрос к пользователю не поступит
-            # else: continue # НИ ключ params , НИ отдельный аргумент НЕ определены, поэтому запрос к пользователю поступит
-
-            def argument_key_comparison(argument, key, params):
-                if (key in params.keys()) & (argument != None):
-                    if params[key] != argument:
-                        print(f'!!   Вы подали {key} и как аргумент, и через словарь params , причём Вы подали разные значения туда и туда; будет использовано значение, поданное в params !!\n')
-                        argument = params[key]
-                elif (key in params.keys()) & (argument == None): argument = params[key]
-                elif (key not in params.keys()) & (argument != None): pass # отдельный аргумент определён, поэтому запрос к пользователю не поступит
-                else: pass # НИ ключ params , НИ отдельный аргумент НЕ определены, поэтому запрос к пользователю поступит
-                return argument
 
             access_token = argument_key_comparison(access_token, 'access_token', params)
             # print('access_token:', access_token) # для отладки
