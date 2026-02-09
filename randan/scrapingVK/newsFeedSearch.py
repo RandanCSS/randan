@@ -2,8 +2,8 @@
 # coding: utf-8
 
 '''
-(EN) A proprietary module that simplifies and maximizes VK content extraction using the platform's official API methods
-(RU) Авторский модуль для упрощения выгрузки контента ВК методами его API и максимизации размера этой выгрузки
+(EN) A proprietary module that simplifies and maximizes VK content extraction using the platform's official API method newsfeed.search
+(RU) Авторский модуль для упрощения выгрузки контента ВК методом его API newsfeed.search и максимизации размера этой выгрузки
 '''
 
 # 0. Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
