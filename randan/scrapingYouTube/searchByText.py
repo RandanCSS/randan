@@ -237,7 +237,7 @@ def dfsProcessor(
                   year,
                   yearsRange
                   ):
-    if (dfAdd != None) | (dfIn != None): # оба df == None -- в случае применения функции dfsProcessor при завершении исполнения скрипта пользователем
+    if (len(dfAdd) != 0) | (len(dfIn) != 0): # оба df пусты -- в случае применения функции dfsProcessor при завершении исполнения скрипта пользователем
         df = pandas.concat([dfIn, dfAdd])
         columnsForCheck = []
         for column in df.columns: # выдача многих методов содержит столбец id, он оптимален для проверки дублирующихся строк
@@ -1973,9 +1973,9 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                          complicatedNamePart=complicatedNamePart,
                          contentType=contentType,
                          fileFormatChoice=fileFormatChoice,
-                         dfAdd=None, # внутри функции dfsProcessor в данном случае отработает только блок goS = False , а dfAdd обрабатывается над этим блоком
+                         dfAdd=pandas.DataFrame(), # внутри функции dfsProcessor в данном случае отработает только блок goS = False , а dfAdd обрабатывается над этим блоком
                          dfFinal=itemS,
-                         dfIn=None, # внутри функции dfsProcessor в данном случае отработает только блок goS = False , а dfIn обрабатывается над этим блоком
+                         dfIn=pandas.DataFrame(), # внутри функции dfsProcessor в данном случае отработает только блок goS = False , а dfIn обрабатывается над этим блоком
                          goS=False,
                          method=method,
                          q=q,
