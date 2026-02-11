@@ -642,7 +642,7 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                                                                    start_from=None,
                                                                                    start_time=start_time
                                                                                    )
-            # print('goS 600:', goS) # для отладки
+            # print('goS 645:', goS) # для отладки
             if goS: # проверка, что функция bigSearch завершилась успехом; обработка вилки с targetCount == 0
                 targetCount = response['total_count']
                 if targetCount == 0:
