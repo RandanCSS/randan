@@ -237,22 +237,23 @@ def dfsProcessor(
                   year,
                   yearsRange
                   ):
-    df = pandas.concat([dfIn, dfAdd])
-    columnsForCheck = []
-    for column in df.columns: # выдача многих методов содержит столбец id, он оптимален для проверки дублирующихся строк
-        if 'id' == column:
-            columnsForCheck.append(column)
-    if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся строк возможна по столбцам, содержащим в имени id
-        for column in df.columns:
-            if 'id.' in column:
+    if (dfAdd != None) | (dfIn != None): # оба df == None -- в случае применения функции dfsProcessor при завершении исполнения скрипта пользователем
+        df = pandas.concat([dfIn, dfAdd])
+        columnsForCheck = []
+        for column in df.columns: # выдача многих методов содержит столбец id, он оптимален для проверки дублирующихся строк
+            if 'id' == column:
                 columnsForCheck.append(column)
-    # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck) # для отладки
-    df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True) # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
+        if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся строк возможна по столбцам, содержащим в имени id
+            for column in df.columns:
+                if 'id.' in column:
+                    columnsForCheck.append(column)
+        # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck) # для отладки
+        df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True) # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
 
 # Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
     if goS == False:
         print(
-f'Поскольку исполнение скрипта натолкнулось на непреодолимую ошибку, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"'
+f'Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"'
               )
         if not os.path.exists(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal'):
                 os.makedirs(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal')
@@ -294,7 +295,7 @@ f'Поскольку исполнение скрипта натолкнулос�
 
         df2file.df2fileShell(
                              complicatedNamePart=f'{complicatedNamePart}_Temporal',
-                             dfIn=df,
+                             dfIn=dfFinal,
                              fileFormatChoice=fileFormatChoice,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
                              coLabFolder=coLabFolder,
@@ -1492,436 +1493,73 @@ f'''    Искомых объектов {targetCount}, а найденных с 
                                     print(f'Завершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser} (с точностью до года)\n')
     
 # 2.1.3 Экспорт выгрузки метода search и опциональное завершение скрипта
-            df2file.df2fileShell(
-                                 complicatedNamePart=complicatedNamePart,
-                                 dfIn=itemS,
-                                 fileFormatChoice=fileFormatChoice,
-                                 method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                                 coLabFolder=coLabFolder,
-                                 currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                                 )
-        elif stage < stageTarget:
-            print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"')
-
-        print(
+                df2file.df2fileShell(
+                                     complicatedNamePart=complicatedNamePart,
+                                     dfIn=itemS,
+                                     fileFormatChoice=fileFormatChoice,
+                                     method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                                     coLabFolder=coLabFolder,
+                                     currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                     )
+            elif stage < stageTarget:
+                print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"')
+    
+            print(
 '''
 Выгрузка метода search содержит НЕ ВСЕ доступные для выгрузки из API YouTube характеристки контента
 --- Если хотите выгрузить дополнительные характеристики (ссылки для ознакомления с ними появятся ниже), нажмите Enter
 --- Если НЕ хотите их выгрузить, нажмите пробел и затем Enter. Тогда исполнение скрипта завершится'''
-              )
+                  )
     
-        if len(input()) > 0:
-            print('Скрипт исполнен')
-            if os.path.exists(rootName):
-                print(
+            if len(input()) > 0:
+                print('Скрипт исполнен')
+                if os.path.exists(rootName):
+                    print(
 'Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'
-                      )
-                shutil.rmtree(rootName, ignore_errors=True)
-            warnings.filterwarnings("ignore")
-            print(
+                          )
+                    shutil.rmtree(rootName, ignore_errors=True)
+                warnings.filterwarnings("ignore")
+                print(
 'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
 'Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'
-                  )
-            if returnDfs: return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
-            sys.exit()
+                      )
+                if returnDfs: return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
+                sys.exit()
 
 # 2.2 Выгрузка дополнительных характеристик и контента методами playlists и playlistItems, videos, commentThreads и comments, channels
 # 2.2.0 Этап stage = 3
-    stage = 3
+        stage = 3
 
 # 2.2.1 Выгрузка дополнительных характеристик плейлистов ИЛИ тот самый случай "в противном случае", когда search следует заменить на cannels + playlistItems
-    snippetContentType = 'playlist'
-    if len(itemS) > 0: # если использовался search..
-        if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # .. и в его выдаче есть плейлисты
-            playlistIdS = itemS[itemS['id.kind'] == f'youtube#{snippetContentType}']
-            playlistIdS =\
-            playlistIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in playlistIdS.columns else playlistIdS['id'].to_list()
-            playlistS, playlistVideoChannelS = playListProcessor(
-                                                                 API_keyS=API_keyS,
-                                                                 channelIdForSearch=channelIdForSearch,
-                                                                 coLabFolder=coLabFolder,
-                                                                 complicatedNamePart=complicatedNamePart,
-                                                                 contentType=contentType,
-                                                                 dfFinal=itemS,
-                                                                 expiriencedMode=expiriencedMode,
-                                                                 fileFormatChoice=fileFormatChoice,
-                                                                 goS=goS,
-                                                                 keyOrder=keyOrder,
-                                                                 momentCurrent=momentCurrent,
-                                                                 playlistIdS=playlistIdS,
-                                                                 q=q,
-                                                                 rootName=rootName,
-                                                                 slash=slash,
-                                                                 snippetContentType=snippetContentType,
-                                                                 stage=stage,
-                                                                 targetCount=targetCount,
-                                                                 year=year,
-                                                                 yearsRange=yearsRange
-                                                                 )
-    else: # если НЕ использовался search (то есть пользователь подал id канала)
-        channelS = channelProcessor(
-                                    API_keyS=API_keyS,
-                                    channelIdForSearch=channelIdForSearch,
-                                    coLabFolder=coLabFolder,
-                                    complicatedNamePart=complicatedNamePart,
-                                    contentType=contentType,
-                                    dfIn=itemS,
-                                    expiriencedMode=expiriencedMode,
-                                    fileFormatChoice=fileFormatChoice,
-                                    goS=goS,
-                                    keyOrder=keyOrder,
-                                    momentCurrent=momentCurrent,
-                                    playlistS=playlistS,
-                                    q=q,
-                                    rootName=rootName,
-                                    slash=slash,
-                                    snippetContentType=snippetContentType,
-                                    stage=stage,
-                                    targetCount=targetCount,
-                                    year=year,
-                                    yearsRange=yearsRange,
-                                    videoS=videoS
-                                    )
-        playlistIdS = channelS['contentDetails.relatedPlaylists.uploads'].to_list()
-        playlistS, playlistVideoChannelS = playListProcessor(
-                                                             API_keyS=API_keyS,
-                                                             channelIdForSearch=channelIdForSearch,
-                                                             coLabFolder=coLabFolder,
-                                                             complicatedNamePart=complicatedNamePart,
-                                                             contentType=contentType,
-                                                             dfFinal=channelS, # т.к. в отсутствие itemS channelS становится базовым датафреймом
-                                                             expiriencedMode=expiriencedMode,
-                                                             fileFormatChoice=fileFormatChoice,
-                                                             goS=goS,
-                                                             keyOrder=keyOrder,
-                                                             momentCurrent=momentCurrent,
-                                                             playlistIdS=playlistIdS,
-                                                             q=q,
-                                                             rootName=rootName,
-                                                             slash=slash,
-                                                             snippetContentType=snippetContentType,
-                                                             stage=stage,
-                                                             targetCount=targetCount,
-                                                             year=year,
-                                                             yearsRange=yearsRange
-                                                             )        
-    # print('playlistIdS:', playlistIdS) # для отладки
-
-# 2.2.2 Выгрузка дополнительных характеристик видео
-    method = 'videos'
-    videoIdS = []
-    if len(itemS) > 0: # если использовался search..
-        snippetContentType = 'video'
-        if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # .. и в его выдаче есть видео
-            print(
-'В скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "contentDetails", "localizations", "statistics", "status", "topicDetails"], id, maxResults .',
-'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
-'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/videos'
-                  )
-            if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-            print('') # для отступа
-
-            iteration = 0 # номер итерации применения текущего метода
-            videoIdS = itemS[itemS['id.kind'] == f'youtube#{snippetContentType}']
-            videoIdS = videoIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in videoIdS.columns else videoIdS['id'].to_list()
-
-# ********** Дополнение списка id видео из itemS списком id видео из playlistS
-    if len(playlistS) > 0:
-        print(
-'''--- Если стоит задача сформировать релевантную запросу базу видео и хотите пополнить список видео теми, которые составляют выгруженные плейлисты,
-просто нажмите Enter (это увеличит совокупность выгруженных видео, но нет гарантии, что если плейлисты релевантны, то и все содержащиеся в них видео тоже релевантны)
---- Если НЕ хотите пополнить список, нажмите пробел и затем Enter'''
-              )
-        if len(input()) == 0:
-
-            # Список списков, каждый из которых соответствует одному плейлисту
-            playlistVideoId_list = playlistS['snippet.resourceId.videoId'].str.split(', ').to_list()
-            # print('playlistVideoId_list:', playlistVideoId_list) # для отладки
-
-            playlistVideoIdS = []
-            for playlistVideoIdSnippet in playlistVideoId_list:
-                playlistVideoIdS.extend(playlistVideoIdSnippet)
-    
-            videoIdS.extend(playlistVideoIdS)
-            videoIdS = list(dict.fromkeys(videoIdS))
-
-    # print(videoIdS) # для отладки
-
-    if len(videoIdS) > 0:
-        print(f'''Проход по видео{' порциями по 50 штук' if len(videoIdS) > 50 else ''} для выгрузки их характеристик (дополнительных к выруженным методом search)''')
-        videoS = portionsProcessor(
-                                   API_keyS=API_keyS,
-                                   channelIdForSearch=channelIdForSearch,
-                                   coLabFolder=coLabFolder,
-                                   complicatedNamePart=complicatedNamePart,
-                                   contentType=contentType,
-                                   fileFormatChoice=fileFormatChoice,
-                                   dfFinal=itemS,
-                                   idS=videoIdS,
-                                   keyOrder=keyOrder,
-                                   method=method,
-                                   momentCurrent=momentCurrent,
-                                   q=q,
-                                   rootName=rootName,
-                                   slash=slash,
-                                   stage=stage,
-                                   targetCount=targetCount,
-                                   year=year,
-                                   yearsRange=yearsRange
-                                   )
-
-# ********** categoryId
-        # Взять столбец snippet.categoryId, удалить из него дубликаты кодов категорий и помеcтить уникальные коды в список
-        # display(videoS) # для отладки
-        # print('videoS.columns:', videoS.columns) # для отладки
-        uniqueCategorieS = videoS['snippet.categoryId'].drop_duplicates().to_list()
-        # print('\nУникальные коды категорий в базе:', uniqueCategorieS, '\nЧисло уникальных категорий в базе:', len(uniqueCategorieS))
-        try:
-            youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
-            response = youtube.videoCategories().list(part='snippet', id=uniqueCategorieS).execute()
-
-        except: goC, goS, keyOrder, problemItemId = errorProcessor(
-                                                                    errorDescription=sys.exc_info(),
-                                                                    keyOrder=keyOrder,
-                                                                    sourceId=None
-                                                                    )
-        # Оформить как датафрейм id категорий из списка uniqueCategorieS и их расшифровки
-        categoryNameS = pandas.json_normalize(response['items'])
-
-        # Заменить индексы датафрейма с расшифровками значениями столбца id
-        categoryNameS.index = categoryNameS['id'].to_list()
-
-        # Добавить расшифровки категорий в новый столбец categoryName датафрейма с видео
-        for row in categoryNameS.index:
-            videoS.loc[videoS['snippet.categoryId'] == row, 'categoryName'] = categoryNameS['snippet.title'][row]
-
-        df2file.df2fileShell(
-                             complicatedNamePart=complicatedNamePart,
-                             dfIn=videoS,
-                             fileFormatChoice=fileFormatChoice,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                             coLabFolder=coLabFolder,
-                             currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                             )
-        commentS = pandas.DataFrame() # не в следующем ченке, чтобы иметь возможность перезапускать его, не затирая промежуточный результат выгрузки
-
-# 2.2.3 Выгрузка комментариев к видео
-        print(
-'\n--- Если хотите выгрузить (в отдельный файл) комментарии к видео,',
-f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart} {method}.xlsx" директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}",',
-'просто нажмите Enter, но учтите, что выгрузка может занять минуты и даже часы',
-'\n--- Если НЕ хотите выгрузить комментарии, нажмите пробел и затем Enter'
-              )
-        if len(input()) == 0:
-
-# ********** commentS
-            # commentS = pandas.DataFrame() # фрагмент вынесен в предыдущий ченк, чтобы иметь возможность перезапускать этот чанк,
-            # не затирая промежуточный результат выгрузки
-            maxResults = 100
-            method = 'commentThreads'
-            part = 'id, replies, snippet'
-            problemVideoIdS = []
-            print(
-'В скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "id", "replies"], maxResults, videoId .',
-'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
-'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/commentThreads'
-                  )
-            if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-            print('') # для отступа
-
-            # Переназначить объект videoIdS для целей текущего чанка
-            videoIdS = videoS[videoS['statistics.commentCount'].notna()]
-            videoIdS = videoIdS[videoIdS['statistics.commentCount'].astype(int) > 0]
-            videoIdS = videoIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in videoIdS.columns else videoIdS['id'].to_list()
-            print('Число видео с комментариями:', len(videoIdS))
-
-            print('\nВыгрузка родительских (topLevel) комментариев')
-            commentS = pandas.DataFrame()
-            for videoId in tqdm(videoIdS):
-            # for videoId in videoS['id'][4576:]: # для отладки
-                # print('videoId', videoId) # для отладки
-                commentsAdditional, goS, keyOrder, problemVideoId = downloadComments(
-                                                                                     API_keyS=API_keyS,
-                                                                                     sourceId=videoId,
-                                                                                     keyOrder=keyOrder,
-                                                                                     method=method
-                                                                                     )
-                if problemVideoId != None: problemVideoIdS.append(problemVideoId)
-                commentS = dfsProcessor(
-                                         channelIdForSearch=channelIdForSearch,
-                                         coLabFolder=coLabFolder,
-                                         complicatedNamePart=complicatedNamePart,
-                                         contentType=contentType,
-                                         fileFormatChoice=fileFormatChoice,
-                                         dfAdd=commentsAdditional,
-                                         dfFinal=itemS,
-                                         dfIn=commentS,
-                                         goS=goS,
-                                         method=method,
-                                         q=q,
-                                         rootName=rootName,
-                                         slash=slash,
-                                         stageTarget=stage,
-                                         targetCount=targetCount,
-                                         momentCurrent=momentCurrent,
-                                         year=year,
-                                         yearsRange=yearsRange
-                                         )
-            commentS = commentS.drop(['kind', 'etag', 'id', 'snippet.channelId', 'snippet.videoId'], axis=1) # т.к. дублируются содержательно
-            commentS = prefixDropper(commentS)
-            df2file.df2fileShell(
-                                 complicatedNamePart=complicatedNamePart,
-                                 dfIn=commentS,
-                                 fileFormatChoice=fileFormatChoice,
-                                 method='commentS',
-                                 coLabFolder=coLabFolder,
-                                 currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                                 )
-
-# ********** replieS
-            print('')
-            if len(commentS[commentS['snippet.totalReplyCount'] > 0]) > 0: # есть ли хотя бы один отвеченный родительский (topLevel) комментарий?
-                print('Проход по строкам всех родительских (topLevel) комментариев, имеющих ответы')
-                replieS = pandas.DataFrame()
-                for row in tqdm(commentS[commentS['snippet.totalReplyCount'] > 0].index):
-                    addReplieS = pandas.json_normalize(commentS['replies.comments'][row])
-    
-                    # Записать разницу между ожданиями и реальностью в новый столбец `Недостача_ответов`
-                    commentS.loc[row, 'Недостача_ответов'] = commentS['snippet.totalReplyCount'][row] - len(addReplieS)
-    
-                    replieS = pandas.concat([replieS, addReplieS]).reset_index(drop=True)
-    
-                replieS.loc[:, 'snippet.totalReplyCount'] = 0
-                replieS.loc[:, 'Недостача_ответов'] = 0
-                replieS = prefixDropper(replieS)
-                df2file.df2fileShell(
-                                     complicatedNamePart=complicatedNamePart,
-                                     dfIn=replieS,
-                                     fileFormatChoice=fileFormatChoice,
-                                     method='replieS',
-                                     coLabFolder=coLabFolder,
-                                     currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                                     )
-                commentReplieS = commentS.copy() # копия датафрейма c родительскими (topLevel) комментариями -- основа будущего общего датафрейма
-                # Найти столбцы, совпадающие для датафреймов c родительскими (topLevel) комментариями и с комментариями-ответами
-                mutualColumns = []
-                for column in commentReplieS.columns:
-                    if column in replieS.columns:
-                        mutualColumns.append(column)
-    
-    # ********** commentReplieS
-                # Оставить только совпадающие столбцы датафреймов с родительскими (topLevel) комментариями и с комментариями-ответами
-                commentReplieS = commentReplieS[mutualColumns]
-                replieS = replieS[mutualColumns]
-                commentReplieS = dfsProcessor(
-                                               channelIdForSearch=channelIdForSearch,
-                                               coLabFolder=coLabFolder,
-                                               complicatedNamePart=complicatedNamePart,
-                                               contentType=contentType,
-                                               fileFormatChoice=fileFormatChoice,
-                                               dfAdd=replieS,
-                                               dfFinal=itemS,
-                                               dfIn=commentReplieS,
-                                               goS=goS,
-                                               method=method,
-                                               q=q,
-                                               rootName=rootName,
-                                               slash=slash,
-                                               stageTarget=stage,
-                                               targetCount=targetCount,
-                                               momentCurrent=momentCurrent,
-                                               year=year,
-                                               yearsRange=yearsRange
-                                               )
-                method = 'comments'
-                part = 'id, snippet'
-                textFormat = 'plainText' # = 'html' по умолчанию
-                problemCommentIdS = []
-                replieS = pandas.DataFrame() # зачем? См. этап 4.2 ниже
-                print(
-'\nВ скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "id"], maxResults, parentId, textFormat .',
-'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
-'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/commentThreads'
-                      )
-                if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-                print('') # для отступа
-
-                print('Проход по id всех родительских (topLevel) комментариев с недостачей ответов для выгрузки этих ответов')
-                commentIdS = commentReplieS['id'][commentReplieS['Недостача_ответов'] > 0]
-                for commentId in tqdm(commentIdS):
-                    page = 0 # номер страницы выдачи
-                    repliesAdditional, goS, keyOrder, problemCommentId = downloadComments(
-                                                                                          API_keyS=API_keyS,
-                                                                                          sourceId=commentId,
-                                                                                          keyOrder=keyOrder,
-                                                                                          method=method
-                                                                                          )
-                    if problemCommentId != None: problemCommentIdS.append(problemCommentId)
-                    replieS = dfsProcessor(
-                                            channelIdForSearch=channelIdForSearch,
-                                            coLabFolder=coLabFolder,
-                                            complicatedNamePart=complicatedNamePart,
-                                            contentType=contentType,
-                                            fileFormatChoice=fileFormatChoice,
-                                            dfAdd=repliesAdditional,
-                                            dfFinal=itemS,
-                                            dfIn=replieS,
-                                            goS=goS,
-                                            method=method,
-                                            q=q,
-                                            rootName=rootName,
-                                            slash=slash,
-                                            stageTarget=stage,
-                                            targetCount=targetCount,
-                                            momentCurrent=momentCurrent,
-                                            year=year,
-                                            yearsRange=yearsRange
-                                            )
-                print(
-'Ответов выгружено', len(replieS), '; проблемные родительские (topLevel) комментарии:', problemCommentIdS if len(problemCommentIdS) > 0  else 'отсутствуют\n'
-                      )
-    
-                # Для совместимости датафреймов добавить столбцы`snippet.totalReplyCount` и `Недостача_ответов`
-                replieS.loc[:, 'snippet.totalReplyCount'] = 0
-                replieS.loc[:, 'Недостача_ответов'] = 0
-    
-                # Удалить столбец `snippet.parentId`, т.к. и из столбца `id` всё ясно
-                replieS = replieS.drop('snippet.parentId', axis=1)
-    
-                commentReplieS = dfsProcessor(
-                                               channelIdForSearch=channelIdForSearch,
-                                               coLabFolder=coLabFolder,
-                                               complicatedNamePart=complicatedNamePart,
-                                               contentType=contentType,
-                                               fileFormatChoice=fileFormatChoice,
-                                               dfAdd=replieS,
-                                               dfFinal=itemS,
-                                               dfIn=commentReplieS,
-                                               goS=goS,
-                                               method=method,
-                                               q=q,
-                                               rootName=rootName,
-                                               slash=slash,
-                                               stageTarget=stage,
-                                               targetCount=targetCount,
-                                               momentCurrent=momentCurrent,
-                                               year=year,
-                                               yearsRange=yearsRange
-                                               )
-                df2file.df2fileShell(
-                                     complicatedNamePart=complicatedNamePart,
-                                     dfIn=commentReplieS,
-                                     fileFormatChoice=fileFormatChoice,
-                                     method='commentReplieS',
-                                     coLabFolder=coLabFolder,
-                                     currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                                     )
-            else: print('Нет ни одного откомментированного родительского (topLevel) комментария')
-
-# 2.2.4 Выгрузка дополнительных характеристик каналов
-    if len(itemS) > 0: # если использовался search..
-        snippetContentType = 'channel'
-        if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # .. и в его выдаче есть каналы
+        snippetContentType = 'playlist'
+        if len(itemS) > 0: # если использовался search..
+            if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # .. и в его выдаче есть плейлисты
+                playlistIdS = itemS[itemS['id.kind'] == f'youtube#{snippetContentType}']
+                playlistIdS =\
+                playlistIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in playlistIdS.columns else playlistIdS['id'].to_list()
+                playlistS, playlistVideoChannelS = playListProcessor(
+                                                                     API_keyS=API_keyS,
+                                                                     channelIdForSearch=channelIdForSearch,
+                                                                     coLabFolder=coLabFolder,
+                                                                     complicatedNamePart=complicatedNamePart,
+                                                                     contentType=contentType,
+                                                                     dfFinal=itemS,
+                                                                     expiriencedMode=expiriencedMode,
+                                                                     fileFormatChoice=fileFormatChoice,
+                                                                     goS=goS,
+                                                                     keyOrder=keyOrder,
+                                                                     momentCurrent=momentCurrent,
+                                                                     playlistIdS=playlistIdS,
+                                                                     q=q,
+                                                                     rootName=rootName,
+                                                                     slash=slash,
+                                                                     snippetContentType=snippetContentType,
+                                                                     stage=stage,
+                                                                     targetCount=targetCount,
+                                                                     year=year,
+                                                                     yearsRange=yearsRange
+                                                                     )
+        else: # если НЕ использовался search (то есть пользователь подал id канала)
             channelS = channelProcessor(
                                         API_keyS=API_keyS,
                                         channelIdForSearch=channelIdForSearch,
@@ -1945,15 +1583,404 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                                         yearsRange=yearsRange,
                                         videoS=videoS
                                         )
+            playlistIdS = channelS['contentDetails.relatedPlaylists.uploads'].to_list()
+            playlistS, playlistVideoChannelS = playListProcessor(
+                                                                 API_keyS=API_keyS,
+                                                                 channelIdForSearch=channelIdForSearch,
+                                                                 coLabFolder=coLabFolder,
+                                                                 complicatedNamePart=complicatedNamePart,
+                                                                 contentType=contentType,
+                                                                 dfFinal=channelS, # т.к. в отсутствие itemS channelS становится базовым датафреймом
+                                                                 expiriencedMode=expiriencedMode,
+                                                                 fileFormatChoice=fileFormatChoice,
+                                                                 goS=goS,
+                                                                 keyOrder=keyOrder,
+                                                                 momentCurrent=momentCurrent,
+                                                                 playlistIdS=playlistIdS,
+                                                                 q=q,
+                                                                 rootName=rootName,
+                                                                 slash=slash,
+                                                                 snippetContentType=snippetContentType,
+                                                                 stage=stage,
+                                                                 targetCount=targetCount,
+                                                                 year=year,
+                                                                 yearsRange=yearsRange
+                                                                 )        
+        # print('playlistIdS:', playlistIdS) # для отладки
+
+# 2.2.2 Выгрузка дополнительных характеристик видео
+        method = 'videos'
+        videoIdS = []
+        if len(itemS) > 0: # если использовался search..
+            snippetContentType = 'video'
+            if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # .. и в его выдаче есть видео
+                print(
+'В скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "contentDetails", "localizations", "statistics", "status", "topicDetails"], id, maxResults .',
+'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
+'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/videos'
+                      )
+                if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+                print('') # для отступа
+
+                iteration = 0 # номер итерации применения текущего метода
+                videoIdS = itemS[itemS['id.kind'] == f'youtube#{snippetContentType}']
+                videoIdS = videoIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in videoIdS.columns else videoIdS['id'].to_list()
+
+# ********** Дополнение списка id видео из itemS списком id видео из playlistS
+        if len(playlistS) > 0:
+            print(
+'''--- Если стоит задача сформировать релевантную запросу базу видео и хотите пополнить список видео теми, которые составляют выгруженные плейлисты,
+просто нажмите Enter (это увеличит совокупность выгруженных видео, но нет гарантии, что если плейлисты релевантны, то и все содержащиеся в них видео тоже релевантны)
+--- Если НЕ хотите пополнить список, нажмите пробел и затем Enter'''
+                  )
+            if len(input()) == 0:
+
+                # Список списков, каждый из которых соответствует одному плейлисту
+                playlistVideoId_list = playlistS['snippet.resourceId.videoId'].str.split(', ').to_list()
+                # print('playlistVideoId_list:', playlistVideoId_list) # для отладки
+
+                playlistVideoIdS = []
+                for playlistVideoIdSnippet in playlistVideoId_list:
+                    playlistVideoIdS.extend(playlistVideoIdSnippet)
+    
+                videoIdS.extend(playlistVideoIdS)
+                videoIdS = list(dict.fromkeys(videoIdS))
+
+        # print(videoIdS) # для отладки
+
+        if len(videoIdS) > 0:
+            print(f'''Проход по видео{' порциями по 50 штук' if len(videoIdS) > 50 else ''} для выгрузки их характеристик (дополнительных к выруженным методом search)''')
+            videoS = portionsProcessor(
+                                       API_keyS=API_keyS,
+                                       channelIdForSearch=channelIdForSearch,
+                                       coLabFolder=coLabFolder,
+                                       complicatedNamePart=complicatedNamePart,
+                                       contentType=contentType,
+                                       fileFormatChoice=fileFormatChoice,
+                                       dfFinal=itemS,
+                                       idS=videoIdS,
+                                       keyOrder=keyOrder,
+                                       method=method,
+                                       momentCurrent=momentCurrent,
+                                       q=q,
+                                       rootName=rootName,
+                                       slash=slash,
+                                       stage=stage,
+                                       targetCount=targetCount,
+                                       year=year,
+                                       yearsRange=yearsRange
+                                       )
+
+# ********** categoryId
+            # Взять столбец snippet.categoryId, удалить из него дубликаты кодов категорий и помеcтить уникальные коды в список
+            # display(videoS) # для отладки
+            # print('videoS.columns:', videoS.columns) # для отладки
+            uniqueCategorieS = videoS['snippet.categoryId'].drop_duplicates().to_list()
+            # print('\nУникальные коды категорий в базе:', uniqueCategorieS, '\nЧисло уникальных категорий в базе:', len(uniqueCategorieS))
+            try:
+                youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
+                response = youtube.videoCategories().list(part='snippet', id=uniqueCategorieS).execute()
+
+            except: goC, goS, keyOrder, problemItemId = errorProcessor(
+                                                                        errorDescription=sys.exc_info(),
+                                                                        keyOrder=keyOrder,
+                                                                        sourceId=None
+                                                                        )
+            # Оформить как датафрейм id категорий из списка uniqueCategorieS и их расшифровки
+            categoryNameS = pandas.json_normalize(response['items'])
+
+            # Заменить индексы датафрейма с расшифровками значениями столбца id
+            categoryNameS.index = categoryNameS['id'].to_list()
+
+            # Добавить расшифровки категорий в новый столбец categoryName датафрейма с видео
+            for row in categoryNameS.index:
+                videoS.loc[videoS['snippet.categoryId'] == row, 'categoryName'] = categoryNameS['snippet.title'][row]
+
+            df2file.df2fileShell(
+                                 complicatedNamePart=complicatedNamePart,
+                                 dfIn=videoS,
+                                 fileFormatChoice=fileFormatChoice,
+                                 method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                                 coLabFolder=coLabFolder,
+                                 currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                 )
+            commentS = pandas.DataFrame() # не в следующем ченке, чтобы иметь возможность перезапускать его, не затирая промежуточный результат выгрузки
+
+# 2.2.3 Выгрузка комментариев к видео
+            print(
+'\n--- Если хотите выгрузить (в отдельный файл) комментарии к видео,',
+f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart} {method}.xlsx" директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}",',
+'просто нажмите Enter, но учтите, что выгрузка может занять минуты и даже часы',
+'\n--- Если НЕ хотите выгрузить комментарии, нажмите пробел и затем Enter'
+                  )
+            if len(input()) == 0:
+
+# ********** commentS
+                # commentS = pandas.DataFrame() # фрагмент вынесен в предыдущий ченк, чтобы иметь возможность перезапускать этот чанк,
+                # не затирая промежуточный результат выгрузки
+                maxResults = 100
+                method = 'commentThreads'
+                part = 'id, replies, snippet'
+                problemVideoIdS = []
+                print(
+'В скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "id", "replies"], maxResults, videoId .',
+'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
+'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/commentThreads'
+                      )
+                if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+                print('') # для отступа
+
+                # Переназначить объект videoIdS для целей текущего чанка
+                videoIdS = videoS[videoS['statistics.commentCount'].notna()]
+                videoIdS = videoIdS[videoIdS['statistics.commentCount'].astype(int) > 0]
+                videoIdS = videoIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in videoIdS.columns else videoIdS['id'].to_list()
+                print('Число видео с комментариями:', len(videoIdS))
+
+                print('\nВыгрузка родительских (topLevel) комментариев')
+                commentS = pandas.DataFrame()
+                for videoId in tqdm(videoIdS):
+                # for videoId in videoS['id'][4576:]: # для отладки
+                    # print('videoId', videoId) # для отладки
+                    commentsAdditional, goS, keyOrder, problemVideoId = downloadComments(
+                                                                                         API_keyS=API_keyS,
+                                                                                         sourceId=videoId,
+                                                                                         keyOrder=keyOrder,
+                                                                                         method=method
+                                                                                         )
+                    if problemVideoId != None: problemVideoIdS.append(problemVideoId)
+                    commentS = dfsProcessor(
+                                             channelIdForSearch=channelIdForSearch,
+                                             coLabFolder=coLabFolder,
+                                             complicatedNamePart=complicatedNamePart,
+                                             contentType=contentType,
+                                             fileFormatChoice=fileFormatChoice,
+                                             dfAdd=commentsAdditional,
+                                             dfFinal=itemS,
+                                             dfIn=commentS,
+                                             goS=goS,
+                                             method=method,
+                                             q=q,
+                                             rootName=rootName,
+                                             slash=slash,
+                                             stageTarget=stage,
+                                             targetCount=targetCount,
+                                             momentCurrent=momentCurrent,
+                                             year=year,
+                                             yearsRange=yearsRange
+                                             )
+                commentS = commentS.drop(['kind', 'etag', 'id', 'snippet.channelId', 'snippet.videoId'], axis=1) # т.к. дублируются содержательно
+                commentS = prefixDropper(commentS)
+                df2file.df2fileShell(
+                                     complicatedNamePart=complicatedNamePart,
+                                     dfIn=commentS,
+                                     fileFormatChoice=fileFormatChoice,
+                                     method='commentS',
+                                     coLabFolder=coLabFolder,
+                                     currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                     )
+
+# ********** replieS
+                print('')
+                if len(commentS[commentS['snippet.totalReplyCount'] > 0]) > 0: # есть ли хотя бы один отвеченный родительский (topLevel) комментарий?
+                    print('Проход по строкам всех родительских (topLevel) комментариев, имеющих ответы')
+                    replieS = pandas.DataFrame()
+                    for row in tqdm(commentS[commentS['snippet.totalReplyCount'] > 0].index):
+                        addReplieS = pandas.json_normalize(commentS['replies.comments'][row])
+    
+                        # Записать разницу между ожданиями и реальностью в новый столбец `Недостача_ответов`
+                        commentS.loc[row, 'Недостача_ответов'] = commentS['snippet.totalReplyCount'][row] - len(addReplieS)
+    
+                        replieS = pandas.concat([replieS, addReplieS]).reset_index(drop=True)
+    
+                    replieS.loc[:, 'snippet.totalReplyCount'] = 0
+                    replieS.loc[:, 'Недостача_ответов'] = 0
+                    replieS = prefixDropper(replieS)
+                    df2file.df2fileShell(
+                                         complicatedNamePart=complicatedNamePart,
+                                         dfIn=replieS,
+                                         fileFormatChoice=fileFormatChoice,
+                                         method='replieS',
+                                         coLabFolder=coLabFolder,
+                                         currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                         )
+                    commentReplieS = commentS.copy() # копия датафрейма c родительскими (topLevel) комментариями -- основа будущего общего датафрейма
+                    # Найти столбцы, совпадающие для датафреймов c родительскими (topLevel) комментариями и с комментариями-ответами
+                    mutualColumns = []
+                    for column in commentReplieS.columns:
+                        if column in replieS.columns:
+                            mutualColumns.append(column)
+    
+    # ********** commentReplieS
+                    # Оставить только совпадающие столбцы датафреймов с родительскими (topLevel) комментариями и с комментариями-ответами
+                    commentReplieS = commentReplieS[mutualColumns]
+                    replieS = replieS[mutualColumns]
+                    commentReplieS = dfsProcessor(
+                                                   channelIdForSearch=channelIdForSearch,
+                                                   coLabFolder=coLabFolder,
+                                                   complicatedNamePart=complicatedNamePart,
+                                                   contentType=contentType,
+                                                   fileFormatChoice=fileFormatChoice,
+                                                   dfAdd=replieS,
+                                                   dfFinal=itemS,
+                                                   dfIn=commentReplieS,
+                                                   goS=goS,
+                                                   method=method,
+                                                   q=q,
+                                                   rootName=rootName,
+                                                   slash=slash,
+                                                   stageTarget=stage,
+                                                   targetCount=targetCount,
+                                                   momentCurrent=momentCurrent,
+                                                   year=year,
+                                                   yearsRange=yearsRange
+                                                   )
+                    method = 'comments'
+                    part = 'id, snippet'
+                    textFormat = 'plainText' # = 'html' по умолчанию
+                    problemCommentIdS = []
+                    replieS = pandas.DataFrame() # зачем? См. этап 4.2 ниже
+                    print(
+'\nВ скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "id"], maxResults, parentId, textFormat .',
+'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
+'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/commentThreads'
+                          )
+                    if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+                    print('') # для отступа
+
+                    print('Проход по id всех родительских (topLevel) комментариев с недостачей ответов для выгрузки этих ответов')
+                    commentIdS = commentReplieS['id'][commentReplieS['Недостача_ответов'] > 0]
+                    for commentId in tqdm(commentIdS):
+                        page = 0 # номер страницы выдачи
+                        repliesAdditional, goS, keyOrder, problemCommentId = downloadComments(
+                                                                                              API_keyS=API_keyS,
+                                                                                              sourceId=commentId,
+                                                                                              keyOrder=keyOrder,
+                                                                                              method=method
+                                                                                              )
+                        if problemCommentId != None: problemCommentIdS.append(problemCommentId)
+                        replieS = dfsProcessor(
+                                                channelIdForSearch=channelIdForSearch,
+                                                coLabFolder=coLabFolder,
+                                                complicatedNamePart=complicatedNamePart,
+                                                contentType=contentType,
+                                                fileFormatChoice=fileFormatChoice,
+                                                dfAdd=repliesAdditional,
+                                                dfFinal=itemS,
+                                                dfIn=replieS,
+                                                goS=goS,
+                                                method=method,
+                                                q=q,
+                                                rootName=rootName,
+                                                slash=slash,
+                                                stageTarget=stage,
+                                                targetCount=targetCount,
+                                                momentCurrent=momentCurrent,
+                                                year=year,
+                                                yearsRange=yearsRange
+                                                )
+                    print(
+'Ответов выгружено', len(replieS), '; проблемные родительские (topLevel) комментарии:', problemCommentIdS if len(problemCommentIdS) > 0  else 'отсутствуют\n'
+                          )
+    
+                    # Для совместимости датафреймов добавить столбцы`snippet.totalReplyCount` и `Недостача_ответов`
+                    replieS.loc[:, 'snippet.totalReplyCount'] = 0
+                    replieS.loc[:, 'Недостача_ответов'] = 0
+    
+                    # Удалить столбец `snippet.parentId`, т.к. и из столбца `id` всё ясно
+                    replieS = replieS.drop('snippet.parentId', axis=1)
+    
+                    commentReplieS = dfsProcessor(
+                                                   channelIdForSearch=channelIdForSearch,
+                                                   coLabFolder=coLabFolder,
+                                                   complicatedNamePart=complicatedNamePart,
+                                                   contentType=contentType,
+                                                   fileFormatChoice=fileFormatChoice,
+                                                   dfAdd=replieS,
+                                                   dfFinal=itemS,
+                                                   dfIn=commentReplieS,
+                                                   goS=goS,
+                                                   method=method,
+                                                   q=q,
+                                                   rootName=rootName,
+                                                   slash=slash,
+                                                   stageTarget=stage,
+                                                   targetCount=targetCount,
+                                                   momentCurrent=momentCurrent,
+                                                   year=year,
+                                                   yearsRange=yearsRange
+                                                   )
+                    df2file.df2fileShell(
+                                         complicatedNamePart=complicatedNamePart,
+                                         dfIn=commentReplieS,
+                                         fileFormatChoice=fileFormatChoice,
+                                         method='commentReplieS',
+                                         coLabFolder=coLabFolder,
+                                         currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                         )
+                else: print('Нет ни одного откомментированного родительского (topLevel) комментария')
+
+# 2.2.4 Выгрузка дополнительных характеристик каналов
+        if len(itemS) > 0: # если использовался search..
+            snippetContentType = 'channel'
+            if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # .. и в его выдаче есть каналы
+                channelS = channelProcessor(
+                                            API_keyS=API_keyS,
+                                            channelIdForSearch=channelIdForSearch,
+                                            coLabFolder=coLabFolder,
+                                            complicatedNamePart=complicatedNamePart,
+                                            contentType=contentType,
+                                            dfIn=itemS,
+                                            expiriencedMode=expiriencedMode,
+                                            fileFormatChoice=fileFormatChoice,
+                                            goS=goS,
+                                            keyOrder=keyOrder,
+                                            momentCurrent=momentCurrent,
+                                            playlistS=playlistS,
+                                            q=q,
+                                            rootName=rootName,
+                                            slash=slash,
+                                            snippetContentType=snippetContentType,
+                                            stage=stage,
+                                            targetCount=targetCount,
+                                            year=year,
+                                            yearsRange=yearsRange,
+                                            videoS=videoS
+                                            )
 
 # 2.2.5 Экспорт выгрузки метода search и финальное завершение скрипта
-    print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
-    if os.path.exists(rootName):
-        print(
+        print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+        if os.path.exists(rootName):
+            print(
 'Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'
-              )
-        shutil.rmtree(rootName, ignore_errors=True)
-    if returnDfs: return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
+                  )
+            shutil.rmtree(rootName, ignore_errors=True)
+        if returnDfs: return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
+
+    except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
+        # display(itemS)
+        if len(itemS) > 0: # в противном случае нет необходимости сохранять что бы то ни было в Temporal
+            dfsProcessor(
+                         channelIdForSearch=channelIdForSearch,
+                         coLabFolder=coLabFolder,
+                         complicatedNamePart=complicatedNamePart,
+                         contentType=contentType,
+                         fileFormatChoice=fileFormatChoice,
+                         dfAdd=None, # внутри функции dfsProcessor в данном случае отработает только блок goS = False , а dfAdd обрабатывается над этим блоком
+                         dfFinal=itemS,
+                         dfIn=None, # внутри функции dfsProcessor в данном случае отработает только блок goS = False , а dfIn обрабатывается над этим блоком
+                         goS=False,
+                         method=method,
+                         q=q,
+                         rootName=rootName,
+                         slash=slash,
+                         stageTarget=stage,
+                         targetCount=targetCount,
+                         momentCurrent=momentCurrent,
+                         year=year,
+                         yearsRange=yearsRange
+                         )
+
+            if returnDfs: return itemS
 
 # warnings.filterwarnings("ignore")
 # print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть')
