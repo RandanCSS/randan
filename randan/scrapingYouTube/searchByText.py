@@ -444,7 +444,7 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                     try:
                         youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
                         response = youtube.playlistItems().list(part='snippet', maxResults=50, pageToken=pageToken, playlistId=playlistId).execute()
-                        add pandas.json_normalize(response['items'])
+                        addPlaylistVideoChannelS = pandas.json_normalize(response['items'])
                         playlistVideoChannelS = dfsProcessor(
                                                              channelIdForSearch=channelIdForSearch,
                                                              coLabFolder=coLabFolder,
