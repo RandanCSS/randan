@@ -303,14 +303,6 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
         df[fieldsColumn] = df[fieldsColumn].replace('N/A', numpy.nan)
     return df
 
-# # Код, чтобы распарсить любой из двух столбцов датафрейма itemS с выдачей аргумента fields
-# fieldsColumn = 'groups'
-# # fieldsColumn = 'profiles'
-# fieldsJSON = []
-# for cell in itemS[fieldsColumn].dropna():
-#     fieldsJSON.extend(cell)
-# pandas.json_normalize(fieldsJSON).drop_duplicates('id').reset_index(drop=True)
-
 # 2. Авторская функция исполнения скрипта
 def newsFeedSearch(
                    access_token=None,
