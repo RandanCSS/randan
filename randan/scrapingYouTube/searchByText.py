@@ -133,6 +133,7 @@ def bigSearch(
 
         except:
             print('\nОшибка внутри авторской функции bigSearch') # для отладки
+            # print(sys.exc_info()) # для отладки
             goC, goS, keyOrder, problemItemId = errorProcessor(
                                                                errorDescription=sys.exc_info(),
                                                                keyOrder=keyOrder,
@@ -353,7 +354,7 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
     goS = True
     goC = True
     problemItemId = sourceId
-    print(errorDescription[1])
+    # print(errorDescription) # для отладки
     if ('exceeded' in str(errorDescription[1]).lower()) & ('quota' in str(errorDescription[1]).lower()):
         print('!!! Похоже, квота текущего ключа закончилась; пробую перейти к следующему ключу')
         # print('  keyOrder ДО смены ключа', keyOrder) # для отладки
@@ -375,8 +376,8 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
     elif 'TimeoutError' in str(errorDescription[0]):
         print('!!! Похоже, проблема в слишком высокой частоте запросов к удалённому серверу; засыпаю на 10 миллисекунд')
         time.sleep(10)
-    elif 'Interrupted by user' in str(errorDescription[1]):
-        # print(sys.exc_info()[1]) # для отладки
+    elif 'KeyboardInterrupt' in str(errorDescription):
+        print(sys.exc_info()[1]) # для отладки
         goS = False # нет смысла продолжать исполнение скрипта
         goC = False # и, следовательно, нет смысла в новых итерациях цикла (вовне этой функции)
     else:
