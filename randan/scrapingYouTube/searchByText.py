@@ -971,104 +971,37 @@ videoPaidProductPlacement : str
 
 # 2.1 Первичный сбор контента методом search
 # 2.1.0 Первый заход БЕЗ аргумента order (этап stage = 0)
-    if (channelIdForSearch == None) | (q != None) | (yearsRange != None): # в противном случае search следует заменить на cannels + playlistItems
-        stage = 0
-        iteration = 0 # номер итерации применения текущего метода
-        method = 'search'
-        print(
+    try: # обработать сигнал прерывания, поданный на любом этапе сбора данных        
+        if (channelIdForSearch == None) | (q != None) | (yearsRange != None): # в противном случае search следует заменить на cannels + playlistItems
+            stage = 0
+            iteration = 0 # номер итерации применения текущего метода
+            method = 'search'
+            print(
 f'В скрипте используются следующие аргументы метода {method} API YouTube: channelId, maxResults, order, pageToken, part, publishedAfter, publishedBefore, q, type.',
 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
 f'Если хотите добавить другие аргументы метода {method} API YouTube, доступные по ссылке https://developers.google.com/youtube/v3/docs/search , -- можете сделать это внутри метода {method} в разделе 2 исполняемого сейчас скрипта'
-              )
-        if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-        print('') # для отступа
+                  )
+            if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+            print('') # для отступа
 
-        if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
-            print('Заход на первую страницу выдачи')
-            # print('publishedAfter', publishedAfter) # для отладки
-            addItemS, goS, iteration, keyOrder, response = bigSearch(
-                                                                     API_keyS=API_keyS,
-                                                                     channelIdForSearch=channelIdForSearch,
-                                                                     channelType=channelType,
-                                                                     contentType=contentType,
-                                                                     iteration=iteration,
-                                                                     keyOrder=keyOrder,
-                                                                     order=None,
-                                                                     publishedAfter=publishedAfter,
-                                                                     publishedBefore=publishedBefore,
-                                                                     pageToken=None,
-                                                                     q=q,
-                                                                     eventType=eventType,
-                                                                     location=location,
-                                                                     locationRadius=locationRadius,
-                                                                     regionCode=regionCode,
-                                                                     relevanceLanguage=relevanceLanguage,
-                                                                     safeSearch=safeSearch,
-                                                                     topicId=topicId,
-                                                                     videoCaption=videoCaption,
-                                                                     videoCategoryId=videoCategoryId,
-                                                                     videoDefinition=videoDefinition,
-                                                                     videoDimension=videoDimension,
-                                                                     videoDuration=videoDuration,
-                                                                     videoEmbeddable=videoEmbeddable,
-                                                                     videoLicense=videoLicense,
-                                                                     videoPaidProductPlacement=videoPaidProductPlacement,
-                                                                     videoType=videoType,
-                                                                     videoSyndicated=videoSyndicated,
-                                                                     year=None
-                                                                     )
-            targetCount = response['pageInfo']['totalResults']
-            if targetCount == 0:
-                print(
-'''Искомых объектов на серверах YouTube по Вашему запросу, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта. Что делать? Поменяйте настройки запроса и запустите скрипт с начала'''
-                      )
-                warnings.filterwarnings("ignore")
-                print(
-'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
-'Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'
-                      )
-                sys.exit()
-    
-            itemS = dfsProcessor(
-                                  channelIdForSearch=channelIdForSearch,
-                                  coLabFolder=coLabFolder,
-                                  complicatedNamePart=complicatedNamePart,
-                                  contentType=contentType,
-                                  fileFormatChoice=fileFormatChoice,
-                                  dfAdd=addItemS,
-                                  dfFinal=itemS,
-                                  dfIn=itemS,
-                                  goS=goS,
-                                  method=method,
-                                  q=q,
-                                  rootName=rootName,
-                                  slash=slash,
-                                  stageTarget=stage,
-                                  targetCount=targetCount,
-                                  momentCurrent=momentCurrent,
-                                  year=year,
-                                  yearsRange=yearsRange
-                                  )
-            # display('itemS', itemS) # для отладки
-    
-            print('  Проход по всем следующим страницам с выдачей          ')
-            while 'nextPageToken' in response.keys():
-                pageToken = response['nextPageToken']
+            if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
+                print('Заход на первую страницу выдачи')
+                # print('publishedAfter', publishedAfter) # для отладки
                 addItemS, goS, iteration, keyOrder, response = bigSearch(
                                                                          API_keyS=API_keyS,
                                                                          channelIdForSearch=channelIdForSearch,
                                                                          channelType=channelType,
                                                                          contentType=contentType,
-                                                                         eventType=eventType,
                                                                          iteration=iteration,
                                                                          keyOrder=keyOrder,
                                                                          order=None,
-                                                                         location=location,
-                                                                         locationRadius=locationRadius,
                                                                          publishedAfter=publishedAfter,
                                                                          publishedBefore=publishedBefore,
-                                                                         pageToken=pageToken,
+                                                                         pageToken=None,
                                                                          q=q,
+                                                                         eventType=eventType,
+                                                                         location=location,
+                                                                         locationRadius=locationRadius,
                                                                          regionCode=regionCode,
                                                                          relevanceLanguage=relevanceLanguage,
                                                                          safeSearch=safeSearch,
@@ -1085,6 +1018,18 @@ f'Если хотите добавить другие аргументы мет�
                                                                          videoSyndicated=videoSyndicated,
                                                                          year=None
                                                                          )
+                targetCount = response['pageInfo']['totalResults']
+                if targetCount == 0:
+                    print(
+'''Искомых объектов на серверах YouTube по Вашему запросу, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта. Что делать? Поменяйте настройки запроса и запустите скрипт с начала'''
+                          )
+                    warnings.filterwarnings("ignore")
+                    print(
+'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
+'Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'
+                          )
+                    sys.exit()
+    
                 itemS = dfsProcessor(
                                       channelIdForSearch=channelIdForSearch,
                                       coLabFolder=coLabFolder,
@@ -1105,19 +1050,11 @@ f'Если хотите добавить другие аргументы мет�
                                       year=year,
                                       yearsRange=yearsRange
                                       )
-            print('  Искомых объектов', targetCount
-                  , ', а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
-        elif stage < stageTarget:
-            print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{rootName}"')
+                # display('itemS', itemS) # для отладки
     
-# 2.1.1 Цикл для прохода по значениям аргумента order, внутри которых проход по всем страницам выдачи (этап stage = 1)
-        stage = 1
-        orderS = ['date', 'rating', 'title', 'videoCount', 'viewCount']
-        if stage >= stageTarget: # eсли НЕТ файла с id и нет временного файла stage.txt с указанием пропустить этап
-            if len(itemS) < targetCount:
-            # -- для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
-                print('Проход по значениям аргумента order, внутри которых проход по всем страницам выдачи')
-                for order in orderS:
+                print('  Проход по всем следующим страницам с выдачей          ')
+                while 'nextPageToken' in response.keys():
+                    pageToken = response['nextPageToken']
                     addItemS, goS, iteration, keyOrder, response = bigSearch(
                                                                              API_keyS=API_keyS,
                                                                              channelIdForSearch=channelIdForSearch,
@@ -1126,12 +1063,12 @@ f'Если хотите добавить другие аргументы мет�
                                                                              eventType=eventType,
                                                                              iteration=iteration,
                                                                              keyOrder=keyOrder,
+                                                                             order=None,
                                                                              location=location,
                                                                              locationRadius=locationRadius,
-                                                                             order=order,
                                                                              publishedAfter=publishedAfter,
                                                                              publishedBefore=publishedBefore,
-                                                                             pageToken=None,
+                                                                             pageToken=pageToken,
                                                                              q=q,
                                                                              regionCode=regionCode,
                                                                              relevanceLanguage=relevanceLanguage,
@@ -1169,15 +1106,19 @@ f'Если хотите добавить другие аргументы мет�
                                           year=year,
                                           yearsRange=yearsRange
                                           )
+                print('  Искомых объектов', targetCount
+                      , ', а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
+            elif stage < stageTarget:
+                print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{rootName}"')
     
-                    print('  Проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order, '          ')
-                    while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0):
-                    # -- второе условие -- для остановки алгоритма, если все искомые объекты найдены
-                        # БЕЗ какой-то из следующих страниц (в т.ч. вообще БЕЗ них)
-                        # третье условие -- для остановки алгоритма, если предыдущая страница выдачи содержит 0 объектов
-    
-                        pageToken = response['nextPageToken']
-                        # print('pageToken', pageToken)
+# 2.1.1 Цикл для прохода по значениям аргумента order, внутри которых проход по всем страницам выдачи (этап stage = 1)
+            stage = 1
+            orderS = ['date', 'rating', 'title', 'videoCount', 'viewCount']
+            if stage >= stageTarget: # eсли НЕТ файла с id и нет временного файла stage.txt с указанием пропустить этап
+                if len(itemS) < targetCount:
+                # -- для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
+                    print('Проход по значениям аргумента order, внутри которых проход по всем страницам выдачи')
+                    for order in orderS:
                         addItemS, goS, iteration, keyOrder, response = bigSearch(
                                                                                  API_keyS=API_keyS,
                                                                                  channelIdForSearch=channelIdForSearch,
@@ -1191,7 +1132,7 @@ f'Если хотите добавить другие аргументы мет�
                                                                                  order=order,
                                                                                  publishedAfter=publishedAfter,
                                                                                  publishedBefore=publishedBefore,
-                                                                                 pageToken=pageToken,
+                                                                                 pageToken=None,
                                                                                  q=q,
                                                                                  regionCode=regionCode,
                                                                                  relevanceLanguage=relevanceLanguage,
@@ -1229,88 +1170,86 @@ f'Если хотите добавить другие аргументы мет�
                                               year=year,
                                               yearsRange=yearsRange
                                               )
-                print('  Искомых объектов', targetCount, ', а найденных С включением аргумента order:', len(itemS))
-            else:
-                print('Все искомые объекты найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
-        elif stage < stageTarget:
-            print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{rootName}"')
+    
+                        print('  Проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order, '          ')
+                        while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0):
+                        # -- второе условие -- для остановки алгоритма, если все искомые объекты найдены
+                            # БЕЗ какой-то из следующих страниц (в т.ч. вообще БЕЗ них)
+                            # третье условие -- для остановки алгоритма, если предыдущая страница выдачи содержит 0 объектов
+    
+                            pageToken = response['nextPageToken']
+                            # print('pageToken', pageToken)
+                            addItemS, goS, iteration, keyOrder, response = bigSearch(
+                                                                                     API_keyS=API_keyS,
+                                                                                     channelIdForSearch=channelIdForSearch,
+                                                                                     channelType=channelType,
+                                                                                     contentType=contentType,
+                                                                                     eventType=eventType,
+                                                                                     iteration=iteration,
+                                                                                     keyOrder=keyOrder,
+                                                                                     location=location,
+                                                                                     locationRadius=locationRadius,
+                                                                                     order=order,
+                                                                                     publishedAfter=publishedAfter,
+                                                                                     publishedBefore=publishedBefore,
+                                                                                     pageToken=pageToken,
+                                                                                     q=q,
+                                                                                     regionCode=regionCode,
+                                                                                     relevanceLanguage=relevanceLanguage,
+                                                                                     safeSearch=safeSearch,
+                                                                                     topicId=topicId,
+                                                                                     videoCaption=videoCaption,
+                                                                                     videoCategoryId=videoCategoryId,
+                                                                                     videoDefinition=videoDefinition,
+                                                                                     videoDimension=videoDimension,
+                                                                                     videoDuration=videoDuration,
+                                                                                     videoEmbeddable=videoEmbeddable,
+                                                                                     videoLicense=videoLicense,
+                                                                                     videoPaidProductPlacement=videoPaidProductPlacement,
+                                                                                     videoType=videoType,
+                                                                                     videoSyndicated=videoSyndicated,
+                                                                                     year=None
+                                                                                     )
+                            itemS = dfsProcessor(
+                                                  channelIdForSearch=channelIdForSearch,
+                                                  coLabFolder=coLabFolder,
+                                                  complicatedNamePart=complicatedNamePart,
+                                                  contentType=contentType,
+                                                  fileFormatChoice=fileFormatChoice,
+                                                  dfAdd=addItemS,
+                                                  dfFinal=itemS,
+                                                  dfIn=itemS,
+                                                  goS=goS,
+                                                  method=method,
+                                                  q=q,
+                                                  rootName=rootName,
+                                                  slash=slash,
+                                                  stageTarget=stage,
+                                                  targetCount=targetCount,
+                                                  momentCurrent=momentCurrent,
+                                                  year=year,
+                                                  yearsRange=yearsRange
+                                                  )
+                    print('  Искомых объектов', targetCount, ', а найденных С включением аргумента order:', len(itemS))
+                else:
+                    print('Все искомые объекты найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
+            elif stage < stageTarget:
+                print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{rootName}"')
     
 # 2.1.2 Этап сегментирования по годам (stage = 2)
-        stage = 2
-        if stage >= stageTarget: # eсли НЕТ файла с id и нет временного файла stage.txt с указанием пропустить этап
-            if len(itemS) < targetCount:
-            # для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
-                print('Увы', f'\nЧисло найденных объектов: {len(itemS)} -- менее числа искомых: {targetCount}',
-                      '\n--- Если хотите для поиска дополнительных объектов попробовать сегментирование по годам, просто нажмите Enter, но учтите, что поиск может занять минуты и даже часы',
-                      '\n--- Если НЕ хотите, нажмите пробел и затем Enter')
-                if len(input()) == 0:
-                    print('Внутри каждого года прохожу по значениям аргумента order, внутри которых прохожу по всем страницам выдачи')
-                    goC = True
+            stage = 2
+            if stage >= stageTarget: # eсли НЕТ файла с id и нет временного файла stage.txt с указанием пропустить этап
+                if len(itemS) < targetCount:
+                # для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
+                    print('Увы', f'\nЧисло найденных объектов: {len(itemS)} -- менее числа искомых: {targetCount}',
+                          '\n--- Если хотите для поиска дополнительных объектов попробовать сегментирование по годам, просто нажмите Enter, но учтите, что поиск может занять минуты и даже часы',
+                          '\n--- Если НЕ хотите, нажмите пробел и затем Enter')
+                    if len(input()) == 0:
+                        print('Внутри каждого года прохожу по значениям аргумента order, внутри которых прохожу по всем страницам выдачи')
+                        goC = True
 # ********** из фрагмента 2.1.0 + условие для goC
-                    while (len(itemS) < targetCount) & (goC):
-                        print(f'  Для года {year} заход на первую страницу выдачи БЕЗ аргумента order')
-                        addItemS, goS, iteration, keyOrder, response = bigSearch(
-                                                                                 API_keyS=API_keyS,
-                                                                                 channelIdForSearch=channelIdForSearch,
-                                                                                 channelType=channelType,
-                                                                                 contentType=contentType,
-                                                                                 eventType=eventType,
-                                                                                 iteration=iteration,
-                                                                                 keyOrder=keyOrder,
-                                                                                 location=location,
-                                                                                 locationRadius=locationRadius,
-                                                                                 order=None,
-                                                                                 publishedAfter = f'{year}-01-01T00:00:00Z',
-                                                                                 publishedBefore = f'{year + 1}-01-01T00:00:00Z',
-                                                                                 pageToken=None,
-                                                                                 q=q,
-                                                                                 regionCode=regionCode,
-                                                                                 relevanceLanguage=relevanceLanguage,
-                                                                                 safeSearch=safeSearch,
-                                                                                 topicId=topicId,
-                                                                                 videoCaption=videoCaption,
-                                                                                 videoCategoryId=videoCategoryId,
-                                                                                 videoDefinition=videoDefinition,
-                                                                                 videoDimension=videoDimension,
-                                                                                 videoDuration=videoDuration,
-                                                                                 videoEmbeddable=videoEmbeddable,
-                                                                                 videoLicense=videoLicense,
-                                                                                 videoPaidProductPlacement=videoPaidProductPlacement,
-                                                                                 videoType=videoType,
-                                                                                 videoSyndicated=videoSyndicated,
-                                                                                 year=year
-                                                                                 )
-                        if len(addItemS) == 0:
-                            print(f'\n--- Первая страница выдачи БЕЗ аргумента order для года {year} -- пуста',
-                                  '\n--- Если НЕ хотите для поиска дополнительных объектов попробовать предыдущий год, просто нажмите Enter',
-                                  '\n--- Если хотите, нажмите пробел и затем Enter')
-                            if len(input()) == 0:
-                                goC = False
-                                break
-                        itemS = dfsProcessor(
-                                              channelIdForSearch=channelIdForSearch,
-                                              coLabFolder=coLabFolder,
-                                              complicatedNamePart=complicatedNamePart,
-                                              contentType=contentType,
-                                              fileFormatChoice=fileFormatChoice,
-                                              dfAdd=addItemS,
-                                              dfFinal=itemS,
-                                              dfIn=itemS,
-                                              goS=goS,
-                                              method=method,
-                                              q=q,
-                                              rootName=rootName,
-                                              slash=slash,
-                                              stageTarget=stage,
-                                              targetCount=targetCount,
-                                              momentCurrent=momentCurrent,
-                                              year=year,
-                                              yearsRange=yearsRange
-                                              )
-    
-                        print(f'    Проход по всем следующим страницам с выдачей для года {year} БЕЗ аргумента order')
-                        while 'nextPageToken' in response.keys():
-                            pageToken = response['nextPageToken']
+                        while (len(itemS) < targetCount) & (goC):
+                            print(f'  Для года {year} заход на первую страницу выдачи БЕЗ аргумента order')
                             addItemS, goS, iteration, keyOrder, response = bigSearch(
                                                                                      API_keyS=API_keyS,
                                                                                      channelIdForSearch=channelIdForSearch,
@@ -1324,7 +1263,7 @@ f'Если хотите добавить другие аргументы мет�
                                                                                      order=None,
                                                                                      publishedAfter = f'{year}-01-01T00:00:00Z',
                                                                                      publishedBefore = f'{year + 1}-01-01T00:00:00Z',
-                                                                                     pageToken=pageToken,
+                                                                                     pageToken=None,
                                                                                      q=q,
                                                                                      regionCode=regionCode,
                                                                                      relevanceLanguage=relevanceLanguage,
@@ -1342,7 +1281,13 @@ f'Если хотите добавить другие аргументы мет�
                                                                                      videoSyndicated=videoSyndicated,
                                                                                      year=year
                                                                                      )
-                        if len(addItemS) == 0:
+                            if len(addItemS) == 0:
+                                print(f'\n--- Первая страница выдачи БЕЗ аргумента order для года {year} -- пуста',
+                                      '\n--- Если НЕ хотите для поиска дополнительных объектов попробовать предыдущий год, просто нажмите Enter',
+                                      '\n--- Если хотите, нажмите пробел и затем Enter')
+                                if len(input()) == 0:
+                                    goC = False
+                                    break
                             itemS = dfsProcessor(
                                                   channelIdForSearch=channelIdForSearch,
                                                   coLabFolder=coLabFolder,
@@ -1364,12 +1309,9 @@ f'Если хотите добавить другие аргументы мет�
                                                   yearsRange=yearsRange
                                                   )
     
-                        print(f'    Искомых объектов в году {year}: {targetCount}, а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
-# ********** из фрагмента 2.1.1
-                        if len(itemS) < targetCount:
-                            print(f'  Для года {year} проход по значениям аргумента order,'
-                                  , 'внутри которых проход по всем страницам выдачи')
-                            for order in orderS:
+                            print(f'    Проход по всем следующим страницам с выдачей для года {year} БЕЗ аргумента order')
+                            while 'nextPageToken' in response.keys():
+                                pageToken = response['nextPageToken']
                                 addItemS, goS, iteration, keyOrder, response = bigSearch(
                                                                                          API_keyS=API_keyS,
                                                                                          channelIdForSearch=channelIdForSearch,
@@ -1380,10 +1322,10 @@ f'Если хотите добавить другие аргументы мет�
                                                                                          keyOrder=keyOrder,
                                                                                          location=location,
                                                                                          locationRadius=locationRadius,
-                                                                                         order=order,
+                                                                                         order=None,
                                                                                          publishedAfter = f'{year}-01-01T00:00:00Z',
                                                                                          publishedBefore = f'{year + 1}-01-01T00:00:00Z',
-                                                                                         pageToken=None,
+                                                                                         pageToken=pageToken,
                                                                                          q=q,
                                                                                          regionCode=regionCode,
                                                                                          relevanceLanguage=relevanceLanguage,
@@ -1401,6 +1343,7 @@ f'Если хотите добавить другие аргументы мет�
                                                                                          videoSyndicated=videoSyndicated,
                                                                                          year=year
                                                                                          )
+                            if len(addItemS) == 0:
                                 itemS = dfsProcessor(
                                                       channelIdForSearch=channelIdForSearch,
                                                       coLabFolder=coLabFolder,
@@ -1422,11 +1365,12 @@ f'Если хотите добавить другие аргументы мет�
                                                       yearsRange=yearsRange
                                                       )
     
-                                print(
-f'    Для года {year} проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order
-                                      )
-                                while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0):
-                                    pageToken = response['nextPageToken']
+                            print(f'    Искомых объектов в году {year}: {targetCount}, а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
+# ********** из фрагмента 2.1.1
+                            if len(itemS) < targetCount:
+                                print(f'  Для года {year} проход по значениям аргумента order,'
+                                      , 'внутри которых проход по всем страницам выдачи')
+                                for order in orderS:
                                     addItemS, goS, iteration, keyOrder, response = bigSearch(
                                                                                              API_keyS=API_keyS,
                                                                                              channelIdForSearch=channelIdForSearch,
@@ -1440,7 +1384,7 @@ f'    Для года {year} проход по всем следующим ст�
                                                                                              order=order,
                                                                                              publishedAfter = f'{year}-01-01T00:00:00Z',
                                                                                              publishedBefore = f'{year + 1}-01-01T00:00:00Z',
-                                                                                             pageToken=pageToken,
+                                                                                             pageToken=None,
                                                                                              q=q,
                                                                                              regionCode=regionCode,
                                                                                              relevanceLanguage=relevanceLanguage,
@@ -1478,17 +1422,74 @@ f'    Для года {year} проход по всем следующим ст�
                                                           year=year,
                                                           yearsRange=yearsRange
                                                           )
-                            print(
+    
+                                    print(
+f'    Для года {year} проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order
+                                          )
+                                    while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0):
+                                        pageToken = response['nextPageToken']
+                                        addItemS, goS, iteration, keyOrder, response = bigSearch(
+                                                                                                 API_keyS=API_keyS,
+                                                                                                 channelIdForSearch=channelIdForSearch,
+                                                                                                 channelType=channelType,
+                                                                                                 contentType=contentType,
+                                                                                                 eventType=eventType,
+                                                                                                 iteration=iteration,
+                                                                                                 keyOrder=keyOrder,
+                                                                                                 location=location,
+                                                                                                 locationRadius=locationRadius,
+                                                                                                 order=order,
+                                                                                                 publishedAfter = f'{year}-01-01T00:00:00Z',
+                                                                                                 publishedBefore = f'{year + 1}-01-01T00:00:00Z',
+                                                                                                 pageToken=pageToken,
+                                                                                                 q=q,
+                                                                                                 regionCode=regionCode,
+                                                                                                 relevanceLanguage=relevanceLanguage,
+                                                                                                 safeSearch=safeSearch,
+                                                                                                 topicId=topicId,
+                                                                                                 videoCaption=videoCaption,
+                                                                                                 videoCategoryId=videoCategoryId,
+                                                                                                 videoDefinition=videoDefinition,
+                                                                                                 videoDimension=videoDimension,
+                                                                                                 videoDuration=videoDuration,
+                                                                                                 videoEmbeddable=videoEmbeddable,
+                                                                                                 videoLicense=videoLicense,
+                                                                                                 videoPaidProductPlacement=videoPaidProductPlacement,
+                                                                                                 videoType=videoType,
+                                                                                                 videoSyndicated=videoSyndicated,
+                                                                                                 year=year
+                                                                                                 )
+                                        itemS = dfsProcessor(
+                                                              channelIdForSearch=channelIdForSearch,
+                                                              coLabFolder=coLabFolder,
+                                                              complicatedNamePart=complicatedNamePart,
+                                                              contentType=contentType,
+                                                              fileFormatChoice=fileFormatChoice,
+                                                              dfAdd=addItemS,
+                                                              dfFinal=itemS,
+                                                              dfIn=itemS,
+                                                              goS=goS,
+                                                              method=method,
+                                                              q=q,
+                                                              rootName=rootName,
+                                                              slash=slash,
+                                                              stageTarget=stage,
+                                                              targetCount=targetCount,
+                                                              momentCurrent=momentCurrent,
+                                                              year=year,
+                                                              yearsRange=yearsRange
+                                                              )
+                                print(
 f'''    Искомых объектов {targetCount}, а найденных с добавлением сегментирования по году (год {year}) и включением аргумента order: {len(itemS)}
 '''
-                                  )
-                        else:
-                            print('  Все искомые объекты в году', year, 'найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
-                        year -= 1
-                        if yearMinByUser != None: # если пользователь ограничил временнОй диапазон
-                            if (year) <= yearMinByUser:
-                                goC = False
-                                print(f'Завершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser} (с точностью до года)\n')
+                                      )
+                            else:
+                                print('  Все искомые объекты в году', year, 'найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
+                            year -= 1
+                            if yearMinByUser != None: # если пользователь ограничил временнОй диапазон
+                                if (year) <= yearMinByUser:
+                                    goC = False
+                                    print(f'Завершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser} (с точностью до года)\n')
     
 # 2.1.3 Экспорт выгрузки метода search и опциональное завершение скрипта
             df2file.df2fileShell(
