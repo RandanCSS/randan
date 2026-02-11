@@ -1,7 +1,7 @@
 # randan
 _A python package for gaining social and financial data and their analysis_
 
-_Current version: 1.4.8_
+_Current version: 1.4.9_
 
 _Documentation: https://randan.readthedocs.io/en/latest/_
 
@@ -208,7 +208,7 @@ searchByText.searchByText(
                           locationRadius=None,
                           regionCode=None,
                           relevanceLanguage=None,
-                          returnDfs = False
+                          returnDfs=False
                           safeSearch=None,
                           topicId=None,
                           videoCaption=None,
