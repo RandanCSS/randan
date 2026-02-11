@@ -444,7 +444,7 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                     try:
                         youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
                         response = youtube.playlistItems().list(part='snippet', maxResults=50, pageToken=pageToken, playlistId=playlistId).execute()
-                        addPlaylistVideoChannelS = pandas.json_normalize(response['items'])
+                        add pandas.json_normalize(response['items'])
                         playlistVideoChannelS = dfsProcessor(
                                                              channelIdForSearch=channelIdForSearch,
                                                              coLabFolder=coLabFolder,
@@ -1988,7 +1988,7 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                          yearsRange=yearsRange
                          )
 
-            if returnDfs: return itemS
+            if returnDfs: return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
 
 # warnings.filterwarnings("ignore")
 # print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть')
