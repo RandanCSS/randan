@@ -137,7 +137,7 @@ def bigSearch(
                                                                errorDescription=sys.exc_info(),
                                                                keyOrder=keyOrder,
                                                                sourceId=channelIdForSearch
-                                                                )
+                                                               )
     return addItemS, goS, iteration, keyOrder, response # от response отказаться нельзя, т.к. в нём много важных ключей, даже если их значения нули
 
 # 1.1 для обработки выдачи метода channels, помогающая работе с ключами
@@ -375,6 +375,10 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
     elif 'TimeoutError' in str(errorDescription[0]):
         print('!!! Похоже, проблема в слишком высокой частоте запросов к удалённому серверу; засыпаю на 10 миллисекунд')
         time.sleep(10)
+    elif 'Interrupted by user' in str(errorDescription[1]):
+        # print(sys.exc_info()[1]) # для отладки
+        goS = False # нет смысла продолжать исполнение скрипта
+        goC = False # и, следовательно, нет смысла в новых итерациях цикла (вовне этой функции)
     else:
         print('!!! Похоже, проблема не в ограничении доступа к обрабатываемому объекту и не в истечении квоты текущего ключа((')
         goC = False # нет смысла повторного обращения к API ни с этим id, ни пока не ясна суть ошибки
@@ -1054,7 +1058,7 @@ f'Если хотите добавить другие аргументы мет�
                 # display('itemS', itemS) # для отладки
     
                 print('  Проход по всем следующим страницам с выдачей          ')
-                while 'nextPageToken' in response.keys():
+                while ('nextPageToken' in response.keys()) & goS:
                     pageToken = response['nextPageToken']
                     addItemS, goS, iteration, keyOrder, response = bigSearch(
                                                                              API_keyS=API_keyS,
@@ -1151,6 +1155,7 @@ f'Если хотите добавить другие аргументы мет�
                                                                                  videoSyndicated=videoSyndicated,
                                                                                  year=None
                                                                                  )
+                        if goS == False: break # на случай сигнала прерывания
                         itemS = dfsProcessor(
                                               channelIdForSearch=channelIdForSearch,
                                               coLabFolder=coLabFolder,
@@ -1173,7 +1178,7 @@ f'Если хотите добавить другие аргументы мет�
                                               )
     
                         print('  Проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order, '          ')
-                        while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0):
+                        while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0) & goS:
                         # -- второе условие -- для остановки алгоритма, если все искомые объекты найдены
                             # БЕЗ какой-то из следующих страниц (в т.ч. вообще БЕЗ них)
                             # третье условие -- для остановки алгоритма, если предыдущая страница выдачи содержит 0 объектов
@@ -1249,7 +1254,7 @@ f'Если хотите добавить другие аргументы мет�
                         print('Внутри каждого года прохожу по значениям аргумента order, внутри которых прохожу по всем страницам выдачи')
                         goC = True
 # ********** из фрагмента 2.1.0 + условие для goC
-                        while (len(itemS) < targetCount) & (goC):
+                        while (len(itemS) < targetCount) & goC & goS:
                             print(f'  Для года {year} заход на первую страницу выдачи БЕЗ аргумента order')
                             addItemS, goS, iteration, keyOrder, response = bigSearch(
                                                                                      API_keyS=API_keyS,
@@ -1311,7 +1316,7 @@ f'Если хотите добавить другие аргументы мет�
                                                   )
     
                             print(f'    Проход по всем следующим страницам с выдачей для года {year} БЕЗ аргумента order')
-                            while 'nextPageToken' in response.keys():
+                            while ('nextPageToken' in response.keys()) & goS:
                                 pageToken = response['nextPageToken']
                                 addItemS, goS, iteration, keyOrder, response = bigSearch(
                                                                                          API_keyS=API_keyS,
@@ -1403,6 +1408,7 @@ f'Если хотите добавить другие аргументы мет�
                                                                                              videoSyndicated=videoSyndicated,
                                                                                              year=year
                                                                                              )
+                                    if goS == False: break # на случай сигнала прерывания
                                     itemS = dfsProcessor(
                                                           channelIdForSearch=channelIdForSearch,
                                                           coLabFolder=coLabFolder,
@@ -1427,7 +1433,7 @@ f'Если хотите добавить другие аргументы мет�
                                     print(
 f'    Для года {year} проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order
                                           )
-                                    while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0):
+                                    while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0) & goS:
                                         pageToken = response['nextPageToken']
                                         addItemS, goS, iteration, keyOrder, response = bigSearch(
                                                                                                  API_keyS=API_keyS,
@@ -1682,10 +1688,10 @@ f'''    Искомых объектов {targetCount}, а найденных с 
                 response = youtube.videoCategories().list(part='snippet', id=uniqueCategorieS).execute()
 
             except: goC, goS, keyOrder, problemItemId = errorProcessor(
-                                                                        errorDescription=sys.exc_info(),
-                                                                        keyOrder=keyOrder,
-                                                                        sourceId=None
-                                                                        )
+                                                                       errorDescription=sys.exc_info(),
+                                                                       keyOrder=keyOrder,
+                                                                       sourceId=None
+                                                                       )
             # Оформить как датафрейм id категорий из списка uniqueCategorieS и их расшифровки
             categoryNameS = pandas.json_normalize(response['items'])
 
@@ -1747,6 +1753,7 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                                                                                          keyOrder=keyOrder,
                                                                                          method=method
                                                                                          )
+                    if goS == False: break # на случай сигнала прерывания
                     if problemVideoId != None: problemVideoIdS.append(problemVideoId)
                     commentS = dfsProcessor(
                                              channelIdForSearch=channelIdForSearch,
@@ -1857,6 +1864,7 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                                                                                               keyOrder=keyOrder,
                                                                                               method=method
                                                                                               )
+                        if goS == False: break # на случай сигнала прерывания
                         if problemCommentId != None: problemCommentIdS.append(problemCommentId)
                         replieS = dfsProcessor(
                                                 channelIdForSearch=channelIdForSearch,
