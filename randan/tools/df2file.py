@@ -13,7 +13,7 @@ from subprocess import check_call
 attempt = 0
 while True:
     try:
-        from randan.tools import varPreprocessor
+        from randan.tools import textPreprocessor, varPreprocessor
         import os, pandas
         break
     except ModuleNotFoundError:
@@ -35,7 +35,7 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
                   )
             break
 
-def df2file(dfIn, *arg): # арки: fileName и folder
+def df2file(df, *arg): # арки: fileName и folder
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
 
 # ********** Выяснить поданные аргументы
@@ -96,10 +96,12 @@ def df2file(dfIn, *arg): # арки: fileName и folder
     # print('folder', folder) # для отладки
     # print('fileName', fileName) # для отладки
     if fileFormatChoice == 'xlsx':
+        for column in df.columns: df[column] = df[column].apply(textPreprocessor.dropControlCharacters, args=(' ',))
+            # чистка текстов от control characters (недопустимых при экспорте в файлы формата типа Excel)
         attempt = 0
         while True:
             try:
-                dfIn.to_excel(folder + fileName)
+                df.to_excel(folder + fileName)
                 # print(folder + fileName)
                 break
             except:
@@ -117,9 +119,11 @@ def df2file(dfIn, *arg): # арки: fileName и folder
                         break
                 else: break
     if fileFormatChoice == 'csv':
-        dfIn.to_csv(folder + fileName)   
+        for column in df.columns: df[column] = df[column].apply(textPreprocessor.dropControlCharacters, args=(' ',))
+            # чистка текстов от control characters (недопустимых при экспорте в файлы формата типа Excel)
+        df.to_csv(folder + fileName)   
     if fileFormatChoice == 'json':
-        dfIn.to_json(folder + fileName)
+        df.to_json(folder + fileName)
 
 def df2fileShell(complicatedNamePart, dfIn, fileFormatChoice, method, coLabFolder, currentMoment):
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
