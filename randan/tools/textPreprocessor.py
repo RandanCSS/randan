@@ -153,7 +153,7 @@ tokensCorrectedQuantityMax : int -- частота самого высокоча
     print('\nСловарь предлагаемых автокорректором исправлений (первые 100):', dict(itertools.islice(corrections.items(), 100)), '\ntokensCorrectedQuantityMax:', tokensCorrectedQuantityMax)
     return corrections, df, tokensCorrectedQuantityMax
 
-def dropControlCharacters(text, replacement=' '):
+def dropControlCharacters(text, replacement=' ', keep_tab_lf_cr=True):
     """
     Функция для чистки текстов от control characters (недопустимых при экспорте в файлы формата типа Excel)
 
@@ -162,7 +162,24 @@ def dropControlCharacters(text, replacement=' '):
         text : str
  replacement : str
     """
-    return re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', replacement, text)
+    if not isinstance(text, str):
+        return text
+    allowed_ranges = [(0x20, 0xD7FF), (0xE000, 0xFFFD), (0x10000, 0x10FFFF)]
+    always_allowed = {0x09, 0x0A, 0x0D} if keep_tab_lf_cr else set()
+
+    def is_allowed(char):
+        code = ord(char)
+        if code in always_allowed:
+            return True
+        for low, high in allowed_ranges:
+            if low <= code <= high:
+                return True
+        return False
+
+    if replacement == '':
+        return ''.join(c for c in text if is_allowed(c))
+    else:
+        return ''.join(c if is_allowed(c) else replacement for c in text)
 
 def multispaceCleaner(text):
     textCleaned = text
