@@ -96,8 +96,10 @@ def df2file(df, *arg): # арки: fileName и folder
     # print('folder', folder) # для отладки
     # print('fileName', fileName) # для отладки
     if fileFormatChoice == 'xlsx':
-        for column in df.columns: df[column] = df[column].apply(textPreprocessor.dropControlCharacters, args=(' ',))
+        textColS = df.select_dtypes(include=['object', 'string']).columns
+        for column in textColS: df[column] = df[column].apply(textPreprocessor.dropControlCharacters)
             # чистка текстов от control characters (недопустимых при экспорте в файлы формата типа Excel)
+
         attempt = 0
         while True:
             try:
@@ -119,8 +121,10 @@ def df2file(df, *arg): # арки: fileName и folder
                         break
                 else: break
     if fileFormatChoice == 'csv':
-        for column in df.columns: df[column] = df[column].apply(textPreprocessor.dropControlCharacters, args=(' ',))
+        textColS = df.select_dtypes(include=['object', 'string']).columns
+        for column in textColS: df[column] = df[column].apply(textPreprocessor.dropControlCharacters)
             # чистка текстов от control characters (недопустимых при экспорте в файлы формата типа Excel)
+
         df.to_csv(folder + fileName)   
     if fileFormatChoice == 'json':
         df.to_json(folder + fileName)
