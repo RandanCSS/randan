@@ -153,6 +153,17 @@ tokensCorrectedQuantityMax : int -- частота самого высокоча
     print('\nСловарь предлагаемых автокорректором исправлений (первые 100):', dict(itertools.islice(corrections.items(), 100)), '\ntokensCorrectedQuantityMax:', tokensCorrectedQuantityMax)
     return corrections, df, tokensCorrectedQuantityMax
 
+def dropControlCharacters(text, replacement=' '):
+    """
+    Функция для чистки текстов от control characters (недопустимых при экспорте в файлы формата типа Excel)
+
+    Parameters
+    ----------
+        text : str
+ replacement : str
+    """
+    return re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', replacement, text)
+
 def multispaceCleaner(text):
     textCleaned = text
     if len(text) > 0: # т.к., например, после чистки текста от эмодзи в нём может остаться пустота
@@ -184,7 +195,7 @@ def pymystemLemmatizer(dfIn, columnWithText):
     df[columnWithText] = df[columnWithText].str.strip() # убрать появившиеся после лемматизации \n на концах лемматизированных текстов
     df[columnWithText] = df[columnWithText].apply(lambda text: re.sub(r'  +', ' ', text))
     return df[columnWithText]
-
+    
 def simbolsCleaner(text):
     """
     Функция для чистки текстов от лишних символов (не являющихся буквами или цифрами)
