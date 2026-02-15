@@ -78,9 +78,24 @@ def билетов_нет(driver, goF, pause, url):
     print('    Предварительно билетов нет          ')
     driver.close()
     driver = webdriver.Chrome()
-    time.sleep(pause * 3)                    
     driver.get(url)
-    time.sleep(pause * 3)
+
+    # Поиск лучших предложений
+    firstMoment = datetime.datetime.now()
+    while True:
+        try:
+            driver.find_element(By.XPATH, "//div[@data-qa-file='DynamicLoaderComponent' and contains(., 'Ищем лучшие предложения')]")
+            print('    Ищем лучшие предложения               ', end='\r') #
+            time.sleep(pause)
+            lastMoment = datetime.datetime.now()
+            diffetenceSeconds = lastMoment - firstMoment
+            print('    Ожидание составляет:', diffetenceSeconds.seconds, 'сек.') #, end='\r'
+        except:
+            # print('\n    ', sys.exc_info()[1]) # для отладки
+            print('    Поиск лучших предложений завершён               ')
+            break   
+    driver.find_element(By.XPATH, "//span[@data-qa-file='ErrorBannerContent' and contains(., 'Билетов нет')]")
+
     if 'Билетов нет' in driver.find_element("tag name", "body").text:
         print('        Билетов нет          ')
         goF = False
