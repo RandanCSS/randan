@@ -80,7 +80,8 @@ def билетов_нет(driver, goF, pause, url):
     driver = webdriver.Chrome()
     driver.get(url)
 
-    # Поиск лучших предложений
+# Поиск лучших предложений
+# <div class="DynamicLoaderComponent__label_zQnoE" data-qa-file="DynamicLoaderComponent">Ищем лучшие предложения</div>driver = webdriver.Chrome()
     firstMoment = datetime.datetime.now()
     while True:
         try:
