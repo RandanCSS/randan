@@ -193,7 +193,7 @@ searchByText.searchByText()
 ```python
 # However, if you want to customize the default scenario, there are three ways availible.
 # The first one is to use the module's dialog interface, which appears in the process of executing the module's code.
-# The second one is to assign manually the function scrapingVK() arguments, which are None by default:
+# The second one is to assign manually the function searchByText() arguments, which are None by default:
 
 searchByText.searchByText(
                           access_token=None,
