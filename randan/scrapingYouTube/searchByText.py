@@ -355,6 +355,7 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
     goC = True
     problemItemId = sourceId
     # print(errorDescription) # для отладки
+    print(errorDescription[1]) # для отладки
     if ('exceeded' in str(errorDescription[1]).lower()) & ('quota' in str(errorDescription[1]).lower()):
         print('!!! Похоже, квота текущего ключа закончилась; пробую перейти к следующему ключу')
         # print('  keyOrder ДО смены ключа', keyOrder) # для отладки
@@ -362,6 +363,11 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
         # print('  keyOrder ПОСЛЕ смены ключа', keyOrder) # для отладки
     elif ('desabled' in str(errorDescription[1]).lower()) & ('key' in str(errorDescription[1]).lower()):
         print('!!! Похоже, текущий ключ деактивирован владельцем или Гуглом; пробую перейти к следующему ключу')
+        # print('  keyOrder ДО смены ключа', keyOrder) # для отладки
+        keyOrder += 1 # смена ключа
+        # print('  keyOrder ПОСЛЕ смены ключа', keyOrder) # для отладки
+    elif ('not valid' in str(errorDescription[1]).lower()) & ('key' in str(errorDescription[1]).lower()):
+        print('!!! Похоже, текущий ключ не валиден; пробую перейти к следующему ключу')
         # print('  keyOrder ДО смены ключа', keyOrder) # для отладки
         keyOrder += 1 # смена ключа
         # print('  keyOrder ПОСЛЕ смены ключа', keyOrder) # для отладки
