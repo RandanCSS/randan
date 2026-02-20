@@ -359,7 +359,7 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
     print(errorDescription[1]) # для отладки
     if 'Request contains an invalid argument' in str(errorDescription[1]):
         # print('errorDescription:', errorDescription) # для отладки
-        print('!!! Похоже, подан id не канала, а плейлиста, поэтому текстовый запрос-фильтр будет проигнорирован; пробую перейти к методам playlistitems и playlists')
+        print('!!! Похоже, подан id не канала, а плейлиста, поэтому текстовый запрос-фильтр и временнОй диапазон (если таковые были поданы) будут проигнорированы; пробую перейти к методам playlistitems и playlists')
         goC = False # нет смысла в новых итерациях цикла (вовне этой функции)
         goToPlayList = True
     if ('exceeded' in str(errorDescription[1]).lower()) & ('quota' in str(errorDescription[1]).lower()):
@@ -416,7 +416,7 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
     
     if len(playlistIdS) > 0:
         # print('playlistIdS:', playlistIdS) # для отладки
-        print(f'''Проход по плейлистам{' порциями по 50 штук' if len(playlistIdS) > 50 else ''} для выгрузки их характеристик{', дополнительных к выруженным методом search' if len(itemS) > 0 else ''}''') # if len(itemS) > 0 -- другими словами, если search использовался
+        print(f'''Проход по плейлистам{' порциями по 50 штук' if len(playlistIdS) > 50 else ''} для выгрузки их характеристик{', дополнительных к выруженным методом search' if len(dfFinal) > 0 else ''}''') # if len(dfFinal) > 0 -- другими словами, если search использовался
         playlistS = portionsProcessor(
                                       API_keyS=API_keyS,
                                       channelIdForSearch=channelIdForSearch,
@@ -502,12 +502,12 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
         # display(playlistS)
         df2file.df2fileShell(
                              complicatedNamePart=complicatedNamePart,
-                             dfIn=playlistVideoChannelS,
+                             dfIn=playlistS,
                              fileFormatChoice=fileFormatChoice,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                             method='playlists',
                              coLabFolder=coLabFolder,
                              currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                                 )
+                             )
     return playlistS, playlistVideoChannelS
 
 # 1.7 для порционной выгрузки, когда метод предполагает подачу ему id порциями
@@ -539,7 +539,7 @@ def portionsProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                                                             ).execute()
                         idS.extend(pandas.json_normalize(response['items'])['id'].tolist())
 
-                    print('playlistIdS:', idS) # для отладки
+                    # print('playlistIdS:', idS) # для отладки
                     response = youtube.playlists().list(
                                                         part='snippet, contentDetails, localizations, status',
                                                         id=idS[bound:bound + portion],
@@ -688,6 +688,7 @@ videoPaidProductPlacement : str
     folder = None
     folderFile = None
     goS = True
+    goToPlayList = False
     itemS = pandas.DataFrame(columns=['id.kind']) # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     keyOrder = 0
     playlistVideoChannelS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
@@ -1000,8 +1001,9 @@ videoPaidProductPlacement : str
 # 2.1 Первичный сбор контента методом search
 # 2.1.0 Первый заход БЕЗ аргумента order (этап stage = 0)
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
-        if (channelIdForSearch == None) | (channelIdForSearch != None) | (q != None): # в противном случае используется не search , а channels + playlists
+        if (channelIdForSearch == None) | (yearsRange != None) | ((channelIdForSearch != None) & (q != None)): # в противном случае используется не search , а channels + playlists
                 # Если поданы вместе channelIdForSearch и q , то search, но если внутри channelIdForSearch подан id плейлиста, то search выдаст ошибку "Request contains an invalid argument" и следует перейти к playListProcessor в else, причём q будет проигнорирован
+                # yearsRange != None предполагает search , поскольку прочие методы не предполагают сегментирование по временнЫм периодам 
             stage = 0
             iteration = 0 # номер итерации применения текущего метода
             method = 'search'
