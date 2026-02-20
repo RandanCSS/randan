@@ -134,11 +134,11 @@ def bigSearch(
         except:
             print('\nОшибка внутри авторской функции bigSearch') # для отладки
             # print(sys.exc_info()) # для отладки
-            goC, goS, keyOrder, problemItemId = errorProcessor(
-                                                               errorDescription=sys.exc_info(),
-                                                               keyOrder=keyOrder,
-                                                               sourceId=channelIdForSearch
-                                                               )
+            goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(
+                                                                             errorDescription=sys.exc_info(),
+                                                                             keyOrder=keyOrder,
+                                                                             sourceId=channelIdForSearch
+                                                                             )
     return addItemS, goS, iteration, keyOrder, response # от response отказаться нельзя, т.к. в нём много важных ключей, даже если их значения нули
 
 # 1.1 для обработки выдачи метода channels, помогающая работе с ключами
@@ -336,11 +336,11 @@ def downloadComments(
 
             except:
                 print('\nОшибка внутри авторской функции downloadComments') # для отладки
-                goC, goS, keyOrder, problemItemId = errorProcessor(
-                                                                    errorDescription=sys.exc_info(),
-                                                                    keyOrder=keyOrder,
-                                                                    sourceId=sourceId
-                                                                    )
+                goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(
+                                                                                 errorDescription=sys.exc_info(),
+                                                                                 keyOrder=keyOrder,
+                                                                                 sourceId=sourceId
+                                                                                 )
         commentS = pandas.concat([commentS, pandas.json_normalize(response['items'])])
         if 'nextPageToken' in response.keys():
             pageToken = response['nextPageToken']
@@ -351,11 +351,17 @@ def downloadComments(
 
 # 1.4 для обработки ошибок
 def errorProcessor(errorDescription, keyOrder, sourceId):
-    goS = True
     goC = True
+    goS = True
+    goToPlayList = False
     problemItemId = sourceId
     # print(errorDescription) # для отладки
     print(errorDescription[1]) # для отладки
+    if 'Request contains an invalid argument' in str(errorDescription[1]):
+        # print('errorDescription:', errorDescription) # для отладки
+        print('!!! Похоже, подан id не канала, а плейлиста, поэтому текстовый запрос-фильтр будет проигнорирован; пробую перейти к методам playlistitems и playlists')
+        goC = False # нет смысла в новых итерациях цикла (вовне этой функции)
+        goToPlayList = True
     if ('exceeded' in str(errorDescription[1]).lower()) & ('quota' in str(errorDescription[1]).lower()):
         print('!!! Похоже, квота текущего ключа закончилась; пробую перейти к следующему ключу')
         # print('  keyOrder ДО смены ключа', keyOrder) # для отладки
@@ -389,7 +395,7 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
     else:
         print('!!! Похоже, проблема не в ограничении доступа к обрабатываемому объекту и не в истечении квоты текущего ключа((')
         goC = False # нет смысла повторного обращения к API ни с этим id, ни пока не ясна суть ошибки
-    return goC, goS, keyOrder, problemItemId
+    return goC, goS, goToPlayList, keyOrder, problemItemId
 
 # 1.5 для визуализации процесса через итерации
 def iterationVisualization(idS, iteration, portion, response):
@@ -409,7 +415,8 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
     print('') # для отступа
     
     if len(playlistIdS) > 0:
-        print(f'''Проход по плейлистам{' порциями по 50 штук' if len(playlistIdS) > 50 else ''} для выгрузки их характеристик (дополнительных к выруженным методом search)''')
+        # print('playlistIdS:', playlistIdS) # для отладки
+        print(f'''Проход по плейлистам{' порциями по 50 штук' if len(playlistIdS) > 50 else ''} для выгрузки их характеристик{', дополнительных к выруженным методом search' if len(itemS) > 0 else ''}''') # if len(itemS) > 0 -- другими словами, если search использовался
         playlistS = portionsProcessor(
                                       API_keyS=API_keyS,
                                       channelIdForSearch=channelIdForSearch,
@@ -432,7 +439,7 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                                       )
 
         method = 'playlistItems'
-        print('В скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet"], playlistId, maxResults .',
+        print('\nВ скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet"], playlistId, maxResults .',
               'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
               'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:',
               'https://developers.google.com/youtube/v3/docs/playlistitems')
@@ -473,11 +480,11 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                                                              yearsRange=yearsRange
                                                              )
                         goC = False # если try успешно исполнился, то цикл прекращается
-                    except: goC, goS, keyOrder, problemItemId = errorProcessor(
-                                                                               errorDescription=sys.exc_info(),
-                                                                               keyOrder=keyOrder,
-                                                                               sourceId=None
-                                                                               )
+                    except: goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(
+                                                                                             errorDescription=sys.exc_info(),
+                                                                                             keyOrder=keyOrder,
+                                                                                             sourceId=None
+                                                                                             )
                 iterationVisualization(idS=None, iteration=iteration, portion=portion, response=response) # для визуализации процесса через итерации
                 iteration += 1
                 if 'nextPageToken' in response.keys(): pageToken = response['nextPageToken']
@@ -519,21 +526,30 @@ def portionsProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                 youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
                 if method == 'channels':
                     response = youtube.channels().list(
-                                                       part='snippet, brandingSettings, contentDetails, id, localizations, statistics, status, topicDetails'
-                                                       , id=idS[bound:bound + portion]
-                                                       , maxResults=50
+                                                       part='snippet, brandingSettings, contentDetails, id, localizations, statistics, status, topicDetails',
+                                                       id=idS[bound:bound + portion],
+                                                       maxResults=50
                                                        ).execute()
                 if method == 'playlists':
+                    if channelIdForSearch: # если НЕ использовался search (то есть пользователь подал id канала)
+                        response = youtube.playlists().list(
+                                                            part='snippet, contentDetails, localizations, status',
+                                                            channelId=channelIdForSearch,
+                                                            maxResults=50
+                                                            ).execute()
+                        idS.extend(pandas.json_normalize(response['items'])['id'].tolist())
+
+                    print('playlistIdS:', idS) # для отладки
                     response = youtube.playlists().list(
-                                                        part='snippet, contentDetails, localizations, status'
-                                                        , id=idS[bound:bound + portion]
-                                                       , maxResults=50
+                                                        part='snippet, contentDetails, localizations, status',
+                                                        id=idS[bound:bound + portion],
+                                                        maxResults=50
                                                         ).execute()
                 if method == 'videos':
                     response = youtube.videos().list(
-                                                     part='snippet, contentDetails, localizations, statistics, status, topicDetails'
-                                                     , id=idS[bound:bound + portion]
-                                                     , maxResults=50
+                                                     part='snippet, contentDetails, localizations, statistics, status, topicDetails',
+                                                     id=idS[bound:bound + portion],
+                                                     maxResults=50
                                                      ).execute()
                 addChplviS = pandas.json_normalize(response['items'])
                 chplviS = dfsProcessor(
@@ -559,11 +575,11 @@ def portionsProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                 goC = False # если try успешно исполнился, то цикл прекращается
             except:
                 print('\nОшибка внутри авторской функции portionsProcessor') # для отладки
-                goC, goS, keyOrder, problemItemId = errorProcessor(
-                                                                    errorDescription=sys.exc_info(),
-                                                                    keyOrder=keyOrder,
-                                                                    sourceId=None
-                                                                    )
+                goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(
+                                                                                 errorDescription=sys.exc_info(),
+                                                                                 keyOrder=keyOrder,
+                                                                                 sourceId=None
+                                                                                 )
         # print('len(idS):', len(idS)) # для отладки
         iterationVisualization(idS, iteration, portion, response) # для визуализации процесса через итерации
         iteration += 1
@@ -629,7 +645,7 @@ def searchByText(
            locationRadius : str
                regionCode : str
         relevanceLanguage : str
-                returnDfs : bool -- в случае True функция возвращает пять итоговых датафреймов с выдачей методов (1) search, (2) playlists и playlistItems (общий датафрейм), (3) videos, (4) commentThreads и comments (общий датафрейм), (5) channels
+                returnDfs : bool -- в случае True функция возвращает пять итоговых датафреймов с выдачей методов (1) search, (2) playlists, (3) videos, (4) commentThreads и comments (общий датафрейм), (5) channels
                safeSearch : str
                   topicId : str
              videoCaption : str
@@ -876,8 +892,8 @@ videoPaidProductPlacement : str
         if (channelIdForSearch == None) & (contentType == 'video'): # если пользователь не подал аргумент channelIdForSearch в рамках experiencedMode
             print(
 '''--- Вы выбрали тип контента video
---- Если НЕ предполагается поиск видео в пределах конкретного канала, нажмите Enter
---- Если предполагается такой поиск, введите id канала, после чего нажмите Enter. Этот id можете найти либо в URL-адресе интересующего канала, либо -- если прежде выгружали контент из YouTube -- в столбце "snippet.channelId" выдачи методов search, playlistItems, videos или в столбце "id" метода cannels'''
+--- Если НЕ предполагается поиск видео в пределах конкретного канала или плейлиста, нажмите Enter
+--- Если предполагается такой поиск, введите id канала или плейлиста, после чего нажмите Enter. Этот id можете найти либо внутри ссылки интересующего канала или плейлиста, либо -- если прежде выгружали контент из YouTube -- в столбце с соответствующим id'''
                   )
             while True:
                 channelIdForSearch = input()
@@ -983,8 +999,9 @@ videoPaidProductPlacement : str
 
 # 2.1 Первичный сбор контента методом search
 # 2.1.0 Первый заход БЕЗ аргумента order (этап stage = 0)
-    try: # обработать сигнал прерывания, поданный на любом этапе сбора данных        
-        if (channelIdForSearch == None) | (q != None) | (yearsRange != None): # в противном случае search следует заменить на cannels + playlistItems
+    try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
+        if (channelIdForSearch == None) | (channelIdForSearch != None) | (q != None): # в противном случае используется не search , а channels + playlists
+                # Если поданы вместе channelIdForSearch и q , то search, но если внутри channelIdForSearch подан id плейлиста, то search выдаст ошибку "Request contains an invalid argument" и следует перейти к playListProcessor в else, причём q будет проигнорирован
             stage = 0
             iteration = 0 # номер итерации применения текущего метода
             method = 'search'
@@ -1538,14 +1555,14 @@ f'''    Искомых объектов {targetCount}, а найденных с 
 'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
 'Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'
                       )
-                if returnDfs: return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
+                if returnDfs: return itemS, playlistS, videoS, commentReplieS, channelS
                 sys.exit()
 
 # 2.2 Выгрузка дополнительных характеристик и контента методами playlists и playlistItems, videos, commentThreads и comments, channels
 # 2.2.0 Этап stage = 3
         stage = 3
 
-# 2.2.1 Выгрузка дополнительных характеристик плейлистов ИЛИ тот самый случай "в противном случае", когда search следует заменить на cannels + playlistItems
+# 2.2.1 Выгрузка характеристик плейлистов как дополнительных к search, а ниже тот самый "в противном случае", когда используется не search, а channels + playlists
         snippetContentType = 'playlist'
         if len(itemS) > 0: # если использовался search..
             if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # .. и в его выдаче есть плейлисты
@@ -1574,31 +1591,35 @@ f'''    Искомых объектов {targetCount}, а найденных с 
                                                                      year=year,
                                                                      yearsRange=yearsRange
                                                                      )
-        else: # если НЕ использовался search (то есть пользователь подал id канала)
-            channelS = channelProcessor(
-                                        API_keyS=API_keyS,
-                                        channelIdForSearch=channelIdForSearch,
-                                        coLabFolder=coLabFolder,
-                                        complicatedNamePart=complicatedNamePart,
-                                        contentType=contentType,
-                                        dfIn=itemS,
-                                        expiriencedMode=expiriencedMode,
-                                        fileFormatChoice=fileFormatChoice,
-                                        goS=goS,
-                                        keyOrder=keyOrder,
-                                        momentCurrent=momentCurrent,
-                                        playlistS=playlistS,
-                                        q=q,
-                                        rootName=rootName,
-                                        slash=slash,
-                                        snippetContentType=snippetContentType,
-                                        stage=stage,
-                                        targetCount=targetCount,
-                                        year=year,
-                                        yearsRange=yearsRange,
-                                        videoS=videoS
-                                        )
-            playlistIdS = channelS['contentDetails.relatedPlaylists.uploads'].to_list()
+        else: # в противном случае используется не search, а channels + playlists
+                # то есть пользователь подал id канала или плейлиста и, следоватлеьно, НЕ использовался search
+            if goToPlayList != True: # если внутри channelIdForSearch подан id плейлиста, то search выдал ошибку "Request contains an invalid argument" и следует перейти к playListProcessor в else, причём q будет проигнорирован
+                channelS = channelProcessor(
+                                            API_keyS=API_keyS,
+                                            channelIdForSearch=channelIdForSearch,
+                                            coLabFolder=coLabFolder,
+                                            complicatedNamePart=complicatedNamePart,
+                                            contentType=contentType,
+                                            dfIn=itemS,
+                                            expiriencedMode=expiriencedMode,
+                                            fileFormatChoice=fileFormatChoice,
+                                            goS=goS,
+                                            keyOrder=keyOrder,
+                                            momentCurrent=momentCurrent,
+                                            playlistS=playlistS,
+                                            q=q,
+                                            rootName=rootName,
+                                            slash=slash,
+                                            snippetContentType=snippetContentType,
+                                            stage=stage,
+                                            targetCount=targetCount,
+                                            year=year,
+                                            yearsRange=yearsRange,
+                                            videoS=videoS
+                                            )
+                playlistIdS = channelS['contentDetails.relatedPlaylists.uploads'].to_list()
+            else:  # если внутри channelIdForSearch подан id плейлиста, то search выдал ошибку "Request contains an invalid argument" и следует перейти к playListProcessor в else, причём q будет проигнорирован
+                playlistIdS = [channelIdForSearch]
             playlistS, playlistVideoChannelS = playListProcessor(
                                                                  API_keyS=API_keyS,
                                                                  channelIdForSearch=channelIdForSearch,
@@ -1696,11 +1717,11 @@ f'''    Искомых объектов {targetCount}, а найденных с 
                 youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
                 response = youtube.videoCategories().list(part='snippet', id=uniqueCategorieS).execute()
 
-            except: goC, goS, keyOrder, problemItemId = errorProcessor(
-                                                                       errorDescription=sys.exc_info(),
-                                                                       keyOrder=keyOrder,
-                                                                       sourceId=None
-                                                                       )
+            except: goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(
+                                                                                     errorDescription=sys.exc_info(),
+                                                                                     keyOrder=keyOrder,
+                                                                                     sourceId=None
+                                                                                     )
             # Оформить как датафрейм id категорий из списка uniqueCategorieS и их расшифровки
             categoryNameS = pandas.json_normalize(response['items'])
 
@@ -1971,7 +1992,7 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
 'Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'
                   )
             shutil.rmtree(rootName, ignore_errors=True)
-        if returnDfs: return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
+        if returnDfs: return itemS, playlistS, videoS, commentReplieS, channelS
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         # display(itemS)
@@ -1997,7 +2018,7 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                          yearsRange=yearsRange
                          )
 
-            if returnDfs: return itemS, playlistVideoChannelS, videoS, commentReplieS, channelS
+            if returnDfs: return itemS, playlistS, videoS, commentReplieS, channelS, playlistS
 
 # warnings.filterwarnings("ignore")
 # print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть')
