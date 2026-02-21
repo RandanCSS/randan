@@ -102,7 +102,7 @@ def vectSettings(column, df, ngram=1):
 
         matrix_df = vectProcess(frequencyMetric=frequencyMetric, column=column, df=df, min_df=min_df, ngram=ngram)
         print('--- Если результат Вас устраивает, нажмите Enter'
-              , '\n--- Если НЕ устраивает и хотите заново вписать предпочитаемые границу и вариант векторизаци, введите любой символ и нажмите Enter')
+              , '\n--- Если НЕ устраивает и хотите заново вписать предпочитаемые границу и вариант векторизаци, нажмите пробел и затем Enter')
         if len(input()) == 0:
             goC_0 = False
     return frequencyMetric, column, df, min_df
