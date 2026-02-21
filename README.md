@@ -226,31 +226,31 @@ searchByText.searchByText(
 # The function's arguments are analoguous to those of the method https://dev.vk.com/ru/method/newsfeed.search with the exception of returnDfs arfument.
 
 # Let us examine the arguments in detail:
-#             access_token : str
-#       channelIdForSearch : str -- это аналог аргумента channelId методов search и playlists и аргумента id метода channels ; также сюда можно подать вместо id канала id плейлиста
-#              contentType : str -- это аналог type
-#           publishedAfter : str, readable by datetime
-#          publishedBefore : str, readable by datetime
-#                        q : str
-#              channelType : str
-#                eventType : str
-#                 location : str
-#           locationRadius : str
-#               regionCode : str
-#        relevanceLanguage : str
-#                returnDfs : bool -- в случае True функция возвращает пять итоговых датафреймов с выдачей методов (1) search, (2) playlists, (3) videos, (4) commentThreads и comments (общий датафрейм), (5) channels
-#               safeSearch : str
-#                  topicId : str
-#             videoCaption : str
-#          videoCategoryId : str
-#          videoDefinition : str
-#           videoDimension : str
-#            videoDuration : str
-#          videoEmbeddable : str
-#             videoLicense : str
-#videoPaidProductPlacement : str
-#          videoSyndicated : str
-#                videoType : str
+#              access_token : str
+#        channelIdForSearch : str -- это аналог аргумента channelId методов search и playlists и аргумента id метода channels ; также сюда можно подать вместо id канала id плейлиста
+#               contentType : str -- это аналог type
+#            publishedAfter : str, readable by datetime
+#           publishedBefore : str, readable by datetime
+#                         q : str
+#               channelType : str
+#                 eventType : str
+#                  location : str
+#            locationRadius : str
+#                regionCode : str
+#         relevanceLanguage : str
+#                 returnDfs : bool -- в случае True функция возвращает пять итоговых датафреймов с выдачей методов (1) search, (2) playlists, (3) videos, (4) commentThreads и comments (общий датафрейм), (5) channels
+#                safeSearch : str
+#                   topicId : str
+#              videoCaption : str
+#           videoCategoryId : str
+#           videoDefinition : str
+#            videoDimension : str
+#             videoDuration : str
+#           videoEmbeddable : str
+#              videoLicense : str
+# videoPaidProductPlacement : str
+#           videoSyndicated : str
+#                 videoType : str
 
 # The arguments might be inputed in the function brackets as stay alone entities.
 # This way is names 'expiriencedMode'
