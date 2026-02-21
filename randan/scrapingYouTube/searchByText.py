@@ -400,8 +400,12 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
 # 1.5 для визуализации процесса через итерации
 def iterationVisualization(idS, iteration, portion, response):
     if idS != None: iterationUpperBound = int(str(len(idS) / portion).split('.')[0]) + 1 # дробная часть после деления числа idS должна увеличить iterationUpperBound на единицу
+    if 'items' not in response.keys():
+        print("!!! Похоже, подан id не канала, а плейлиста, поэтому подаю пустой список в качестве значения словарного ключа 'items'")
+        response['items'] = []
+    
     print(
-f'''  Порция № {iteration + 1}{f' из {iterationUpperBound}' if idS != None else ''}.{f' Сколько в порции наблюдений? {len(response["items"])}' if portion > 1 else ''}''', end='\r'
+f'''  Порция № {iteration + 1}{f' из {iterationUpperBound}' if idS != None else ''}.{f" Сколько в порции наблюдений? {len(response['items'])}" if portion > 1 else ''}''', end='\r'
           )
 
 # 1.6 для обработки выдачи методов playlists и playlistItems, помогающая работе с ключами
@@ -1001,10 +1005,10 @@ videoPaidProductPlacement : str
 # 2.1 Первичный сбор контента методом search
 # 2.1.0 Первый заход БЕЗ аргумента order (этап stage = 0)
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
+        stage = 0
         if (channelIdForSearch == None) | (yearsRange != None) | ((channelIdForSearch != None) & (q != None)): # в противном случае используется не search , а channels + playlists
                 # Если поданы вместе channelIdForSearch и q , то search, но если внутри channelIdForSearch подан id плейлиста, то search выдаст ошибку "Request contains an invalid argument" и следует перейти к playListProcessor в else, причём q будет проигнорирован
                 # yearsRange != None предполагает search , поскольку прочие методы не предполагают сегментирование по временнЫм периодам 
-            stage = 0
             iteration = 0 # номер итерации применения текущего метода
             method = 'search'
             print(
@@ -1638,21 +1642,27 @@ f'''    Искомых объектов {targetCount}, а найденных с 
                                         q=q,
                                         rootName=rootName,
                                         slash=slash,
-                                        snippetContentType=snippetContentType,
+                                        snippetContentType='channel',
                                         stage=stage,
                                         targetCount=targetCount,
                                         year=year,
                                         yearsRange=yearsRange,
                                         videoS=videoS
                                         )
-            playlistIdS = channelS['contentDetails.relatedPlaylists.uploads'].to_list()
+
+            # display('channelS:', channelS) # для отладки
+            if len(channelS) > 0: playlistIdS = channelS['contentDetails.relatedPlaylists.uploads'].to_list()
+            else: # поскольку подан id не канала, а плейлиста, этот id передатся из одного контейнера в другой
+                playlistIdS = [channelIdForSearch]
+                channelIdForSearch = None
+
             playlistS, playlistVideoChannelS = playListProcessor(
                                                                  API_keyS=API_keyS,
                                                                  channelIdForSearch=channelIdForSearch,
                                                                  coLabFolder=coLabFolder,
                                                                  complicatedNamePart=complicatedNamePart,
                                                                  contentType=contentType,
-                                                                 dfFinal=channelS, # т.к. в отсутствие itemS channelS становится базовым датафреймом
+                                                                 dfFinal=channelS, # т.к. в отсутствие itemS channelS становится базовым датафреймом !!!
                                                                  expiriencedMode=expiriencedMode,
                                                                  fileFormatChoice=fileFormatChoice,
                                                                  goS=goS,
@@ -2002,7 +2012,7 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                                             q=q,
                                             rootName=rootName,
                                             slash=slash,
-                                            snippetContentType=snippetContentType,
+                                            snippetContentType='channel',
                                             stage=stage,
                                             targetCount=targetCount,
                                             year=year,
@@ -2051,5 +2061,6 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
 # sys.exit()
 
 # Поработать со snippetContentType , возможно, вынести этот аргумент из channelProcessor
+# Добавить возможность подавать множество ключей в accessToken
 # https://stackoverflow.com/questions/30475309/get-youtube-trends-v3-country-wise-in-json -- про тренды
 # Если подавать в скрипт располагаемый файл НЕ search , то в нём не будет столбца id.kind , следовательно, скрипт не поймёт, какие дополнительные характеристки выгружать
