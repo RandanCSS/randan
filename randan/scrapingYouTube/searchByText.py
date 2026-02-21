@@ -142,10 +142,9 @@ def bigSearch(
     return addItemS, goS, goToPlayList, iteration, keyOrder, response # от response отказаться нельзя, т.к. в нём много важных ключей, даже если их значения нули
 
 # 1.1 для обработки выдачи метода channels, помогающая работе с ключами
-def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, contentType, dfIn, expiriencedMode, fileFormatChoice, goS, keyOrder, momentCurrent, playlistS, q, rootName, slash, snippetContentType, stage, targetCount, year, yearsRange, videoS):
-    df = dfIn.copy()
-    if len(df) > 0: # если использовался search и успешно, id каналов берутся из него
-        channelIdS = df[df['id.kind'] == f'youtube#{snippetContentType}']
+def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, contentType, dfFinal, expiriencedMode, fileFormatChoice, goS, keyOrder, momentCurrent, playlistS, q, rootName, slash, snippetContentType, stage, targetCount, year, yearsRange, videoS):
+    if len(dfFinal) > 0: # если использовался search и успешно, id каналов берутся из него
+        channelIdS = dfFinal[dfFinal['id.kind'] == f'youtube#{snippetContentType}']
         if len(channelIdS) > 0:
             channelIdS =\
                 channelIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in channelIdS.columns else channelIdS['id'].to_list()
@@ -161,7 +160,7 @@ def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNameP
     if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
     print('') # для отступа
 
-# ********** Дополнение списка id каналов из df списком id каналов из playlistS
+# ********** Дополнение списка id каналов из dfFinal списком id каналов из playlistS
     if (len(playlistS) > 0) | (len(videoS) > 0):
         print(
 '''--- Если стоит задача сформировать релевантную запросу базу каналов и хотите пополнить список каналов теми, к которым относятся выгруженные плейлисты и видео,
@@ -180,20 +179,25 @@ def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNameP
                 channelIdS.extend(playlistChannelIdS)
                 channelIdS = list(dict.fromkeys(channelIdS))
 
-# ********** Дополнение списка id каналов из df списком id каналов из videoS
+# ********** Дополнение списка id каналов из dfFinal списком id каналов из videoS
             if len(videoS) > 0:
                 channelIdS.extend(videoS['snippet.channelId'].to_list())
                 channelIdS = list(dict.fromkeys(channelIdS))
 
     if len(channelIdS) > 0:
-        print(f'''Проход по каналам{' порциями по 50 штук' if 90 > 50 else ''} для выгрузки их характеристик (дополнительных к выруженным методом search)''')
+
+        print(f'''Проход по каналам{' порциями по 50 штук' if 90 > 50 else ''} для выгрузки их характеристик''')
+        if len(dfFinal) > 0:
+            if 'search' in dfFinal['kind'].drop_duplicates().iloc[0]: # другими словами, если search использовался, потому что мог не search , а channels сформировать dfFinal
+                print('-- дополнительных к выруженным методом search')
+
         channelS = portionsProcessor(
                                      API_keyS=API_keyS,
                                      channelIdForSearch=channelIdForSearch,
                                      coLabFolder=coLabFolder,
                                      complicatedNamePart=complicatedNamePart,
                                      contentType=contentType, # snippetContentType -- не то же самое, что contentType , т.к. contentType исходно подаётся пользователем
-                                     dfFinal=df,
+                                     dfFinal=dfFinal,
                                      fileFormatChoice=fileFormatChoice,
                                      idS=channelIdS,
                                      keyOrder=keyOrder,
@@ -207,14 +211,15 @@ def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNameP
                                      year=year,
                                      yearsRange=yearsRange
                                      )
-        df2file.df2fileShell(
-                             complicatedNamePart=complicatedNamePart,
-                             dfIn=channelS,
-                             fileFormatChoice=fileFormatChoice,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                             coLabFolder=coLabFolder,
-                             currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                             )
+        if len(channelS) > 0:
+            df2file.df2fileShell(
+                                 complicatedNamePart=complicatedNamePart,
+                                 dfIn=channelS,
+                                 fileFormatChoice=fileFormatChoice,
+                                 method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                                 coLabFolder=coLabFolder,
+                                 currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                 )
     return channelS
 
 # 1.2 для обработки выдачи любого из методов, помогающая работе с ключами
@@ -419,8 +424,13 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
     print('') # для отступа
     
     if len(playlistIdS) > 0:
-        # print('playlistIdS:', playlistIdS) # для отладки
-        print(f'''Проход по плейлистам{' порциями по 50 штук' if len(playlistIdS) > 50 else ''} для выгрузки их характеристик{', дополнительных к выруженным методом search' if len(dfFinal) > 0 else ''}''') # if len(dfFinal) > 0 -- другими словами, если search использовался
+
+        # print('playlistIdS:', playlistIdS) # для отладки        
+        print(f'''Проход по плейлистам{' порциями по 50 штук' if len(playlistIdS) > 50 else ''} для выгрузки их характеристик''')
+        if len(dfFinal) > 0:
+            if 'search' in dfFinal['kind'].drop_duplicates().iloc[0]: # другими словами, если search использовался, потому что мог не search , а channels сформировать dfFinal
+                print('-- дополнительных к выруженным методом search')
+
         playlistS = portionsProcessor(
                                       API_keyS=API_keyS,
                                       channelIdForSearch=channelIdForSearch,
@@ -504,14 +514,16 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                 playlistS.loc[playlistS[playlistS['id'] == playlistId].index[0], column] =\
                     ', '.join(playlistVideoChannelS_snippet[playlistVideoChannelS_snippet['snippet.playlistId'] == playlistId][column].to_list())
         # display(playlistS)
-        df2file.df2fileShell(
-                             complicatedNamePart=complicatedNamePart,
-                             dfIn=playlistS,
-                             fileFormatChoice=fileFormatChoice,
-                             method='playlists',
-                             coLabFolder=coLabFolder,
-                             currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                             )
+
+        if len(playlistS) > 0:
+            df2file.df2fileShell(
+                                 complicatedNamePart=complicatedNamePart,
+                                 dfIn=playlistS,
+                                 fileFormatChoice=fileFormatChoice,
+                                 method='playlists',
+                                 coLabFolder=coLabFolder,
+                                 currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                 )
     return playlistS, playlistVideoChannelS
 
 # 1.7 для порционной выгрузки, когда метод предполагает подачу ему id порциями
@@ -563,7 +575,7 @@ def portionsProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                                        contentType=contentType,
                                        fileFormatChoice=fileFormatChoice,
                                        dfAdd=addChplviS,
-                                       dfFinal=dfFinal, # itemS подаются как значение аргумента оборачивающей функции
+                                       dfFinal=dfFinal, # itemS или channelS подаются как значение аргумента оборачивающей функции
                                        dfIn=chplviS,
                                        goS=goS,
                                        method=method,
@@ -636,9 +648,9 @@ def searchByText(
 
     Parameters
     ----------
-    Аргументы этой функции аналогичны аргументам метода https://developers.google.com/youtube/v3/docs/search/list  , за исключением аргумена returnDfs
+    Аргументы этой функции аналогичны аргументам метода https://developers.google.com/youtube/v3/docs/search/list , за исключением аргументов channelIdForSearch returnDfs
              access_token : str
-       channelIdForSearch : str -- это аналог channelId
+       channelIdForSearch : str -- это аналог аргумента channelId методов search и playlists и аргумента id метода channels ; также сюда можно подать вместо id канала id плейлиста
               contentType : str -- это аналог type
            publishedAfter : str, readable by datetime
           publishedBefore : str, readable by datetime
@@ -1632,7 +1644,7 @@ f'''    Искомых объектов {targetCount}, а найденных с 
                                         coLabFolder=coLabFolder,
                                         complicatedNamePart=complicatedNamePart,
                                         contentType=contentType,
-                                        dfIn=itemS,
+                                        dfFinal=itemS,
                                         expiriencedMode=expiriencedMode,
                                         fileFormatChoice=fileFormatChoice,
                                         goS=goS,
@@ -1720,7 +1732,12 @@ f'''    Искомых объектов {targetCount}, а найденных с 
         # print(videoIdS) # для отладки
 
         if len(videoIdS) > 0:
-            print(f'''Проход по видео{' порциями по 50 штук' if len(videoIdS) > 50 else ''} для выгрузки их характеристик (дополнительных к выруженным методом search)''')
+
+            print(f'''Проход по видео{' порциями по 50 штук' if len(videoIdS) > 50 else ''} для выгрузки их характеристик''')
+            if len(itemS) > 0:
+                if 'search' in dfFinal['kind'].drop_duplicates().iloc[0]: # другими словами, если search использовался, потому что мог не search , а channels сформировать dfFinal
+                    print('-- дополнительных к выруженным методом search')
+
             videoS = portionsProcessor(
                                        API_keyS=API_keyS,
                                        channelIdForSearch=channelIdForSearch,
@@ -2002,7 +2019,7 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                                             coLabFolder=coLabFolder,
                                             complicatedNamePart=complicatedNamePart,
                                             contentType=contentType,
-                                            dfIn=itemS,
+                                            dfFinal=itemS,
                                             expiriencedMode=expiriencedMode,
                                             fileFormatChoice=fileFormatChoice,
                                             goS=goS,
