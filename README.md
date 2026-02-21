@@ -224,6 +224,34 @@ searchByText.searchByText(
                           )
 
 # The function's arguments are analoguous to those of the method https://dev.vk.com/ru/method/newsfeed.search with the exception of returnDfs arfument.
+
+# Let us examine the arguments in detail:
+#             access_token : str
+#       channelIdForSearch : str -- это аналог аргумента channelId методов search и playlists и аргумента id метода channels ; также сюда можно подать вместо id канала id плейлиста
+#              contentType : str -- это аналог type
+#           publishedAfter : str, readable by datetime
+#          publishedBefore : str, readable by datetime
+#                        q : str
+#              channelType : str
+#                eventType : str
+#                 location : str
+#           locationRadius : str
+#               regionCode : str
+#        relevanceLanguage : str
+#                returnDfs : bool -- в случае True функция возвращает пять итоговых датафреймов с выдачей методов (1) search, (2) playlists, (3) videos, (4) commentThreads и comments (общий датафрейм), (5) channels
+#               safeSearch : str
+#                  topicId : str
+#             videoCaption : str
+#          videoCategoryId : str
+#          videoDefinition : str
+#           videoDimension : str
+#            videoDuration : str
+#          videoEmbeddable : str
+#             videoLicense : str
+#videoPaidProductPlacement : str
+#          videoSyndicated : str
+#                videoType : str
+
 # The arguments might be inputed in the function brackets as stay alone entities.
 # This way is names 'expiriencedMode'
 
@@ -255,6 +283,18 @@ newsFeedSearch.newsFeedSearch(
                               returnDfs=False
                               start_time=None,
                               )
+
+# Let us examine the arguments in detail:
+#    access_token : str
+#           count : int
+#        end_time : int -- формат Unix
+#          fields : list
+#        latitude : int
+#       longitude : int
+#          params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/newsfeed.search , чтобы не подавать эти аргументы по отдельности
+#               q : str
+#       returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
+#      start_time : int -- формат Unix
 
 # The function's arguments are analoguous to those of the method https://dev.vk.com/ru/method/newsfeed.search with the exception of params and returnDfs arfuments.
 # Moreover, the arguments might be inputed in the function brackets both as stay alone entities, and as params parts
