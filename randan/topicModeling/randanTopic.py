@@ -65,7 +65,7 @@ def poleDocs_unique_search(df, docsLimit, pole, poleDocsIndeceS):
         indicesDuplicate_cellContent = poleDocsDf_unique['indicesDuplicate'][row]
         if indicesDuplicate_cellContent !=[]:
             print(f'На {pole}ом полюсе очищенный и лемматизированный текст документа', row,
-                  f'дублируется в документ{'ах' if len(indicesDuplicate_cellContent) > 1 else 'е'}:', str(list(indicesDuplicate_cellContent)).replace('[', '').replace(']', ''),
+                  f"дублируется в документ{'ах' if len(indicesDuplicate_cellContent) > 1 else 'е'}:", str(list(indicesDuplicate_cellContent)).replace('[', '').replace(']', ''),
                   '-- поэтому далее не вывожу дубли')
 
     return poleDocsDf_unique
@@ -89,6 +89,7 @@ def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTo
         print(f'Величина loadings токенов {pole}ого полюса не достигает заданного порога |{round(loadingsThreshold, 2)}|.'
               , f'Поэтому {pole}ый полюс НЕ выражен и НЕ требует интерпретации')
         docs_snippetS = pandas.DataFrame()
+        poleDocsIndeceS = []
     else:
         poleDocsDf_unique = poleDocs_unique_search(df, docsLimit, pole, poleDocsIndeceS)
         poleDocsIndeceS = poleDocsDf_unique.index
@@ -100,7 +101,7 @@ def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTo
         # display('df.loc[poleDocsIndeceS, :]:', df.loc[poleDocsIndeceS, :]) # для отладки
 
         for docIndex in poleDocsIndeceS:
-            print(f'Посмотрите на фрагменты документа {docIndex}, содержащие указанные выше токены и их окружение.'
+            print(f'\nПосмотрите на фрагменты документа {docIndex}, содержащие указанные выше токены и их окружение.'
                   , 'Документ:', docIndex)
             row = 0
             docSnippetS = pandas.DataFrame(columns=['min', 'max', 'token'])
@@ -400,11 +401,15 @@ Cреди обозначений строк исходной таблицы ес
     # Описание каждого топика через его полюса и формирующие их токены и релевантные фрагменты располагаемых на них документов
         poleMinusTokenS = list(topicTokenS[topicTokenS[topicName] < 0].sort_values(topicName).index)
         poleMinusDocsIndeceS = list(topicDocS[topicDocS[topicName] < 0].sort_values(topicName).index)
+        # print('poleMinusDocsIndeceS:', poleMinusDocsIndeceS[:2]) # для отладки
         minusDocs_snippetS, poleMinusDocsIndeceS = snippetByDoc(df, docsLimit, loadingsThreshold, poleS[0], poleMinusDocsIndeceS, poleMinusTokenS, supplementarieS)
+        # print('poleMinusDocsIndeceS:', poleMinusDocsIndeceS[:2]) # для отладки
 
         polePlusTokenS = list(topicTokenS[topicTokenS[topicName] > 0].sort_values(topicName, ascending=False).index)
         polePlusDocsIndeceS = list(topicDocS[topicDocS[topicName] > 0].sort_values(topicName, ascending=False).index)
+        # print('polePlusDocsIndeceS:', polePlusDocsIndeceS[:2]) # для отладки
         plusDocs_snippetS, polePlusDocsIndeceS = snippetByDoc(df, docsLimit, loadingsThreshold, poleS[-1], polePlusDocsIndeceS, polePlusTokenS, supplementarieS) # стало
+        # print('polePlusDocsIndeceS:', polePlusDocsIndeceS[:2]) # для отладки
         
         docs_snippetS_additional = pandas.concat([minusDocs_snippetS, plusDocs_snippetS])
         docs_snippetS_additional = docs_snippetS_additional.drop(['min', 'max'], axis=1)
