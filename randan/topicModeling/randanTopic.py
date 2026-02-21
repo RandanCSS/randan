@@ -44,8 +44,33 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
             break
 tqdm.pandas() # для визуализации прогресса функций, применяемых к датафреймам
 
-# 1 Авторские функции для
-# 1.0 оформления токенов на полюсах топиков
+# 1 Авторские функции для..
+# 1.0 ..обработки документов с дублирующимися тестами
+def poleDocs_unique_search(df, docsLimit, pole, poleDocsIndeceS):
+    poleDocsDf = df.loc[poleDocsIndeceS, :]
+
+    # Добавить столбец со списком всех номеров строк для каждого текста
+    poleDocsDf['indicesDuplicate'] = poleDocsDf.groupby('textFull_stopwordsDropped')['textFull_stopwordsDropped'].transform(lambda group: [group.index.tolist()] * len(group))
+
+    # Оставить только уникальные тексты (первые вхождения)
+    poleDocsDf_unique = poleDocsDf.drop_duplicates('textFull_stopwordsDropped', keep='first').copy()
+
+    # Убрать собственный индекс из списка дубликатов в каждой оставшейся строке
+    poleDocsDf_unique['indicesDuplicate'] = poleDocsDf_unique.apply(lambda row: [i for i in row['indicesDuplicate'] if i != row.name], axis=1)
+
+    poleDocsDf_unique = poleDocsDf_unique.iloc[:docsLimit, :]
+    # display('poleDocsDf_unique:', poleDocsDf_unique) # для отладки
+
+    for row in poleDocsDf_unique.index:
+        indicesDuplicate_cellContent = poleDocsDf_unique['indicesDuplicate'][row]
+        if indicesDuplicate_cellContent !=[]:
+            print(f'На {pole}ом полюсе очищенный и лемматизированный текст документа', row,
+                  f'дублируется в документ{'ах' if len(indicesDuplicate_cellContent) > 1 else 'е'}:', str(list(indicesDuplicate_cellContent)).replace('[', '').replace(']', ''),
+                  '-- поэтому далее не вывожу дубли')
+
+    return poleDocsDf_unique
+
+# 1.1 ..оформления токенов на полюсах топиков
 def summaryPole(loadingsThreshold, minusPlus, tokensLimit, topicDocS, topicLoadingS, topicName):
     summaryPole = pandas.DataFrame()
     if len(topicLoadingS[topicLoadingS[topicName] * minusPlus > loadingsThreshold].sort_values(topicName, ascending=False).head(tokensLimit)) > 0:
@@ -57,18 +82,23 @@ def summaryPole(loadingsThreshold, minusPlus, tokensLimit, topicDocS, topicLoadi
         summaryPole.loc[:, 'Интерпретация топика'] = ''
     return summaryPole
 
-# 1.1 описания каждого топика через его полюса и формирующие их токены и релевантные фрагменты располагаемых на них документов
-def snippetByDoc(df, loadingsThreshold, pole, poleDocsIndeceS, poleTokenS, supplementarieS):
-    print(f'{pole.capitalize()}ый полюс топика')
+# 1.2 ..описания каждого топика через его полюса и формирующие их токены и релевантные фрагменты располагаемых на них документов
+def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTokenS, supplementarieS):
+    print(f'\n{pole.upper()}ЫЙ полюс топика')
     if poleTokenS == []:
         print(f'Величина loadings токенов {pole}ого полюса не достигает заданного порога |{round(loadingsThreshold, 2)}|.'
               , f'Поэтому {pole}ый полюс НЕ выражен и НЕ требует интерпретации')
         docs_snippetS = pandas.DataFrame()
     else:
-        print(f'{pole.capitalize()}ый полюс сформирован токен[ом, ами]'
+        poleDocsDf_unique = poleDocs_unique_search(df, docsLimit, pole, poleDocsIndeceS)
+        poleDocsIndeceS = poleDocsDf_unique.index
+        
+        print(f"{pole.capitalize()}ый полюс сформирован токен{'ами' if len(poleTokenS) > 1 else 'ом'}"
               , str(poleTokenS).replace('[', '').replace(']', ''), '-- по величине вклада')
-        print(f'На {pole}ом полюсе расположен[ы] документ[ы]', str(poleDocsIndeceS).replace('[', '').replace(']', ''), '-- по близости к полюсу')
+        print(f"На {pole}ом полюсе расположен{'ы' if len(poleDocsIndeceS) > 1 else ''} документ{'ы' if len(poleDocsIndeceS) > 1 else ''}", str(list(poleDocsIndeceS)).replace('[', '').replace(']', ''), '-- по близости к полюсу')
         docs_snippetS = pandas.DataFrame()
+        # display('df.loc[poleDocsIndeceS, :]:', df.loc[poleDocsIndeceS, :]) # для отладки
+
         for docIndex in poleDocsIndeceS:
             print(f'Посмотрите на фрагменты документа {docIndex}, содержащие указанные выше токены и их окружение.'
                   , 'Документ:', docIndex)
@@ -152,7 +182,7 @@ def snippetByDoc(df, loadingsThreshold, pole, poleDocsIndeceS, poleTokenS, suppl
                 print(docSnippetS['textSnippet'][row])
             docs_snippetS = pandas.concat([docs_snippetS, docSnippetS])
         print('\n')
-    return docs_snippetS
+    return docs_snippetS, poleDocsIndeceS
 
 def randanTopic(dfIn, matrix_df, docsLimit=5, loadingsThreshold=0.5, returnDfs=False, rowsNumerator=None, supplementarieS=None, textFull_lemmatized='textFull_lemmatized', textFull_simbolsCleaned='textFull_simbolsCleaned', tokensLimit=10, topicsCount=None):
     '''    Метод тематического моделирования randanTopic основан на методе главных компонент (по-английски: principal components analisys, PCA). То есть он НЕ использует нейросети и embeddings, а работает с "мешком слов" (по-английски: bag of words, BoW). Поэтому важно качественно подготовить "мешок слов" через очистку исходного текста от лишних символов, лемматизацию и удаление стоп-слов. Эти три этапа предобработки исходного текста, а также (при необходимости) автокоррекция грамматических ошибок могут быть выполнены функциями из скрипта textPreprocessor пакета randan https://github.com/RandanCSS/randan/blob/master/randan/tools/textPreprocessor.py . Причём для удобства последующей интерпретации рекомендую результаты очистки от лишних символов и результаты лемматизации сохранить в отдельные столбцы: textFull_simbolsCleaned и textFull_lemmatized соответственно.
@@ -356,7 +386,10 @@ Cреди обозначений строк исходной таблицы ес
         plt.show() # обязательно после savefig
 
     # Полярные документы
-        topicDocS = pandas.concat([scoreS.sort_values(topicName)[[topicName]].head(docsLimit), scoreS.sort_values(topicName)[[topicName]].tail(docsLimit)])
+        # topicDocS = pandas.concat([scoreS.sort_values(topicName)[[topicName]].head(docsLimit), scoreS.sort_values(topicName)[[topicName]].tail(docsLimit)]) # было
+        topicDocS = scoreS.sort_values(topicName)[[topicName]] # стало
+        # display('topicDocS:', topicDocS.head(50)) # для отладки
+        # display('topicDocS:', topicDocS.tail(50)) # для отладки
     # Полярные токены
         topicTokenS = pandas.concat([topicLoadingS[topicLoadingS[topicName] < -loadingsThreshold].sort_values(topicName).head(tokensLimit)
                                      , topicLoadingS[topicLoadingS[topicName] > loadingsThreshold].sort_values(topicName).tail(tokensLimit)])
@@ -364,26 +397,28 @@ Cреди обозначений строк исходной таблицы ес
         topicTokenS = topicTokenS.dropna()
         display(topicTokenS)
         
-    # Обработка полярных документов и токенов; запись в датафрейм
-        summaryMinus = summaryPole(loadingsThreshold, -1, tokensLimit, topicDocS, topicLoadingS, topicName)
-        summaryPlus = summaryPole(loadingsThreshold, 1, tokensLimit, topicDocS, topicLoadingS, topicName)
-        summary_additional = pandas.concat([summaryMinus, summaryPlus])
-        summary = pandas.concat([summary, summary_additional])
-        
     # Описание каждого топика через его полюса и формирующие их токены и релевантные фрагменты располагаемых на них документов
         poleMinusTokenS = list(topicTokenS[topicTokenS[topicName] < 0].sort_values(topicName).index)
         poleMinusDocsIndeceS = list(topicDocS[topicDocS[topicName] < 0].sort_values(topicName).index)
-        minusDocs_snippetS = snippetByDoc(df, loadingsThreshold, poleS[0], poleMinusDocsIndeceS, poleMinusTokenS, supplementarieS)
-        polePlusTokenS = list(topicTokenS[topicTokenS[topicName] > 0].index)
-        polePlusDocsIndeceS = list(topicDocS[topicDocS[topicName] > 0].index)
-        plusDocs_snippetS = snippetByDoc(df, loadingsThreshold, poleS[-1], polePlusDocsIndeceS, polePlusTokenS, supplementarieS)
+        minusDocs_snippetS, poleMinusDocsIndeceS = snippetByDoc(df, docsLimit, loadingsThreshold, poleS[0], poleMinusDocsIndeceS, poleMinusTokenS, supplementarieS)
+
+        polePlusTokenS = list(topicTokenS[topicTokenS[topicName] > 0].sort_values(topicName, ascending=False).index)
+        polePlusDocsIndeceS = list(topicDocS[topicDocS[topicName] > 0].sort_values(topicName, ascending=False).index)
+        plusDocs_snippetS, polePlusDocsIndeceS = snippetByDoc(df, docsLimit, loadingsThreshold, poleS[-1], polePlusDocsIndeceS, polePlusTokenS, supplementarieS) # стало
         
         docs_snippetS_additional = pandas.concat([minusDocs_snippetS, plusDocs_snippetS])
         docs_snippetS_additional = docs_snippetS_additional.drop(['min', 'max'], axis=1)
         docs_snippetS_additional = docs_snippetS_additional.reset_index(drop=True)
         docs_snippetS_additional.loc[:, 'Интерпретация топика'] = ''
         docs_snippetS = pandas.concat([docs_snippetS, docs_snippetS_additional])
-        # print('\n\n\n')
+        # print('\n')
+        
+    # Обработка полярных документов и токенов; запись в датафрейм
+        topicDocS = pandas.concat([topicDocS.loc[poleMinusDocsIndeceS, :], topicDocS.loc[polePlusDocsIndeceS, :]])
+        summaryMinus = summaryPole(loadingsThreshold, -1, tokensLimit, topicDocS, topicLoadingS, topicName)
+        summaryPlus = summaryPole(loadingsThreshold, 1, tokensLimit, topicDocS, topicLoadingS, topicName)
+        summary_additional = pandas.concat([summaryMinus, summaryPlus])
+        summary = pandas.concat([summary, summary_additional])
 
         # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки
         ws = wb.create_sheet(title=topicName)
