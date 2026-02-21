@@ -80,14 +80,15 @@ def bigSearch(
               videoSyndicated,
               year
               ):
+    addItemS = pandas.DataFrame() # принудительная выдача для response на случай неуспеха request.execute()
+    goC = True
     goS = True
+    goToPlayList = False
     response = {
                 'kind': 'youtube#searchListResponse',
                 'pageInfo': {'totalResults': 0, 'resultsPerPage': 0},
                 'items': []
                 } # принудительная выдача для response на случай неуспеха request.execute()
-    addItemS = pandas.DataFrame() # принудительная выдача для response на случай неуспеха request.execute()
-    goC = True
     while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
         try:
             youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
@@ -1734,9 +1735,7 @@ f'''    Искомых объектов {targetCount}, а найденных с 
         if len(videoIdS) > 0:
 
             print(f'''Проход по видео{' порциями по 50 штук' if len(videoIdS) > 50 else ''} для выгрузки их характеристик''')
-            if len(itemS) > 0:
-                if 'search' in dfFinal['kind'].drop_duplicates().iloc[0]: # другими словами, если search использовался, потому что мог не search , а channels сформировать dfFinal
-                    print('-- дополнительных к выруженным методом search')
+            if len(itemS) > 0: print('-- дополнительных к выруженным методом search')
 
             videoS = portionsProcessor(
                                        API_keyS=API_keyS,
