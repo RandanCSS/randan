@@ -3,7 +3,7 @@
 
 '''
 (EN) A module for topic modelling
-(RU) Авторский модуль для тематического моделирования
+(RU) Модуль для тематического моделирования
 '''
 
 # 0 Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
@@ -142,7 +142,12 @@ def snippetByDoc(df, loadingsThreshold, pole, poleDocsIndeceS, poleTokenS, suppl
                 docSnippetS.loc[row, 'textSnippet'] = '..' + ' '.join(textFull_list[docSnippetS['min'][row]: docSnippetS['max'][row]]) + '..'
                 if supplementarieS != None:
                     for supplementary in supplementarieS:
-                        docSnippetS.loc[row, supplementary] = df[supplementary][docIndex]
+                        try: docSnippetS.loc[row, supplementary] = df[supplementary][docIndex] # .loc не может записать в ячейку список
+                        except:
+                            # print(sys.exc_info()[1]) # для отладки
+                            print('docSnippetS.columns:', docSnippetS.columns) # для отладки
+                            df[supplementary] = df[supplementary].astype(str)
+                            docSnippetS.loc[row, supplementary] = df[supplementary][docIndex]
 
                 print(docSnippetS['textSnippet'][row])
             docs_snippetS = pandas.concat([docs_snippetS, docSnippetS])
@@ -380,6 +385,7 @@ Cреди обозначений строк исходной таблицы ес
         docs_snippetS = pandas.concat([docs_snippetS, docs_snippetS_additional])
         # print('\n\n\n')
 
+        # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки
         ws = wb.create_sheet(title=topicName)
         for r in dataframe_to_rows(docs_snippetS_additional, index=False, header=True):
             ws.append(r)
