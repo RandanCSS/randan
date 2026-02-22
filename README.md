@@ -234,6 +234,7 @@ This parameter is used to restrict the search to a specific channel. For fetchin
 Finally, the third way is to take the module's code manually and and alter it
 
 
+
 #### Module `scrapingVK`
 This module utilise VK API method news.search. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. You only need to call the necessary module:
 ```python
