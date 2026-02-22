@@ -58,7 +58,7 @@ def poleDocs_unique_search(df, docsLimit, pole, poleDocsIndeceS):
     # Убрать собственный индекс из списка дубликатов в каждой оставшейся строке
     poleDocsDf_unique['indicesDuplicate'] = poleDocsDf_unique.apply(lambda row: [i for i in row['indicesDuplicate'] if i != row.name], axis=1)
 
-    poleDocsDf_unique = poleDocsDf_unique.iloc[:docsLimit, :]
+    poleDocsDf_unique = poleDocsDf_unique.iloc[:min(docsLimit, len(poleDocsDf_unique)), :]
     # display('poleDocsDf_unique:', poleDocsDf_unique) # для отладки
 
     for row in poleDocsDf_unique.index:
