@@ -223,8 +223,12 @@ print(f"Found {len(videos_df)} videos")
 - returnDfs (bool, default=False): If True, returns a tuple of five pandas DataFrames: (search, playlists, videos, comments, channels). If False, returns None (data is only saved to disk).
 - ... (and all other standard YouTube API parameters)
 
-#### Note on channelIdForSearch:
-_This parameter is used to restrict the search to a specific channel (or a specific playlist)._
+#### Notes:
+- The function automatically handles pagination — you do not need to manage the offset parameter manually.
+- All parameters are optional; if none are provided (or if you run the function without arguments), the interactive mode will guide you through the available options.
+- When returnDfs=True, the returned DataFrame includes standard VK post fields such as id, date, text, likes, reposts, views, plus any additional fields requested via the fields parameter.
+- The module saves output files in the ./output/scrapingVK/ directory. The files are named with a timestamp to avoid overwriting.
+- The parameter `channelIdForSearch` is used to restrict the search to a specific channel (or a specific playlist).
 
 Finally, the third way of usage is to take the module's code manually and and alter it
 
@@ -268,25 +272,22 @@ df = newsFeedSearch.newsFeedSearch(
 print(df[['text', 'likes', 'date']].head())
 ```
 
-####Parameters:
+#### Parameters:
+- access_token : str — VK API access token (user or service token).
+- q : str — Search query string. Supports VK search syntax (e.g., quotes for exact phrases).
+- count : int, default 200 — Number of posts to return per request. The function automatically handles pagination, so you can effectively retrieve more than 200 posts.
+- start_time : int — Unix timestamp (in seconds). Restricts results to posts published after this time.
+- end_time : int — Unix timestamp (in seconds). Restricts results to posts published before this time.
+- latitude : float — Latitude for location-based search. Must be used together with longitude.
+- longitude : float — Longitude for location-based search.
+- fields : list of str — Additional fields to include in the response. For example: ["city", "sex"]. Refer to the official VK documentation for the full list of available fields.
+- params : dict — A pre‑built dictionary of parameters for the VK API request. If this argument is provided, all other individual parameters (like q, count, start_time, etc.) are ignored (except access_token and returnDfs). This is useful when you want to reuse a complex query configuration.
+- returnDfs : bool, default False — If True, the function returns a pandas DataFrame containing the posts and their metadata. If False (default), it returns None and only saves the data to disk.
 
-Parameter	Type	Description
-access_token	str	VK API access token (user or service).
-q	str	Search query string.
-count	int	Number of posts to return (max 200 per request, but the function handles pagination automatically).
-start_time	int	Unix timestamp (seconds) — return posts published after this time.
-end_time	int	Unix timestamp (seconds) — return posts published before this time.
-latitude	float	Latitude for location-based search. Requires longitude.
-longitude	float	Longitude for location-based search.
-fields	list[str]	Additional fields to return (e.g., ["likes", "reposts", "attachments"]). See VK docs for full list.
-params	dict	A pre‑built dictionary of parameters for the VK API request. If provided, individual parameters (q, count, etc.) are ignored (except access_token and returnDfs). Useful for reusing complex queries.
-returnDfs	bool	If True, returns a pandas DataFrame containing the posts and their metadata. If False (default), returns None (data is only saved to disk).
-Notes:
-
-The function handles pagination automatically — you don't need to manage offset or multiple requests.
-
-All parameters are optional; interactive mode will prompt you for the most common ones.
-
-The resulting DataFrame (when returnDfs=True) includes standard VK post fields like id, date, text, likes, reposts, views, and any additional fields requested via fields.
+#### Notes:
+- The function automatically handles pagination — you do not need to manage the offset parameter manually.
+- All parameters are optional; if none are provided (or if you run the function without arguments), the interactive mode will guide you through the available options.
+- When returnDfs=True, the returned DataFrame includes standard VK post fields such as id, date, text, likes, reposts, views, plus any additional fields requested via the fields parameter.
+- The module saves output files in the ./output/scrapingVK/ directory. The files are named with a timestamp to avoid overwriting.
 
 Finally, the third way of usage is to take the module's code manually and and alter it
