@@ -182,77 +182,50 @@ chaid = CHAIDRegressor().fit(
 predictions = chaid.predict(node=True, interaction=True)
 ```
 #### Module `scrapingYouTube`
-This module aggregates seven YouTube API methods: search, playlists & playlistItems, videos, commentThreads & comments, channels. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. You only need to call the necessary module:
-```python
+This module wraps several YouTube Data API v3 methods (search, playlists, videos, comments, channels). It automatically saves results to ./output/scrapingYouTube/ as JSON and Excel files.
+
+Basic usage (Interactive mode):
+
+python
 from randan.scrapingYouTube import searchByText
+
+# Launches a step-by-step dialog. Press Enter to proceed with default values.
 searchByText.searchByText()
 
-# with this code, you will immediately see an instruction.
-# Just follow it for executing the default scenario, episodically pressing Enter on your keyboard
-```
-```python
-# However, if you want to customize the default scenario, there are three ways availible.
-# The first one is to use the module's dialog interface, which appears in the process of executing the module's code.
-# The second one is to assign manually the function searchByText() arguments, which are None by default:
+Advanced usage (Programmatic mode):
+You can pass parameters directly to the function. Parameters correspond to the YouTube Search.list API parameters.
 
-searchByText.searchByText(
-                          access_token=None,
-                          channelIdForSearch=None,
-                          contentType=None,
-                          publishedAfter=None,
-                          publishedBefore=None,
-                          q=None,
-                          channelType=None,
-                          eventType=None,
-                          location=None,
-                          locationRadius=None,
-                          regionCode=None,
-                          relevanceLanguage=None,
-                          returnDfs=False
-                          safeSearch=None,
-                          topicId=None,
-                          videoCaption=None,
-                          videoCategoryId=None,
-                          videoDefinition=None,
-                          videoDimension=None,
-                          videoDuration=None,
-                          videoEmbeddable=None,
-                          videoLicense=None,
-                          videoPaidProductPlacement=None,
-                          videoSyndicated=None,
-                          videoType=None,
-                          )
+python
+from randan.scrapingYouTube import searchByText
 
-# The function's arguments are analoguous to those of the method https://dev.vk.com/ru/method/newsfeed.search with the exception of returnDfs arfument.
+dfs = searchByText.searchByText(
+    q="Python programming",
+    publishedAfter="2023-01-01T00:00:00Z",
+    videoDuration="long",
+    regionCode="US",
+    returnDfs=True  # Returns a tuple of 5 DataFrames
+)
 
-# Let us examine the arguments in detail:
-#              access_token : str
-#        channelIdForSearch : str -- это аналог аргумента channelId методов search и playlists и аргумента id метода channels ; также сюда можно подать вместо id канала id плейлиста
-#               contentType : str -- это аналог type
-#            publishedAfter : str, readable by datetime
-#           publishedBefore : str, readable by datetime
-#                         q : str
-#               channelType : str
-#                 eventType : str
-#                  location : str
-#            locationRadius : str
-#                regionCode : str
-#         relevanceLanguage : str
-#                 returnDfs : bool -- в случае True функция возвращает пять итоговых датафреймов с выдачей методов (1) search, (2) playlists, (3) videos, (4) commentThreads и comments (общий датафрейм), (5) channels
-#                safeSearch : str
-#                   topicId : str
-#              videoCaption : str
-#           videoCategoryId : str
-#           videoDefinition : str
-#            videoDimension : str
-#             videoDuration : str
-#           videoEmbeddable : str
-#              videoLicense : str
-# videoPaidProductPlacement : str
-#           videoSyndicated : str
-#                 videoType : str
+# Unpack results
+search_df, playlists_df, videos_df, comments_df, channels_df = dfs
 
-# The arguments might be inputed in the function brackets as stay alone entities.
+print(f"Found {len(videos_df)} videos")
+Parameters:
+
+access_token (str, optional): Your YouTube Data API key.
+
+q (str, optional): Search query string.
+
+publishedAfter (str, optional): RFC 3339 formatted timestamp (e.g., 2023-01-01T00:00:00Z).
+
+videoDuration (str, optional): Filter by duration (any, short, medium, long).
+
+returnDfs (bool, default=False): If True, returns a tuple of five pandas DataFrames: (search, playlists, videos, comments, channels). If False, returns None (data is only saved to disk).
+
+... (and all other standard YouTube API parameters)
+
+Note on channelIdForSearch:
+This parameter is used to restrict the search to a specific channel. For fetching playlist contents, consider using the dedicated getPlaylistItems method (if available).
 # This way is names 'expiriencedMode'
 
 # Finally, the third way is to take the module's code manually and and alter it
