@@ -75,7 +75,7 @@ def summaryPole(loadingsThreshold, minusPlus, tokensLimit, topicDocS, topicLoadi
     summaryPole = pandas.DataFrame()
     if len(topicLoadingS[topicLoadingS[topicName] * minusPlus > loadingsThreshold].sort_values(topicName, ascending=False).head(tokensLimit)) > 0:
         summaryPole = topicDocS[topicDocS[topicName] * minusPlus > 0].round(3)
-        summaryPole.loc[:, 'Топик'] = topicName
+        summaryPole.loc[:, 'Топики'] = topicName
         summaryPole.loc[:, 'Токены'] = ', '.join(list(topicLoadingS[topicLoadingS[topicName] * minusPlus > loadingsThreshold].sort_values(topicName, ascending=False).head(tokensLimit).index))
         summaryPole.loc[:, 'Усреднённая связь токена с топиком'] = round(topicLoadingS[topicLoadingS[topicName] * minusPlus > loadingsThreshold].sort_values(topicName, ascending=False).head(tokensLimit).mean()[topicName], 3)
         summaryPole.loc[:, 'Релевантность теме исследования'] = ''
@@ -415,17 +415,21 @@ Cреди обозначений строк исходной таблицы ес
         docs_snippetS_additional = docs_snippetS_additional.drop(['min', 'max'], axis=1)
         docs_snippetS_additional = docs_snippetS_additional.reset_index(drop=True)
         docs_snippetS_additional.loc[:, 'Интерпретация топика'] = ''
+        # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки
         docs_snippetS = pandas.concat([docs_snippetS, docs_snippetS_additional])
         # print('\n')
         
     # Обработка полярных документов и токенов; запись в датафрейм
         topicDocS = pandas.concat([topicDocS.loc[poleMinusDocsIndeceS, :], topicDocS.loc[polePlusDocsIndeceS, :]])
+        # display('topicDocS:', topicDocS) # для отладки
         summaryMinus = summaryPole(loadingsThreshold, -1, tokensLimit, topicDocS, topicLoadingS, topicName)
         summaryPlus = summaryPole(loadingsThreshold, 1, tokensLimit, topicDocS, topicLoadingS, topicName)
         summary_additional = pandas.concat([summaryMinus, summaryPlus])
+        display('summary_additional:', summary_additional) # для отладки
         summary = pandas.concat([summary, summary_additional])
+        summary['Документы'] = summary.index
+        display('summary:', summary) # для отладки
 
-        # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки
         ws = wb.create_sheet(title=topicName)
         for r in dataframe_to_rows(docs_snippetS_additional, index=False, header=True):
             ws.append(r)
@@ -437,7 +441,7 @@ Cреди обозначений строк исходной таблицы ес
 
 # 6. Если норм, отправить эти документы в Excel
     # Желательно после начала интерпретации назвать Excel по-новому, чтобы он не перезаписался в дальнейшем.
-    summaryColumns = ['Топик', 'Токены', 'Усреднённая связь токена с топиком']
+    summaryColumns = ['Топики', 'Токены', 'Усреднённая связь токена с топиком', 'Документы']
     summaryColumns.extend(scoreS.columns)
     summaryColumns.extend(['Релевантность теме исследования', 'Интерпретация топика'])
 
@@ -452,12 +456,6 @@ Cреди обозначений строк исходной таблицы ес
 
     print(f'''\nCоздаю файл "{fileName + ' ' + str(attempt)}.xlsx"''')
     wb.save(fileName + ' ' + str(attempt) + ".xlsx")
-
-    # # Причём разместить релевантные фрагменты документов на отдельныъх страницах
-    # with pandas.ExcelWriter("Топики.xlsx") as writer:
-    #     summary[summaryColumns].to_excel(writer, sheet_name="Сводка")
-    #     for topicName in scoreS.columns:
-    #         docs_snippetS[docs_snippetS['topicName'] == topicName].to_excel(writer, sheet_name=topicName)
 
     print(
 '''
