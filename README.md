@@ -182,7 +182,7 @@ chaid = CHAIDRegressor().fit(
 predictions = chaid.predict(node=True, interaction=True)
 ```
 
-#### Module `scrapingYouTube`
+### Module `scrapingYouTube`
 This module wraps several YouTube Data API v3 methods (search, playlists, videos, comments, channels). It automatically saves results to ./output/scrapingYouTube/ as JSON and Excel files.
 
 Basic usage (Interactive mode):
