@@ -237,7 +237,7 @@ print(docs_snippets.head())
  - `scores_df` — contains document–topic scores and auxiliary variables.
    If `False`, the function returns `None` and only saves the results to disk (in a folder like ./output/topicModeling/).
 - `rowsNumerator` : `str`, optional — Name of a column in dfIn whose values will be used as row labels (index) in the output DataFrames. If not provided, a default integer index is used.
-- `supplementaries` : list, optional — List of additional column names from dfIn to include in the output DataFrames. These can be used for later interpretation (e.g., document author, date, category).
+- `supplementarieS` : list, optional — List of additional column names from dfIn to include in the output DataFrames. These can be used for later interpretation (e.g., document author, date, category).
 - `textFull_lemmatized` : `str` — Name of the column in `dfIn` that contains lemmatized texts (stop words not removed). This is used to build the document-term matrix.
 - `textFull_simbolsCleaned` : `str` — Name of the column in `dfIn` that contains texts after cleaning (removal of special characters, punctuation, etc.) but without lemmatization and stop word removal. This is used for generating readable snippets.
 - `tokensLimit` : `int` — Maximum number of tokens to display per topic pole (positive/negative side). Helps keep interpretations concise.
