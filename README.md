@@ -183,19 +183,17 @@ predictions = chaid.predict(node=True, interaction=True)
 ```
 #### Module `scrapingYouTube`
 This module wraps several YouTube Data API v3 methods (search, playlists, videos, comments, channels). It automatically saves results to ./output/scrapingYouTube/ as JSON and Excel files.
-
 Basic usage (Interactive mode):
-
-python
+```python
 from randan.scrapingYouTube import searchByText
 
 # Launches a step-by-step dialog. Press Enter to proceed with default values.
 searchByText.searchByText()
+```
 
-Advanced usage (Programmatic mode):
+Advanced way of usage ('expiriencedMode'):
 You can pass parameters directly to the function. Parameters correspond to the YouTube Search.list API parameters.
-
-python
+```python
 from randan.scrapingYouTube import searchByText
 
 dfs = searchByText.searchByText(
@@ -210,26 +208,20 @@ dfs = searchByText.searchByText(
 search_df, playlists_df, videos_df, comments_df, channels_df = dfs
 
 print(f"Found {len(videos_df)} videos")
+```
+
 Parameters:
-
 access_token (str, optional): Your YouTube Data API key.
-
 q (str, optional): Search query string.
-
 publishedAfter (str, optional): RFC 3339 formatted timestamp (e.g., 2023-01-01T00:00:00Z).
-
 videoDuration (str, optional): Filter by duration (any, short, medium, long).
-
 returnDfs (bool, default=False): If True, returns a tuple of five pandas DataFrames: (search, playlists, videos, comments, channels). If False, returns None (data is only saved to disk).
-
 ... (and all other standard YouTube API parameters)
 
 Note on channelIdForSearch:
 This parameter is used to restrict the search to a specific channel. For fetching playlist contents, consider using the dedicated getPlaylistItems method (if available).
-# This way is names 'expiriencedMode'
+Finally, the third way is to take the module's code manually and and alter it
 
-# Finally, the third way is to take the module's code manually and and alter it
-```
 #### Module `scrapingVK`
 This module utilise VK API method news.search. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. You only need to call the necessary module:
 ```python
