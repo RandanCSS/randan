@@ -181,56 +181,73 @@ chaid = CHAIDRegressor().fit(
 # and the description of the node in terms of interactions for the given data 
 predictions = chaid.predict(node=True, interaction=True)
 ```
-
 ---
 
-### Module `scrapingYouTube`
-This module wraps several YouTube Data API v3 methods (search, playlists, videos, comments, channels). It automatically saves results to ./output/scrapingYouTube/ as JSON and Excel files.
+### Module `randanTopic`
+This module performs topic modeling on a collection of texts. It takes a DataFrame with texts and optional metadata, builds a document-term matrix, extracts topics, and returns dataframes with topic loadings, representative tokens, and document assignments. The results can be saved or returned as pandas DataFrames for further analysis.
 
-Basic usage (Interactive mode):
+Basic usage (minimal example):
+
 ```python
-from randan.scrapingYouTube import searchByText
+import pandas as pd
+from randan.topicModeling.randanTopic import randanTopic
 
-# Launches a step-by-step dialog. Press Enter to proceed with default values.
-searchByText.searchByText()
+# Assuming you have a DataFrame with a column of lemmatized texts
+df = pd.read_csv('my_texts.csv')
+
+# Run topic modeling with default parameters
+randanTopic(dfIn=df,
+            textFull_lemmatized='lemmas',
+            topicsCount=10)
 ```
 
-Advanced usage (Expirienced mode):
+Advanced usage:
 
-You can pass parameters directly to the function. Parameters correspond to the YouTube Search.list API parameters.
+You can customize the modeling process by providing additional parameters. The function returns DataFrames with results when returnDfs=True.
+
 ```python
-from randan.scrapingYouTube import searchByText
+from randan.topicModeling.randanTopic import randanTopic
 
-dfs = searchByText.searchByText(
-    q="Python programming",
-    publishedAfter="2023-01-01T00:00:00Z",
-    videoDuration="long",
-    regionCode="US",
-    returnDfs=True  # Returns a tuple of 5 DataFrames
+dfs = randanTopic(
+    dfIn=df,
+    matrix_df=dtm,                                     # optional precomputed document-term matrix
+    textFull_lemmatized='textFull_lemmatized',         # column with lemmatized texts
+    textFull_simbolsCleaned='textFull_simbolsCleaned', # column with cleaned but not lemmatized texts
+    topicsCount=15,                                    # number of topics to extract
+    loadingsThreshold=0.75,                            # minimum absolute loading to consider a token
+    tokensLimit=20,                                    # max tokens per topic for interpretation
+    docsLimit=10,                                      # max documents per topic pole for interpretation
+    rowsNumerator='document_id',                       # column to use as row labels
+    supplementary_cols=['author', 'date'],             # additional columns to keep in output
+    returnDfs=True
 )
 
-# Unpack results
-search_df, playlists_df, videos_df, comments_df, channels_df = dfs
-
-print(f"Found {len(videos_df)} videos")
+# dfs is a tuple: (docs_snippets_df, scores_df)
+docs_snippets, scores = dfs
+print(docs_snippets.head())
 ```
 
 #### Parameters:
-- `access_token` (`str`): Your YouTube Data API key.
-- `q` (`str`, optional): Search query string.
-- `publishedAfter` (`str`, optional): RFC 3339 formatted timestamp (e.g., `2023-01-01T00:00:00Z`).
-- `videoDuration` (`str`, optional): Filter by duration (`any`, `short`, `medium`, `long`).
-- `returnDfs` (`bool`, default=False): If `True`, returns a tuple of five pandas DataFrames: (search, playlists, videos, comments, channels). If `False`, returns `None` (data is only saved to disk).
-- ... (and all other standard YouTube API parameters)
+- `dfIn` : `pandas.DataFrame` — Input DataFrame containing the texts and any auxiliary variables (e.g., metadata). Must include at least the column specified in textFull_lemmatized.
+- `matrix_df` : `pandas.DataFrame` — A precomputed document-term matrix (bag-of-words).
+- `docsLimit` : `int`, default `5` — Maximum number of documents to show per topic pole. Used for selecting representative documents.
+- `loadingsThreshold` : `float`, default `0.5` — Threshold for the average token–topic loading. Tokens with loadings below this value are filtered out when interpreting topics. This indirectly limits the number of tokens shown per topic.
+- `returnDfs` : `bool`, default `False` — If `True`, the function returns a tuple of two DataFrames:
+ - `docs_snippets_df` — contains fragments of documents (snippets) and their metadata.
+ - `scores_df` — contains document–topic scores and auxiliary variables.
+   If `False`, the function returns `None` and only saves the results to disk (in a folder like ./output/topicModeling/).
+- `rowsNumerator` : `str`, optional — Name of a column in dfIn whose values will be used as row labels (index) in the output DataFrames. If not provided, a default integer index is used.
+- `supplementaries` : list, optional — List of additional column names from dfIn to include in the output DataFrames. These can be used for later interpretation (e.g., document author, date, category).
+- `textFull_lemmatized` : `str` — Name of the column in `dfIn` that contains lemmatized texts (stop words not removed). This is used to build the document-term matrix.
+- `textFull_simbolsCleaned` : `str` — Name of the column in `dfIn` that contains texts after cleaning (removal of special characters, punctuation, etc.) but without lemmatization and stop word removal. This is used for generating readable snippets.
+- `tokensLimit` : `int` — Maximum number of tokens to display per topic pole (positive/negative side). Helps keep interpretations concise.
+- `topicsCount` : `int` — The number of topics to extract. This is a key parameter for the topic modeling algorithm.
 
 #### Notes:
-- The function automatically handles pagination — you do not need to manage the offset parameter manually.
-- All parameters are optional; if none are provided (or if you run the function without arguments), the interactive mode will guide you through the available options.
-- When returnDfs=True, the returned DataFrame includes standard VK post fields such as id, date, text, likes, reposts, views, plus any additional fields requested via the fields parameter.
-- The module saves output files in the ./output/scrapingVK/ directory. The files are named with a timestamp to avoid overwriting.
-- The parameter `channelIdForSearch` is used to restrict the search to a specific channel (or a specific playlist).
-
-Finally, the third way of usage is to take the module's code manually and and alter it
+- The module automatically saves output files (Excel and JSON) to a timestamped folder inside ./output/topicModeling/, regardless of the returnDfs setting.
+- The document‑term matrix is constructed using the lemmatized texts; make sure that column contains space‑separated tokens.
+- If you already have a document‑term matrix (e.g., from another preprocessing step), you can pass it via matrix_df to save computation time.
+- The user_words parameter is optional and only effective if the underlying algorithm supports seeded topic modeling.
 
 ---
 
@@ -289,5 +306,55 @@ print(df[['text', 'likes', 'date']].head())
 - All parameters are optional; if none are provided (or if you run the function without arguments), the interactive mode will guide you through the available options.
 - When returnDfs=True, the returned DataFrame includes standard VK post fields such as id, date, text, likes, reposts, views, plus any additional fields requested via the fields parameter.
 - The module saves output files in the ./output/scrapingVK/ directory. The files are named with a timestamp to avoid overwriting.
+
+Finally, the third way of usage is to take the module's code manually and and alter it
+
+---
+
+### Module `scrapingYouTube`
+This module wraps several YouTube Data API v3 methods (search, playlists, videos, comments, channels). It automatically saves results to ./output/scrapingYouTube/ as JSON and Excel files.
+
+Basic usage (Interactive mode):
+```python
+from randan.scrapingYouTube import searchByText
+
+# Launches a step-by-step dialog. Press Enter to proceed with default values.
+searchByText.searchByText()
+```
+
+Advanced usage (Expirienced mode):
+
+You can pass parameters directly to the function. Parameters correspond to the YouTube Search.list API parameters.
+```python
+from randan.scrapingYouTube import searchByText
+
+dfs = searchByText.searchByText(
+    q="Python programming",
+    publishedAfter="2023-01-01T00:00:00Z",
+    videoDuration="long",
+    regionCode="US",
+    returnDfs=True  # Returns a tuple of 5 DataFrames
+)
+
+# Unpack results
+search_df, playlists_df, videos_df, comments_df, channels_df = dfs
+
+print(f"Found {len(videos_df)} videos")
+```
+
+#### Parameters:
+- `access_token` (`str`): Your YouTube Data API key.
+- `q` (`str`, optional): Search query string.
+- `publishedAfter` (`str`, optional): RFC 3339 formatted timestamp (e.g., `2023-01-01T00:00:00Z`).
+- `videoDuration` (`str`, optional): Filter by duration (`any`, `short`, `medium`, `long`).
+- `returnDfs` (`bool`, default=False): If `True`, returns a tuple of five pandas DataFrames: (search, playlists, videos, comments, channels). If `False`, returns `None` (data is only saved to disk).
+- ... (and all other standard YouTube API parameters)
+
+#### Notes:
+- The function automatically handles pagination — you do not need to manage the offset parameter manually.
+- All parameters are optional; if none are provided (or if you run the function without arguments), the interactive mode will guide you through the available options.
+- When returnDfs=True, the returned DataFrame includes standard VK post fields such as id, date, text, likes, reposts, views, plus any additional fields requested via the fields parameter.
+- The module saves output files in the ./output/scrapingVK/ directory. The files are named with a timestamp to avoid overwriting.
+- The parameter `channelIdForSearch` is used to restrict the search to a specific channel (or a specific playlist).
 
 Finally, the third way of usage is to take the module's code manually and and alter it
