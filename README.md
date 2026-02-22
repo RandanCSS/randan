@@ -214,23 +214,16 @@ print(f"Found {len(videos_df)} videos")
 ```
 
 ##### Parameters:
-
 - access_token (str, optional): Your YouTube Data API key.
-
 - q (str, optional): Search query string.
-
 - publishedAfter (str, optional): RFC 3339 formatted timestamp (e.g., 2023-01-01T00:00:00Z).
-
 - videoDuration (str, optional): Filter by duration (any, short, medium, long).
-
 - returnDfs (bool, default=False): If True, returns a tuple of five pandas DataFrames: (search, playlists, videos, comments, channels). If False, returns None (data is only saved to disk).
-
 - ... (and all other standard YouTube API parameters)
 
-
 ##### Note on channelIdForSearch:
-This parameter is used to restrict the search to a specific channel. For fetching playlist contents, consider using the dedicated getPlaylistItems method (if available).
-Finally, the third way is to take the module's code manually and and alter it
+_This parameter is used to restrict the search to a specific channel. For fetching playlist contents, consider using the dedicated getPlaylistItems method (if available).
+Finally, the third way is to take the module's code manually and and alter it_
 
 ---
 
