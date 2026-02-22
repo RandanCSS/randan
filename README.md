@@ -213,7 +213,7 @@ search_df, playlists_df, videos_df, comments_df, channels_df = dfs
 print(f"Found {len(videos_df)} videos")
 ```
 
-# Parameters:
+#### Parameters:
 
  access_token (str, optional): Your YouTube Data API key.
 
@@ -228,7 +228,7 @@ print(f"Found {len(videos_df)} videos")
  ... (and all other standard YouTube API parameters)
 
 
-# Note on channelIdForSearch:
+##### Note on channelIdForSearch:
 
 This parameter is used to restrict the search to a specific channel. For fetching playlist contents, consider using the dedicated getPlaylistItems method (if available).
 Finally, the third way is to take the module's code manually and and alter it
