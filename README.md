@@ -203,7 +203,7 @@ randanTopic(dfIn=df,
 
 Advanced usage:
 
-You can customize the modeling process by providing additional parameters. The function returns DataFrames with results when returnDfs=True.
+You can customize the modeling process by providing additional parameters. The function returns DataFrames with results when `returnDfs=True`.
 
 ```python
 from randan.topicModeling.randanTopic import randanTopic
