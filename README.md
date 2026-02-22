@@ -273,16 +273,16 @@ print(df[['text', 'likes', 'date']].head())
 ```
 
 #### Parameters:
-- access_token : str — VK API access token (user or service token).
-- q : str — Search query string. Supports VK search syntax (e.g., quotes for exact phrases).
-- count : int, default 200 — Number of posts to return per request. The function automatically handles pagination, so you can effectively retrieve more than 200 posts.
-- start_time : int — Unix timestamp (in seconds). Restricts results to posts published after this time.
-- end_time : int — Unix timestamp (in seconds). Restricts results to posts published before this time.
-- latitude : float — Latitude for location-based search. Must be used together with longitude.
-- longitude : float — Longitude for location-based search.
-- fields : list of str — Additional fields to include in the response. For example: ["city", "sex"]. Refer to the official VK documentation for the full list of available fields.
-- params : dict — A pre‑built dictionary of parameters for the VK API request. If this argument is provided, all other individual parameters (like q, count, start_time, etc.) are ignored (except access_token and returnDfs). This is useful when you want to reuse a complex query configuration.
-- returnDfs : bool, default False — If True, the function returns a pandas DataFrame containing the posts and their metadata. If False (default), it returns None and only saves the data to disk.
+- access_token : `str` — VK API access token (user or service token).
+- q : `str` — Search query string. Supports VK search syntax (e.g., quotes for exact phrases).
+- count : `int`, default `200` — Number of posts to return per request. The function automatically handles pagination, so you can effectively retrieve more than 200 posts.
+- start_time : `int` — Unix timestamp (in seconds). Restricts results to posts published after this time.
+- end_time : `int` — Unix timestamp (in seconds). Restricts results to posts published before this time.
+- latitude : `float` — Latitude for location-based search. Must be used together with longitude.
+- longitude : `float` — Longitude for location-based search.
+- fields : `list` of `str` — Additional fields to include in the response. For example: ["city", "sex"]. Refer to the official VK documentation for the full list of available fields.
+- params : `dict` — A pre‑built dictionary of parameters for the VK API request. If this argument is provided, all other individual parameters (like q, count, start_time, etc.) are ignored (except access_token and returnDfs). This is useful when you want to reuse a complex query configuration.
+- returnDfs : `bool`, default `False` — If `True`, the function returns a pandas DataFrame containing the posts and their metadata. If False (default), it returns None and only saves the data to disk.
 
 #### Notes:
 - The function automatically handles pagination — you do not need to manage the offset parameter manually.
