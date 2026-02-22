@@ -182,6 +182,8 @@ chaid = CHAIDRegressor().fit(
 predictions = chaid.predict(node=True, interaction=True)
 ```
 
+---
+
 ### Module `scrapingYouTube`
 This module wraps several YouTube Data API v3 methods (search, playlists, videos, comments, channels). It automatically saves results to ./output/scrapingYouTube/ as JSON and Excel files.
 
@@ -193,7 +195,7 @@ from randan.scrapingYouTube import searchByText
 searchByText.searchByText()
 ```
 
-Advanced usage (Expirienced mode'):
+Advanced usage (Expirienced mode):
 
 You can pass parameters directly to the function. Parameters correspond to the YouTube Search.list API parameters.
 ```python
@@ -222,54 +224,69 @@ print(f"Found {len(videos_df)} videos")
 - ... (and all other standard YouTube API parameters)
 
 #### Note on channelIdForSearch:
-_This parameter is used to restrict the search to a specific channel. For fetching playlist contents, consider using the dedicated getPlaylistItems method (if available).
-Finally, the third way is to take the module's code manually and and alter it_
+_This parameter is used to restrict the search to a specific channel (or a specific playlist)._
+
+Finally, the third way of usage is to take the module's code manually and and alter it
 
 ---
 
-#### Module `scrapingVK`
-This module utilise VK API method news.search. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. You only need to call the necessary module:
+### Module `scrapingVK`
+This module wraps the VK API method newsfeed.search. It automatically saves the results to ./output/scrapingVK/ as JSON (raw API response) and Excel (flattened table) files.
+
+Basic usage (Interactive mode):
 ```python
 from randan.scrapingVK import newsFeedSearch
+
+# Launches a step-by-step dialog. Press Enter to proceed with default values.
 newsFeedSearch.newsFeedSearch()
-
-# with this code, you will immediately see an instruction.
-# Just follow it for executing the default scenario, episodically pressing Enter on your keyboard
 ```
+
+Advanced usage (Expirienced mode):
+
+You can pass parameters directly to the function. All parameters correspond to the official VK API newsfeed.search method, with the addition of params and returnDfs.
 ```python
-# However, if you want to customize the default scenario, there are three ways availible.
-# The first one is to use the module's dialog interface, which appears in the process of executing the module's code.
-# The second one is to assign manually the function scrapingVK() arguments, which are None by default:
+from randan.scrapingVK import newsFeedSearch
 
+# Example 1: Simple search for posts containing "python"
 newsFeedSearch.newsFeedSearch(
-                              access_token=None,
-                              count=200,
-                              end_time=None,
-                              fields=None,
-                              latitude=None,
-                              longitude=None,
-                              params=None,
-                              q=None,
-                              returnDfs=False
-                              start_time=None,
-                              )
+    q="python",
+    count=50,
+    returnDfs=False   # only saves files, does not return DataFrame
+)
 
-# Let us examine the arguments in detail:
-#    access_token : str
-#           count : int
-#        end_time : int -- формат Unix
-#          fields : list
-#        latitude : int
-#       longitude : int
-#          params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/newsfeed.search , чтобы не подавать эти аргументы по отдельности
-#               q : str
-#       returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
-#      start_time : int -- формат Unix
+# Example 2: Search with time range and specific fields, returning DataFrame
+df = newsFeedSearch.newsFeedSearch(
+    access_token="YOUR_TOKEN",
+    q="data science",
+    start_time=1609459200,      # 2021-01-01 00:00:00 UTC
+    end_time=1612137600,         # 2021-02-01 00:00:00 UTC
+    fields=["likes", "reposts"],
+    count=200,
+    returnDfs=True
+)
 
-# The function's arguments are analoguous to those of the method https://dev.vk.com/ru/method/newsfeed.search with the exception of params and returnDfs arfuments.
-# Moreover, the arguments might be inputed in the function brackets both as stay alone entities, and as params parts
-#( params belongs to a dictionary class and is an argument of the method get of the module requests ).
-# This way is names 'expiriencedMode'
-
-# Finally, the third way is to take the module's code manually and and alter it
+print(df[['text', 'likes', 'date']].head())
 ```
+
+####Parameters:
+
+Parameter	Type	Description
+access_token	str	VK API access token (user or service).
+q	str	Search query string.
+count	int	Number of posts to return (max 200 per request, but the function handles pagination automatically).
+start_time	int	Unix timestamp (seconds) — return posts published after this time.
+end_time	int	Unix timestamp (seconds) — return posts published before this time.
+latitude	float	Latitude for location-based search. Requires longitude.
+longitude	float	Longitude for location-based search.
+fields	list[str]	Additional fields to return (e.g., ["likes", "reposts", "attachments"]). See VK docs for full list.
+params	dict	A pre‑built dictionary of parameters for the VK API request. If provided, individual parameters (q, count, etc.) are ignored (except access_token and returnDfs). Useful for reusing complex queries.
+returnDfs	bool	If True, returns a pandas DataFrame containing the posts and their metadata. If False (default), returns None (data is only saved to disk).
+Notes:
+
+The function handles pagination automatically — you don't need to manage offset or multiple requests.
+
+All parameters are optional; interactive mode will prompt you for the most common ones.
+
+The resulting DataFrame (when returnDfs=True) includes standard VK post fields like id, date, text, likes, reposts, views, and any additional fields requested via fields.
+
+Finally, the third way of usage is to take the module's code manually and and alter it
