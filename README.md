@@ -213,25 +213,26 @@ search_df, playlists_df, videos_df, comments_df, channels_df = dfs
 print(f"Found {len(videos_df)} videos")
 ```
 
-#### Parameters:
+##### Parameters:
 
- access_token (str, optional): Your YouTube Data API key.
+- access_token (str, optional): Your YouTube Data API key.
 
- q (str, optional): Search query string.
+- q (str, optional): Search query string.
 
- publishedAfter (str, optional): RFC 3339 formatted timestamp (e.g., 2023-01-01T00:00:00Z).
+- publishedAfter (str, optional): RFC 3339 formatted timestamp (e.g., 2023-01-01T00:00:00Z).
 
- videoDuration (str, optional): Filter by duration (any, short, medium, long).
+- videoDuration (str, optional): Filter by duration (any, short, medium, long).
 
- returnDfs (bool, default=False): If True, returns a tuple of five pandas DataFrames: (search, playlists, videos, comments, channels). If False, returns None (data is only saved to disk).
+- returnDfs (bool, default=False): If True, returns a tuple of five pandas DataFrames: (search, playlists, videos, comments, channels). If False, returns None (data is only saved to disk).
 
- ... (and all other standard YouTube API parameters)
+- ... (and all other standard YouTube API parameters)
 
 
 ##### Note on channelIdForSearch:
 
 This parameter is used to restrict the search to a specific channel. For fetching playlist contents, consider using the dedicated getPlaylistItems method (if available).
 Finally, the third way is to take the module's code manually and and alter it
+
 
 #### Module `scrapingVK`
 This module utilise VK API method news.search. The module automatically stores its output in Excel and JSON files logically organized by relevant folders. You only need to call the necessary module:
