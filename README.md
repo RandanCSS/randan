@@ -235,9 +235,9 @@ display(docs_snippets.head())
 - `docsLimit` : `int`, default `5` — Maximum number of documents to show per topic pole. Used for selecting representative documents.
 - `loadingsThreshold` : `float`, default `0.5` — Threshold for the average token–topic loading. Tokens with loadings below this value are filtered out when interpreting topics. This indirectly limits the number of tokens shown per topic.
 - `returnDfs` : `bool`, default `False` — If `True`, the function returns a tuple of two `DataFrame`s:
- - `docs_snippets_df` — contains fragments of documents (snippets) and their metadata.
- - `scores_df` — contains document–topic scores and auxiliary variables.
-   If `False`, the function returns `None` and only saves the results to disk in the folder where the module performs.
+####### - `docs_snippets_df` — contains fragments of documents (snippets) and their metadata.
+####### - `scores_df` — contains document–topic scores and auxiliary variables.
+####### If `False`, the function returns `None` and only saves the results to disk in the folder where the module performs.
 - `rowsNumerator` : `str`, optional — Name of a column in df whose values will be used as row labels (index) in the output `DataFrame`s. If not provided, a default integer index is used.
 - `supplementarieS` : list, optional — List of additional column names from df to include in the output `DataFrame`s. These can be used for later interpretation (e.g., document author, date, category).
 - `textFull_lemmatized` : `str` — Name of the column in `df` that contains lemmatized texts (stop words not removed). This is used to build the document-term matrix.
