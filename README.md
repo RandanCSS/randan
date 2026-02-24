@@ -184,7 +184,7 @@ predictions = chaid.predict(node=True, interaction=True)
 ---
 
 ### Module `randanTopic`
-This module performs topic modeling on a collection of texts. It takes a DataFrame with texts and optional metadata, builds a document-term matrix, extracts topics, and returns dataframes with topic loadings, representative tokens, and document assignments. The results can be saved or returned as pandas DataFrames for further analysis.
+This module performs topic modeling on a collection of texts. It takes `DataFrame` with texts and optional metadata, extracts topics, and returns `DataFrame`s with topic loadings, representative tokens, and document assignments. The results will be saved as a facilitating interpretation form and, optionally, returned as `pandas` `DataFramee` for further analysis.
 
 Basic usage (minimal example):
 
@@ -193,11 +193,13 @@ import pandas as pd
 from randan.topicModeling.randanTopic import randanTopic
 
 # Assuming you have a DataFrame with a column of lemmatized texts
-df = pd.read_csv('my_texts.csv')
+df = pd.read_csv('my_texts.csv') # texts
+matrix_df = pd.read_csv(matrix_df.csv') # bag-of-words
 
 # Run topic modeling with default parameters
-randanTopic(dfIn=df,
-            textFull_lemmatized='lemmas',
+randanTopic(df=df,
+            matrix_df= matrix_df,
+            textFull_lemmatized=' textFull_lemmatized ',
             topicsCount=10)
 ```
 
@@ -209,42 +211,42 @@ You can customize the modeling process by providing additional parameters. The f
 from randan.topicModeling.randanTopic import randanTopic
 
 dfs = randanTopic(
-    dfIn=df,
-    matrix_df=dtm,                                     # optional precomputed document-term matrix
-    textFull_lemmatized='textFull_lemmatized',         # column with lemmatized texts
-    textFull_simbolsCleaned='textFull_simbolsCleaned', # column with cleaned but not lemmatized texts
-    topicsCount=15,                                    # number of topics to extract
+    df=df,
+    matrix_df=matrix_df,                               # precomputed document-term matrix
     loadingsThreshold=0.75,                            # minimum absolute loading to consider a token
-    tokensLimit=20,                                    # max tokens per topic for interpretation
     docsLimit=10,                                      # max documents per topic pole for interpretation
+    returnDfs=True,                                    # returns `pandas` `DataFrame`s containing fragments of documents (snippets) and their metadata + document–topic scores and auxiliary variables
     rowsNumerator='document_id',                       # column to use as row labels
-    supplementary_cols=['author', 'date'],             # additional columns to keep in output
-    returnDfs=True
+    supplementarieS=['author', 'date'],                # additional columns to keep in output
+    textFull_lemmatized='textFull_lemmatized',         # column with both cleaned, and lemmatized texts without lemmatization and stop word removal
+    textFull_simbolsCleaned='textFull_simbolsCleaned', # column with cleaned but not lemmatized texts without lemmatization and stop word removal
+    tokensLimit=20,                                    # max tokens per topic for interpretation
+    topicsCount=15                                     # number of topics to extract
 )
 
 # dfs is a tuple: (docs_snippets_df, scores_df)
 docs_snippets, scores = dfs
-print(docs_snippets.head())
+display(docs_snippets.head())
 ```
 
 #### Parameters:
-- `dfIn` : `pandas.DataFrame` — Input DataFrame containing the texts and any auxiliary variables (e.g., metadata). Must include at least the column specified in textFull_lemmatized.
+- `df` : `pandas.DataFrame` — Input `DataFrame` containing the texts and any auxiliary variables (e.g., metadata). Must include at least the column specified in textFull_lemmatized.
 - `matrix_df` : `pandas.DataFrame` — A precomputed document-term matrix (bag-of-words).
 - `docsLimit` : `int`, default `5` — Maximum number of documents to show per topic pole. Used for selecting representative documents.
 - `loadingsThreshold` : `float`, default `0.5` — Threshold for the average token–topic loading. Tokens with loadings below this value are filtered out when interpreting topics. This indirectly limits the number of tokens shown per topic.
-- `returnDfs` : `bool`, default `False` — If `True`, the function returns a tuple of two DataFrames:
+- `returnDfs` : `bool`, default `False` — If `True`, the function returns a tuple of two `DataFrame`s:
  - `docs_snippets_df` — contains fragments of documents (snippets) and their metadata.
  - `scores_df` — contains document–topic scores and auxiliary variables.
-   If `False`, the function returns `None` and only saves the results to disk (in a folder like ./output/topicModeling/).
-- `rowsNumerator` : `str`, optional — Name of a column in dfIn whose values will be used as row labels (index) in the output DataFrames. If not provided, a default integer index is used.
-- `supplementarieS` : list, optional — List of additional column names from dfIn to include in the output DataFrames. These can be used for later interpretation (e.g., document author, date, category).
-- `textFull_lemmatized` : `str` — Name of the column in `dfIn` that contains lemmatized texts (stop words not removed). This is used to build the document-term matrix.
-- `textFull_simbolsCleaned` : `str` — Name of the column in `dfIn` that contains texts after cleaning (removal of special characters, punctuation, etc.) but without lemmatization and stop word removal. This is used for generating readable snippets.
+   If `False`, the function returns `None` and only saves the results to disk in the folder where the module performs.
+- `rowsNumerator` : `str`, optional — Name of a column in df whose values will be used as row labels (index) in the output `DataFrame`s. If not provided, a default integer index is used.
+- `supplementarieS` : list, optional — List of additional column names from df to include in the output `DataFrame`s. These can be used for later interpretation (e.g., document author, date, category).
+- `textFull_lemmatized` : `str` — Name of the column in `df` that contains lemmatized texts (stop words not removed). This is used to build the document-term matrix.
+- `textFull_simbolsCleaned` : `str` — Name of the column in `df` that contains texts after cleaning (removal of special characters, punctuation, etc.) but without lemmatization and stop word removal. This is used for generating readable snippets.
 - `tokensLimit` : `int` — Maximum number of tokens to display per topic pole (positive/negative side). Helps keep interpretations concise.
 - `topicsCount` : `int` — The number of topics to extract. This is a key parameter for the topic modeling algorithm.
 
 #### Notes:
-- The module automatically saves output files (Excel and JSON) to a timestamped folder inside ./output/topicModeling/, regardless of the returnDfs setting.
+- The module automatically saves output files (Excel and JSON) to the folder where the module performs, regardless of the returnDfs setting.
 - The document‑term matrix is constructed using the lemmatized texts; make sure that column contains space‑separated tokens.
 - If you already have a document‑term matrix (e.g., from another preprocessing step), you can pass it via matrix_df to save computation time.
 - The user_words parameter is optional and only effective if the underlying algorithm supports seeded topic modeling.
