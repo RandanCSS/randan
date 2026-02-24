@@ -726,6 +726,7 @@ videoPaidProductPlacement : str
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     rootNameS = os.listdir() if coLabFolder == None else os.listdir(coLabFolder)
+    # print('rootNameS:', rootNameS) # для отладки
     # Поиск ключей
     if access_token == None:
         print('Проверяю наличие файла credentialsYouTube.txt с ключ[ом ами], гипотетически сохранённым[и] при первом запуске скрипта')
@@ -766,7 +767,8 @@ videoPaidProductPlacement : str
           )
     for rootName in rootNameS:
         if 'Temporal' in rootName:
-            if len(os.listdir(rootName)) == 9:
+            # print('rootName:', rootName) # для отладки
+            if len(os.listdir(rootName if coLabFolder == None else coLabFolder + slash + rootName)) == 9:
                 file = open(f'{rootName}{slash}targetCount.txt')
                 targetCountTemporal = file.read()
                 file.close()
