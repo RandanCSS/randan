@@ -142,6 +142,7 @@ def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTo
                 # display(docSnippetS)
 
             rowInvaderToDropS = []
+            dysplay('poleTokenS:', poleTokenS)
             tokenReceiverS = poleTokenS.copy()
             for tokenInvader in poleTokenS[:-1]:
                 tokenInvaderIndex = docSnippetS[docSnippetS['token'] == tokenInvader].index
