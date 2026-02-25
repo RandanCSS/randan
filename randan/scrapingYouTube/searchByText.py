@@ -143,7 +143,7 @@ def bigSearch(
     return addItemS, goS, goToPlayList, iteration, keyOrder, response # от response отказаться нельзя, т.к. в нём много важных ключей, даже если их значения нули
 
 # 1.1 для обработки выдачи метода channels, помогающая работе с ключами
-def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, contentType, dfFinal, expiriencedMode, fileFormatChoice, goS, keyOrder, momentCurrent, playlistS, q, rootName, slash, snippetContentType, stage, targetCount, year, yearsRange, videoS):
+def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, contentType, dfFinal, experiencedMode, fileFormatChoice, goS, keyOrder, momentCurrent, playlistS, q, rootName, slash, snippetContentType, stage, targetCount, year, yearsRange, videoS):
     if len(dfFinal) > 0: # если использовался search и успешно, id каналов берутся из него
         channelIdS = dfFinal[dfFinal['id.kind'] == f'youtube#{snippetContentType}']
         if len(channelIdS) > 0:
@@ -158,7 +158,7 @@ def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNameP
 'В скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "brandingSettings", "contentDetails", "id", "localizations", "statistics", "status", "topicDetails"], id, maxResults .',
 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/channels')
-    if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+    if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
     print('') # для отступа
 
 # ********** Дополнение списка id каналов из dfFinal списком id каналов из playlistS
@@ -415,13 +415,13 @@ f'''  Порция № {iteration + 1}{f' из {iterationUpperBound}' if idS != 
           )
 
 # 1.6 для обработки выдачи методов playlists и playlistItems, помогающая работе с ключами
-def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, contentType, dfFinal, expiriencedMode, fileFormatChoice, goS, keyOrder, momentCurrent, playlistIdS, q, rootName, slash, stage, targetCount, year, yearsRange):
+def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, contentType, dfFinal, experiencedMode, fileFormatChoice, goS, keyOrder, momentCurrent, playlistIdS, q, rootName, slash, stage, targetCount, year, yearsRange):
     method = 'playlists'
     print('В скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "contentDetails", "localizations", "status"], id, maxResults .',
           'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
           'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:',
           'https://developers.google.com/youtube/v3/docs/playlists')
-    if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+    if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
     print('') # для отступа
     
     if len(playlistIdS) > 0:
@@ -458,7 +458,7 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
               'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
               'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:',
               'https://developers.google.com/youtube/v3/docs/playlistitems')
-        if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+        if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
         print('') # для отступа
     
         iteration = 0 # номер итерации применения текущего метода
@@ -681,10 +681,10 @@ videoPaidProductPlacement : str
         & (videoCaption == None) & (videoCategoryId == None) & (videoDefinition == None) & (videoDimension == None) & (videoDuration == None) & (videoEmbeddable == None) & (videoLicense == None)\
         & (videoPaidProductPlacement == None) & (videoSyndicated == None) & (videoType == None) & (returnDfs == False):
         # print('Пользователь не подал аргументы')
-        expiriencedMode = False
-    else: expiriencedMode = True
+        experiencedMode = False
+    else: experiencedMode = True
 
-    if expiriencedMode == False:
+    if experiencedMode == False:
         print(
 '''    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API YouTube по ключу (см. примерную видео-инструкцию: https://www.youtube.com/watch?v=EXysYgWeapI&t=490s ). Для получения API key следует создать проект, авторизовать его, подключить к нему API нужного сервиса Google. Проект -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому сервисов Google и применения на этой основе API разных сервисов Google в рамках установленных Гуглом ограничений (the units of quota). Разные уровни авторизации -- это авторизация ключом (представляющим собой код) и полная авторизация (ключ + протокол Google OAuth 2.0, реализующийся в формате файла JSON). Авторизация ключом нужна, чтобы использовать любой метод любого API. Её достаточно, если выполнять действия, которые были бы доступны Вам как пользователю сервисов Google без Вашего входа в аккаунт: посмотреть видео, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления видео, то Вам придётся пройти полную авторизацию. Далее разные API как бы подключаются к проектам (кнопка Enable APIs and servises), используются, затем отключаются (кнопка Disable APIs).
     Квоты одного ключа может не хватить (quota is exceeded) для выгрузки всего предоставляемого ЮТьюбом по запросу пользователя контента. К счастью, использованный ключ ежесуточно восстанавливается ЮТьюбом. скрипт позволяет сохранить промежуточную выгрузку и после восстановления ключа автоматически продолжит её дополнять с момента остановки. В момент остановки появится надпись: "Поскольку ключи закончились, исполнение скрипта завершаю. Подождите сутки для восстановления ключей или подготовьте новый ключ -- и запустите скрипт с начала", а исполнение скрипта прервётся. Не пугайтесь, нажмите OK и следуйте этой инструкции.'''
@@ -694,7 +694,7 @@ videoPaidProductPlacement : str
     Для корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.
     Преимущества скрипта перед выгрузкой контента из YouTube вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API YouTube: гораздо быстрее, гораздо большее количество контента с одним и тем же ключом, не требуется тщательно изучать обширную документацию семи методов API YouTube (search, videos, commentThreads и comments, channels, playlists и playlistItems), выстроена логика обрашения к этим методам'''
           )
-    if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+    if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
 
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API YouTube
@@ -1031,7 +1031,7 @@ f'В скрипте используются следующие аргумент
 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
 f'Если хотите добавить другие аргументы метода {method} API YouTube, доступные по ссылке https://developers.google.com/youtube/v3/docs/search , -- можете сделать это внутри метода {method} в разделе 2 исполняемого сейчас скрипта'
                   )
-            if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+            if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
             print('') # для отступа
 
             if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
@@ -1599,7 +1599,7 @@ f'''    Искомых объектов {targetCount}, а найденных с 
                                                                          complicatedNamePart=complicatedNamePart,
                                                                          contentType=contentType,
                                                                          dfFinal=itemS,
-                                                                         expiriencedMode=expiriencedMode,
+                                                                         experiencedMode=experiencedMode,
                                                                          fileFormatChoice=fileFormatChoice,
                                                                          goS=goS,
                                                                          keyOrder=keyOrder,
@@ -1623,7 +1623,7 @@ f'''    Искомых объектов {targetCount}, а найденных с 
                                                                      complicatedNamePart=complicatedNamePart,
                                                                      contentType=contentType,
                                                                      dfFinal=channelS, # т.к. в отсутствие itemS channelS становится базовым датафреймом
-                                                                     expiriencedMode=expiriencedMode,
+                                                                     experiencedMode=experiencedMode,
                                                                      fileFormatChoice=fileFormatChoice,
                                                                      goS=goS,
                                                                      keyOrder=keyOrder,
@@ -1648,7 +1648,7 @@ f'''    Искомых объектов {targetCount}, а найденных с 
                                         complicatedNamePart=complicatedNamePart,
                                         contentType=contentType,
                                         dfFinal=itemS,
-                                        expiriencedMode=expiriencedMode,
+                                        experiencedMode=experiencedMode,
                                         fileFormatChoice=fileFormatChoice,
                                         goS=goS,
                                         keyOrder=keyOrder,
@@ -1678,7 +1678,7 @@ f'''    Искомых объектов {targetCount}, а найденных с 
                                                                  complicatedNamePart=complicatedNamePart,
                                                                  contentType=contentType,
                                                                  dfFinal=channelS, # т.к. в отсутствие itemS channelS становится базовым датафреймом !!!
-                                                                 expiriencedMode=expiriencedMode,
+                                                                 experiencedMode=experiencedMode,
                                                                  fileFormatChoice=fileFormatChoice,
                                                                  goS=goS,
                                                                  keyOrder=keyOrder,
@@ -1705,7 +1705,7 @@ f'''    Искомых объектов {targetCount}, а найденных с 
 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/videos'
                       )
-                if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+                if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
                 print('') # для отступа
 
                 iteration = 0 # номер итерации применения текущего метода
@@ -1816,7 +1816,7 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/commentThreads'
                       )
-                if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+                if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
                 print('') # для отступа
 
                 # Переназначить объект videoIdS для целей текущего чанка
@@ -1934,7 +1934,7 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
 'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
 'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/commentThreads'
                           )
-                    if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+                    if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
                     print('') # для отступа
 
                     print('Проход по id всех родительских (topLevel) комментариев с недостачей ответов для выгрузки этих ответов')
@@ -2021,7 +2021,7 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                                             complicatedNamePart=complicatedNamePart,
                                             contentType=contentType,
                                             dfFinal=itemS,
-                                            expiriencedMode=expiriencedMode,
+                                            experiencedMode=experiencedMode,
                                             fileFormatChoice=fileFormatChoice,
                                             goS=goS,
                                             keyOrder=keyOrder,
