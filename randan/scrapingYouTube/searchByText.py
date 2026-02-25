@@ -2,8 +2,8 @@
 # coding: utf-8
 
 '''
-(EN) A proprietary module that simplifies and maximizes YouTube content extraction using the platform's official API method search
-(RU) Авторский модуль для упрощения выгрузки контента YouTube методом его API search и максимизации размера этой выгрузки
+(EN) A module that simplifies and maximizes YouTube content extraction using the platform's official API method search
+(RU) Ммодуль для упрощения выгрузки контента YouTube методом его API search и максимизации размера этой выгрузки
 '''
 
 # 0 Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
@@ -373,7 +373,7 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
         # print('  keyOrder ДО смены ключа', keyOrder) # для отладки
         keyOrder += 1 # смена ключа
         # print('  keyOrder ПОСЛЕ смены ключа', keyOrder) # для отладки
-    elif ('desabled' in str(errorDescription[1]).lower()) & ('key' in str(errorDescription[1]).lower()):
+    elif ('disabled' in str(errorDescription[1]).lower()) & ('key' in str(errorDescription[1]).lower()):
         print('!!! Похоже, текущий ключ деактивирован владельцем или Гуглом; пробую перейти к следующему ключу')
         # print('  keyOrder ДО смены ключа', keyOrder) # для отладки
         keyOrder += 1 # смена ключа
