@@ -215,25 +215,25 @@ textFull_simbolsCleaned : str -- имя столбца с текстом, про
               )
         input()
 
-    if 'textFull_lemmatized' not in .columns:
+    if 'textFull_lemmatized' not in df.columns:
         print(
 f'''В поданном Вами датафрейме отсутствует столбец textFull_lemmatized . Какой столбец в поданном Вами датафрейме содержит лемматизированные тексты (из которого НЕ удалены стоп-слова)?'''
               )
         while True:
             print('--- Впишите, пожалуйста, его название')
             textFull_lemmatized = input()
-            if textFull_lemmatized in .columns: break
+            if textFull_lemmatized in df.columns: break
             else:
                 print('--- Вы вписали что-то не то')
 
-    if 'textFull_simbolsCleaned' not in .columns:
+    if 'textFull_simbolsCleaned' not in df.columns:
         print(
 f'''В поданном Вами датафрейме отсутствует столбец textFull_simbolsCleaned . Какой столбец в поданном Вами датафрейме содержит тексты, из которых удалены лишние символы, но НЕ лемматизированные?'''
               )
         while True:
             print('--- Впишите, пожалуйста, его название')
             textFull_lemmatized = input()
-            if textFull_lemmatized in .columns: break
+            if textFull_lemmatized in df.columns: break
             else:
                 print('--- Вы вписали что-то не то')  
                     
