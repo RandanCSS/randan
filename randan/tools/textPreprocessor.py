@@ -3,7 +3,7 @@
 
 '''
 (EN) A module for an unstandardized text preprocessing
-(RU) Авторский модуль для предобработки неформализованного текста
+(RU) Модуль для предобработки неформализованного текста
 '''
 
 # sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
@@ -225,7 +225,7 @@ def simbolsCleaner(text):
     for a in text:
         if (a.isalnum()) | (a == ' '): textCleaned += a
         else: textCleaned += ' ' # чтобы при удалении лишних символов, за которым не следует пробел, оставшиеся символы не сливались
-    textCleaned = multispaceCleaner(textCleaned)
+    textCleaned = multispaceCleaner(str(textCleaned))
     return textCleaned
 
 def stopwordsDropper(text, userStopWordsToAdd=None, userStopWordsToRemove=None, language='russian'):
