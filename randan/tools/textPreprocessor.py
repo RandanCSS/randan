@@ -185,8 +185,10 @@ def multispaceCleaner(text):
     textCleaned = text
     if len(text) > 0: # т.к., например, после чистки текста от эмодзи в нём может остаться пустота
         while '  ' in textCleaned: textCleaned = textCleaned.replace('  ', ' ')
-        while textCleaned[0] == ' ': textCleaned = textCleaned[1:] # избавиться от пробелов в начале текста
-        while textCleaned[-1] == ' ': textCleaned = textCleaned[:-1] # избавиться от пробелов в конце текста
+        # print('len(textCleaned):', len(textCleaned)) # для отладки
+        if len(textCleaned) == ' ': # т.к. после чистки текста от пробелов может остаться один поробел
+            while textCleaned[0] == ' ': textCleaned = textCleaned[1:] # избавиться от пробелов в начале текста
+            while textCleaned[-1] == ' ': textCleaned = textCleaned[:-1] # избавиться от пробелов в конце текста
     return textCleaned
 
 def pymystemLemmatizer(dfIn, columnWithText):
@@ -221,11 +223,12 @@ def simbolsCleaner(text):
     ----------
     text : str
     """
+    text = str(text) # т.к., например, после чистки текста от эмодзи в нём могут остаться только цифры, которые Python идентифицирует как int
     textCleaned = ''
     for a in text:
         if (a.isalnum()) | (a == ' '): textCleaned += a
         else: textCleaned += ' ' # чтобы при удалении лишних символов, за которым не следует пробел, оставшиеся символы не сливались
-    textCleaned = multispaceCleaner(str(textCleaned))
+    textCleaned = multispaceCleaner(textCleaned)
     return textCleaned
 
 def stopwordsDropper(text, userStopWordsToAdd=None, userStopWordsToRemove=None, language='russian'):
