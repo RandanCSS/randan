@@ -2,7 +2,7 @@
 # coding: utf-8
 
 '''
-(EN) A module for an unstandardized text preprocessing
+(EN) A module for an unstructured text preprocessing
 (RU) Модуль для предобработки неформализованного текста
 '''
 
@@ -213,6 +213,7 @@ def pymystemLemmatizer(dfIn, columnWithText):
     df[columnWithText] = textS.split(separator)
     df[columnWithText] = df[columnWithText].str.strip() # убрать появившиеся после лемматизации \n на концах лемматизированных текстов
     df[columnWithText] = df[columnWithText].apply(lambda text: re.sub(r'  +', ' ', text))
+    df[columnWithText] = df[columnWithText].str.lower() # нераспознанные лемматизатором тексты остаются в исходном регистре, что нарушает единообразие
     return df[columnWithText]
     
 def simbolsCleaner(text):
