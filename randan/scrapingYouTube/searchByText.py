@@ -411,7 +411,7 @@ def iterationVisualization(idS, iteration, portion, response):
         response['items'] = []
     
     print(
-f'''  Порция № {iteration + 1}{f' из {iterationUpperBound}' if idS != None else ''}.{f" Сколько в порции наблюдений? {len(response['items'])}" if portion > 1 else ''}''', end='\r'
+f'''  Порция № {iteration + 1}{f' из {iterationUpperBound}' if idS != None else ''}.{f" Сколько в порции наблюдений? {len(response['items'])}" if portion > 1 else ''}          ''', end='\r'
           )
 
 # 1.6 для обработки выдачи методов playlists и playlistItems, помогающая работе с ключами
