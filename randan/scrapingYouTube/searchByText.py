@@ -1939,7 +1939,7 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
 
                     print('Проход по id всех родительских (topLevel) комментариев с недостачей ответов для выгрузки этих ответов')
                     commentIdS = commentReplieS['id'][commentReplieS['Недостача_ответов'] > 0]
-                    print('commentIdS:', commentIdS) # для отладки
+                    # print('commentIdS:', commentIdS) # для отладки
                     if commentIdS != []: # блок если нет недостачи
                         for commentId in tqdm(commentIdS):
                             page = 0 # номер страницы выдачи
