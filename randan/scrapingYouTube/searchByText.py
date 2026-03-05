@@ -1939,75 +1939,80 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
 
                     print('Проход по id всех родительских (topLevel) комментариев с недостачей ответов для выгрузки этих ответов')
                     commentIdS = commentReplieS['id'][commentReplieS['Недостача_ответов'] > 0]
-                    for commentId in tqdm(commentIdS):
-                        page = 0 # номер страницы выдачи
-                        repliesAdditional, goS, keyOrder, problemCommentId = downloadComments(
-                                                                                              API_keyS=API_keyS,
-                                                                                              sourceId=commentId,
-                                                                                              keyOrder=keyOrder,
-                                                                                              method=method
-                                                                                              )
-                        if goS == False: break # на случай сигнала прерывания
-                        if problemCommentId != None: problemCommentIdS.append(problemCommentId)
-                        replieS = dfsProcessor(
-                                               channelIdForSearch=channelIdForSearch,
-                                               coLabFolder=coLabFolder,
-                                               complicatedNamePart=complicatedNamePart,
-                                               contentType=contentType,
-                                               fileFormatChoice=fileFormatChoice,
-                                               dfAdd=repliesAdditional,
-                                               dfFinal=itemS,
-                                               dfIn=replieS,
-                                               goS=goS,
-                                               method=method,
-                                               q=q,
-                                               rootName=rootName,
-                                               slash=slash,
-                                               stageTarget=stage,
-                                               targetCount=targetCount,
-                                               momentCurrent=momentCurrent,
-                                               year=year,
-                                               yearsRange=yearsRange
-                                               )
-                    print(
+                    print('commentIdS:', commentIdS) # для отладки
+                    if commentIdS != []: # блок если нет недостачи
+                        for commentId in tqdm(commentIdS):
+                            page = 0 # номер страницы выдачи
+                            repliesAdditional, goS, keyOrder, problemCommentId = downloadComments(
+                                                                                                  API_keyS=API_keyS,
+                                                                                                  sourceId=commentId,
+                                                                                                  keyOrder=keyOrder,
+                                                                                                  method=method
+                                                                                                  )
+                            if goS == False: break # на случай сигнала прерывания
+                            if problemCommentId != None: problemCommentIdS.append(problemCommentId)
+                            replieS = dfsProcessor(
+                                                   channelIdForSearch=channelIdForSearch,
+                                                   coLabFolder=coLabFolder,
+                                                   complicatedNamePart=complicatedNamePart,
+                                                   contentType=contentType,
+                                                   fileFormatChoice=fileFormatChoice,
+                                                   dfAdd=repliesAdditional,
+                                                   dfFinal=itemS,
+                                                   dfIn=replieS,
+                                                   goS=goS,
+                                                   method=method,
+                                                   q=q,
+                                                   rootName=rootName,
+                                                   slash=slash,
+                                                   stageTarget=stage,
+                                                   targetCount=targetCount,
+                                                   momentCurrent=momentCurrent,
+                                                   year=year,
+                                                   yearsRange=yearsRange
+                                                   )
+                        print(
 'Ответов выгружено', len(replieS), '; проблемные родительские (topLevel) комментарии:', problemCommentIdS if len(problemCommentIdS) > 0  else 'отсутствуют\n'
-                          )
+                              )
     
-                    # Для совместимости датафреймов добавить столбцы`snippet.totalReplyCount` и `Недостача_ответов`
-                    replieS.loc[:, 'snippet.totalReplyCount'] = 0
-                    replieS.loc[:, 'Недостача_ответов'] = 0
+                        # Для совместимости датафреймов добавить столбцы`snippet.totalReplyCount` и `Недостача_ответов`
+                        # display('replieS:', replieS) # для отладки
+                        # print('replieS.columns:', replieS.columns) # для отладки
+                        replieS.loc[:, 'snippet.totalReplyCount'] = 0
+                        replieS.loc[:, 'Недостача_ответов'] = 0
     
-                    # Удалить столбец `snippet.parentId`, т.к. и из столбца `id` всё ясно
-                    replieS = replieS.drop('snippet.parentId', axis=1)
+                        # Удалить столбец `snippet.parentId`, т.к. и из столбца `id` всё ясно
+                        replieS = replieS.drop('snippet.parentId', axis=1)
     
-                    commentReplieS = dfsProcessor(
-                                                  channelIdForSearch=channelIdForSearch,
-                                                  coLabFolder=coLabFolder,
-                                                  complicatedNamePart=complicatedNamePart,
-                                                  contentType=contentType,
-                                                  fileFormatChoice=fileFormatChoice,
-                                                  dfAdd=replieS,
-                                                  dfFinal=itemS,
-                                                  dfIn=commentReplieS,
-                                                  goS=goS,
-                                                  method=method,
-                                                  q=q,
-                                                  rootName=rootName,
-                                                  slash=slash,
-                                                  stageTarget=stage,
-                                                  targetCount=targetCount,
-                                                  momentCurrent=momentCurrent,
-                                                  year=year,
-                                                  yearsRange=yearsRange
-                                                  )
-                    df2file.df2fileShell(
-                                         complicatedNamePart=complicatedNamePart,
-                                         dfIn=commentReplieS,
-                                         fileFormatChoice=fileFormatChoice,
-                                         method='commentReplieS',
-                                         coLabFolder=coLabFolder,
-                                         currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                                         )
+                        commentReplieS = dfsProcessor(
+                                                      channelIdForSearch=channelIdForSearch,
+                                                      coLabFolder=coLabFolder,
+                                                      complicatedNamePart=complicatedNamePart,
+                                                      contentType=contentType,
+                                                      fileFormatChoice=fileFormatChoice,
+                                                      dfAdd=replieS,
+                                                      dfFinal=itemS,
+                                                      dfIn=commentReplieS,
+                                                      goS=goS,
+                                                      method=method,
+                                                      q=q,
+                                                      rootName=rootName,
+                                                      slash=slash,
+                                                      stageTarget=stage,
+                                                      targetCount=targetCount,
+                                                      momentCurrent=momentCurrent,
+                                                      year=year,
+                                                      yearsRange=yearsRange
+                                                      )
+                        df2file.df2fileShell(
+                                             complicatedNamePart=complicatedNamePart,
+                                             dfIn=commentReplieS,
+                                             fileFormatChoice=fileFormatChoice,
+                                             method='commentReplieS',
+                                             coLabFolder=coLabFolder,
+                                             currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                             )
+                        # блок "если нет недостачи" завершён
                 else: print('Нет ни одного откомментированного родительского (topLevel) комментария')
 
 # 2.2.4 Выгрузка дополнительных характеристик каналов
