@@ -1937,10 +1937,10 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                     if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
                     print('') # для отступа
 
-                    print('Проход по id всех родительских (topLevel) комментариев с недостачей ответов для выгрузки этих ответов')
                     commentIdS = commentReplieS['id'][commentReplieS['Недостача_ответов'] > 0]
-                    # print('commentIdS:', commentIdS) # для отладки
+                    print('commentIdS:', commentIdS) # для отладки
                     if commentIdS != []: # блок если нет недостачи
+                        print('Проход по id всех родительских (topLevel) комментариев с недостачей ответов для выгрузки этих ответов')
                         for commentId in tqdm(commentIdS):
                             page = 0 # номер страницы выдачи
                             repliesAdditional, goS, keyOrder, problemCommentId = downloadComments(
