@@ -1938,8 +1938,8 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                     print('') # для отступа
 
                     commentIdS = commentReplieS['id'][commentReplieS['Недостача_ответов'] > 0]
-                    print('commentIdS:', commentIdS) # для отладки
-                    if commentIdS != []: # блок если нет недостачи
+                    # print('commentIdS:', commentIdS) # для отладки
+                    if len(commentIdS) > 0: # блок "если нет недостачи"
                         print('Проход по id всех родительских (topLevel) комментариев с недостачей ответов для выгрузки этих ответов')
                         for commentId in tqdm(commentIdS):
                             page = 0 # номер страницы выдачи
@@ -2013,6 +2013,7 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                                              currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                              )
                         # блок "если нет недостачи" завершён
+                        # print('''блок "если нет недостачи" завершён''') # для отладки
                 else: print('Нет ни одного откомментированного родительского (topLevel) комментария')
 
 # 2.2.4 Выгрузка дополнительных характеристик каналов
