@@ -36,7 +36,7 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
             break
 
 # Процесс векторизации
-def vectProcess(frequencyMetric, column, df, min_df, ngram=1):
+def vectProcess(frequencyMetric, column, df, min_df, ngram=1, returnVect=False):
     df = df[df[column].notna()]
     vect = CountVectorizer(min_df=min_df, ngram_range=(ngram, ngram)).fit(df[column]) if frequencyMetric == 'c' else TfidfVectorizer(min_df=min_df, ngram_range=(ngram, ngram)).fit(df[column])
     matrix = vect.transform(df[column]) # оформить новый датафрейм..
@@ -55,7 +55,7 @@ def vectProcess(frequencyMetric, column, df, min_df, ngram=1):
 '''--- Если хотите посмотреть топ мешка токенов глубже, чем сейчас он выведен, можете использовать в следующем чанке такой код:
 matrix_df.sum().sort_values(ascending=False).head(25) , где 25 -- требуемая глубина (максимально можно увеличить до 50)'''
           )
-    return matrix_df
+    return matrix_df, vect if returnVect else matrix_df
 
 # Выбор настроек векторизации
 def vectSettings(column, df, ngram=1):
