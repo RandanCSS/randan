@@ -55,7 +55,12 @@ def vectProcess(frequencyMetric, column, df, min_df, ngram=1, returnVect=False):
 '''--- Если хотите посмотреть топ мешка токенов глубже, чем сейчас он выведен, можете использовать в следующем чанке такой код:
 matrix_df.sum().sort_values(ascending=False).head(25) , где 25 -- требуемая глубина (максимально можно увеличить до 50)'''
           )
-    return matrix_df, vect if returnVect else matrix_df
+    if returnVect:
+        print('matrix_df, vect') # для отладки   
+        return matrix_df, vect
+    else:
+        print('matrix_df') # для отладки
+        return matrix_df
 
 # Выбор настроек векторизации
 def vectSettings(column, df, ngram=1):
