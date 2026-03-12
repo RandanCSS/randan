@@ -101,8 +101,7 @@ def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTo
         # display('df.loc[poleDocsIndeceS, :]:', df.loc[poleDocsIndeceS, :]) # для отладки
 
         for docIndex in poleDocsIndeceS:
-            print(f'\nПосмотрите на фрагменты документа {docIndex}, содержащие указанные выше токены и их окружение.'
-                  , 'Документ:', docIndex)
+            # print(f'\nПосмотрите на фрагменты документа {docIndex}, содержащие указанные выше токены и их окружение.', 'Документ:', docIndex)
             row = 0
             docSnippetS = pandas.DataFrame(columns=['min', 'max', 'token'])
             for token in poleTokenS:
@@ -142,7 +141,7 @@ def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTo
                 # display(docSnippetS)
 
             rowInvaderToDropS = []
-            display('poleTokenS:', poleTokenS)
+            # display('poleTokenS:', poleTokenS) # для отладки
             tokenReceiverS = poleTokenS.copy()
             for tokenInvader in poleTokenS[:-1]:
                 tokenInvaderIndex = docSnippetS[docSnippetS['token'] == tokenInvader].index
@@ -168,21 +167,23 @@ def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTo
                                 rowInvaderToDropS.append(rowInvader)
             docSnippetS = docSnippetS.drop(rowInvaderToDropS)
 
-            for row in docSnippetS.index:
-                # По границам интервала вывести окружение интересующего токена в нелемматизиованном документе
-                docSnippetS.loc[row, 'pole'] = pole.capitalize() + 'ый'
-                docSnippetS.loc[row, 'textSnippet'] = '..' + ' '.join(textFull_list[docSnippetS['min'][row]: docSnippetS['max'][row]]) + '..'
-                if supplementarieS != None:
-                    for supplementary in supplementarieS:
-                        try: docSnippetS.loc[row, supplementary] = df[supplementary][docIndex] # .loc не может записать в ячейку список
-                        except:
-                            # print(sys.exc_info()[1]) # для отладки
-                            print('docSnippetS.columns:', docSnippetS.columns) # для отладки
-                            df[supplementary] = df[supplementary].astype(str)
-                            docSnippetS.loc[row, supplementary] = df[supplementary][docIndex]
-
-                print(docSnippetS['textSnippet'][row])
-            docs_snippetS = pandas.concat([docs_snippetS, docSnippetS])
+            if len(docSnippetS) > 0:
+                print(f'\nПосмотрите на фрагмент{'ы' if len(docSnippetS) > 0 else ''} документа {docIndex}, содержащие указанные выше токены и их окружение.', 'Документ:', docIndex)
+                for row in docSnippetS.index:
+                    # По границам интервала вывести окружение интересующего токена в нелемматизиованном документе
+                    docSnippetS.loc[row, 'pole'] = pole.capitalize() + 'ый'
+                    docSnippetS.loc[row, 'textSnippet'] = '..' + ' '.join(textFull_list[docSnippetS['min'][row]: docSnippetS['max'][row]]) + '..'
+                    if supplementarieS != None:
+                        for supplementary in supplementarieS:
+                            try: docSnippetS.loc[row, supplementary] = df[supplementary][docIndex] # .loc не может записать в ячейку список
+                            except:
+                                # print(sys.exc_info()[1]) # для отладки
+                                # print('docSnippetS.columns:', docSnippetS.columns) # для отладки
+                                df[supplementary] = df[supplementary].astype(str)
+                                docSnippetS.loc[row, supplementary] = df[supplementary][docIndex]
+    
+                    print(docSnippetS['textSnippet'][row])
+                docs_snippetS = pandas.concat([docs_snippetS, docSnippetS])
         print('\n')
     return docs_snippetS, poleDocsIndeceS
 
@@ -425,10 +426,10 @@ Cреди обозначений строк исходной таблицы ес
         summaryMinus = summaryPole(loadingsThreshold, -1, tokensLimit, topicDocS, topicLoadingS, topicName)
         summaryPlus = summaryPole(loadingsThreshold, 1, tokensLimit, topicDocS, topicLoadingS, topicName)
         summary_additional = pandas.concat([summaryMinus, summaryPlus])
-        display('summary_additional:', summary_additional) # для отладки
+        # display('summary_additional:', summary_additional) # для отладки
         summary = pandas.concat([summary, summary_additional])
         summary['Документы'] = summary.index
-        display('summary:', summary) # для отладки
+        # display('summary:', summary) # для отладки
 
         ws = wb.create_sheet(title=topicName)
         for r in dataframe_to_rows(docs_snippetS_additional, index=False, header=True):
