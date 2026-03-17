@@ -1696,9 +1696,9 @@ f'''    Искомых объектов {targetCount}, а найденных с 
 
 # 2.2.2 Выгрузка дополнительных характеристик видео
         method = 'videos'
+        snippetContentType = 'video'
         videoIdS = []
         if len(itemS) > 0: # если использовался search..
-            snippetContentType = 'video'
             if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # .. и в его выдаче есть видео
                 print(
 'В скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "contentDetails", "localizations", "statistics", "status", "topicDetails"], id, maxResults .',
@@ -1822,7 +1822,10 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                 # Переназначить объект videoIdS для целей текущего чанка
                 videoIdS = videoS[videoS['statistics.commentCount'].notna()]
                 videoIdS = videoIdS[videoIdS['statistics.commentCount'].astype(int) > 0]
+
+                snippetContentType = 'video'
                 videoIdS = videoIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in videoIdS.columns else videoIdS['id'].to_list()
+
                 print('Число видео с комментариями:', len(videoIdS))
 
                 print('\nВыгрузка родительских (topLevel) комментариев')
