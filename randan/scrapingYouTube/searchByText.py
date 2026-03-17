@@ -3,7 +3,7 @@
 
 '''
 (EN) A module that simplifies and maximizes YouTube content extraction using the platform's official API method search
-(RU) Ммодуль для упрощения выгрузки контента YouTube методом его API search и максимизации размера этой выгрузки
+(RU) Модуль для упрощения выгрузки контента YouTube методом его API search и максимизации размера этой выгрузки
 '''
 
 # 0 Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
