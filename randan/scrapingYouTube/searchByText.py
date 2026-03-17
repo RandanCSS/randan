@@ -1878,7 +1878,8 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                     print('Проход по строкам всех родительских (topLevel) комментариев, имеющих ответы')
                     replieS = pandas.DataFrame()
                     for row in tqdm(commentS[commentS['snippet.totalReplyCount'] > 0].index):
-                        addReplieS = pandas.json_normalize(commentS['replies.comments'][row])
+                        try: addReplieS = pandas.json_normalize(commentS['replies.comments'][row])
+                        except: print("commentS['replies.comments'][row]:", commentS['replies.comments'][row]) # для отладки !!!
     
                         # Записать разницу между ожданиями и реальностью в новый столбец `Недостача_ответов`
                         commentS.loc[row, 'Недостача_ответов'] = commentS['snippet.totalReplyCount'][row] - len(addReplieS)
