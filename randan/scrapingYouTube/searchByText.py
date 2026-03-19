@@ -1874,10 +1874,11 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
 
 # ********** replieS
                 print('')
-                if len(commentS[commentS['snippet.totalReplyCount'] > 0]) > 0: # есть ли хотя бы один отвеченный родительский (topLevel) комментарий?
+                commentS_replied_index = commentS[(commentS['replies.comments'].notna()) & commentS['snippet.totalReplyCount'] > 0].index
+                if len(commentS_replied_index) > 0: # есть ли хотя бы один отвеченный родительский (topLevel) комментарий?
                     print('Проход по строкам всех родительских (topLevel) комментариев, имеющих ответы')
                     replieS = pandas.DataFrame()
-                    for row in tqdm(commentS[commentS['snippet.totalReplyCount'] > 0].index):
+                    for row in tqdm(commentS_replied_index):
                         try: addReplieS = pandas.json_normalize(commentS['replies.comments'][row])
                         except: print("commentS['replies.comments'][row]:", commentS['replies.comments'][row]) # для отладки !!!
     
@@ -1886,6 +1887,7 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
     
                         replieS = pandas.concat([replieS, addReplieS]).reset_index(drop=True)
     
+                    replieS = replieS.reset_index(drop=True)
                     replieS.loc[:, 'snippet.totalReplyCount'] = 0
                     replieS.loc[:, 'Недостача_ответов'] = 0
                     replieS = prefixDropper(replieS)
