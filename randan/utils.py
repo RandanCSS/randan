@@ -63,7 +63,7 @@ def confidence_interval_comparison(first_ci, second_ci):
 def classification_table(y_true, y_predicted):
     classification = pd.crosstab(y_true, 
                                     y_predicted,
-                                    margins=True)
+                                    margins=True).astype(float)
     classification.index.name = 'Observed'
     classification.columns.name = 'Predicted'
     all_categories = list(classification.index)
