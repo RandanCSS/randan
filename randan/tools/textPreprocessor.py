@@ -153,19 +153,20 @@ tokensCorrectedQuantityMax : int -- частота самого высокоча
     print('\nСловарь предлагаемых автокорректором исправлений (первые 100):', dict(itertools.islice(corrections.items(), 100)), '\ntokensCorrectedQuantityMax:', tokensCorrectedQuantityMax)
     return corrections, df, tokensCorrectedQuantityMax
 
-def dropControlCharacters(text, replacement=' ', keep_tab_lf_cr=True):
+def dropControlCharacters(keep_tab_lf_cr=True, replacement=' ', text):
     """
     Функция для чистки текстов от control characters (недопустимых при экспорте в файлы формата типа Excel)
 
     Parameters
     ----------
-        text : str
- replacement : str
+ keep_tab_lf_cr : bool -- если требуется сохранит горизонтальную табуляцию (\t, TAB), перевод строки (\n, LF, line feed) и возврат каретки (\r, CR, carriage return)
+    replacement : str
+           text : str
     """
     if not isinstance(text, str):
         return text
     allowed_ranges = [(0x20, 0xD7FF), (0xE000, 0xFFFD), (0x10000, 0x10FFFF)]
-    always_allowed = {0x09, 0x0A, 0x0D} if keep_tab_lf_cr else set()
+    keep_tab_lf_cr = {0x09, 0x0A, 0x0D} if keep_tab_lf_cr else set()
 
     def is_allowed(char):
         code = ord(char)
@@ -225,7 +226,7 @@ def simbolsCleaner(text):
     text : str
     """
     text = str(text) # т.к., например, после чистки текста от эмодзи в нём могут остаться только цифры, которые Python идентифицирует как int
-    text = textPreprocessor.dropControlCharacters(text, replacement=' ', keep_tab_lf_cr=False)
+    text = dropControlCharacters(keep_tab_lf_cr=False, replacement=' ', text)
     textCleaned = ''
     for a in text:
         if (a.isalnum()) | (a == ' '): textCleaned += a
