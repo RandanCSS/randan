@@ -16,15 +16,7 @@ from subprocess import check_call
 attempt = 0
 while True:
     try:
-        from datetime import date, datetime
-        from randan.tools import calendarWithinYear, coLabAdaptor, df2file, files2df, scrapingTools, varPreprocessor # авторские модули для
-            # (а) работы с календарём конкретного года
-            # (б) адаптации текущего скрипта к файловой системе CoLab
-            # (в) сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
-            # (г) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
-            # (д) упрощения скрапинга
-            # (е) предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
-        import numpy, os, pandas, re, shutil, time, requests, warnings
+        import pandas
         break
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
