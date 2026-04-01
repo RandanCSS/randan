@@ -166,7 +166,7 @@ keep_tab_lf_cr : bool -- если требуется сохранит гориз
     if not isinstance(text, str):
         return text
     allowed_ranges = [(0x20, 0xD7FF), (0xE000, 0xFFFD), (0x10000, 0x10FFFF)]
-    keep_tab_lf_cr = {0x09, 0x0A, 0x0D} if keep_tab_lf_cr else set()
+    always_allowed = {0x09, 0x0A, 0x0D} if keep_tab_lf_cr else set()
 
     def is_allowed(char):
         code = ord(char)
