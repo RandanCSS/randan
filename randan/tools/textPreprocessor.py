@@ -225,6 +225,7 @@ def simbolsCleaner(text):
     text : str
     """
     text = str(text) # т.к., например, после чистки текста от эмодзи в нём могут остаться только цифры, которые Python идентифицирует как int
+    text = textPreprocessor.dropControlCharacters(text, replacement=' ', keep_tab_lf_cr=False)
     textCleaned = ''
     for a in text:
         if (a.isalnum()) | (a == ' '): textCleaned += a
