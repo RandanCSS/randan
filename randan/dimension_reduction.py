@@ -1033,11 +1033,15 @@ class PCA: # первичен
                     print(f'The number of selected components by an inflection point: {self.n_components}')
                 print('------------------\n')
         
+        threshold_visual = 30
+
         if self.rotation != 'natural collinearity':
             print('Explained variance')
-            display(self.get_explained_variance(scree_plot=True).style\
-                    .format(None, na_rep="", precision=n_decimals)\
-                    .set_caption("methods .get_explained_variance() and .scree_plot()"))
+            explained_variance = self.get_explained_variance()
+            display(explained_variance.head(min(len(self.communalities_and_loadings), threshold_visual))\
+                        .style.format(None, na_rep="", precision=n_decimals).set_caption("methods .get_explained_variance() and .scree_plot()"))
+            if len(explained_variance) > threshold_visual: print('Row count in the full dataframe:', explained_variance.shape[0])
+
             print(f'The model explains {round(self.explained_variance_total, n_decimals)}% of variance.')
             print('------------------\n')
         if self.rotation is None:
@@ -1046,9 +1050,15 @@ class PCA: # первичен
             print('Rotated component loadings')
         elif self.rotation in ['natural collinearity', 'promax']:
             print('Structure matrix')
-        display(self.communalities_and_loadings.style\
-                .format(None, na_rep="", precision=n_decimals)\
-                .set_caption("attribute .communalities_and_loadings"))
+
+        display(self.communalities_and_loadings.head(min(len(self.communalities_and_loadings), threshold_visual)).\
+                    style.format(None, na_rep="", precision=n_decimals).set_caption("attribute .communalities_and_loadings"))
+        if len(self.communalities_and_loadings) > threshold_visual: print(
+'Column count in the full dataframe:', self.communalities_and_loadings.shape[1], ', and row count in the full dataframe', self.communalities_and_loadings.shape[0]
+                                                                          )
+        # print('self.communalities_and_loadings:') # для отладки
+        # display(self.communalities_and_loadings) # для отладки
+        
         print(f'The minimum communality is {round(self.communalities["Communality"].min(), n_decimals)}.')
         if self.rotation in ['natural collinearity', 'promax']:
             print("Components' correlation")
