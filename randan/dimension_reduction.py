@@ -1054,7 +1054,7 @@ class PCA: # первичен
         display(self.communalities_and_loadings.head(min(len(self.communalities_and_loadings), threshold_visual)).\
                     style.format(None, na_rep="", precision=n_decimals).set_caption("attribute .communalities_and_loadings"))
         if len(self.communalities_and_loadings) > threshold_visual: print(
-'Column count in the full dataframe:', self.communalities_and_loadings.shape[1], ', and row count in the full dataframe', self.communalities_and_loadings.shape[0]
+'Column count in the full dataframe:', self.communalities_and_loadings.shape[1], '; and row count in the full dataframe:', self.communalities_and_loadings.shape[0]
                                                                           )
         # print('self.communalities_and_loadings:') # для отладки
         # display(self.communalities_and_loadings) # для отладки
