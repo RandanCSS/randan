@@ -50,10 +50,10 @@ def poleDocs_unique_search(df, docsLimit, pole, poleDocsIndeceS):
     poleDocsDf = df.loc[poleDocsIndeceS, :]
 
     # Добавить столбец со списком всех номеров строк для каждого текста
-    poleDocsDf['indicesDuplicate'] = poleDocsDf.groupby('textFull_stopwordsDropped')['textFull_stopwordsDropped'].transform(lambda group: [group.index.tolist()] * len(group))
+    poleDocsDf['indicesDuplicate'] = poleDocsDf.groupby('textFull_lemmatized')['textFull_lemmatized'].transform(lambda group: [group.index.tolist()] * len(group)) # 'textFull_stopwordsDropped'
 
     # Оставить только уникальные тексты (первые вхождения)
-    poleDocsDf_unique = poleDocsDf.drop_duplicates('textFull_stopwordsDropped', keep='first').copy()
+    poleDocsDf_unique = poleDocsDf.drop_duplicates('textFull_lemmatized', keep='first').copy() # 'textFull_stopwordsDropped'
 
     # Убрать собственный индекс из списка дубликатов в каждой оставшейся строке
     poleDocsDf_unique['indicesDuplicate'] = poleDocsDf_unique.apply(lambda row: [i for i in row['indicesDuplicate'] if i != row.name], axis=1)
