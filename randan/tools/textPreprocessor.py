@@ -249,10 +249,13 @@ userStopWordsToRemove : list -- слова, исключаемые пользо�
     if userStopWordsToAdd != None: stopWordS.extend(userStopWordsToAdd)
     if userStopWordsToRemove != None:
         for word in userStopWordsToRemove: stopWordS.remove(word)
+
+    stopWordS_lower = []
+    for word in stopWordS: stopWordS_lower.append(word) # не заменяя регистр слов в поданном тексте, сравнение провести в нижнем регистре
+
     textCleaned = ''
     for word in text.split(' '):
-        if word not in stopWordS:
+        if word.lower() not in stopWordS_lower: # сравнение проводится в нижнем регистре
             textCleaned += ' ' + word
     textCleaned = textCleaned.strip()
-    # textCleaned = textCleaned.split(' ')
     return textCleaned
