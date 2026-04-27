@@ -88,7 +88,8 @@ def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTo
     if poleTokenS == []:
         print(f'Величина loadings токенов {pole}ого полюса не достигает заданного порога |{round(loadingsThreshold, 2)}|.'
               , f'Поэтому {pole}ый полюс НЕ выражен и НЕ требует интерпретации')
-        docs_snippetS = pandas.DataFrame()
+        docSnippetS = pandas.DataFrame(columns=['min', 'max', 'token'])
+        docSnippetS_all = pandas.DataFrame(columns=['min', 'max', 'token'])
         poleDocsIndeceS = []
     else:
         poleDocsDf_unique = poleDocs_unique_search(df, docsLimit, pole, poleDocsIndeceS, textFull_lemmatized)
@@ -200,6 +201,7 @@ def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTo
 Если хотите получить фрагменты ключевых документов, относящихся к ключевым токенам, попробуйте снизить перечисленные пороги и перезапустить функцию randanTopic .'''
                                             )
         print('\n')
+        display('docSnippetS_all:', docSnippetS_all) # для отладки
     return docSnippetS_all, poleDocsIndeceS
 
 def randanTopic(df, matrix_df, docsLimit=5, loadingsThreshold=0.5, returnDfs=False, rowsNumerator=None, supplementarieS=None, textFull_lemmatized='textFull_lemmatized', textFull_simbolsCleaned='textFull_simbolsCleaned', tokensLimit=10, topicsCount=None):
@@ -430,10 +432,12 @@ Cреди обозначений строк исходной таблицы ес
         docs_snippetS_additional = pandas.concat([minusDocs_snippetS, plusDocs_snippetS])
         display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки
 
-        docs_snippetS_additional = docs_snippetS_additional.drop(['min', 'max'], axis=1)
-        docs_snippetS_additional = docs_snippetS_additional.reset_index(drop=True)
-        docs_snippetS_additional.loc[:, 'Интерпретация топика'] = ''
-        # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки
+        if len(docs_snippetS_additional) > 0:
+            docs_snippetS_additional = docs_snippetS_additional.drop(['min', 'max'], axis=1)
+            docs_snippetS_additional = docs_snippetS_additional.reset_index(drop=True)
+            docs_snippetS_additional.loc[:, 'Интерпретация топика'] = ''
+            # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки
+
         docs_snippetS = pandas.concat([docs_snippetS, docs_snippetS_additional])
         # print('\n')
         
