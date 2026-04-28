@@ -70,30 +70,7 @@ def poleDocs_unique_search(df, docsLimit, pole, poleDocsIndeceS, textFull_lemmat
 
     return poleDocsDf_unique
 
-# 1.1 ..оформления токенов на полюсах топиков
-# def summaryPole(loadingsThreshold, minusPlus, tokensLimit, topicDocS, topicLoadingS, topicName):
-#     summaryPole = pandas.DataFrame()
-#     if len(topicLoadingS[topicLoadingS[topicName] * minusPlus > loadingsThreshold].sort_values(topicName, ascending=False).head(tokensLimit)) > 0:
-#         summaryPole = topicDocS[topicDocS[topicName] * minusPlus > 0].round(3)
-#         summaryPole.loc[:, 'Топики'] = topicName
-#         summaryPole.loc[:, 'Токены'] = ', '.join(list(topicLoadingS[topicLoadingS[topicName] * minusPlus > loadingsThreshold].sort_values(topicName, ascending=False).head(tokensLimit).index))
-#         summaryPole.loc[:, 'Усреднённая связь токена с топиком'] = round(topicLoadingS[topicLoadingS[topicName] * minusPlus > loadingsThreshold].sort_values(topicName, ascending=False).head(tokensLimit).mean()[topicName], 3)
-#         summaryPole.loc[:, 'Релевантность теме исследования'] = ''
-#         summaryPole.loc[:, 'Интерпретация топика'] = ''
-#     return summaryPole
-
-def summaryPole(minusPlus, poleTokenS, topicDocS, topicLoadingS, topicName):
-    summaryPole = pandas.DataFrame()
-    if len(poleTokenS) > 0:
-        summaryPole = topicDocS[topicDocS[topicName] * minusPlus > 0].round(3)      
-        summaryPole.loc[:, 'Топики'] = topicName
-        summaryPole.loc[:, 'Токены'] = ', '.join(poleTokenS)
-        summaryPole.loc[:, 'Усреднённая связь токена с топиком'] = round(topicLoadingS.loc[poleTokenS, topicName].mean(), 3)
-        summaryPole.loc[:, 'Релевантность теме исследования'] = ''
-        summaryPole.loc[:, 'Интерпретация топика'] = ''
-    return summaryPole
-
-# 1.2 ..описания каждого топика через его полюса и формирующие их токены и релевантные фрагменты располагаемых на них документов
+# 1.1 ..описания каждого топика через его полюса и формирующие их токены и релевантные фрагменты располагаемых на них документов
 def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTokenS, supplementarieS, textFull_lemmatized, textFull_simbolsCleaned):
     print(f'\n{pole.upper()}ЫЙ полюс топика')
     if poleTokenS == []:
@@ -191,15 +168,15 @@ def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTo
                     # По границам интервала вывести окружение интересующего токена в нелемматизиованном документе
                     docSnippetS.loc[row, 'pole'] = pole.capitalize() + 'ый'
                     docSnippetS.loc[row, 'textSnippet'] = '..' + ' '.join(textFull_list[docSnippetS['min'][row]: docSnippetS['max'][row]]) + '..'
-                    if supplementarieS != None:
-                        for supplementary in supplementarieS:
-                            try: docSnippetS.loc[row, supplementary] = df[supplementary][docIndex] # .loc не может записать в ячейку список
-                            except:
-                                # print(sys.exc_info()[1]) # для отладки
-                                # print('docSnippetS.columns:', docSnippetS.columns) # для отладки
-                                df[supplementary] = df[supplementary].astype(str)
-                                docSnippetS.loc[row, supplementary] = df[supplementary][docIndex]
-    
+                    # if supplementarieS != None:
+                    #     for supplementary in supplementarieS:
+                    #         try: docSnippetS.loc[row, supplementary] = df[supplementary][docIndex] # .loc не может записать в ячейку список
+                    #         except:
+                    #             # print(sys.exc_info()[1]) # для отладки
+                    #             # print('docSnippetS.columns:', docSnippetS.columns) # для отладки
+                    #             df[supplementary] = df[supplementary].astype(str)
+                    #             docSnippetS.loc[row, supplementary] = df[supplementary][docIndex]
+                    docSnippetS = supplementariesExecuter(df, docSnippetS, docIndex, row, supplementarieS)
                     print(docSnippetS['textSnippet'][row])
                 docs_snippetS = pandas.concat([docs_snippetS, docSnippetS])
 
@@ -214,6 +191,43 @@ def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTo
         print('\n')
         # display('docSnippetS_all:', docSnippetS_all) # для отладки
     return docSnippetS_all, poleDocsIndeceS
+
+# 1.2 ..оформления токенов на полюсах топиков
+# def summaryPole(loadingsThreshold, minusPlus, tokensLimit, topicDocS, topicLoadingS, topicName):
+#     summaryPole = pandas.DataFrame()
+#     if len(topicLoadingS[topicLoadingS[topicName] * minusPlus > loadingsThreshold].sort_values(topicName, ascending=False).head(tokensLimit)) > 0:
+#         summaryPole = topicDocS[topicDocS[topicName] * minusPlus > 0].round(3)
+#         summaryPole.loc[:, 'Топики'] = topicName
+#         summaryPole.loc[:, 'Токены'] = ', '.join(list(topicLoadingS[topicLoadingS[topicName] * minusPlus > loadingsThreshold].sort_values(topicName, ascending=False).head(tokensLimit).index))
+#         summaryPole.loc[:, 'Усреднённая связь токена с топиком'] = round(topicLoadingS[topicLoadingS[topicName] * minusPlus > loadingsThreshold].sort_values(topicName, ascending=False).head(tokensLimit).mean()[topicName], 3)
+#         summaryPole.loc[:, 'Релевантность теме исследования'] = ''
+#         summaryPole.loc[:, 'Интерпретация топика'] = ''
+#     return summaryPole
+
+def summaryPole(minusPlus, poleTokenS, topicDocS, topicLoadingS, topicName):
+    summaryPole = pandas.DataFrame()
+    if len(poleTokenS) > 0:
+        summaryPole = topicDocS[topicDocS[topicName] * minusPlus > 0].round(3)      
+        summaryPole.loc[:, 'Топики'] = topicName
+        summaryPole.loc[:, 'Токены'] = ', '.join(poleTokenS)
+        summaryPole.loc[:, 'Усреднённая связь токена с топиком'] = round(topicLoadingS.loc[poleTokenS, topicName].mean(), 3)
+        summaryPole.loc[:, 'Релевантность теме исследования'] = ''
+        summaryPole.loc[:, 'Интерпретация топика'] = ''
+    return summaryPole
+
+# 1.3 ..внедрения вспомогательных полей (supplementaries) в итоговые датафреймы
+def supplementariesExecuter(dfOriginator, dfRecipient, docIndex, dfRecipient_row, supplementarieS):
+    if supplementarieS != None:
+        for supplementary in supplementarieS:
+            try: dfRecipient.loc[dfRecipient_row, supplementary] = dfOriginator[supplementary][docIndex]
+            except:
+                # print(sys.exc_info()[1]) # для отладки
+                print('supplementary:', supplementary) # для отладки
+                # print('dfRecipient.columns:', dfRecipient.columns) # для отладки
+                dfOriginator[supplementary] = dfOriginator[supplementary].astype(str)
+                dfRecipient.loc[dfRecipient_row, supplementary] = dfOriginator[supplementary][docIndex]
+                dfRecipient[supplementary] = dfRecipient[supplementary].astype(str)
+        return dfRecipient
 
 def randanTopic(df, matrix_df, docsLimit=5, loadingsThreshold=0.5, returnDfs=False, rowsNumerator=None, supplementarieS=None, textFull_lemmatized='textFull_lemmatized', textFull_simbolsCleaned='textFull_simbolsCleaned', tokensLimit=10, topicsCount=None):
     '''    Метод тематического моделирования randanTopic основан на методе главных компонент (по-английски: principal components analisys, PCA). То есть он НЕ использует нейросети и embeddings, а работает с "мешком слов" (по-английски: bag of words, BoW). Поэтому важно качественно подготовить "мешок слов" через очистку исходного текста от лишних символов, лемматизацию и удаление стоп-слов. Эти три этапа предобработки исходного текста, а также (при необходимости) автокоррекция грамматических ошибок могут быть выполнены функциями из скрипта textPreprocessor пакета randan https://github.com/RandanCSS/randan/blob/master/randan/tools/textPreprocessor.py . Причём для удобства последующей интерпретации рекомендую результаты очистки от лишних символов и результаты лемматизации сохранить в отдельные столбцы: textFull_simbolsCleaned и textFull_lemmatized соответственно.
@@ -473,10 +487,11 @@ Cреди обозначений строк исходной таблицы ес
         display('df.loc[polePlusDocsIndeceS, textFull_simbolsCleaned]:', df.loc[polePlusDocsIndeceS, textFull_simbolsCleaned]) # для отладки
         if len(docs_snippetS_additional) == 0:
             docs_snippetS_additional = pandas.concat([df.loc[poleMinusDocsIndeceS, [textFull_simbolsCleaned]], df.loc[polePlusDocsIndeceS, [textFull_simbolsCleaned]]])
-            docs_snippetS_additional.loc[poleMinusDocsIndeceS, 'pole'] = poleS[0]
-            docs_snippetS_additional.loc[polePlusDocsIndeceS, 'pole'] = poleS[-1]
-            docs_snippetS_additional.columns = ['textFull', 'pole']
-            docs_snippetS_additional = docs_snippetS_additional['pole', 'textFull']
+            docs_snippetS_additional.loc[poleMinusDocsIndeceS, 'pole'] = poleS[0].capitalize() + 'ый'
+            docs_snippetS_additional.loc[polePlusDocsIndeceS, 'pole'] = poleS[-1].capitalize() + 'ый'
+            docs_snippetS_additional.columns = ['textFull_simbolsCleaned', 'pole']
+            docs_snippetS_additional = docs_snippetS_additional[['pole', 'textFull_simbolsCleaned']]
+            docs_snippetS_additional = supplementariesExecuter(df, docs_snippetS_additional, docs_snippetS_additional.index, docs_snippetS_additional.index, supplementarieS)
 
         display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки            
         docs_snippetS_additional.loc[:, 'Интерпретация топика'] = ''
