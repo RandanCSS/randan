@@ -162,7 +162,7 @@ def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTo
                 docSnippetS = docSnippetS.drop(rowInvaderToDropS)
                 # Проход по всем токенам на обрабатываемом полюсе для объединения пересекающихся фрагментов из docSnippetS ЗАВЕРШЁН
 
-                print(f'\nПосмотрите на фрагмент{'ы' if len(docSnippetS) > 0 else ''} документа {docIndex}, содержащие указанные выше токены и их окружение.', 'Документ:', docIndex)
+                print(f'\nПосмотрите на фрагмент{'ы' if len(docSnippetS) > 0 else ''} документа {docIndex}, содержащие указанные выше токены и их окружение.') # , 'Документ:', docIndex
                 for row in docSnippetS.index:
                     # По границам интервала вывести окружение интересующего токена в нелемматизиованном документе
                     docSnippetS.loc[row, 'pole'] = pole.capitalize() + 'ый'
@@ -176,8 +176,8 @@ def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTo
                     #             df[supplementary] = df[supplementary].astype(str)
                     #             docSnippetS.loc[row, supplementary] = df[supplementary][docIndex]
 
-                    # print('Отладка')
-                    # display('docSnippetS до:', docSnippetS)
+                    print('Отладка')
+                    display('docSnippetS до:', docSnippetS)
                     # from openpyxl import Workbook
                     # wb = Workbook()
                     # ws = wb.create_sheet(title='topicName')
@@ -186,8 +186,8 @@ def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTo
 
                     docSnippetS = supplementariesExecuter(df, docSnippetS, docIndex, row, supplementarieS)
 
-                    # print('Отладка')
-                    # display('docSnippetS после:', docSnippetS)
+                    print('Отладка')
+                    display('docSnippetS после:', docSnippetS)
                     # from openpyxl import Workbook
                     # wb = Workbook()
                     # ws = wb.create_sheet(title='topicName')
@@ -498,21 +498,11 @@ Cреди обозначений строк исходной таблицы ес
         # for r in dataframe_to_rows(plusDocs_snippetS, index=False, header=True):
         #     ws.append(r)
 
-        docs_snippetS_additional = pandas.concat([minusDocs_snippetS, plusDocs_snippetS]) # гипотетически, проблема решается , когда датафрейм проходит через concat
+        docs_snippetS_additional = pandas.concat([minusDocs_snippetS, plusDocs_snippetS])
         # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки
-
-        # if len(docs_snippetS_additional) == 0:
         
         docs_snippetS_additional = docs_snippetS_additional.drop(['min', 'max'], axis=1)
         docs_snippetS_additional = docs_snippetS_additional.reset_index(drop=True)
-
-        # if len(docs_snippetS_additional) > 0:
-        #     docs_snippetS_additional.loc[:, 'Интерпретация топика'] = ''
-
-        # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки
-
-        # docs_snippetS = pandas.concat([docs_snippetS, docs_snippetS_additional])
-        # print('\n')
         
     # Обработка полярных документов и токенов; запись в датафрейм
         topicDocS = pandas.concat([topicDocS.loc[poleMinusDocsIndeceS, :], topicDocS.loc[polePlusDocsIndeceS, :]])
@@ -527,7 +517,7 @@ Cреди обозначений строк исходной таблицы ес
             docs_snippetS_additional.loc[polePlusDocsIndeceS, 'pole'] = poleS[-1].capitalize() + 'ый'
             docs_snippetS_additional.columns = ['textFull_simbolsCleaned', 'pole']
             docs_snippetS_additional = docs_snippetS_additional[['pole', 'textFull_simbolsCleaned']]
-            for docIndex in docs_snippetS_additional.index:
+            for docIndex in docs_snippetS_additional.index: # гипотетически, проблема невосприимчивости экселя к сложной структуре внутри ячеек решается , когда датафрейм проходит через for in
                 # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки
                 docs_snippetS_additional = supplementariesExecuter(df, docs_snippetS_additional, docIndex, docIndex, supplementarieS)
             # docs_snippetS_additional = supplementariesExecuter(df, docs_snippetS_additional, docs_snippetS_additional.index, docs_snippetS_additional.index, supplementarieS)
