@@ -451,24 +451,45 @@ Cреди обозначений строк исходной таблицы ес
         docs_snippetS_additional = pandas.concat([minusDocs_snippetS, plusDocs_snippetS])
         # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки
 
-        if len(docs_snippetS_additional) > 0:
-            docs_snippetS_additional = docs_snippetS_additional.drop(['min', 'max'], axis=1)
-            docs_snippetS_additional = docs_snippetS_additional.reset_index(drop=True)
-            docs_snippetS_additional.loc[:, 'Интерпретация топика'] = ''
-            # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки
+        # if len(docs_snippetS_additional) == 0:
+        
+        docs_snippetS_additional = docs_snippetS_additional.drop(['min', 'max'], axis=1)
+        docs_snippetS_additional = docs_snippetS_additional.reset_index(drop=True)
 
-        docs_snippetS = pandas.concat([docs_snippetS, docs_snippetS_additional])
+        # if len(docs_snippetS_additional) > 0:
+        #     docs_snippetS_additional.loc[:, 'Интерпретация топика'] = ''
+
+        # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки
+
+        # docs_snippetS = pandas.concat([docs_snippetS, docs_snippetS_additional])
         # print('\n')
         
     # Обработка полярных документов и токенов; запись в датафрейм
         topicDocS = pandas.concat([topicDocS.loc[poleMinusDocsIndeceS, :], topicDocS.loc[polePlusDocsIndeceS, :]])
         # display('topicDocS:', topicDocS) # для отладки
+
+        # Заполнение docs_snippetS_additional , если он пустой
+        display('df.loc[poleMinusDocsIndeceS, textFull_simbolsCleaned]:', df.loc[poleMinusDocsIndeceS, textFull_simbolsCleaned]) # для отладки
+        display('df.loc[polePlusDocsIndeceS, textFull_simbolsCleaned]:', df.loc[polePlusDocsIndeceS, textFull_simbolsCleaned]) # для отладки
+        if len(docs_snippetS_additional) == 0:
+            docs_snippetS_additional = pandas.concat([df.loc[poleMinusDocsIndeceS, [textFull_simbolsCleaned]], df.loc[polePlusDocsIndeceS, [textFull_simbolsCleaned]]])
+            docs_snippetS_additional.loc[poleMinusDocsIndeceS, 'pole'] = poleS[0]
+            docs_snippetS_additional.loc[polePlusDocsIndeceS, 'pole'] = poleS[-1]
+            docs_snippetS_additional.columns = ['textFull', 'pole']
+            docs_snippetS_additional = docs_snippetS_additional['pole', 'textFull']
+
+        display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки            
+        docs_snippetS_additional.loc[:, 'Интерпретация топика'] = ''
+        docs_snippetS = pandas.concat([docs_snippetS, docs_snippetS_additional])
+        print('\n')
+        
         # summaryMinus = summaryPole(loadingsThreshold, -1, tokensLimit, topicDocS, topicLoadingS, topicName)
         summaryMinus = summaryPole(-1, poleMinusTokenS, topicDocS, topicLoadingS, topicName)
         # summaryPlus = summaryPole(loadingsThreshold, 1, tokensLimit, topicDocS, topicLoadingS, topicName)
         summaryPlus = summaryPole(1, polePlusTokenS, topicDocS, topicLoadingS, topicName)
         summary_additional = pandas.concat([summaryMinus, summaryPlus])
         # display('summary_additional:', summary_additional) # для отладки
+
         summary = pandas.concat([summary, summary_additional])
         summary['Документы'] = summary.index
         # display('summary:', summary) # для отладки
