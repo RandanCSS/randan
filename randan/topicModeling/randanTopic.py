@@ -73,11 +73,11 @@ def poleDocs_unique_search(df, docsLimit, pole, poleDocsIndeceS, textFull_lemmat
 # 1.1 ..описания каждого топика через его полюса и формирующие их токены и релевантные фрагменты располагаемых на них документов
 def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTokenS, supplementarieS, textFull_lemmatized, textFull_simbolsCleaned):
     print(f'\n{pole.upper()}ЫЙ полюс топика')
+    docSnippetS = pandas.DataFrame(columns=['min', 'max', 'token'])
+    docs_snippetS = pandas.DataFrame(columns=['min', 'max', 'token'])
     if poleTokenS == []:
         print(f'Величина loadings токенов {pole}ого полюса не достигает заданного порога |{round(loadingsThreshold, 2)}|.'
               , f'Поэтому {pole}ый полюс НЕ выражен и НЕ требует интерпретации')
-        docSnippetS = pandas.DataFrame(columns=['min', 'max', 'token'])
-        docSnippetS_all = pandas.DataFrame(columns=['min', 'max', 'token'])
         poleDocsIndeceS = []
     else:
         poleDocsDf_unique = poleDocs_unique_search(df, docsLimit, pole, poleDocsIndeceS, textFull_lemmatized)
@@ -86,12 +86,11 @@ def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTo
         print(f"{pole.capitalize()}ый полюс сформирован токен{'ами' if len(poleTokenS) > 1 else 'ом'}"
               , str(poleTokenS).replace('[', '').replace(']', ''), '-- по величине вклада')
         print(f"На {pole}ом полюсе расположен{'ы' if len(poleDocsIndeceS) > 1 else ''} документ{'ы' if len(poleDocsIndeceS) > 1 else ''}", str(list(poleDocsIndeceS)).replace('[', '').replace(']', ''), '-- по близости к полюсу')
-        docs_snippetS = pandas.DataFrame()
         # display('df.loc[poleDocsIndeceS, :]:', df.loc[poleDocsIndeceS, :]) # для отладки
 
-        docSnippetS_all = pandas.DataFrame()
+        # docSnippetS_all = pandas.DataFrame()
         for docIndex in poleDocsIndeceS:
-            print(f'\nПредварительные фрагменты документа {docIndex}, содержащие указанные выше токены и их окружение.', 'Документ:', docIndex) # для отладки
+            # print(f'\nПредварительные фрагменты документа {docIndex}, содержащие указанные выше токены и их окружение.', 'Документ:', docIndex) # для отладки
             row = 0
             docSnippetS = pandas.DataFrame(columns=['min', 'max', 'token'])
             # Предварительный проход по всем токенам на обрабатываемом полюсе для формирования docSnippetS
@@ -176,21 +175,48 @@ def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTo
                     #             # print('docSnippetS.columns:', docSnippetS.columns) # для отладки
                     #             df[supplementary] = df[supplementary].astype(str)
                     #             docSnippetS.loc[row, supplementary] = df[supplementary][docIndex]
+
+                    # print('Отладка')
+                    # display('docSnippetS до:', docSnippetS)
+                    # from openpyxl import Workbook
+                    # wb = Workbook()
+                    # ws = wb.create_sheet(title='topicName')
+                    # for r in dataframe_to_rows(docSnippetS, index=False, header=True):
+                    #     ws.append(r)
+
                     docSnippetS = supplementariesExecuter(df, docSnippetS, docIndex, row, supplementarieS)
+
+                    # print('Отладка')
+                    # display('docSnippetS после:', docSnippetS)
+                    # from openpyxl import Workbook
+                    # wb = Workbook()
+                    # ws = wb.create_sheet(title='topicName')
+                    # for r in dataframe_to_rows(docSnippetS, index=False, header=True):
+                    #     ws.append(r)
+
                     print(docSnippetS['textSnippet'][row])
+
                 docs_snippetS = pandas.concat([docs_snippetS, docSnippetS])
+                
+                # print('Отладка')
+                # display(docs_snippetS)
+                # from openpyxl import Workbook
+                # wb = Workbook()
+                # ws = wb.create_sheet(title='topicName')
+                # for r in dataframe_to_rows(docs_snippetS, index=False, header=True):
+                #     ws.append(r)
 
-            docSnippetS_all = pandas.concat([docSnippetS_all, docSnippetS])
+            # docSnippetS_all = pandas.concat([docSnippetS_all, docSnippetS])
 
-        if len(docSnippetS_all) == 0: print(
+        if len(docs_snippetS) == 0: print(
 '''В ключевых документах этого полюса не встречаются ключевые токены этого полюса. Возможные причины:
 (а) ключевых токенов слишком мало в силу высокого порога loadingsThreshold или высокого порога tokensLimit или
 (б) ключевых документов слишком мало в силу высокого порога docsLimit.
 Если хотите получить фрагменты ключевых документов, относящихся к ключевым токенам, попробуйте снизить перечисленные пороги и перезапустить функцию randanTopic .'''
                                             )
         print('\n')
-        # display('docSnippetS_all:', docSnippetS_all) # для отладки
-    return docSnippetS_all, poleDocsIndeceS
+        # display('Итоговый docs_snippetS в рамках функции:', docs_snippetS) # для отладки
+    return docs_snippetS, poleDocsIndeceS
 
 # 1.2 ..оформления токенов на полюсах топиков
 # def summaryPole(loadingsThreshold, minusPlus, tokensLimit, topicDocS, topicLoadingS, topicName):
@@ -218,6 +244,7 @@ def summaryPole(minusPlus, poleTokenS, topicDocS, topicLoadingS, topicName):
 # 1.3 ..внедрения вспомогательных полей (supplementaries) в итоговые датафреймы
 def supplementariesExecuter(dfOriginator, dfRecipient, docIndex, dfRecipient_row, supplementarieS):
     if supplementarieS != None:
+        # display('dfRecipient:', dfRecipient) # для отладки
         for supplementary in supplementarieS:
             try: dfRecipient.loc[dfRecipient_row, supplementary] = dfOriginator[supplementary][docIndex]
             except:
@@ -226,7 +253,6 @@ def supplementariesExecuter(dfOriginator, dfRecipient, docIndex, dfRecipient_row
                 # print('dfRecipient.columns:', dfRecipient.columns) # для отладки
                 dfOriginator[supplementary] = dfOriginator[supplementary].astype(str)
                 dfRecipient.loc[dfRecipient_row, supplementary] = dfOriginator[supplementary][docIndex]
-                dfRecipient[supplementary] = dfRecipient[supplementary].astype(str)
         return dfRecipient
 
 def randanTopic(df, matrix_df, docsLimit=5, loadingsThreshold=0.5, returnDfs=False, rowsNumerator=None, supplementarieS=None, textFull_lemmatized='textFull_lemmatized', textFull_simbolsCleaned='textFull_simbolsCleaned', tokensLimit=10, topicsCount=None):
@@ -461,8 +487,18 @@ Cреди обозначений строк исходной таблицы ес
         # print('polePlusDocsIndeceS:', polePlusDocsIndeceS[:2]) # для отладки
         plusDocs_snippetS, polePlusDocsIndeceS = snippetByDoc(df, docsLimit, loadingsThreshold, poleS[-1], polePlusDocsIndeceS, polePlusTokenS, supplementarieS, textFull_lemmatized, textFull_simbolsCleaned) # стало
         # print('polePlusDocsIndeceS:', polePlusDocsIndeceS[:2]) # для отладки
-        
-        docs_snippetS_additional = pandas.concat([minusDocs_snippetS, plusDocs_snippetS])
+
+        # print('Отладка')
+        # display(minusDocs_snippetS, plusDocs_snippetS)
+        # from openpyxl import Workbook
+        # wb = Workbook()
+        # ws = wb.create_sheet(title='topicName')
+        # for r in dataframe_to_rows(minusDocs_snippetS, index=False, header=True):
+        #     ws.append(r)
+        # for r in dataframe_to_rows(plusDocs_snippetS, index=False, header=True):
+        #     ws.append(r)
+
+        docs_snippetS_additional = pandas.concat([minusDocs_snippetS, plusDocs_snippetS]) # гипотетически, проблема решается , когда датафрейм проходит через concat
         # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки
 
         # if len(docs_snippetS_additional) == 0:
@@ -483,17 +519,20 @@ Cреди обозначений строк исходной таблицы ес
         # display('topicDocS:', topicDocS) # для отладки
 
         # Заполнение docs_snippetS_additional , если он пустой
-        display('df.loc[poleMinusDocsIndeceS, textFull_simbolsCleaned]:', df.loc[poleMinusDocsIndeceS, textFull_simbolsCleaned]) # для отладки
-        display('df.loc[polePlusDocsIndeceS, textFull_simbolsCleaned]:', df.loc[polePlusDocsIndeceS, textFull_simbolsCleaned]) # для отладки
+        # display('df.loc[poleMinusDocsIndeceS, textFull_simbolsCleaned]:', df.loc[poleMinusDocsIndeceS, textFull_simbolsCleaned]) # для отладки
+        # display('df.loc[polePlusDocsIndeceS, textFull_simbolsCleaned]:', df.loc[polePlusDocsIndeceS, textFull_simbolsCleaned]) # для отладки
         if len(docs_snippetS_additional) == 0:
             docs_snippetS_additional = pandas.concat([df.loc[poleMinusDocsIndeceS, [textFull_simbolsCleaned]], df.loc[polePlusDocsIndeceS, [textFull_simbolsCleaned]]])
             docs_snippetS_additional.loc[poleMinusDocsIndeceS, 'pole'] = poleS[0].capitalize() + 'ый'
             docs_snippetS_additional.loc[polePlusDocsIndeceS, 'pole'] = poleS[-1].capitalize() + 'ый'
             docs_snippetS_additional.columns = ['textFull_simbolsCleaned', 'pole']
             docs_snippetS_additional = docs_snippetS_additional[['pole', 'textFull_simbolsCleaned']]
-            docs_snippetS_additional = supplementariesExecuter(df, docs_snippetS_additional, docs_snippetS_additional.index, docs_snippetS_additional.index, supplementarieS)
+            for docIndex in docs_snippetS_additional.index:
+                # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки
+                docs_snippetS_additional = supplementariesExecuter(df, docs_snippetS_additional, docIndex, docIndex, supplementarieS)
+            # docs_snippetS_additional = supplementariesExecuter(df, docs_snippetS_additional, docs_snippetS_additional.index, docs_snippetS_additional.index, supplementarieS)
 
-        display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки            
+        # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки            
         docs_snippetS_additional.loc[:, 'Интерпретация топика'] = ''
         docs_snippetS = pandas.concat([docs_snippetS, docs_snippetS_additional])
         print('\n')
@@ -509,9 +548,31 @@ Cреди обозначений строк исходной таблицы ес
         summary['Документы'] = summary.index
         # display('summary:', summary) # для отладки
 
+        # print('Отладка')
+        # display(docs_snippetS_additional)
+        # from openpyxl import Workbook
+        # wb = Workbook()
+        # ws = wb.create_sheet(title='topicName')
+        # for r in dataframe_to_rows(docs_snippetS_additional, index=False, header=True):
+        #     ws.append(r)        
+
         ws = wb.create_sheet(title=topicName)
         for r in dataframe_to_rows(docs_snippetS_additional, index=False, header=True):
             ws.append(r)
+        
+        # while True:
+        #     try:
+        #         ws = wb.create_sheet(title=topicName)
+        #         for r in dataframe_to_rows(docs_snippetS_additional, index=False, header=True):
+        #             ws.append(r)
+        #             # r_previous = r
+        #         break
+        #     except:
+        #         # ws.remove(r_previous)
+        #         # print(sys.exc_info()[1]) # для отладки
+        #         # docs_snippetS_additional['title'] = docs_snippetS_additional['title'].astype(str)
+        #         docs_snippetS_additional = docs_snippetS_additional.astype(str)
+
         img_data.seek(0)
         img = Image(img_data)
         ws.add_image(img, "K1")
