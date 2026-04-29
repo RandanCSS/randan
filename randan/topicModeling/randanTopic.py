@@ -80,6 +80,9 @@ def topicDocsUnique_search(df, docsLimit, textFull_lemmatized, topicName, topicS
     dfUnique_topicScoreS['indicesDuplicate'] = dfUnique_topicScoreS.apply(lambda row: [i for i in row['indicesDuplicate'] if i != row.name], axis=1)
     # display('dfUnique_topicScoreS:', dfUnique_topicScoreS) # для отладки
 
+# Отсюда надо будет перенести и сделать переменную сортировку
+    # упорядочить строк df согласно величинам scoreS в рамках рассматриваемого топика
+
     # Оставить только полярные документы числом docsLimit
     dfUnique_minus = dfUnique_topicScoreS[dfUnique_topicScoreS[topicName] < 0]
     dfUnique_minus = dfUnique_minus.iloc[:min(docsLimit, len(dfUnique_minus)), :]
@@ -448,7 +451,7 @@ Cреди обозначений строк исходной таблицы ес
         print('\n\nTopic', topicName)
 
         # Документы-топики
-        topicScoreS = scoreS[topicName]
+        topicScoreS = scoreS[[topicName]]
 
         # Токены-топики
         topicLoadingS = component_loadings_rotated[[topicName]]
@@ -466,14 +469,14 @@ Cреди обозначений строк исходной таблицы ес
     # Распределение документов по осям
         # Гистограмма
         plt.subplot(3, 2, 1) # три строки, три столбца, первое место
-        plt.hist(topicScoreS.dropna(), color='grey')
+        plt.hist(topicScoreS, color='grey')
         plt.title(f"Docs Distribution by Scores\nin {topicName}")
         plt.xlabel('Scores')
         plt.ylabel('Frequency');
 
         # Боксплот
         plt.subplot(3, 2, 2) # три строки, три столбца, третье место
-        plt.boxplot(topicScoreS.dropna())
+        plt.boxplot(topicScoreS)
         plt.title(f"Docs Distribution by Scores\nin {topicName}")
         plt.xticks([])
         plt.ylabel('Scores')
@@ -501,15 +504,56 @@ Cреди обозначений строк исходной таблицы ес
 
         # Полярные документы, причём уникальные
         # topicDocS = pandas.concat([scoreS.sort_values(topicName)[[topicName]].head(docsLimit), scoreS.sort_values(topicName)[[topicName]].tail(docsLimit)]) # было
-        topicScoreS = scoreS.sort_values(topicName)[[topicName]] # стало # topicDocS
-        # display('topicScoreS:', topicScoreS) # для отладки
+        # topicScoreS = scoreS[[topicName]] # стало # topicDocS
 
-        dfUnique_minus, dfUnique_plus, dfUnique_poles = topicDocsUnique_search(df, docsLimit, textFull_lemmatized, topicName, topicScoreS)
-        display('dfUnique_poles:', dfUnique_poles) # для отладки
+        # Добавить столбец со scoreS документов в рамках рассматриваемого топика
+        df_topicScoreS = pandas.concat([df, topicScoreS], axis=1)
     
-        while True: # Определение списка ключевых токенов с учётом необходимости встречаемости хотя бы одного из них в ключевых документах
-
+        # Оставить только уникальные (по столбцу textFull_lemmatized) тексты (первые вхождения)
+        dfUnique_topicScoreS = df_topicScoreS.drop_duplicates(textFull_lemmatized, keep='first') # 'textFull_stopwordsDropped'
+    
+        # Убрать собственный индекс из списка дубликатов в каждой оставшейся строке
+        dfUnique_topicScoreS['indicesDuplicate'] = dfUnique_topicScoreS.apply(lambda row: [i for i in row['indicesDuplicate'] if i != row.name], axis=1)
+        display('dfUnique_topicScoreS:', dfUnique_topicScoreS) # для отладки
+    
         # Полярные токены
+
+        def tokensSelector(loadingsThreshold, minusPlus, tokensLimit, topicLoadingS, topicName):
+            tokenS_topic = topicLoadingS.sort_values(topicName, ascending=False) if minusPlus == 1 else topicLoadingS.sort_values(topicName)
+            display('tokenS_topic:', tokenS_topic) # для отладки
+            
+            tokenS_topic = tokenS_topic[tokenS_topic[topicName] * minusPlus > 0]
+            tokenS_topic_list = tokenS_topic.index
+            print('tokenS_topic_list:', tokenS_topic_list) # для отладки
+    
+            tokenS_topic_inUse = tokenS_topic[tokenS_topic[topicName] * minusPlus > loadingsThreshold * minusPlus]
+            tokenS_topic_inUse = tokenS_topic_inUse.iloc[:min(tokensLimit, len(tokenS_topic_inUse)), :]
+            tokenS_topic_inUse_list = tokenS_topic_inUse.index
+            print('tokenS_topic_inUse_list:', tokenS_topic_inUse_list) # для отладки
+
+            return tokenS_topic_list, tokenS_topic_inUse_list
+
+        tokenS_topic_minus_list, tokenS_topic_minus_inUse_list = tokensSelector(loadingsThreshold, -1, tokensLimit, topicLoadingS, topicName)
+        tokenS_topic_plus_list, tokenS_topic_plnus_inUse_list = tokensSelector(loadingsThreshold, 1, tokensLimit, topicLoadingS, topicName)
+
+        
+        # tokenS_topic_minus = tokenS_topic[tokenS_topic[topicName] < 0]
+        # tokenS_topic_minus_list = tokenS_topic_minus.index
+        # print('tokenS_topic_minus_list:', tokenS_topic_minus_list) # для отладки
+
+        # tokenS_topic_minus_inUse = tokenS_topic_minus[tokenS_topic_minus[topicName] > loadingsThreshold]
+        # tokenS_topic_minus_inUse = tokenS_topic_minus_inUse.iloc[:min(tokensLimit, len(tokenS_topic_minus_inUse)), :]
+        # tokenS_topic_minus_inUse_list = tokenS_topic_minus_inUse.index
+        # print('tokenS_topic_minus_inUse_list:', tokenS_topic_minus_inUse_list) # для отладки
+        
+
+        # .iloc[:min(docsLimit, len(dfUnique_minus)), :]
+
+        
+        tokenS_topic_plus = tokenS_topic[tokenS_topic[topicName] > 0]
+        
+        while True: # Определение списка ключевых токенов с учётом необходимости встречаемости хотя бы одного из них в ключевых документах
+        
             topicTokenS = pandas.concat([topicLoadingS[topicLoadingS[topicName] < -loadingsThreshold].sort_values(topicName).head(tokensLimit),
                                          topicLoadingS[topicLoadingS[topicName] > loadingsThreshold].sort_values(topicName).tail(tokensLimit)])
             print('Токены на полюсах топика', topicName)
