@@ -69,8 +69,9 @@ def poleDocs_unique_search(df, docsLimit, pole, poleDocsIndeceS, textFull_lemmat
                   '-- поэтому далее не вывожу дубли')
     return poleDocsDf_unique
 
-def topicDocsUnique_search(df, docsLimit, textFull_lemmatized, topicScoreS_indeceS):
-    df_topicScoreS = df.loc[topicScoreS_indeceS, :] # упорядочить строк df согласно величинам scoreS в рамках рассматриваемого топика
+def topicDocsUnique_search(df, docsLimit, textFull_lemmatized, topicName, topicScoreS):
+    df_topicScoreS = df.loc[topicScoreS.index, :] # упорядочить строк df согласно величинам scoreS в рамках рассматриваемого топика
+    df_topicScoreS = pandas.concat([df_topicScoreS, topicScoreS], axis=1).sort_values(topicName)
 
     # Оставить только уникальные тексты (первые вхождения)
     dfUnique_topicScoreS = df_topicScoreS.drop_duplicates(textFull_lemmatized, keep='first').copy() # 'textFull_stopwordsDropped'
@@ -79,18 +80,18 @@ def topicDocsUnique_search(df, docsLimit, textFull_lemmatized, topicScoreS_indec
     dfUnique_topicScoreS['indicesDuplicate'] = dfUnique_topicScoreS.apply(lambda row: [i for i in row['indicesDuplicate'] if i != row.name], axis=1)
     # display('dfUnique_topicScoreS:', dfUnique_topicScoreS) # для отладки
 
-    # ОСтавить только полярные документы числом docsLimit
-    dfUnique_minus = dfUnique_topicScoreS.head(docsLimit)
-    dfUnique_plus = dfUnique_topicScoreS.tail(docsLimit)
+    # Оставить только полярные документы числом docsLimit
+    dfUnique_minus = dfUnique_topicScoreS[dfUnique_topicScoreS[topicName] < 0]
+    dfUnique_minus = dfUnique_minus.iloc[:min(docsLimit, len(dfUnique_minus)), :]
+    # display('dfUnique_minus:', dfUnique_minus) # для отладки
+    
+    dfUnique_plus = dfUnique_topicScoreS[dfUnique_topicScoreS[topicName] > 0]
+    dfUnique_plus = dfUnique_plus.iloc[-min(docsLimit, len(dfUnique_minus)):, :]
+    # display('dfUnique_plus:', dfUnique_plus) # для отладки
+    
     dfUnique_poles = pandas.concat([dfUnique_minus, dfUnique_plus])
     # display('dfUnique_poles:', dfUnique_poles) # для отладки
 
-    for row in dfUnique_poles.index:
-        indicesDuplicate_cellContent = poleDocsDf_unique['indicesDuplicate'][row]
-        if indicesDuplicate_cellContent != []:
-            print(f'На {pole}ом полюсе очищенный и лемматизированный текст документа', row,
-                  f"дублируется в документ{'ах' if len(indicesDuplicate_cellContent) > 1 else 'е'}:", str(list(indicesDuplicate_cellContent)).replace('[', '').replace(']', ''),
-                  '-- поэтому далее не вывожу дубли')
     return dfUnique_minus, dfUnique_plus, dfUnique_poles
 
 # 1.1 ..описания каждого топика через его полюса и формирующие их токены и релевантные фрагменты располагаемых на них документов
@@ -503,8 +504,7 @@ Cреди обозначений строк исходной таблицы ес
         topicScoreS = scoreS.sort_values(topicName)[[topicName]] # стало # topicDocS
         # display('topicScoreS:', topicScoreS) # для отладки
 
-        topicScoreS_indeceS = topicScoreS.index
-        dfUnique_minus, dfUnique_plus, dfUnique_poles = topicDocsUnique_search(df, docsLimit, textFull_lemmatized, topicScoreS_indeceS)
+        dfUnique_minus, dfUnique_plus, dfUnique_poles = topicDocsUnique_search(df, docsLimit, textFull_lemmatized, topicName, topicScoreS)
         display('dfUnique_poles:', dfUnique_poles) # для отладки
     
         while True: # Определение списка ключевых токенов с учётом необходимости встречаемости хотя бы одного из них в ключевых документах
