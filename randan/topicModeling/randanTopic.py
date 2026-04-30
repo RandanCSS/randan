@@ -516,6 +516,19 @@ Cреди обозначений строк исходной таблицы ес
         dfUnique_topicScoreS['indicesDuplicate'] = dfUnique_topicScoreS.apply(lambda row: [i for i in row['indicesDuplicate'] if i != row.name], axis=1)
         display('dfUnique_topicScoreS:', dfUnique_topicScoreS) # для отладки
     
+        def docsSelector(dfUnique_topicScoreS, minusPlus, docsLimit, topicName):
+            dfUnique_topicScoreS = dfUnique_topicScoreS.sort_values(topicName, ascending=False) if minusPlus == 1 else dfUnique_topicScoreS.sort_values(topicName)
+            display('dfUnique_topicScoreS:', dfUnique_topicScoreS) # для отладки
+            
+            docS_pole = dfUnique_topicScoreS[dfUnique_topicScoreS[topicName] * minusPlus > 0]
+            docS_pole = docS_pole.iloc[:min(docsLimit, len(docS_pole)), :]
+            display('docS_pole:', docS_pole) # для отладки
+
+            return docS_pole
+
+        docS_minus = docsSelector(dfUnique_topicScoreS, -1, docsLimit, topicName)
+        docS_plus = docsSelector(dfUnique_topicScoreS, 1, docsLimit, topicName)
+        
         # Полярные токены
 
         def tokensSelector(loadingsThreshold, minusPlus, tokensLimit, topicLoadingS, topicName):
