@@ -235,12 +235,7 @@ def snippetByDoc(df, docsLimit, loadingsThreshold, pole, poleDocsIndeceS, poleTo
 
             # docSnippetS_all = pandas.concat([docSnippetS_all, docSnippetS])
 
-        if len(docs_snippetS) == 0: print(
-'''В ключевых документах этого полюса не встречаются ключевые токены этого полюса. Возможные причины:
-(а) ключевых токенов слишком мало в силу высокого порога loadingsThreshold или высокого порога tokensLimit или
-(б) ключевых документов слишком мало в силу высокого порога docsLimit.
-Если хотите получить фрагменты ключевых документов, относящихся к ключевым токенам, попробуйте снизить перечисленные пороги и перезапустить функцию randanTopic .'''
-                                            )
+        if len(docs_snippetS) == 0: print(message_tokens)
         print('\n')
         # display('Итоговый docs_snippetS в рамках функции:', docs_snippetS) # для отладки
     return docs_snippetS, poleDocsIndeceS
@@ -514,15 +509,15 @@ Cреди обозначений строк исходной таблицы ес
     
         # Убрать собственный индекс из списка дубликатов в каждой оставшейся строке
         dfUnique_topicScoreS['indicesDuplicate'] = dfUnique_topicScoreS.apply(lambda row: [i for i in row['indicesDuplicate'] if i != row.name], axis=1)
-        display('dfUnique_topicScoreS:', dfUnique_topicScoreS) # для отладки
+        # display('dfUnique_topicScoreS:', dfUnique_topicScoreS) # для отладки
     
         def docsSelector(dfUnique_topicScoreS, minusPlus, docsLimit, topicName):
             dfUnique_topicScoreS = dfUnique_topicScoreS.sort_values(topicName, ascending=False) if minusPlus == 1 else dfUnique_topicScoreS.sort_values(topicName)
-            display('dfUnique_topicScoreS:', dfUnique_topicScoreS) # для отладки
+            # display('dfUnique_topicScoreS:', dfUnique_topicScoreS) # для отладки
             
             docS_pole = dfUnique_topicScoreS[dfUnique_topicScoreS[topicName] * minusPlus > 0]
             docS_pole = docS_pole.iloc[:min(docsLimit, len(docS_pole)), :]
-            display('docS_pole:', docS_pole) # для отладки
+            # display('docS_pole:', docS_pole) # для отладки
 
             return docS_pole
 
@@ -531,7 +526,8 @@ Cреди обозначений строк исходной таблицы ес
         
         # Полярные токены
 
-        def tokensSelector(loadingsThreshold, minusPlus, tokensLimit, topicLoadingS, topicName):
+        def tokensSelector(docS_pole, loadingsThreshold, minusPlus, tokensLimit, topicLoadingS, topicName):
+            message_tokens = ''
             tokenS_topic = topicLoadingS.sort_values(topicName, ascending=False) if minusPlus == 1 else topicLoadingS.sort_values(topicName)
             display('tokenS_topic:', tokenS_topic) # для отладки
             
@@ -539,15 +535,38 @@ Cреди обозначений строк исходной таблицы ес
             tokenS_topic_list = tokenS_topic.index
             print('tokenS_topic_list:', tokenS_topic_list) # для отладки
     
-            tokenS_topic_inUse = tokenS_topic[tokenS_topic[topicName] * minusPlus > loadingsThreshold * minusPlus]
+            # print('loadingsThreshold:', loadingsThreshold) # для отладки
+            tokenS_topic_inUse = tokenS_topic[tokenS_topic[topicName] * minusPlus > loadingsThreshold]
             tokenS_topic_inUse = tokenS_topic_inUse.iloc[:min(tokensLimit, len(tokenS_topic_inUse)), :]
             tokenS_topic_inUse_list = tokenS_topic_inUse.index
             print('tokenS_topic_inUse_list:', tokenS_topic_inUse_list) # для отладки
 
-            return tokenS_topic_list, tokenS_topic_inUse_list
+            if len(tokenS_topic_inUse_list) > 0: # если хотя бы один токен преодолевает порог loadingsThreshold
 
-        tokenS_topic_minus_list, tokenS_topic_minus_inUse_list = tokensSelector(loadingsThreshold, -1, tokensLimit, topicLoadingS, topicName)
-        tokenS_topic_plus_list, tokenS_topic_plnus_inUse_list = tokensSelector(loadingsThreshold, 1, tokensLimit, topicLoadingS, topicName)
+                docS_pole_list = docS_pole[textFull_lemmatized].tolist()
+                docS_pole_list = ' '.join(docS_pole_list)
+                docS_pole_list = docS_pole_list.split(' ')
+                # print('docS_pole_list:', docS_pole_list) # для отладки
+    
+                goC = True
+                while goC: # Определение списка ключевых токенов с учётом необходимости встречаемости хотя бы одного из них в ключевых документах того же полюса
+                    for token in tokenS_topic_inUse_list:
+                        if token in docS_pole_list:
+                            goC = False
+                            # print('Ключевой токен найден в хотя бы одном ключевом документе того же полюса') # для отладки
+                    if goC == True:
+                        tokenS_topic_inUse_new = tokenS_topic_inUse.iloc[:min(tokensLimit + 1, len(tokenS_topic_inUse)), :] # добавить один ключевой токен полюса
+                        tokenS_topic_inUse_new_list = tokenS_topic_inUse_new.index
+                        if tokenS_topic_inUse_list == tokenS_topic_inUse_new_list:
+                            # если добавка ключевого токена полюса невозможна в силу исчерпания ключевых токенов полюса или достижения предела по loadingsThreshold
+                            message_tokens = '''В ключевых документах этого полюса не встречаются ключевые токены этого полюса. Возможная причина: ключевых токенов слишком мало в силу высокого порога loadingsThreshold или высокого порога tokensLimit.
+--- Если хотите получить фрагменты ключевых документов, относящихся к ключевым токенам, попробуйте снизить перечисленные пороги и перезапустить функцию randanTopic .'''
+                            goC = False
+                        else: tokenS_topic_inUse_list = tokenS_topic_inUse_new_list # подготовка новой итерации после добавки одного ключевого токена полюса
+            return message_tokens, tokenS_topic_list, tokenS_topic_inUse_list
+
+        message_tokens, tokenS_topic_minus_list, tokenS_topic_minus_inUse_list = tokensSelector(docS_minus, loadingsThreshold, -1, tokensLimit, topicLoadingS, topicName)
+        message_tokens, tokenS_topic_plus_list, tokenS_topic_plnus_inUse_list = tokensSelector(docS_plus, loadingsThreshold, 1, tokensLimit, topicLoadingS, topicName)
 
         
         # tokenS_topic_minus = tokenS_topic[tokenS_topic[topicName] < 0]
@@ -560,18 +579,14 @@ Cреди обозначений строк исходной таблицы ес
         # print('tokenS_topic_minus_inUse_list:', tokenS_topic_minus_inUse_list) # для отладки
         
 
-        # .iloc[:min(docsLimit, len(dfUnique_minus)), :]
-
         
         tokenS_topic_plus = tokenS_topic[tokenS_topic[topicName] > 0]
-        
-        while True: # Определение списка ключевых токенов с учётом необходимости встречаемости хотя бы одного из них в ключевых документах
-        
-            topicTokenS = pandas.concat([topicLoadingS[topicLoadingS[topicName] < -loadingsThreshold].sort_values(topicName).head(tokensLimit),
-                                         topicLoadingS[topicLoadingS[topicName] > loadingsThreshold].sort_values(topicName).tail(tokensLimit)])
-            print('Токены на полюсах топика', topicName)
-            topicTokenS = topicTokenS.dropna()
-            display(topicTokenS)
+                
+        topicTokenS = pandas.concat([topicLoadingS[topicLoadingS[topicName] < -loadingsThreshold].sort_values(topicName).head(tokensLimit),
+                                     topicLoadingS[topicLoadingS[topicName] > loadingsThreshold].sort_values(topicName).tail(tokensLimit)])
+        print('Токены на полюсах топика', topicName)
+        topicTokenS = topicTokenS.dropna()
+        display(topicTokenS)
         
         # Описание каждого топика через его полюса и формирующие их токены и релевантные фрагменты располагаемых на них документов
         # display('topicLoadingS:', topicLoadingS) # для отладки
