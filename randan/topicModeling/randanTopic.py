@@ -45,10 +45,19 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 tqdm.pandas() # для визуализации прогресса функций, применяемых к датафреймам
 
 # 1 Авторские функции для..
-# 1.0 ..обработки документов с дублирующимися тестами
+# 1.0 ..обработки документов полюса топика с учётом дублирующихся тестов
+def docsSelector(dfUnique_topicScoreS, minusPlus, docsLimit, topicName):
+	dfUnique_topicScoreS = dfUnique_topicScoreS.sort_values(topicName, ascending=False) if minusPlus == 1 else dfUnique_topicScoreS.sort_values(topicName)
+	# display('dfUnique_topicScoreS:', dfUnique_topicScoreS) # для отладки
+	
+	docS_topic_pole = dfUnique_topicScoreS[dfUnique_topicScoreS[topicName] * minusPlus > 0]
+	docS_topic_pole = docS_topic_pole.iloc[:min(docsLimit, len(docS_topic_pole)), :]
+	# display('docS_topic_pole:', docS_topic_pole) # для отладки
+
+	return docS_topic_pole
 
 # 1.1 ..описания каждого топика через его полюса и формирующие их токены и релевантные фрагменты располагаемых на них документов
-def snippetByDoc(docS_topic_pole, loadingsThreshold, pole, supplementarieS, textFull_lemmatized, textFull_simbolsCleaned, tokenS_topic_pole_inUse_list):
+def snippetByDoc(docS_topic_pole, loadingsThreshold, message_tokens, pole, supplementarieS, textFull_lemmatized, textFull_simbolsCleaned, tokenS_topic_pole_inUse_list):
     print(f'\n{pole.upper()}ЫЙ полюс топика')
     doc_snippetS = pandas.DataFrame(columns=['min', 'max', 'token'])
     docs_snippetS = pandas.DataFrame(columns=['min', 'max', 'token'])
@@ -218,6 +227,48 @@ def supplementariesExecuter(dfOriginator, dfRecipient, docIndex, dfRecipient_row
                 dfRecipient.loc[dfRecipient_row, supplementary] = dfOriginator[supplementary][docIndex]
         return dfRecipient
 
+def tokensSelector(docS_topic_pole, loadingsThreshold, minusPlus, textFull_lemmatized, tokensLimit, topicLoadingS, topicName):
+	message_tokens = ''
+	tokenS_topic = topicLoadingS.sort_values(topicName, ascending=False) if minusPlus == 1 else topicLoadingS.sort_values(topicName)
+	# display('tokenS_topic.head(25):', tokenS_topic.head(25)) # для отладки
+	
+	tokenS_topic = tokenS_topic[tokenS_topic[topicName] * minusPlus > 0]
+	tokenS_topic_list = tokenS_topic.index
+	# print('tokenS_topic_list:', tokenS_topic_list) # для отладки
+
+	# print('loadingsThreshold:', loadingsThreshold) # для отладки
+	tokenS_topic_pole_inUse = tokenS_topic[tokenS_topic[topicName] * minusPlus > loadingsThreshold]
+	tokenS_topic_pole_inUse = tokenS_topic_pole_inUse.iloc[:min(tokensLimit, len(tokenS_topic_pole_inUse)), :]
+	tokenS_topic_pole_inUse_list = list(tokenS_topic_pole_inUse.index)
+	# print('tokenS_topic_pole_inUse_list:', tokenS_topic_pole_inUse_list) # для отладки
+
+	if len(tokenS_topic_pole_inUse_list) > 0: # если хотя бы один токен преодолевает порог loadingsThreshold
+
+		docS_topic_pole_list = docS_topic_pole[textFull_lemmatized].tolist()
+		docS_topic_pole_list = ' '.join(docS_topic_pole_list)
+		docS_topic_pole_list = docS_topic_pole_list.split(' ')
+		# print('docS_topic_pole_list:', docS_topic_pole_list) # для отладки
+
+		goC = True
+		while goC: # Определение списка ключевых токенов с учётом необходимости встречаемости хотя бы одного из них в ключевых документах того же полюса
+			for token in tokenS_topic_pole_inUse_list:
+				if token in docS_topic_pole_list:
+					goC = False
+					print('Ключевой токен найден в хотя бы одном ключевом документе того же полюса') # для отладки
+			if goC == True:
+				tokensLimit += 1
+				tokenS_topic_pole_inUse_new = tokenS_topic.iloc[:min(tokensLimit, len(tokenS_topic)), :] # добавить один ключевой токен полюса
+				tokenS_topic_pole_inUse_new_list = list(tokenS_topic_pole_inUse_new.index)
+				print('tokenS_topic_pole_inUse_new_list:', tokenS_topic_pole_inUse_new_list) # для отладки
+				if len(tokenS_topic_pole_inUse_list) == len(tokenS_topic_pole_inUse_new_list):
+					# если добавка ключевого токена полюса невозможна в силу исчерпания ключевых токенов полюса или достижения предела по loadingsThreshold
+					message_tokens = '''В ключевых документах этого полюса не встречаются ключевые токены этого полюса. Возможная причина: ключевых токенов слишком мало в силу высокого порога loadingsThreshold или высокого порога tokensLimit.
+--- Если хотите получить фрагменты ключевых документов, относящихся к ключевым токенам, попробуйте снизить перечисленные пороги и перезапустить функцию randanTopic .'''
+					goC = False
+				else: tokenS_topic_pole_inUse_list = tokenS_topic_pole_inUse_new_list # подготовка новой итерации после добавки одного ключевого токена полюса
+	print('message_tokens:', message_tokens) # для отладки
+	return message_tokens, tokenS_topic_pole_inUse, tokenS_topic_pole_inUse_list
+
 def randanTopic(dfIn, matrix_df, docsLimit=5, loadingsThreshold=0.5, returnDfs=False, rowsNumerator=None, supplementarieS=None, textFull_lemmatized='textFull_lemmatized', textFull_simbolsCleaned='textFull_simbolsCleaned', tokensLimit=10, topicsCount=None):
     '''    Метод тематического моделирования randanTopic основан на методе главных компонент (по-английски: principal components analisys, PCA). То есть он НЕ использует нейросети и embeddings, а работает с "мешком слов" (по-английски: bag of words, BoW). Поэтому важно качественно подготовить "мешок слов" через очистку исходного текста от лишних символов, лемматизацию и удаление стоп-слов. Эти три этапа предобработки исходного текста, а также (при необходимости) автокоррекция грамматических ошибок могут быть выполнены функциями из скрипта textPreprocessor пакета randan https://github.com/RandanCSS/randan/blob/master/randan/tools/textPreprocessor.py . Причём для удобства последующей интерпретации рекомендую результаты очистки от лишних символов и результаты лемматизации сохранить в отдельные столбцы: textFull_simbolsCleaned и textFull_lemmatized соответственно.
         Если для последующей интерпретации Вам пригодятся дополнительные столбцы (скажем, заголовок, дата и т.п.), впишите их в формате списка текстовых объектов в аргумент supplementaries= текущей функции.
@@ -233,7 +284,7 @@ def randanTopic(dfIn, matrix_df, docsLimit=5, loadingsThreshold=0.5, returnDfs=F
         supplementarieS : list -- дополнительные столбцы для последующей интерпретации
     textFull_lemmatized : str -- имя столбца с текстом, прошедшем лемматизацию, но из которого НЕ удалены стоп-слова
 textFull_simbolsCleaned : str -- имя столбца с текстом, прошедшем удаление лишних символов, но НЕ прошедший лемматизацию и из которого НЕ удалены стоп-слова
-            tokensLimit : int -- лимит на число токенов на полюсе топика; нужен для отбора токенов           
+            tokensLimit : int -- лимит на число ключевых токенов на полюсе топика. Этот лимит может быть автоматически увеличено в процессе исполнения алгоритма для обеспечения встречаемости хотя бы одного ключевого токена в ключевых документах того же полюса
             topicsCount : int -- частота самого высокочастотного слова из тех, которые предложены автокорректором в качестве правильного варианта; этот аргумент необходим для корректной работы аргумента userWordS'''
 
     df = dfIn.copy()
@@ -450,62 +501,12 @@ Cреди обозначений строк исходной таблицы ес
         dfUnique_topicScoreS['indicesDuplicate'] = dfUnique_topicScoreS.apply(lambda row: [i for i in row['indicesDuplicate'] if i != row.name], axis=1)
         # display('dfUnique_topicScoreS:', dfUnique_topicScoreS) # для отладки
     
-        def docsSelector(dfUnique_topicScoreS, minusPlus, docsLimit, topicName):
-            dfUnique_topicScoreS = dfUnique_topicScoreS.sort_values(topicName, ascending=False) if minusPlus == 1 else dfUnique_topicScoreS.sort_values(topicName)
-            # display('dfUnique_topicScoreS:', dfUnique_topicScoreS) # для отладки
-            
-            docS_topic_pole = dfUnique_topicScoreS[dfUnique_topicScoreS[topicName] * minusPlus > 0]
-            docS_topic_pole = docS_topic_pole.iloc[:min(docsLimit, len(docS_topic_pole)), :]
-            # display('docS_topic_pole:', docS_topic_pole) # для отладки
-
-            return docS_topic_pole
-
         docS_topic_minus = docsSelector(dfUnique_topicScoreS, -1, docsLimit, topicName)
         docS_topic_plus = docsSelector(dfUnique_topicScoreS, 1, docsLimit, topicName)
         
         # Полярные токены
-
-        def tokensSelector(docS_topic_pole, loadingsThreshold, minusPlus, tokensLimit, topicLoadingS, topicName):
-            message_tokens = ''
-            tokenS_topic = topicLoadingS.sort_values(topicName, ascending=False) if minusPlus == 1 else topicLoadingS.sort_values(topicName)
-            # display('tokenS_topic:', tokenS_topic) # для отладки
-            
-            tokenS_topic = tokenS_topic[tokenS_topic[topicName] * minusPlus > 0]
-            tokenS_topic_list = tokenS_topic.index
-            # print('tokenS_topic_list:', tokenS_topic_list) # для отладки
-    
-            # print('loadingsThreshold:', loadingsThreshold) # для отладки
-            tokenS_topic_pole_inUse = tokenS_topic[tokenS_topic[topicName] * minusPlus > loadingsThreshold]
-            tokenS_topic_pole_inUse = tokenS_topic_pole_inUse.iloc[:min(tokensLimit, len(tokenS_topic_pole_inUse)), :]
-            tokenS_topic_pole_inUse_list = list(tokenS_topic_pole_inUse.index)
-            # print('tokenS_topic_pole_inUse_list:', tokenS_topic_pole_inUse_list) # для отладки
-
-            if len(tokenS_topic_pole_inUse_list) > 0: # если хотя бы один токен преодолевает порог loadingsThreshold
-
-                docS_topic_pole_list = docS_topic_pole[textFull_lemmatized].tolist()
-                docS_topic_pole_list = ' '.join(docS_topic_pole_list)
-                docS_topic_pole_list = docS_topic_pole_list.split(' ')
-                # print('docS_topic_pole_list:', docS_topic_pole_list) # для отладки
-    
-                goC = True
-                while goC: # Определение списка ключевых токенов с учётом необходимости встречаемости хотя бы одного из них в ключевых документах того же полюса
-                    for token in tokenS_topic_pole_inUse_list:
-                        if token in docS_topic_pole_list:
-                            goC = False
-                            # print('Ключевой токен найден в хотя бы одном ключевом документе того же полюса') # для отладки
-                    if goC == True:
-                        tokenS_topic_pole_inUse_new = tokenS_topic_pole_inUse.iloc[:min(tokensLimit + 1, len(tokenS_topic_pole_inUse)), :] # добавить один ключевой токен полюса
-                        tokenS_topic_pole_inUse_new_list = tokenS_topic_pole_inUse_new.index
-                        if tokenS_topic_pole_inUse_list == tokenS_topic_pole_inUse_new_list:
-                            # если добавка ключевого токена полюса невозможна в силу исчерпания ключевых токенов полюса или достижения предела по loadingsThreshold
-                            message_tokens = '''В ключевых документах этого полюса не встречаются ключевые токены этого полюса. Возможная причина: ключевых токенов слишком мало в силу высокого порога loadingsThreshold или высокого порога tokensLimit.
---- Если хотите получить фрагменты ключевых документов, относящихся к ключевым токенам, попробуйте снизить перечисленные пороги и перезапустить функцию randanTopic .'''
-                            goC = False
-                        else: tokenS_topic_pole_inUse_list = tokenS_topic_pole_inUse_new_list # подготовка новой итерации после добавки одного ключевого токена полюса
-            return message_tokens, tokenS_topic_pole_inUse, tokenS_topic_pole_inUse_list
-
-        message_tokens, tokenS_topic_minus_inUse, tokenS_topic_minus_inUse_list = tokensSelector(docS_topic_minus, loadingsThreshold, -1, tokensLimit, topicLoadingS, topicName)
-        message_tokens, tokenS_topic_plus_inUse, tokenS_topic_plus_inUse_list = tokensSelector(docS_topic_plus, loadingsThreshold, 1, tokensLimit, topicLoadingS, topicName)
+        message_tokens, tokenS_topic_minus_inUse, tokenS_topic_minus_inUse_list = tokensSelector(docS_topic_minus, loadingsThreshold, -1, textFull_lemmatized, tokensLimit, topicLoadingS, topicName)
+        message_tokens, tokenS_topic_plus_inUse, tokenS_topic_plus_inUse_list = tokensSelector(docS_topic_plus, loadingsThreshold, 1, textFull_lemmatized, tokensLimit, topicLoadingS, topicName)
 
         print('Токены на полюсах топика', topicName)
         display(pandas.concat([tokenS_topic_minus_inUse, tokenS_topic_plus_inUse])) #.dropna()
@@ -517,13 +518,13 @@ Cреди обозначений строк исходной таблицы ес
         # display('Средняя связь ключевых токенов с топиком:', tokenS_topic_minus_inUse[topicName].mean()) # для отладки
 
         # print('docS_topic_minus_list:', docS_topic_minus_list[:2]) # для отладки
-        docs_snippetS_minus = snippetByDoc(docS_topic_minus, loadingsThreshold, poleS[0], supplementarieS, textFull_lemmatized, textFull_simbolsCleaned, tokenS_topic_minus_inUse_list)
+        docs_snippetS_minus = snippetByDoc(docS_topic_minus, loadingsThreshold, message_tokens, poleS[0], supplementarieS, textFull_lemmatized, textFull_simbolsCleaned, tokenS_topic_minus_inUse_list)
         
         # print('tokenS_topic_plus_inUse_list:', tokenS_topic_plus_inUse_list) # для отладки
         # display('Средняя связь ключевых токенов с топиком:', tokenS_topic_plus_inUse[topicName].mean()) # для отладки
 
         # print('docS_topic_plus_list:', docS_topic_plus_list[:2]) # для отладки
-        docs_snippetS_plus = snippetByDoc(docS_topic_plus, loadingsThreshold, poleS[-1], supplementarieS, textFull_lemmatized, textFull_simbolsCleaned, tokenS_topic_plus_inUse_list)
+        docs_snippetS_plus = snippetByDoc(docS_topic_plus, loadingsThreshold, message_tokens, poleS[-1], supplementarieS, textFull_lemmatized, textFull_simbolsCleaned, tokenS_topic_plus_inUse_list)
         
         # print('Отладка')
         # display(docs_snippetS_minus, docs_snippetS_plus)
@@ -546,18 +547,18 @@ Cреди обозначений строк исходной таблицы ес
         # display('docS_topic:', docS_topic) # для отладки
 
         # Заполнение docs_snippetS_additional , если он пустой
-        # display('df.loc[poleMinusDocsIndeceS, textFull_simbolsCleaned]:', df.loc[poleMinusDocsIndeceS, textFull_simbolsCleaned]) # для отладки
-        # display('df.loc[polePlusDocsIndeceS, textFull_simbolsCleaned]:', df.loc[polePlusDocsIndeceS, textFull_simbolsCleaned]) # для отладки
         if len(docs_snippetS_additional) == 0:
-            docs_snippetS_additional = pandas.concat([df.loc[poleMinusDocsIndeceS, [textFull_simbolsCleaned]], df.loc[polePlusDocsIndeceS, [textFull_simbolsCleaned]]])
-            docs_snippetS_additional.loc[poleMinusDocsIndeceS, 'pole'] = poleS[0].capitalize() + 'ый'
-            docs_snippetS_additional.loc[polePlusDocsIndeceS, 'pole'] = poleS[-1].capitalize() + 'ый'
-            docs_snippetS_additional.columns = ['textFull_simbolsCleaned', 'pole']
-            docs_snippetS_additional = docs_snippetS_additional[['pole', 'textFull_simbolsCleaned']]
-            for docIndex in docs_snippetS_additional.index: # гипотетически, проблема невосприимчивости экселя к сложной структуре внутри ячеек решается , когда датафрейм проходит через for in
+            docs_snippetS_additional = docS_topic[[textFull_simbolsCleaned]]
+			if len(tokenS_topic_minus_inUse_list) > 0: docs_snippetS_additional.loc[docS_topic_minus.index, 'pole'] = poleS[0].capitalize() + 'ый'
+			else: docs_snippetS_additional = docs_snippetS_additional.drop(docS_topic_minus.index) # чтобы не выводить в эксельке ключевые документы при отсутствии ключевых токенов
+			
+			if len(tokenS_topic_plus_inUse_list) > 0: docs_snippetS_additional.loc[docS_topic_minus.index, 'pole'] = poleS[0].capitalize() + 'ый'
+			else: docs_snippetS_additional = docs_snippetS_additional.drop(docS_topic_minus.index) # чтобы не выводить в эксельке ключевые документы при отсутствии ключевых токенов
+
+            docs_snippetS_additional = docs_snippetS_additional[['pole', textFull_simbolsCleaned]]
+            for doc in docs_snippetS_additional.index: # гипотетически, проблема невосприимчивости экселя к сложной структуре внутри ячеек решается , когда датафрейм проходит через for in
                 # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки
-                docs_snippetS_additional = supplementariesExecuter(df, docs_snippetS_additional, docIndex, docIndex, supplementarieS)
-            # docs_snippetS_additional = supplementariesExecuter(df, docs_snippetS_additional, docs_snippetS_additional.index, docs_snippetS_additional.index, supplementarieS)
+                docs_snippetS_additional = supplementariesExecuter(df, docs_snippetS_additional, doc, doc, supplementarieS)
 
         # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки            
         docs_snippetS_additional.loc[:, 'Интерпретация топика'] = ''
