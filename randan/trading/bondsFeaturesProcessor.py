@@ -73,11 +73,12 @@ def bondsFeaturesProcessor(
     # display(bondS) # для отладки
 
 # 1.2 Рейтинг и другие важные характеристики из bondsRatingS
-    fileUptodateName_0 = files2df.getFileUptodateName('_bondsRatingS.', None, path + 'Замеры рейтингов')
-    # print('fileUptodateName_0:', fileUptodateName_0) # для отладки
-    fileUptodateName_1 = files2df.getFileUptodateName('_bondsRatingS.', [fileUptodateName_0], path + 'Замеры рейтингов')
+    # print('path:', path) # для отладки
+    if os.path.exists(path + 'Замеры рейтингов'):
+        fileUptodateName_0 = files2df.getFileUptodateName('_bonds', None, path + 'Замеры рейтингов')
+        # print('fileUptodateName_0:', fileUptodateName_0) # для отладки
+        fileUptodateName_1 = files2df.getFileUptodateName('_bonds', [fileUptodateName_0], path + 'Замеры рейтингов')
 
-    # if os.path.exists(path + 'Замеры рейтингов'):
     #     # print("Директория 'Замеры рейтингов' существует") # для отладки
     #     fileNameS_inDirectory = os.listdir('Замеры рейтингов')
     #     fileNameS_inDirectory.sort(reverse=True)        
@@ -89,37 +90,39 @@ def bondsFeaturesProcessor(
     #             if len(fileNameS_forUse) == 2: break
     #     print(f"\nРаботаю с файлом bondsRatingS_previous:'{fileName}'")
 
-    bondsRatingS = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_0)
-    bondsRatingS = bondsRatingS.drop_duplicates('ISIN', keep='last', ignore_index=True)
-    # display('bondsRatingS:', bondsRatingS) # для отладки
-    bondsRatingS_previous = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_1)
-    bondsRatingS_previous = bondsRatingS_previous.drop_duplicates('ISIN', keep='last', ignore_index=True)
-    # display('bondsRatingS_previous:', bondsRatingS_previous) # для отладки
-    # bondsRatingS = bondsRatingS[bondsRatingS['ISIN'].isin(bondS['ISIN'])]
-    # display('bondsRatingS:', bondsRatingS) # для отладки
-    bondsRatingS = bondsRatingS.merge(bondsRatingS_previous[['ISIN', 'Issuer D Rating']], on='ISIN', suffixes=("", " Previous"), how="left")
-    # display('bondsRatingS:', bondsRatingS) # для отладки
-    bondsRatingS.loc[bondsRatingS['Issuer D Rating'] != bondsRatingS['Issuer D Rating Previous'], 'С прошлого замера'] = 'Рейтинг изменился'
+        bondsRatingS = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_0)
+        bondsRatingS = bondsRatingS.drop_duplicates('ISIN', keep='last', ignore_index=True)
+        # display('bondsRatingS:', bondsRatingS) # для отладки
+        bondsRatingS_previous = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_1)
+        bondsRatingS_previous = bondsRatingS_previous.drop_duplicates('ISIN', keep='last', ignore_index=True)
+        # display('bondsRatingS_previous:', bondsRatingS_previous) # для отладки
+        # bondsRatingS = bondsRatingS[bondsRatingS['ISIN'].isin(bondS['ISIN'])]
+        # display('bondsRatingS:', bondsRatingS) # для отладки
+        bondsRatingS = bondsRatingS.merge(bondsRatingS_previous[['ISIN', 'Issuer D Rating']], on='ISIN', suffixes=("", " Previous"), how="left")
+        # display('bondsRatingS:', bondsRatingS) # для отладки
+        bondsRatingS.loc[bondsRatingS['Issuer D Rating'] != bondsRatingS['Issuer D Rating Previous'], 'С прошлого замера'] = 'Рейтинг изменился'
+    
+        print('\n Изменения рейтинга с прошлого замера:')
+        print('  Повышение')
+        bondsRatingS_up = bondsRatingS[(bondsRatingS['Issuer D Rating'].notna()) & (bondsRatingS['Issuer D Rating Previous'].notna()) &\
+                                       (bondsRatingS['Issuer D Rating'] > bondsRatingS['Issuer D Rating Previous'])
+                                       ][['SECNAME', 'ISIN', 'Issuer D Rating Previous', 'Issuer D Rating', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL MoEx']]
+        display(bondsRatingS_up)
+        print('  Понижение')
+        bondsRatingS_down = bondsRatingS[(bondsRatingS['Issuer D Rating'].notna()) & (bondsRatingS['Issuer D Rating Previous'].notna()) &\
+                                         (bondsRatingS['Issuer D Rating'] < bondsRatingS['Issuer D Rating Previous'])
+                                         ][['SECNAME', 'ISIN', 'Issuer D Rating Previous', 'Issuer D Rating', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL MoEx']]
+        display(bondsRatingS_down)
+        bondsRatingS_change = pandas.concat([bondsRatingS_up, bondsRatingS_down])
 
-    print('\n Изменения рейтинга с прошлого замера:')
-    print('  Повышение')
-    bondsRatingS_up = bondsRatingS[(bondsRatingS['Issuer D Rating'].notna()) & (bondsRatingS['Issuer D Rating Previous'].notna()) &\
-                                   (bondsRatingS['Issuer D Rating'] > bondsRatingS['Issuer D Rating Previous'])
-                                   ][['SECNAME', 'ISIN', 'Issuer D Rating Previous', 'Issuer D Rating', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL MoEx']]
-    display(bondsRatingS_up)
-    print('  Понижение')
-    bondsRatingS_down = bondsRatingS[(bondsRatingS['Issuer D Rating'].notna()) & (bondsRatingS['Issuer D Rating Previous'].notna()) &\
-                                     (bondsRatingS['Issuer D Rating'] < bondsRatingS['Issuer D Rating Previous'])
-                                     ][['SECNAME', 'ISIN', 'Issuer D Rating Previous', 'Issuer D Rating', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL MoEx']]
-    display(bondsRatingS_down)
-    bondsRatingS_change = pandas.concat([bondsRatingS_up, bondsRatingS_down])
+        bondS = bondS.merge(bondsRatingS, on='ISIN', suffixes=("_drop", ""), how="left")
+        bondS = bondS[[column for column in bondS.columns if not column.endswith("_drop")]]
 
-    # bondS = bondS.merge(bondsRatingS, on='ISIN', suffixes=("_drop", ""), how="left")
-    # bondS = bondS[[column for column in bondS.columns if not column.endswith("_drop")]]
-    # else:
-    #     print("Найдите и запустите скрипт bondsRatingS")
-    #     bondsRatingS = pandas.DataFrame()
-    # # display('bondS:', bondS) # для отладки
+    else:
+        print("Найдите и запустите скрипт bondsRatingS")
+        bondsRatingS = pandas.DataFrame()
+
+    # display('bondS:', bondS) # для отладки
 
 # 1.3 Фильтры по датам
     for column in ['MATDATE', 'NEXTCOUPON']:
