@@ -45,7 +45,19 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 tqdm.pandas() # для визуализации прогресса функций, применяемых к датафреймам
 
 # 1 Авторские функции для..
-# 1.0 ..обработки документов полюса топика с учётом дублирующихся тестов
+# 1.0 ..проверки наличия в поданном пользователем датафрейме ключевого тестового столбца
+def columnTargetChecker(columnTarget, columnTargetMessage, df):
+    if columnTarget not in df.columns:
+        print(f"В поданном Вами датафрейме отсутствует столбец '{columnTarget}' .", columnTargetMessage)
+        while True:
+            print('--- Впишите, пожалуйста, его название')
+            columnTarget = input()
+            if columnTarget in df.columns: break
+            else:
+                print('--- Вы вписали что-то не то')
+    return columnTarget
+
+# 1.1 ..обработки документов полюса топика с учётом дублирующихся тестов
 def docsSelector(dfUnique_topicScoreS, minusPlus, docsLimit, topicName):
     dfUnique_topicScoreS = dfUnique_topicScoreS.sort_values(topicName, ascending=False) if minusPlus == 1 else dfUnique_topicScoreS.sort_values(topicName)
     # display('dfUnique_topicScoreS:', dfUnique_topicScoreS) # для отладки
@@ -56,7 +68,7 @@ def docsSelector(dfUnique_topicScoreS, minusPlus, docsLimit, topicName):
 
     return docS_topic_pole
 
-# 1.1 ..описания каждого топика через его полюса и формирующие их токены и релевантные фрагменты располагаемых на них документов
+# 1.2 ..описания каждого топика через его полюса и формирующие их токены и релевантные фрагменты располагаемых на них документов
 def snippetByDoc(docS_topic_pole, loadingsThreshold, message_tokens_0, message_tokens_1, pole, supplementarieS, textFull_lemmatized, textFull_simbolsCleaned, tokenS_topic_pole_inUse_list):
     print(f'\n{pole.upper()}ЫЙ полюс топика')
     doc_snippetS = pandas.DataFrame(columns=['min', 'max', 'token'])
@@ -217,7 +229,7 @@ def snippetByDoc(docS_topic_pole, loadingsThreshold, message_tokens_0, message_t
         # display('Итоговый docs_snippetS в рамках функции:', docs_snippetS) # для отладки
     return docs_snippetS
 
-# 1.2 ..оформления токенов на полюсах топиков
+# 1.3 ..оформления токенов на полюсах топиков
 def summaryPole(minusPlus, tokenS_topic_pole_inUse_list, docS_topic, topicLoadingS, topicName):
     summaryPole = pandas.DataFrame()
     if len(tokenS_topic_pole_inUse_list) > 0:
@@ -229,7 +241,7 @@ def summaryPole(minusPlus, tokenS_topic_pole_inUse_list, docS_topic, topicLoadin
         summaryPole.loc[:, 'Интерпретация топика'] = ''
     return summaryPole
 
-# 1.3 ..внедрения вспомогательных полей (supplementaries) в итоговые датафреймы
+# 1.4 ..внедрения вспомогательных полей (supplementaries) в итоговые датафреймы
 def supplementariesExecuter(dfOriginator, dfRecipient, docIndex, dfRecipient_row, supplementarieS):
     if supplementarieS != None:
         # display('dfRecipient:', dfRecipient) # для отладки
@@ -243,6 +255,7 @@ def supplementariesExecuter(dfOriginator, dfRecipient, docIndex, dfRecipient_row
                 dfRecipient.loc[dfRecipient_row, supplementary] = dfOriginator[supplementary][docIndex]
         return dfRecipient
 
+# 1.5 ..выбора датафрейма и списка ключевых токенов полюса топика
 def tokensSelector(docS_topic_pole, loadingsThreshold, minusPlus, textFull_lemmatized, tokensLimit, topicLoadingS, topicName):
     message_tokens_0 = ''
     message_tokens_1 = ''
@@ -321,27 +334,33 @@ textFull_simbolsCleaned : str -- имя столбца с текстом, про
               )
         input()
 
-    if textFull_lemmatized not in df.columns:
-        print(
-f'''В поданном Вами датафрейме отсутствует столбец '{textFull_lemmatized}' . Какой столбец в поданном Вами датафрейме содержит лемматизированные тексты (из которого НЕ удалены стоп-слова)?'''
-              )
-        while True:
-            print('--- Впишите, пожалуйста, его название')
-            textFull_lemmatized = input()
-            if textFull_lemmatized in df.columns: break
-            else:
-                print('--- Вы вписали что-то не то')
+    print('textFull_lemmatized', textFull_lemmatized) # для отладки
+    print('textFull_lemmatized in df.columns', textFull_lemmatized in df.columns) # для отладки
+    textFull_lemmatized = columnTargetChecker(textFull_lemmatized, 'Какой столбец в поданном Вами датафрейме содержит лемматизированные тексты (из которого НЕ удалены стоп-слова)?', df)
+#     if textFull_lemmatized not in df.columns:
+#         print(
+# f'''В поданном Вами датафрейме отсутствует столбец '{textFull_lemmatized}' . Какой столбец в поданном Вами датафрейме содержит лемматизированные тексты (из которого НЕ удалены стоп-слова)?'''
+#               )
+#         while True:
+#             print('--- Впишите, пожалуйста, его название')
+#             textFull_lemmatized = input()
+#             if textFull_lemmatized in df.columns: break
+#             else:
+#                 print('--- Вы вписали что-то не то')
 
-    if textFull_simbolsCleaned not in df.columns:
-        print(
-f'''В поданном Вами датафрейме отсутствует столбец '{textFull_simbolsCleaned}' . Какой столбец в поданном Вами датафрейме содержит тексты, из которых удалены лишние символы, но НЕ лемматизированные?'''
-              )
-        while True:
-            print('--- Впишите, пожалуйста, его название')
-            textFull_lemmatized = input()
-            if textFull_lemmatized in df.columns: break
-            else:
-                print('--- Вы вписали что-то не то')  
+    print('textFull_simbolsCleaned', textFull_simbolsCleaned) # для отладки
+    print('textFull_simbolsCleaned in df.columns', textFull_simbolsCleaned in df.columns) # для отладки
+    textFull_simbolsCleaned = columnTargetChecker(textFull_simbolsCleaned, 'Какой столбец в поданном Вами датафрейме содержит тексты, из которых удалены лишние символы, но НЕ лемматизированные?', df)
+#     if textFull_simbolsCleaned not in df.columns:
+#         print(
+# f'''В поданном Вами датафрейме отсутствует столбец '{textFull_simbolsCleaned}' . Какой столбец в поданном Вами датафрейме содержит тексты, из которых удалены лишние символы, но НЕ лемматизированные?'''
+#               )
+#         while True:
+#             print('--- Впишите, пожалуйста, его название')
+#             textFull_lemmatized = input()
+#             if textFull_lemmatized in df.columns: break
+#             else:
+#                 print('--- Вы вписали что-то не то')  
                     
 # 0. Определение желаемого числа топиков
     if topicsCount == None:
@@ -508,6 +527,7 @@ Cреди обозначений строк исходной таблицы ес
         # Полярные документы, причём уникальные
 
         # Добавить столбец со scoreS документов в рамках рассматриваемого топика
+        display('topicScoreS:', topicScoreS) # для отладки        
         df_topicScoreS = pandas.concat([df, topicScoreS], axis=1)
     
         # Оставить только уникальные (по столбцу textFull_lemmatized) тексты (первые вхождения)
