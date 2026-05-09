@@ -334,8 +334,8 @@ textFull_simbolsCleaned : str -- имя столбца с текстом, про
               )
         input()
 
-    print('textFull_lemmatized', textFull_lemmatized) # для отладки
-    print('textFull_lemmatized in df.columns', textFull_lemmatized in df.columns) # для отладки
+    # print('textFull_lemmatized', textFull_lemmatized) # для отладки
+    # print('textFull_lemmatized in df.columns', textFull_lemmatized in df.columns) # для отладки
     textFull_lemmatized = columnTargetChecker(textFull_lemmatized, 'Какой столбец в поданном Вами датафрейме содержит лемматизированные тексты (из которого НЕ удалены стоп-слова)?', df)
 #     if textFull_lemmatized not in df.columns:
 #         print(
@@ -348,8 +348,8 @@ textFull_simbolsCleaned : str -- имя столбца с текстом, про
 #             else:
 #                 print('--- Вы вписали что-то не то')
 
-    print('textFull_simbolsCleaned', textFull_simbolsCleaned) # для отладки
-    print('textFull_simbolsCleaned in df.columns', textFull_simbolsCleaned in df.columns) # для отладки
+    # print('textFull_simbolsCleaned', textFull_simbolsCleaned) # для отладки
+    # print('textFull_simbolsCleaned in df.columns', textFull_simbolsCleaned in df.columns) # для отладки
     textFull_simbolsCleaned = columnTargetChecker(textFull_simbolsCleaned, 'Какой столбец в поданном Вами датафрейме содержит тексты, из которых удалены лишние символы, но НЕ лемматизированные?', df)
 #     if textFull_simbolsCleaned not in df.columns:
 #         print(
@@ -527,7 +527,7 @@ Cреди обозначений строк исходной таблицы ес
         # Полярные документы, причём уникальные
 
         # Добавить столбец со scoreS документов в рамках рассматриваемого топика
-        display('topicScoreS:', topicScoreS) # для отладки        
+        # display('topicScoreS:', topicScoreS) # для отладки        
         df_topicScoreS = pandas.concat([df, topicScoreS], axis=1)
     
         # Оставить только уникальные (по столбцу textFull_lemmatized) тексты (первые вхождения)
