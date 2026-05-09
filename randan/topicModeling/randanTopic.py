@@ -70,30 +70,30 @@ def docsSelector(dfUnique_topicScoreS, minusPlus, docsLimit, topicName):
 
 # 1.2 ..описания каждого топика через его полюса и формирующие их токены и релевантные фрагменты располагаемых на них документов
 def snippetByDoc(docS_topic_pole, loadingsThreshold, message_tokens_0, message_tokens_1, pole, supplementarieS, textFull_lemmatized, textFull_simbolsCleaned, tokenS_topic_pole_inUse_list):
-    if pole != None: print(f'\n{pole.upper()}ЫЙ полюс топика')
+    if pole is not None: print(f'\n{pole.upper()}ЫЙ полюс топика')
     doc_snippetS = pandas.DataFrame(columns=['min', 'max', 'token'])
     doc_snippetS_new = pandas.DataFrame(columns=['min', 'max', 'token'])
     docs_snippetS = pandas.DataFrame(columns=['min', 'max', 'token'])
     # print('tokenS_topic_pole_inUse_list:', tokenS_topic_pole_inUse_list) # для отладки    
     if len(tokenS_topic_pole_inUse_list) == 0:
-        if (loadingsThreshold != None) & (pole != None):
+        if (loadingsThreshold != None) & (pole is not None):
             print(f'Величина loadings токенов {pole}ого полюса не достигает заданного порога |{round(loadingsThreshold, 2)}|.'
                   , f'Поэтому {pole}ый полюс НЕ выражен и НЕ требует интерпретации')
     else:
         docS_topic_pole_list = list(docS_topic_pole.index)
         # print('docS_topic_pole_list:', docS_topic_pole_list) # для отладки
 
-        print(f"{f'{pole.capitalize()}ый полюс' if pole != None else 'Топик'} сформирован токен{'ами' if len(tokenS_topic_pole_inUse_list) > 1 else 'ом'}",
+        print(f"{f'{pole.capitalize()}ый полюс' if pole is not None else 'Топик'} сформирован токен{'ами' if len(tokenS_topic_pole_inUse_list) > 1 else 'ом'}",
               str(tokenS_topic_pole_inUse_list).replace('[', '').replace(']', ''), '-- по величине вклада')
         if message_tokens_1 != '': print(message_tokens_1)
-        print(f"На {pole}ом полюсе расположен{'ы' if len(docS_topic_pole_list) > 1 else ''} следующи{'е' if len(docS_topic_pole_list) > 1 else 'й'} документ{'ы' if len(docS_topic_pole_list) > 1 else ''}" if pole != None else f"Топик выражен следующим{'и' if len(docS_topic_pole_list) > 1 else ''} документ{'ами' if len(docS_topic_pole_list) > 1 else 'ом'}",
-              str(list(docS_topic_pole_list)).replace('[', '').replace(']', ''), '-- по близости к полюсу' if pole != None else '-- по степени вероятности')
+        print(f"На {pole}ом полюсе расположен{'ы' if len(docS_topic_pole_list) > 1 else ''} следующи{'е' if len(docS_topic_pole_list) > 1 else 'й'} документ{'ы' if len(docS_topic_pole_list) > 1 else ''}" if pole is not None else f"Топик выражен следующим{'и' if len(docS_topic_pole_list) > 1 else ''} документ{'ами' if len(docS_topic_pole_list) > 1 else 'ом'}",
+              str(list(docS_topic_pole_list)).replace('[', '').replace(']', ''), '-- по близости к полюсу' if pole is not None else '-- по степени вероятности')
         # display('docS_topic_pole:', docS_topic_pole) # для отладки
 
         for row in docS_topic_pole.index:
             indecesDuplicate_cellContent = docS_topic_pole['indicesDuplicate'][row]
             if len(indecesDuplicate_cellContent) > 0:
-                print(f'На {pole}ом полюсе очищенный и лемматизированный текст документа' if pole != None else 'Текст документа', row,
+                print(f'На {pole}ом полюсе очищенный и лемматизированный текст документа' if pole is not None else 'Текст документа', row,
                       f"дублируется в документ{'ах' if len(indecesDuplicate_cellContent) > 1 else 'е'}:",
                       str(list(indecesDuplicate_cellContent)).replace('[', '').replace(']', ''),
                       '-- поэтому далее не вывожу дубли')
@@ -191,7 +191,7 @@ def snippetByDoc(docS_topic_pole, loadingsThreshold, message_tokens_0, message_t
                     print(f'\nПосмотрите на фрагмент{'ы' if len(doc_snippetS) > 0 else ''} документа {doc}, содержащие указанные выше токены и их окружение.') # , 'Документ:', doc
                     for row in doc_snippetS.index:
                         # По границам интервала вывести окружение интересующего токена в нелемматизиованном документе
-                        if pole != None: doc_snippetS.loc[row, 'pole'] = pole.capitalize() + 'ый'
+                        if pole is not None: doc_snippetS.loc[row, 'pole'] = pole.capitalize() + 'ый'
                         doc_snippetS.loc[row, 'textSnippet'] = '..' + ' '.join(textFull_list[doc_snippetS['min'][row]: doc_snippetS['max'][row]]) + '..'
     
                         # print('Отладка')
@@ -463,7 +463,6 @@ Cреди обозначений строк исходной таблицы ес
     
     summary = pandas.DataFrame()
     docs_snippetS = pandas.DataFrame()
-    errorS = []
 
     wb = Workbook()
     summary_ws = wb.active
@@ -655,7 +654,8 @@ Cреди обозначений строк исходной таблицы ес
 
     fileName = 'Топики'
     attempt = 0
-# Чтобы не перезаписать ранее созднный файл, в котором может быть интерпретация
+
+    # Чтобы не перезаписать ранее созднный файл, в котором может быть интерпретация
     while os.path.exists(fileName + ' ' + str(attempt) + ".xlsx"):
         attempt += 1
 
