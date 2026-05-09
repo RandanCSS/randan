@@ -86,8 +86,8 @@ def snippetByDoc(docS_topic_pole, loadingsThreshold, message_tokens_0, message_t
         print(f"{f'{pole.capitalize()}ый полюс' if pole != None else 'Топик'} сформирован токен{'ами' if len(tokenS_topic_pole_inUse_list) > 1 else 'ом'}",
               str(tokenS_topic_pole_inUse_list).replace('[', '').replace(']', ''), '-- по величине вклада')
         if message_tokens_1 != '': print(message_tokens_1)
-        print(f"На {pole}ом полюсе расположен{'ы' if len(docS_topic_pole_list) > 1 else ''} документ{'ы' if len(docS_topic_pole_list) > 1 else ''}",
-              str(list(docS_topic_pole_list)).replace('[', '').replace(']', ''), '-- по близости к полюсу')
+        print(f"На {pole}ом полюсе расположен{'ы' if len(docS_topic_pole_list) > 1 else ''} следующи{'е' if len(docS_topic_pole_list) > 1 else 'й'} документ{'ы' if len(docS_topic_pole_list) > 1 else ''}" if pole != None else f"Топик выражен следующим{'и' if len(docS_topic_pole_list) > 1 else ''} документ{'ами' if len(docS_topic_pole_list) > 1 else 'ом'}",
+              str(list(docS_topic_pole_list)).replace('[', '').replace(']', ''), '-- по близости к полюсу' if pole != None else '-- по степени вероятности')
         # display('docS_topic_pole:', docS_topic_pole) # для отладки
 
         for row in docS_topic_pole.index:
@@ -238,7 +238,8 @@ def summaryPole(minusPlus, tokenS_topic_pole_inUse_list, docS_topic, topicLoadin
         summaryPole = docS_topic[docS_topic[topicName] * minusPlus > 0].round(3)      
         summaryPole.loc[:, 'Топики'] = topicName
         summaryPole.loc[:, 'Токены'] = ', '.join(tokenS_topic_pole_inUse_list)
-        if topicLoadingS != None: summaryPole.loc[:, 'Усреднённая связь токена с топиком'] = round(topicLoadingS.loc[tokenS_topic_pole_inUse_list, topicName].mean(), 3)
+        # print('type(topicLoadingS):', type(topicLoadingS)) # для отладки
+        if topicLoadingS is not None: summaryPole.loc[:, 'Усреднённая связь токена с топиком'] = round(topicLoadingS.loc[tokenS_topic_pole_inUse_list, topicName].mean(), 3)
         summaryPole.loc[:, 'Релевантность теме исследования'] = ''
         summaryPole.loc[:, 'Интерпретация топика'] = ''
     return summaryPole
@@ -414,14 +415,14 @@ textFull_simbolsCleaned : str -- имя столбца с текстом, про
     if topicsCount > len(matrix_df.columns):
         print('Число топиков принудительно снижено до', len(matrix_df.columns), ', поскольку значение topicsCount, равное', topicsCount, ', слишком велико для располагаемых данных.')
         topicsCount = len(matrix_df.columns)
-    pca = dimension_reduction.PCA(n_components=min(len(matrix_df.columns), 3000), rotation='varimax')
+    pca = dimension_reduction.PCA(n_components=min(len(matrix_df.columns), 300), rotation='varimax')
 # Подать токены в настроенный класс PCA
     pca = pca.fit(matrix_df, show_results=False)
 
 # 4. Четыре датафрейма, ключевых для оформления и интерпретации результатов тематического моделирования, плюс один датафрейм
     component_loadings_rotated = pca.component_loadings_rotated
     component_loadings_rotated = component_loadings_rotated.iloc[:, :topicsCount]
-    # display(component_loadings_rotated) # для отладки
+    display(component_loadings_rotated) # для отладки
     topicNameS = component_loadings_rotated.columns
 
 # Матрица "документы-топики" (и величины в ячейках матрицы названы так же)
