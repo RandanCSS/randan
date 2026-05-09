@@ -415,14 +415,14 @@ textFull_simbolsCleaned : str -- имя столбца с текстом, про
     if topicsCount > len(matrix_df.columns):
         print('Число топиков принудительно снижено до', len(matrix_df.columns), ', поскольку значение topicsCount, равное', topicsCount, ', слишком велико для располагаемых данных.')
         topicsCount = len(matrix_df.columns)
-    pca = dimension_reduction.PCA(n_components=min(len(matrix_df.columns), 300), rotation='varimax')
+    pca = dimension_reduction.PCA(n_components=min(len(matrix_df.columns), 300), rotation='varimax') # !!! 300 и быстро, и устойчиво
 # Подать токены в настроенный класс PCA
     pca = pca.fit(matrix_df, show_results=False)
 
 # 4. Четыре датафрейма, ключевых для оформления и интерпретации результатов тематического моделирования, плюс один датафрейм
     component_loadings_rotated = pca.component_loadings_rotated
     component_loadings_rotated = component_loadings_rotated.iloc[:, :topicsCount]
-    display(component_loadings_rotated) # для отладки
+    # display(component_loadings_rotated) # для отладки
     topicNameS = component_loadings_rotated.columns
 
 # Матрица "документы-топики" (и величины в ячейках матрицы названы так же)
