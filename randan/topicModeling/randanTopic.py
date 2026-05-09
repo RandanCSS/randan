@@ -238,8 +238,7 @@ def summaryPole(minusPlus, tokenS_topic_pole_inUse_list, docS_topic, topicLoadin
         summaryPole = docS_topic[docS_topic[topicName] * minusPlus > 0].round(3)      
         summaryPole.loc[:, 'Топики'] = topicName
         summaryPole.loc[:, 'Токены'] = ', '.join(tokenS_topic_pole_inUse_list)
-        # print('type(topicLoadingS):', type(topicLoadingS)) # для отладки
-        if topicLoadingS is not None: summaryPole.loc[:, 'Усреднённая связь токена с топиком'] = round(topicLoadingS.loc[tokenS_topic_pole_inUse_list, topicName].mean(), 3)
+        summaryPole.loc[:, 'Усреднённая связь токена с топиком'] = round(topicLoadingS.loc[tokenS_topic_pole_inUse_list, topicName].mean(), 3)
         summaryPole.loc[:, 'Релевантность теме исследования'] = ''
         summaryPole.loc[:, 'Интерпретация топика'] = ''
     return summaryPole
