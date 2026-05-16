@@ -140,7 +140,7 @@ def snippetByDoc(docS_topic_pole, loadingsThreshold, message_tokens_0, message_t
                 doc_snippetS = doc_snippetS.drop_duplicates('min', keep='last')
                 # display('doc_snippetS:', doc_snippetS) # для отладки
 
-            # display('doc_snippetS:', doc_snippetS) # для отладки
+            # display('doc_snippetS до проверки пересечений диапазонов фрагментов:', doc_snippetS.head(50)) # для отладки
             # Предварительный проход по всем токенам на обрабатываемом полюсе ЗАВЕРШЁН
 
             if len(doc_snippetS) > 0:
@@ -152,7 +152,6 @@ def snippetByDoc(docS_topic_pole, loadingsThreshold, message_tokens_0, message_t
                     for tokenInvader in tokenS_topic_pole_inUse_list[:-1]:
                         # display("doc_snippetS[doc_snippetS['token'] == tokenInvader]:", doc_snippetS[doc_snippetS['token'] == tokenInvader]) # для отладки                    
                         tokenInvaderIndeces = doc_snippetS[doc_snippetS['token'] == tokenInvader].index
-                        # print('tokenInvaderIndeces:', tokenInvaderIndeces) # для отладки
                         tokenReceiverS.remove(tokenInvader)
                         for tokenReceiver in tokenReceiverS:
                             # print('tokenInvader:', tokenInvader, '-> tokenReceiver:', tokenReceiver) # для отладки
@@ -169,22 +168,27 @@ def snippetByDoc(docS_topic_pole, loadingsThreshold, message_tokens_0, message_t
                                             & (doc_snippetS['min'][rowReceiver] <= doc_snippetS['max'][rowInvader])\
                                         | (doc_snippetS['max'][rowReceiver] >= doc_snippetS['min'][rowInvader])\
                                             & (doc_snippetS['max'][rowReceiver] <= doc_snippetS['max'][rowInvader]):
-                                        # print(rowInvader, rowReceiver)
-                                        # display("rowInvader и rowReceiver concat:", pandas.concat([doc_snippetS.loc[rowInvader, :], doc_snippetS.loc[rowReceiver, :]])) # для отладки                    
+                                        # print('rowInvader, rowReceiver:', rowInvader, rowReceiver) # для отладки
                                         doc_snippetS.loc[rowReceiver, 'min'] = min(doc_snippetS['min'][rowInvader], doc_snippetS['min'][rowReceiver])
                                         doc_snippetS.loc[rowReceiver, 'max'] = max(doc_snippetS['max'][rowInvader], doc_snippetS['max'][rowReceiver])
                                         doc_snippetS.loc[rowReceiver, 'token'] += ' ' + tokenInvader
                                         # display('doc_snippetS:', doc_snippetS) # для отладки                    
                                         rowInvaderToDropS.append(rowInvader)
+                    # print('rowInvaderToDropS:', rowInvaderToDropS) # для отладки
                     doc_snippetS = doc_snippetS.drop(rowInvaderToDropS)
                     # display('doc_snippetS на выходе из for in:', doc_snippetS) # для отладки
+
                     if (len(doc_snippetS) == len(doc_snippetS_new)) | (len(doc_snippetS) < 2): break # выход из while , т.к. на прошедшей итерации while ни один диапазон не объединился или нечего объединять 
                     else: # подготовка к следующей итерации while , чтобы попробовать объединить имеющиеся диапазоны  
                         doc_snippetS_new = doc_snippetS.copy()
-                        tokenS_topic_pole_inUse_list = doc_snippetS['token'].tolist()
+                        tokenS_topic_pole_inUse_list = doc_snippetS['token'].drop_duplicates().tolist()
+                        # print('tokenS_topic_pole_inUse_list:', tokenS_topic_pole_inUse_list) # для отладки
+
                 # display('doc_snippetS на выходе из while:', doc_snippetS) # для отладки
+
                 doc_snippetS['token'] = doc_snippetS['token'].apply(lambda cellContent:  ' '.join(sorted(set(cellContent.split())))) # удалить дубли токенов внутри каждой ячейки
                 # display('doc_snippetS итоговый:', doc_snippetS) # для отладки
+
                 # Проход по всем токенам на обрабатываемом полюсе для объединения пересекающихся фрагментов из doc_snippetS ЗАВЕРШЁН
 
                 if len(doc_snippetS) > 0:
