@@ -1,1847 +1,695 @@
-from itertools import combinations
-from matplotlib import pyplot as plt
-import os
-import numpy as np
-import pandas as pd
-from factor_analyzer.rotator import Rotator
-from sklearn.base import BaseEstimator
-import scipy as sp
-import statsmodels.formula.api as smf
-import time
+#!/usr/bin/env python
+# coding: utf-8
 
+'''
+(EN) A module for topic modelling
+(RU) Модуль для тематического моделирования
+'''
 
-from IPython.display import display
+# 0 Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
 
-class CA:
-    
-    """
-    A class for implementing correspondence analysis (CA),
-    a method for identifying associations of two categorical
-    variables.
-    
-    Parameters
-    ----------
-    n_dimensions : int 
-        A number of dimensions in solution (equals 2 by default)
-    
-    Attributes
-    ----------
-    crosstab : pd.DataFrame
-        A contingency table
-    correspondence_matrix : pd.DataFrame
-        A normalized (divided by number of observations) contingency table 
-    row_categories : list
-        Names of the categories located at the rows of a crosstab
-    column_categories : list
-        Names of the categories located at the columns of a crosstab
-    row_mass : pd.Series
-        Masses of row categories
-    column_mass : pd.Series
-        Masses of column categories
-    inertia_total : float
-        Total inertia of a crosstab
-    inertia_by_dimensions : pd.DataFrame
-        Inertia accounted for
-    inertia_of_rows : np.ndarray
-        Inertia of row categories
-    inertia_of_columns : np.ndarray
-        Inertia of column categories
-    principal_row_coordinates : np.ndarray
-        Principal coordinates of row categories
-    principal_column_coordinates : np.ndarray
-        Principal coordinates of column categories
-    standard_row_coordinates : np.ndarray
-        Standard coordinates of row categories
-    standard_column_coordinates : np.ndarray
-        Standard coordinates of column categories
-    contribution_of_rows_to_inertia_of_dimensions : np.ndarray
-        Contribution of row categories to inertia of dimensions
-    contribution_of_columns_to_inertia_of_dimensions : np.ndarray
-        Contribution of column categories to inertia of dimensions
-    contribution_of_dimensions_to_inertia_of_rows : np.ndarray
-        Contribution of dimensions to inertia of row categories 
-    contribution_of_dimensions_to_inertia_of_columns : np.ndarray
-        Contribution of dimensions to inertia of column categories
-    communalities_rows : np.ndarray
-        Analogues of communalities for row categories
-    communalities_columns : np.ndarray
-        Analogues of communalities for column categories
-    component_loadings_rows : pd.DataFrame
-        Analogues of component (factor) loadings for row categories
-    component_loadings_columns : pd.DataFrame
-        Analogues of component (factor) loadings for column categories
-    """
-    
-    def __init__(self, n_dimensions=2):
-        self.n_dimensions = n_dimensions    
+# sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+import sys
+from subprocess import check_call
 
-    def fit(
-        self, 
-        data, 
-        row=None, 
-        column=None, 
-        data_type='raw',
-        show_results=True,
-        n_decimals=3,
-        plot_dimensions=True
-    ):
-        
-        """
-        Fit a model to the given data.
-        
-        Parameters
-        ----------
-        data : pd.DataFrame 
-            Data to fit a model. 
-            Either the raw data or the contingency table with row categories as index
-        row : str 
-            [only necessary if raw data are passed]
-            Name of a variable of the data to be considered as row values
-        column : str 
-            [only necessary if raw data are passed]
-            Name of a variable of the data to be considered as column values
-        data_type : str 
-            Type of the data passed, 
-            possible values are 'raw' or 'crosstab' 
-        show_results : bool 
-            Whether to show results of the analysis
-        n_decimals : int 
-            Number of digits to round results when showing them
-        plot_dimensions : bool 
-            Whether to vizualize two first dimensions
+# --- остальные модули и пакеты
+attempt = 0
+while True:
+    try:
+        from io import BytesIO
+        from openpyxl import Workbook
+        from openpyxl.drawing.image import Image
+        from openpyxl.utils.dataframe import dataframe_to_rows
+        from randan import descriptive_statistics, dimension_reduction
+        from tqdm import tqdm
+        import matplotlib.pyplot as plt, os, pandas, time, warnings
+        break
+    except ModuleNotFoundError:
+        errorDescription = sys.exc_info()
+        module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
+        if '.' in module: module = module.split('.')[1]
+        print(
+f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
+Попытка № {attempt} из 10
+'''
+              )
+        check_call([sys.executable, "-m", "pip", "install", module])
+        attempt += 1
+        if  attempt == 10:
+            print(
+f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
+поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
+'''
+                  )
+            break
+tqdm.pandas() # для визуализации прогресса функций, применяемых к датафреймам
 
-        Returns
-        -------
-        self
-            The current instance of the CA class
-        """
-        
-        if data_type.lower() == 'raw':
-            if len(data.columns) > 2 and (not row and not column):
-                raise ValueError("""Number of variables in DataFrame
-                exceeds 2. Please specify both row and column arguments
-                or filter the necessary variables manually.""")
-
-            elif len(data.columns) < 2:
-                raise ValueError("""One or no variables were passed.
-                Please add necessary variables to DataFrame.""")
-
-            if row and column:
-                self.crosstab = pd.crosstab(data[row], data[column])
-
-            elif row or column:
-                raise ValueError("""Please specify both row and column arguments
-                or filter the necessary variables manually.""")
-
-            else: 
-                self.crosstab = pd.crosstab(data.iloc[:, 0], data.iloc[:, 1])
-
-        elif data_type.lower() == 'crosstab':
-            
-            self.crosstab = data.copy()
-            
-        else:
-            raise ValueError("""Unknown data type. Possible values: 'raw' or 'crosstab'""")
-            
-        while len(self.crosstab.loc[self.crosstab.var(axis=1) == 0.0, :]) > 0 or \
-        len(self.crosstab.loc[:, self.crosstab.var() == 0.0].T) > 0:
-            self.crosstab = self.crosstab.loc[:, self.crosstab.var() > 0.0].copy()
-            self.crosstab = self.crosstab.loc[self.crosstab.var(axis=1) > 0.0, :].copy()
-            print('One or more categories were removed from analysis as they have zero variance.')
-        
-        max_inertia = min(len(self.crosstab.columns),
-                         len(self.crosstab.index)) - 1
-        
-        if self.n_dimensions > max_inertia:
-            raise ValueError(f"""Too many dimensions requested. The maximum possible number of
-            dimensions is {max_inertia}, but {self.n_dimensions} were requested.""")
-        
-        self.N = self.crosstab.sum().sum()
-        self.column_marginals = self.crosstab.sum()
-        self.row_marginals = self.crosstab.sum(axis=1)
-        self.correspondence_matrix = self.crosstab / self.N
-        self.row_categories = list(self.correspondence_matrix.index)
-        self.column_categories = list(self.correspondence_matrix.columns)
-        
-        
-        self.column_profiles = self.crosstab / self.column_marginals
-        
-        try:
-            self.column_profiles.columns = self.column_profiles.columns.add_categories('Mean column profile')
-            self.column_profiles['Mean column profile'] = self.row_marginals / self.N
-        except AttributeError:
-            self.column_profiles['Mean column profile'] = self.row_marginals / self.N
-
-        
-        self.row_profiles = (self.crosstab.T / self.row_marginals).T
-        
-        try:
-            self.row_profiles.index = self.row_profiles.index.add_categories('Mean row profile')
-            self.row_profiles.loc['Mean row profile'] = self.column_marginals / self.N
-        except AttributeError:
-            self.row_profiles.loc['Mean row profile'] = self.column_marginals / self.N
-            
-
-        
-        self.row_mass = self.column_profiles['Mean column profile'].copy()
-        self.row_mass.name = 'Row mass'
-        self.column_mass = self.row_profiles.loc['Mean row profile'].copy()
-        self.column_mass.name = 'Column mass'
-        
-        self.expected_frequencies = pd.DataFrame(np.outer(self.correspondence_matrix.sum(),
-                                                          self.correspondence_matrix.sum(axis=1)).T,
-                                                 index = self.correspondence_matrix.index,
-                                                 columns = self.correspondence_matrix.columns)
-        
-        self.standardized_residuals = (self.correspondence_matrix                                        - self.expected_frequencies) / np.sqrt(self.expected_frequencies)
-        
-        self.inertia_total = (self.standardized_residuals ** 2).sum().sum()
-        
-        self.U, self.singular_values, self.V = np.linalg.svd(self.standardized_residuals, full_matrices=True)
-        
-        self.inertia_by_dimensions = pd.DataFrame(self.singular_values ** 2,
-                                                        columns = ['Inertia'],
-                                                        index = [f'Dimension {i+1}' for i in range(len(self.singular_values))])
-        self.inertia_by_dimensions['Inertia (%)'] = self.inertia_by_dimensions['Inertia'] / self.inertia_total * 100
-        self.inertia_by_dimensions = self.inertia_by_dimensions.iloc[:self.n_dimensions, :]
-        self.inertia_by_dimensions.loc['Total'] = self.inertia_by_dimensions.sum()
-        
-        self.standard_row_coordinates = (np.diag(self.row_mass.values**-0.5) @ self.U)[:, :max_inertia]
-        self.standard_column_coordinates = np.diag(self.column_mass.values**-0.5) @ self.V[:max_inertia, :].T
-        
-        self.principal_row_coordinates = self.standard_row_coordinates @ np.diag(self.singular_values[:max_inertia])
-        self.principal_column_coordinates = np.diag(self.column_mass.values**-0.5) @ self.V[:max_inertia, :].T @ np.diag(self.singular_values[:max_inertia])
-        
-        self.row_inertia_components = np.diag(self.row_mass.values) @ self.principal_row_coordinates**2
-        self.column_inertia_components = np.diag(self.column_mass.values) @ self.principal_column_coordinates**2
-        
-        self.contribution_of_rows_to_inertia_of_dimensions = self.row_inertia_components / self.row_inertia_components.sum(axis=0)[np.newaxis, :]
-        self.contribution_of_columns_to_inertia_of_dimensions = self.column_inertia_components / self.column_inertia_components.sum(axis=0)[np.newaxis, :]
-        
-        self.inertia_of_rows = self.row_inertia_components.sum(axis=1)
-        self.inertia_of_columns = self.column_inertia_components.sum(axis=1)
-        
-        self.contribution_of_dimensions_to_inertia_of_rows = self.row_inertia_components / self.inertia_of_rows[:, np.newaxis]
-        self.contribution_of_dimensions_to_inertia_of_columns = self.column_inertia_components / self.inertia_of_columns[:, np.newaxis]
-        
-        self.communalities_rows = self.contribution_of_dimensions_to_inertia_of_rows[:, :self.n_dimensions].sum(axis=1)
-        self.communalities_columns = self.contribution_of_dimensions_to_inertia_of_columns[:, :self.n_dimensions].sum(axis=1)
-        
-        self.component_loadings_rows = self.contribution_of_dimensions_to_inertia_of_rows**0.5 * np.sign(self.principal_row_coordinates)
-        self.component_loadings_rows = pd.DataFrame(self.component_loadings_rows[:, :self.n_dimensions], 
-                                                columns = [f'Dimension {i+1}' for i in range(self.n_dimensions)],
-                                                index = self.correspondence_matrix.index)
-        self.component_loadings_columns = self.contribution_of_dimensions_to_inertia_of_columns**0.5 * np.sign(self.principal_column_coordinates)
-        self.component_loadings_columns = pd.DataFrame(self.component_loadings_columns[:, :self.n_dimensions], 
-                                                columns = [f'Dimension {i+1}' for i in range(self.n_dimensions)],
-                                                index = self.correspondence_matrix.columns)
-        
-        if show_results:
-            self.show_results(n_decimals) # CA
-            
-        if plot_dimensions:
-            print('------------------\n')
-            if self.n_dimensions == 1:
-                print("The plot couldn't be drawn with n_demnsions set to 1.")
+# 1 Авторские функции для..
+# 1.0 ..проверки наличия в поданном пользователем датафрейме ключевого тестового столбца
+def columnTargetChecker(columnTarget, columnTargetMessage, df):
+    if columnTarget not in df.columns:
+        print(f"В поданном Вами датафрейме отсутствует столбец '{columnTarget}' .", columnTargetMessage)
+        while True:
+            print('--- Впишите, пожалуйста, его название')
+            columnTarget = input()
+            if columnTarget in df.columns: break
             else:
-                print("Dimension's plot")
-                self.plot_dimensions()
-                if self.n_dimensions > 2:
-                    print('Only two first dimensions are shown.')
-                    print(f'To get more plots, use [model].plot_dimensions((1, {self.n_dimensions}))')
-        
-        return self
+                print('--- Вы вписали что-то не то')
+    return columnTarget
+
+# 1.1 ..обработки документов полюса топика с учётом дублирующихся тестов
+def docsSelector(dfUnique_topicScoreS, minusPlus, docsLimit, topicName):
+    dfUnique_topicScoreS = dfUnique_topicScoreS.sort_values(topicName, ascending=False) if minusPlus == 1 else dfUnique_topicScoreS.sort_values(topicName)
+    # display('dfUnique_topicScoreS:', dfUnique_topicScoreS) # для отладки
     
-    def show_results(self, n_decimals): # CA
-        """
-        Show results of the analysis in a readable form.
+    docS_topic_pole = dfUnique_topicScoreS[dfUnique_topicScoreS[topicName] * minusPlus > 0]
+    docS_topic_pole = docS_topic_pole.iloc[:min(docsLimit, len(docS_topic_pole)), :]
+    # display('docS_topic_pole:', docS_topic_pole) # для supplementary
+
+    return docS_topic_pole
+
+# 1.2 ..описания каждого топика через его полюса и формирующие их токены и релевантные фрагменты располагаемых на них документов
+def snippetByDoc(docS_topic_pole, loadingsThreshold, message_tokens_0, message_tokens_1, pole, supplementarieS, textFull_lemmatized, textFull_simbolsCleaned, tokenS_topic_pole_inUse_list):
+    if pole is not None: print(f'\n{pole.upper()}ЫЙ полюс топика')
+    doc_snippetS = pandas.DataFrame(columns=['min', 'max', 'token'])
+    doc_snippetS_new = pandas.DataFrame(columns=['min', 'max', 'token'])
+    docs_snippetS = pandas.DataFrame(columns=['min', 'max', 'token'])
+    # print('tokenS_topic_pole_inUse_list:', tokenS_topic_pole_inUse_list) # для отладки    
+    if len(tokenS_topic_pole_inUse_list) == 0:
+        if (loadingsThreshold != None) & (pole is not None):
+            print(f'Величина loadings токенов {pole}ого полюса не достигает заданного порога |{round(loadingsThreshold, 2)}|.'
+                  , f'Поэтому {pole}ый полюс НЕ выражен и НЕ требует интерпретации')
+    else:
+        docS_topic_pole_list = list(docS_topic_pole.index)
+        # print('docS_topic_pole_list:', docS_topic_pole_list) # для отладки
+
+        print(f"{f'{pole.capitalize()}ый полюс' if pole is not None else 'Топик'} сформирован токен{'ами' if len(tokenS_topic_pole_inUse_list) > 1 else 'ом'}",
+              str(tokenS_topic_pole_inUse_list).replace('[', '').replace(']', ''), '-- по величине вклада')
+        if message_tokens_1 != '': print(message_tokens_1)
+        print(f"На {pole}ом полюсе расположен{'ы' if len(docS_topic_pole_list) > 1 else ''} следующи{'е' if len(docS_topic_pole_list) > 1 else 'й'} документ{'ы' if len(docS_topic_pole_list) > 1 else ''}" if pole is not None else f"Топик выражен следующим{'и' if len(docS_topic_pole_list) > 1 else ''} документ{'ами' if len(docS_topic_pole_list) > 1 else 'ом'}",
+              str(list(docS_topic_pole_list)).replace('[', '').replace(']', ''), '-- по близости к полюсу' if pole is not None else '-- по степени вероятности')
+        # display('docS_topic_pole:', docS_topic_pole) # для отладки
+
+        for row in docS_topic_pole.index:
+            indecesDuplicate_cellContent = docS_topic_pole['indicesDuplicate'][row]
+            if len(indecesDuplicate_cellContent) > 0:
+                print(f'На {pole}ом полюсе очищенный и лемматизированный текст документа' if pole is not None else 'Текст документа', row,
+                      f"дублируется в документ{'ах' if len(indecesDuplicate_cellContent) > 1 else 'е'}:",
+                      str(list(indecesDuplicate_cellContent)).replace('[', '').replace(']', ''),
+                      '-- поэтому далее не вывожу дубли')
         
-        Parameters
-        ----------
-        n_decimals : int 
-            Number of digits to round results when showing them
-        """
-        print('\nCA SUMMARY')
-        print('------------------\n')
-        print('Explained inertia')
-        display(self.inertia_by_dimensions.style\
-                    .format(None, na_rep="", precision=n_decimals)\
-                    .set_caption("attribute .inertia_by_dimensions"))
-        print('------------------\n')
-        print('Detailed information')
-        display(self.summary().style\
-                    .format(None, na_rep="", precision=n_decimals)\
-                    .set_caption("method .summary()"))
-    
-    def summary(self, 
-                display_component_loadings=True, 
-                display_contributions=False,
-                display_coordinates=False):
-        """
-        Return summary of the fitted model
-        in terms of mass, inertia, contributions and communalities.
-        
-        Parameters
-        ----------
-        display_component_loadings : bool 
-            Whether to display component loadings 
-            instead of 'raw' contributions of dimensions and points to inertia in the final table
-        display_contributions : bool 
-            Whether to display 
-            'raw' contributions of dimensions and points in the final table
-        display_coordinates : bool 
-            Whether to display 
-            coordinates of points in the final table
+        for doc in docS_topic_pole_list:
+            # print(f'\nПредварительные фрагменты документа {doc}, содержащие указанные выше токены и их окружение.', 'Документ:', doc) # для отладки
+            row = 0
+            doc_snippetS = pandas.DataFrame(columns=['min', 'max', 'token'])
+            # Предварительный проход по всем токенам на обрабатываемом полюсе для формирования doc_snippetS
+            for token in tokenS_topic_pole_inUse_list:
+                goC = True
+                # print('Токен:', token) # для отладки
+                textFull_lemmatized_list = docS_topic_pole[textFull_lemmatized][doc].split()
+                textFull_list = docS_topic_pole[textFull_simbolsCleaned][doc].split()
+                tokenProximity = 7  # лимит на длину окружения интересующего токена влево и вправо в нелемматизиованном документе
+                tokenPosition = -1
+                tokenPositionIntervalInitial = [0, 0]
+                while goC:
+                    try:
+                        # Выяснить номер интересующего токена в списке всех токенов лемматизиованного документа
+                        tokenPosition = textFull_lemmatized_list.index(token, tokenPosition + 1)
 
-        Returns
-        -------
-        pd.DataFrame
-            A summary table
-        """
-        
-        summary_table = pd.DataFrame(index = self.row_categories + self.column_categories)
-        summary_table['Mass'] = list(self.row_mass) + list(self.column_mass)
-        
-        if display_coordinates==True:
-            for i in range(self.n_dimensions):
-                summary_table[f'Coordinates (dim. {i+1})'] = list(self.principal_row_coordinates[:, i]) + list(self.principal_column_coordinates[:, i])
-        
-        summary_table['Inertia (%)'] = list(self.inertia_of_rows / self.inertia_total * 100) + list(self.inertia_of_columns / self.inertia_total * 100)
-        
-        if display_contributions==True:
-            for i in range(self.n_dimensions):
-                summary_table[f'Contribution of points to inertia of dimensions (dim. {i+1})'] = list(self.contribution_of_rows_to_inertia_of_dimensions[:, i]) + list(self.contribution_of_columns_to_inertia_of_dimensions[:, i])
-            
-            for i in range(self.n_dimensions):
-                summary_table[f'Contribution of dimensions to inertia of points (dim. {i+1})'] = list(self.contribution_of_dimensions_to_inertia_of_rows[:, i]) + list(self.contribution_of_dimensions_to_inertia_of_columns[:, i])
-            
-        if display_component_loadings==True:
-            for i in range(self.n_dimensions):
-                summary_table[f'Component loadings of points (dim. {i+1})'] = list(self.component_loadings_rows.iloc[:, i]) + list(self.component_loadings_columns.iloc[:, i])        
-         
-        summary_table[f'Communalities ({self.n_dimensions} dims)'] = list(self.communalities_rows) + list(self.communalities_columns)
-        
-        summary_table.fillna(0, inplace=True)
-        
-        return summary_table
-    
-    def show_components(self, axis=0, n_indicators=None):
-        
-        """
-        Show component loadings in a more concise way.
-        Useful when dealing with big crosstabs 
-        (e.g., when CA is used to text data for topic modeling).
-        
-        Parameters
-        ----------
-        axis : int or str 
-            Categories of which axis to show, 
-            possible values are 'row' (0) or 'column' (1)
-        n_indicators : int 
-            How many indicators to show, if not specified,
-            all indicators will be shown
+                        tokenPositionInterval = [tokenPosition - tokenProximity, tokenPosition + tokenProximity]
+                        # print('tokenPositionIntervalInitial', tokenPositionIntervalInitial) # для отладки
+                        # print('tokenPositionInterval', tokenPositionInterval) # для отладки
 
-        Returns
-        -------
-        pd.DataFrame
-            A table with indicators and their loadings
-        """
-        row_categories = [str(category) + '__ROW' for category in self.row_categories]
-        column_categories = [str(category) + '__COLUMN' for category in self.column_categories]
-        
-        if axis == 0 or axis == 'row':
-            categories_to_show = row_categories.copy()
-            
-        elif axis == 1 or axis == 'column':
-            categories_to_show = column_categories.copy()
-            
-        else:
-            raise ValueError("Unknown axis. Possible values: 'row' (0) and 'column' (1)")
-        
-        if not n_indicators:
-            n_indicators = len(categories_to_show)
-            
-        components = pd.DataFrame(index = range(n_indicators))
-        n_components = self.n_dimensions
-        summary = self.summary().copy()
-        summary.index = row_categories + column_categories
-        
-        for i in range(2, n_components+2):
-            positive_loadings_index = list(summary.loc[categories_to_show].iloc[:, i].sort_values(ascending=False)[:n_indicators].index)
-            positive_loadings_values = list(summary.loc[categories_to_show].iloc[:, i].sort_values(ascending=False)[:n_indicators])
-            positive_loadings = list(zip(positive_loadings_index, positive_loadings_values))
-            positive_loadings = [str(loading)+'*'+index for index, loading in positive_loadings]    
-            components[f'Component {i-1} (positive loadings)'] = positive_loadings
+                        if tokenPositionIntervalInitial[-1] > tokenPositionInterval[0]:
+                            # print('tokenPositionIntervalInitial и tokenPositionInterval пересеклись\n'
+                            #       , 'Поэтому объединяю их\n'
+                            #       , 'И не вывожу промежуточный фрагмент на экран')
+                            tokenPositionInterval[0] = tokenPositionIntervalInitial[0]
+                            # print('Объединённый tokenPositionInterval', tokenPositionInterval)
+                        doc_snippetS.loc[row, 'min'] = tokenPositionInterval[0]
+                        doc_snippetS.loc[row, 'max'] = tokenPositionInterval[-1]
+                        doc_snippetS.loc[row, 'token'] = token
+                        tokenPositionIntervalInitial = tokenPositionInterval.copy()
+                        row += 1
 
-            negative_loadings_index = list(summary.loc[categories_to_show].iloc[:, i].sort_values(ascending=True)[:n_indicators].index)
-            negative_loadings_values = list(summary.loc[categories_to_show].iloc[:, i].sort_values(ascending=True)[:n_indicators])
-            negative_loadings = list(zip(negative_loadings_index, negative_loadings_values))
-            negative_loadings = [str(loading)+'*'+index for index, loading in negative_loadings]
-            components[f'Component {i-1} (negative loadings)'] = negative_loadings
-            
-        for component in components.columns:
-            components[component] = components[component].str.replace('__ROW', '').str.replace('__COLUMN', '')
-        
-        return components
-    
-    def plot_dimensions(
-        self, 
-        dimensions_range=(1, 2), 
-        size=100, 
-        n_symbols=20, 
-        save=False
-    ):
-
-        """
-        Build plots of categories's coordinates in the obtained dimensions.
-        
-        Parameters
-        ----------
-        dimensions_range : tuple 
-            Which dimensions to consider,
-            e.g. if dimensions_range is (1, 3), it will produce three plots
-            (the 1st dimension & the 2nd dimension,
-            the 2nd dimension & the 3rd dimension,
-            the 1st dimension & the 3rd dimension)
-        size : int 
-            Size of plots, in percentage (100 corresponds to figsize=(8, 5))
-        n_symbols : int 
-            How many symbols of labels to display
-        save : bool 
-            Whether to save plots or not (in the current directory)
-        """
-        
-        if self.n_dimensions == 1:
-            raise ValueError("The plot couldn't be drawn with n_demnsions set to 1.")
-        
-        dimension_low = dimensions_range[0]-1
-        dimension_high = dimensions_range[1]-1
-
-        dimension_combinations = list(combinations(range(dimension_low, dimension_high+1), 2))
-
-        n_plots = len(dimension_combinations)
-        size = size/100
-        for plot in range(n_plots):
-            plt.figure(figsize=(8*size, 5*size))
-            current_combination_x, current_combination_y = dimension_combinations[plot]
-            x1, y1 = self.principal_row_coordinates[:, current_combination_x], self.principal_row_coordinates[:, current_combination_y]
-            x2, y2 = self.principal_column_coordinates[:, current_combination_x], self.principal_column_coordinates[:, current_combination_y]
-            plt.scatter(x1, y1, c='r')
-            plt.scatter(x2, y2, c='gray', marker='s')
-
-            x_delta = 0.005
-            y_delta = 0.005
-
-            for i, txt in enumerate(self.row_categories):
-                plt.annotate(txt[:n_symbols]+'...', (x1[i]-x_delta, y1[i]+y_delta))
-
-            for i, txt in enumerate(self.column_categories):
-                plt.annotate(txt[:n_symbols]+'...', (x2[i]-x_delta, y2[i]+y_delta))
-
-            plt.axhline(0, alpha=0.2, linestyle='--')  #horizontal line
-            plt.axvline(0, alpha=0.2, linestyle='--')
-            x_min = min(plt.xticks()[0])
-            x_max = max(plt.xticks()[0])
-
-            y_min = min(plt.yticks()[0])
-            y_max = max(plt.yticks()[0])
-
-            xticks = plt.xticks()[0]
-
-            plt.fill_between(xticks, y_min, 0,
-                            where = xticks <= 0,
-                            alpha=0.2)
-            plt.fill_between(xticks, y_min, 0,
-                            where = xticks >= 0,
-                            alpha=0.2)
-            plt.fill_between(xticks, 0, y_max,
-                            where = xticks <= 0,
-                            alpha=0.2)
-            plt.fill_between(xticks, 0, y_max,
-                            where = xticks >= 0,
-                            alpha=0.2);
-            plt.xlabel(f'Dimension {current_combination_x+1}')
-            plt.ylabel(f'Dimension {current_combination_y+1}')
-            plt.grid(alpha=0.15)
-            if save:
-                plt.savefig(f'Plot_{plot}.png')
-            plt.show();
-
-# this class is not for direct use
-class Rotator():
-
-    """
-    The Rotator class takes an (unrotated) component loading matrix and performs one of several rotations.
-
-    Parameters
-    ----------
-    method : str, optional
-        The component rotation method. Options include:
-            (a) varimax (orthogonal rotation)
-            (b) promax (oblique rotation)
-            
-            ОСТАЛЬНЫЕ ПОКА НЕ РАБОТАЮТ
-            (c) oblimin (oblique rotation)
-            (d) oblimax (orthogonal rotation)
-            (e) quartimin (oblique rotation)
-            (f) quartimax (orthogonal rotation)
-            (g) equamax (orthogonal rotation)
-        Defaults to 'varimax'.
-    normalize : bool or None, optional
-        Whether to perform Kaiser normalization and de-normalization prior to and following rotation.
-        Used for varimax and promax rotations.
-        If None, default for promax is False, and default for varimax is True.
-        Defaults to None.
-    gamma : int, optional
-        The gamma level for the oblimin objective.
-        Ignored if the method is not 'oblimin'.
-        Defaults to 0.
-    kappa : int, optional
-        The extention to which raise the components' correlation within 'promax'.
-        Numbers generally range form 2 to 4.
-        Ignored if the method is not 'equamax'.
-        Defaults to 4.
-    max_iter : int, optional
-        The maximum number of iterations.
-        Used for varimax and oblique rotations.
-        Defaults to `1000`.
-    tol : float, optional
-        The convergence threshold.
-        Used for varimax and oblique rotations.
-        Defaults to `1e-5`.
-
-    Attributes
-    ----------
-    loadings_ : pandas DataFrame
-        The loadings matrix
-    rotation_ : numpy array, shape (n_components, n_components)
-        The rotation matrix
-    psi_ : numpy array or None
-        The component correlations
-        matrix. This only exists
-        if the rotation is oblique.
-
-    Notes
-    -----
-
-
-    References
-    ----------
-    [1] https://factor-analyzer.readthedocs.io/en/latest/_modules/factor_analyzer/rotator.html
-
-    Examples
-    --------
-    >>> rotator = RotatorBiggs(ars_list=vars_init_list,PCs_list=PCs_init_list_1,loadings_=loadings_init_df_1)
-    >>> rotator.fit_transform()
-    DataFrame...
-    """
-
-    def __init__(self,vars_list,PCs_list,loadings_,
-                 method='varimax',
-                 normalize=True,
-                 gamma=0,
-                 kappa=4,
-                 max_iter=500,
-                 tol=1e-5):
-
-        self.method = method
-        self.normalize = normalize
-        self.gamma = gamma
-        self.kappa = kappa
-        self.max_iter = max_iter
-        self.tol = tol
-        self.vars_list = vars_list
-        self.PCs_list = PCs_list
-        self.loadings_ = loadings_
-        
-        self.rotation_ = None
-        self.phi_ = None
-        self.X = None
-
-    def _varimax(self, X=None):
-        """
-        Perform varimax (orthogonal) rotation, with optional Kaiser normalization.
-
-        Parameters
-        ----------
-
-
-        Returns
-        -------
-        self
-        """
-        if X is None:
-            X = self.loadings_.copy()
-        
-        n_rows, n_cols = X.shape
-        if n_cols < 2:
-            return X
-
-        # normalize the loadings matrix using sqrt of the sum of squares (Kaiser)
-#         start = time.time()
-        if self.normalize:
-            normalized_mtx = np.apply_along_axis(lambda x: np.sqrt(np.sum(x**2)),1,X.copy())
-            X = (X.T/normalized_mtx).T
-#         print(f"varimax-normalized_mtx: {time.time()-start}")
-
-        # initialize the rotation matrix to N x N identity matrix
-        rotation_mtx = np.eye(n_cols)
-
-#         start = time.time()
-        d = 0
-        for _ in range(self.max_iter):
-
-            old_d = d
-
-            # take inner product of loading matrix and rotation matrix
-            basis = np.dot(X,rotation_mtx)
-
-            # transform data for singular value decomposition
-            transformed = np.dot(X.T,basis**3-(1.0/n_rows)*np.dot(basis,np.diag(np.diag(np.dot(basis.T,basis)))))
-
-            # perform SVD on the transformed matrix
-            U,S,V = np.linalg.svd(transformed)
-            
-            # take inner product of U and V, and sum of S
-            rotation_mtx = np.dot(U,V)
-            d = np.sum(S)
-
-            # check convergence
-            if old_d != 0 and d/old_d < 1+self.tol:
-#                 print(f'The rotation converged in {_} iterations')
-                break
-#             if _== self.max_iter-1:
-#                 print(f'The rotation is not converged in {_} iterations')
+                    except ValueError:
+                        # print('Поиск в документе', doc, 'по токену "', token, '"завершён безуспешно') # для отладки
+                        goC = False
+                # display('doc_snippetS:', doc_snippetS) # для отладки
                 
-#         print(f"varimax-max_iter: {time.time()-start}")
+                doc_snippetS = doc_snippetS.drop_duplicates('min', keep='last')
+                # display('doc_snippetS:', doc_snippetS) # для отладки
 
-        # take inner product of loading matrix and rotation matrix
-        X = np.dot(X,rotation_mtx)
+            # display('doc_snippetS до проверки пересечений диапазонов фрагментов:', doc_snippetS.head(50)) # для отладки
+            # Предварительный проход по всем токенам на обрабатываемом полюсе ЗАВЕРШЁН
 
+            if len(doc_snippetS) > 0:
+                # Проход по всем токенам на обрабатываемом полюсе для объединения пересекающихся фрагментов из doc_snippetS
+                while True:
+                    rowInvaderToDropS = []
+                    # display('tokenS_topic_pole_inUse_list:', tokenS_topic_pole_inUse_list) # для отладки
+                    tokenReceiverS = tokenS_topic_pole_inUse_list.copy()
+                    for tokenInvader in tokenS_topic_pole_inUse_list[:-1]:
+                        # display("doc_snippetS[doc_snippetS['token'] == tokenInvader]:", doc_snippetS[doc_snippetS['token'] == tokenInvader]) # для отладки                    
+                        tokenInvaderIndeces = doc_snippetS[doc_snippetS['token'] == tokenInvader].index
+                        tokenReceiverS.remove(tokenInvader)
+                        for tokenReceiver in tokenReceiverS:
+                            # print('tokenInvader:', tokenInvader, '-> tokenReceiver:', tokenReceiver) # для отладки
+                            tokenReceiverIndeces = doc_snippetS[doc_snippetS['token'] == tokenReceiver].index
+                            for rowInvader in tokenInvaderIndeces:
+                                for rowReceiver in tokenReceiverIndeces:
+                                    # print('Иду по:', rowInvader, rowReceiver) # для отладки
+                                    # Сравнение диапазонов в строчках rowInvader и rowReceiver датафрейма doc_snippetS
+                                    if (doc_snippetS['min'][rowInvader] >= doc_snippetS['min'][rowReceiver])\
+                                            & (doc_snippetS['min'][rowInvader] <= doc_snippetS['max'][rowReceiver])\
+                                        | (doc_snippetS['max'][rowInvader] >= doc_snippetS['min'][rowReceiver])\
+                                            & (doc_snippetS['max'][rowInvader] <= doc_snippetS['max'][rowReceiver])\
+                                        | (doc_snippetS['min'][rowReceiver] >= doc_snippetS['min'][rowInvader])\
+                                            & (doc_snippetS['min'][rowReceiver] <= doc_snippetS['max'][rowInvader])\
+                                        | (doc_snippetS['max'][rowReceiver] >= doc_snippetS['min'][rowInvader])\
+                                            & (doc_snippetS['max'][rowReceiver] <= doc_snippetS['max'][rowInvader]):
+                                        # print('rowInvader, rowReceiver:', rowInvader, rowReceiver) # для отладки
+                                        doc_snippetS.loc[rowReceiver, 'min'] = min(doc_snippetS['min'][rowInvader], doc_snippetS['min'][rowReceiver])
+                                        doc_snippetS.loc[rowReceiver, 'max'] = max(doc_snippetS['max'][rowInvader], doc_snippetS['max'][rowReceiver])
+                                        doc_snippetS.loc[rowReceiver, 'token'] += ' ' + tokenInvader
+                                        # display('doc_snippetS:', doc_snippetS) # для отладки                    
+                                        rowInvaderToDropS.append(rowInvader)
+                    # print('rowInvaderToDropS:', rowInvaderToDropS) # для отладки
+                    doc_snippetS = doc_snippetS.drop(rowInvaderToDropS)
+                    # display('doc_snippetS на выходе из for in:', doc_snippetS) # для отладки
 
-        # de-normalize the data
-#         start = time.time()
-        if self.normalize:
-            X = X.T*normalized_mtx
-        else:
-            X = X.T
-#         print(f"varimax-DEnormalize: {time.time()-start}")
+                    if (len(doc_snippetS) == len(doc_snippetS_new)) | (len(doc_snippetS) < 2): break # выход из while , т.к. на прошедшей итерации while ни один диапазон не объединился или нечего объединять 
+                    else: # подготовка к следующей итерации while , чтобы попробовать объединить имеющиеся диапазоны  
+                        doc_snippetS_new = doc_snippetS.copy()
+                        tokenS_topic_pole_inUse_list = doc_snippetS['token'].drop_duplicates().tolist()
+                        # print('tokenS_topic_pole_inUse_list:', tokenS_topic_pole_inUse_list) # для отладки
 
-        # я вписал
-        # convert loadings matrix to data frame
-        loadings = pd.DataFrame(X.T,columns=self.loadings_.columns,index=self.loadings_.index)
-        
-        variance = self._get_component_variance(loadings)[0]
-        loadings = loadings[variance.sort_values(ascending=False).index]
-        
-        PCs_vrmx_list = [f'PC{i}_vrmx' for i in range(1, len(self.PCs_list) + 1)]
-        loadings.columns = PCs_vrmx_list
-        
-        return loadings, rotation_mtx
+                # display('doc_snippetS на выходе из while:', doc_snippetS) # для отладки
 
-    def _promax(self):
-        """
-        Perform promax (oblique) rotation, with optional Kaiser normalization.
+                doc_snippetS['token'] = doc_snippetS['token'].apply(lambda cellContent:  ' '.join(sorted(set(cellContent.split())))) # удалить дубли токенов внутри каждой ячейки
+                # display('doc_snippetS итоговый:', doc_snippetS) # для отладки
 
-        Parameters
-        ----------
+                # Проход по всем токенам на обрабатываемом полюсе для объединения пересекающихся фрагментов из doc_snippetS ЗАВЕРШЁН
 
-
-        Returns
-        -------
-        loadings : numpy array, shape (n_features, n_components)
-            The loadings matrix
-        rotation_mtx : numpy array, shape (n_components, n_components)
-            The rotation matrix
-        psi : numpy array or None, shape (n_components, n_components)
-            The component correlations
-            matrix. This only exists
-            if the rotation is oblique.
-        """
-        X = self.loadings_.copy()
-        
-        if self.normalize:
-            # pre-normalization is done in R's
-            # `kaiser()` function when rotate='Promax'.
-            array = X.copy()
-            h2 = sp.diag(np.dot(array, array.T))
-            h2 = np.reshape(h2, (h2.shape[0], 1))
-            weights = array / sp.sqrt(h2)
-
-        else:
-            weights = X.copy()
-        # first get varimax rotation
-        X, rotation_mtx = self._varimax(weights)
-        Y = X*np.abs(X)**(self.kappa-1)
-
-        # fit linear regression model
-        coef = np.dot(np.linalg.inv(np.dot(X.T,X)),np.dot(X.T,Y))
-
-        # calculate diagonal of inverse square
-        try:
-            diag_inv = sp.diag(sp.linalg.inv(sp.dot(coef.T,coef)))
-        except np.linalg.LinAlgError:
-            diag_inv = sp.diag(sp.linalg.pinv(sp.dot(coef.T,coef)))
-
-        # transform and calculate inner products
-        coef = sp.dot(coef,sp.diag(sp.sqrt(diag_inv)))
-        z = sp.dot(X,coef)
-
-        if self.normalize:
-            # post-normalization is done in R's
-            # `kaiser()` function when rotate='Promax'
-            z = z*sp.sqrt(h2)
-
-        rotation_mtx = sp.dot(rotation_mtx,coef)
-
-        coef_inv = np.linalg.inv(coef)
-        phi = np.dot(coef_inv, coef_inv.T)
-
-        # я вписал
-        # convert loadings matrix to data frame
-        loadings = pd.DataFrame(z, 
-                                columns=self.loadings_.columns,
-                                index=self.loadings_.index)
-        
-        variance = self._get_component_variance(loadings)[0]
-        loadings = loadings[variance.sort_values(ascending=False).index]
-        
-        PCs_vrmx_list = [f'PC{i}_prmx' for i in range(1, len(self.PCs_list) + 1)]
-        loadings.columns = PCs_vrmx_list
-        
-        return loadings, rotation_mtx, phi
+                if len(doc_snippetS) > 0:
+                    print(f'\nПосмотрите на фрагмент{'ы' if len(doc_snippetS) > 0 else ''} документа {doc}, содержащие указанные выше токены и их окружение.') # , 'Документ:', doc
+                    for row in doc_snippetS.index:
+                        # По границам интервала вывести окружение интересующего токена в нелемматизиованном документе
+                        if pole is not None: doc_snippetS.loc[row, 'pole'] = pole.capitalize() + 'ый'
+                        doc_snippetS.loc[row, 'textSnippet'] = '..' + ' '.join(textFull_list[doc_snippetS['min'][row]: doc_snippetS['max'][row]]) + '..'
     
-    @staticmethod
-    def _get_component_variance(loadings):
-        """
-        A helper method to get the component variances,
-        because sometimes we need them even before the model is fitted.
-
-        Parameters
-        ----------
-        loadings : array-like
-            The component loading matrix,
-            in whatever state.
-
-        Returns
-        -------
-        variance : numpy array
-            The component variances.
-        proportional_variance : numpy array
-            The proportional component variances.
-        cumulative_variances : numpy array
-            The cumulative component variances.
-        """
-        n_rows = loadings.shape[0]
-
-        # calculate variance
-        loadings = loadings**2
-        variance = np.sum(loadings,axis=0)
-
-        # calculate proportional variance
-        proportional_variance = variance/n_rows
-
-        # calculate cumulative variance
-        cumulative_variance = np.cumsum(proportional_variance, axis=0)
-
-        return (variance,
-                proportional_variance,
-                cumulative_variance)
-        
-    def fit(self):
-        """
-        Computes the component rotation.
-
-        Parameters
-        ----------
-
-
-        Returns
-        -------
-        self
-        """
-        self.fit_transform(self.X)
-        return self
+                        # print('Отладка')
+                        # display('doc_snippetS до:', doc_snippetS)
+                        # from openpyxl import Workbook
+                        # wb = Workbook()
+                        # ws = wb.create_sheet(title='topicName')
+                        # for r in dataframe_to_rows(doc_snippetS, index=False, header=True):
+                        #     ws.append(r)
     
-    def fit_transform(self):
-        """
-        Computes the component rotation,
-        and returns the new loading matrix.
-
-        Parameters
-        ----------
-
-        Returns
-        -------
-        loadings_ : pandas DataFrame
-            The loadings matrix
-
-        Raises
-        ------
-        ValueError
-            If the `method` is not in the list of
-            acceptable methods.
-
-        Example
-        -------
-        >>> rotator = RotatorBiggs(ars_list=vars_init_list,PC_list=PCs_init_list_1,loadings_=loadings_init_df_1)
-        >>> rotator.fit_transform()
-        DataFrame...
-        """
-        # default phi to None
-        # it will only be calculated
-        # for oblique rotations
-        phi = None
-        method = self.method.lower()
-        if method == 'varimax':
-            (new_loadings,
-             new_rotation_mtx) = self._varimax()
-
-        elif method == 'promax':
-            (new_loadings,
-             new_rotation_mtx,
-             phi) = self._promax()
-
-#         elif method in OBLIQUE_ROTATIONS:
-#             (new_loadings,
-#              new_rotation_mtx,
-#              phi) = self._oblique(X,method)
-
-#         elif method in ORTHOGONAL_ROTATIONS:
-#             (new_loadings,
-#              new_rotation_mtx) = self._orthogonal(X,method)
-
-        else:
-            raise ValueError("The value for `method` must be one of the "
-                             "following: {}.".format(', '.join(POSSIBLE_ROTATIONS)))
-
-        (self.loadings_,
-         self.rotation_,
-         self.phi_) = new_loadings, new_rotation_mtx, phi
-        return self.loadings_
-
-class PCA: # первичен
+                        doc_snippetS = supplementariesExecuter(docS_topic_pole, doc_snippetS, doc, row, supplementarieS)
     
-    """A class for implementing principal component analysis (PCA).
+                        # print('Отладка')
+                        # display('doc_snippetS после:', doc_snippetS)
+                        # from openpyxl import Workbook
+                        # wb = Workbook()
+                        # ws = wb.create_sheet(title='topicName')
+                        # for r in dataframe_to_rows(doc_snippetS, index=False, header=True):
+                        #     ws.append(r)
     
-    Parameters
-    ----------
-    n_components : int or str 
-        The exact number of dimensions
-        in solution or the criterion for its automatic selection.
-        Current possible values: 'kaiser' (defualt),
-        which corresponds to Kaiser's criterion
-    rotation : None, 'varimax', 'promax', 'natural collinearity' 
-        Rotation to perform on factor loadings.
-        Currently, only varimax rotation is available
-    kappa : int
-        Kappa parameter for promax rotation
+                        print(doc_snippetS['textSnippet'][row])
 
-
-    Attributes
-    ----------
-    correlation_matrix : pd.DataFrame
-        A correlation matrix
-    explained_variance : pd.DataFrame
-        A table with eigenvalues and variance accounted for
-    explained_variance_total : float
-        Total percentage of the explained variance
-    component_loadings : pd.DataFrame
-        Component (factor) loadings
-    component_loadings_rotated : pd.DataFrame
-        Component (factor) loadings after rotation
-    communalities : pd.DataFrame
-        Communalities
-    communalities_and_loadings : pd.DataFrame
-        A joint table of component (factor) loadings and communalities
-    """
-    
-    def __init__(self, n_components='Kaiser', rotation=None, kappa=4):
-        if str(n_components).lower() == 'kaiser':
-            self.n_components_criterion = 'Kaiser'
-        elif str(n_components).lower() == 'inflection':
-            self.n_components_criterion = 'Inflection point (based on scree plot)'
-        elif isinstance(n_components, int):
-            self.n_components = n_components
-            self.n_components_criterion = 'User based'
-        else:
-            raise ValueError(f"""Invalid number of components was passed.
-            Possible values: exact number of components, 'Kaiser', or 'Inflection'.""")
-            
-        possible_rotations = ['varimax', 'natural collinearity', 'promax']
-        
-        if rotation is not None:
-            if rotation.lower() not in possible_rotations:
-                raise ValueError(f"Invalid type of rotation was passed. Possible values: {', '.join(possible_rotations)}.")            
-            else:
-                self.rotation = rotation.lower()
-        else:
-            self.rotation = None
-                                
-        self.kappa = kappa
-        self._pc_max_list = None
-                    
-    def fit(self, 
-            data, 
-            variables=None, 
-            scale=True, 
-            show_results=True,
-            n_decimals=3,
-            print_decision=True):
-        
-        """
-        Fit a model to the given data.
-        
-        Parameters
-        ----------
-        
-        data : pd.DataFrame 
-            Data to fit a model
-            variables (None or list): variables from data to include in a model.
-            If not specified, all variables will be used.
-        variables : list
-            Names of variables from data that should be used in a model.
-            If not specified, all variables from data are used. Variables should have a numeric dtype.
-        scale : bool 
-            Whether data should be considered as scale variables. 
-            If set to False, data will be transformed to ranks. 
-        show_results :bool 
-            Whether to show results of the analysis
-        n_decimals : int 
-            Number of digits to round results when showing them
-        print_decision : bool
-            Whether to print decision on what number of dimensions was exctracted
-
-        Returns
-        -------
-        self
-            The current instance of the PCA class
-        """    
-        
-        if variables is not None:
-            data = data[variables].dropna()
-        else:
-            data = data.dropna()
-                                 
-        if not scale:
-            data = data.rank()
-            
-        self._data = data.copy()
-        init_df = data.copy()
-        
-        self.variables = list(init_df.columns)
-        self.max_n_components = len(self.variables)
-        self._PCs_init_list = [f'PC{i+1}' for i in range(self.max_n_components)]
-        self.correlation_matrix = pd.DataFrame(np.corrcoef(init_df.T),columns=init_df.columns,index=init_df.columns)
-        self.correlation_matrix.index.name = 'Variable'
-        self._eigenvectors, self._eigenvalues, self._eigenvectors_t = np.linalg.svd(self.correlation_matrix)
-        self._eigenvalues, self._eigenvectors = PCA._sort_sign(self._eigenvalues, self._eigenvectors)
-        
-        #max_n_components solution
-        #start = time.time()
-        init_component_loadings = PCA._loadings(self._eigenvalues, 
-                                          self._eigenvectors,
-                                          self.variables,
-                                          self._PCs_init_list)
-        #print(f"._loadings(): {time.time()-start}")
-        self.explained_variance = self.get_explained_variance(scree_plot=False)
-        
-        if self.n_components_criterion == 'Kaiser':
-            
-            self.n_components = len(self.explained_variance[self.explained_variance.iloc[:, 0].astype('float') >= 1])
-#             if print_decision:
-#                 print(f'The number of selected components by Kaiser criterion: {self.n_components}')
-            
-        elif self.n_components_criterion == 'Inflection point (based on scree plot)':
-            self.n_components = PCA._inflection_point(self.explained_variance)
-#             if print_decision:
-#                 print(f'The number of selected components by an inflection point: {self.n_components}')
-        self.explained_variance_total = self.explained_variance.loc[self.n_components, 'Cumulative %']
-        
-        #n_components solution
-        self.component_loadings = init_component_loadings.iloc[:, :self.n_components]
-        self.component_loadings_rotated = None
-                             
-        self._PCs_final_list = self._PCs_init_list[:self.n_components]
-        
-        if self.rotation is not None:
-            if self.n_components > 1:
-                self.component_loadings_rotated,self.structure_matrix = self._rotation_matrices(init_df,
-                                                                                 self.n_components,
-                                                                                 self.variables,
-                                                                                 self._PCs_final_list,
-                                                                                 self.component_loadings,
-                                                                                 show_results)
-    
-                self._PCs_final_list = list(self.component_loadings_rotated.columns)
-            else:
-                print('Rotation could not be performed because number of dimensions is 1.')
-                self.rotation = None
-
-        
-        if self.rotation in ['natural collinearity', 'promax']:
-            necessary_loadings = self.structure_matrix.copy()
-        elif self.rotation == 'varimax':
-            necessary_loadings = self.component_loadings_rotated.copy()
-        else:
-            necessary_loadings = self.component_loadings.copy()
-            
-        #communalities through the component loadings
-        self._necessary_loadings = necessary_loadings.copy()
-        self.communalities = self.get_communalities(min_max=False)        
-        
-        self.communalities_and_loadings = pd.concat([self.communalities, necessary_loadings], axis=1)
-        
-        if self.rotation in ['natural collinearity', 'promax']:
-            #start = time.time()     
-            self._transformed_data_rotated = self.transform(init_df, add_to_data=False)
-            #print(f".transform(): {time.time()-start}")        
-            self.correlation_matrix_components = pd.DataFrame(np.corrcoef(self._transformed_data_rotated.T),
-                                                          columns=self._transformed_data_rotated.columns,
-                                                          index=self._transformed_data_rotated.columns)
-            
-            pc_corr = self.correlation_matrix_components.copy()
-            _pc_max_list = []
-            for pc in pc_corr:    
-                _pc_max_list.append(abs(pc_corr[pc][(pc_corr[pc])!=1]).max())
-            _pc_max_list.sort()
-            self._pc_max_list = _pc_max_list.copy()
-            
-        if show_results:
-            self.show_results() # PCA
-                                 
-        return self
-
-    def show_results(self, print_decision=True, n_decimals=3): # PCA
-        """
-        Show results of the analysis in a readable form.
-        
-        Parameters
-        ----------
-        n_decimals : int 
-            Number of digits to round results when showing them
-        print_decision : bool
-            Whether to print decision on what number of dimensions was exctracted
-        """
-        if self.rotation != 'natural collinearity':
-            print('\nPCA SUMMARY', '------------------\n')                                 
-            if print_decision:
-                if self.n_components_criterion=='Kaiser': 
-                    print(f'The number of selected components by Kaiser criterion: {self.n_components}')
-                elif self.n_components_criterion=='Inflection point (based on scree plot)':
-                    print(f'The number of selected components by an inflection point: {self.n_components}')
-                print('------------------\n')
-        
-        # Потенциальные граничные значения в тематическом моделировании: от критерия Кайзера до 75% объяснённой дисперсии -- больше смысла точно нет
-        
-        topicsCountMaх = self.n_components + 1 # + 1 -- чтобы посмотреть на величину Eigenvalue после строки таблицы объяснённой дисперсии, соответствующей критерию Кайзера
-        # print('topicsCountMaх:', topicsCountMaх) # для отладки
-        threshold_visual = topicsCountMaх
-
-        if self.rotation != 'natural collinearity':
-            print('Explained variance')
-            explained_variance = self.get_explained_variance()
-            # display(explained_variance[explained_variance['Cumulative %'] < 75]) # для отладки
-            topicsCountMaх = explained_variance[explained_variance['Cumulative %'] < 75].index[-1] + 1
-                # + 1 -- чтобы посмотреть на величину Eigenvalue после строки таблицы объяснённой дисперсии, соответствующей 75%
-            # print('topicsCountMaх:', topicsCountMaх) # для отладки
-            threshold_visual = topicsCountMaх
-            
-            display(explained_variance.head(min(len(self.communalities_and_loadings), threshold_visual))\
-                        .style.format(None, na_rep="", precision=n_decimals).set_caption("methods .get_explained_variance() and .scree_plot()"))
-            if len(explained_variance) > threshold_visual: print('Row count in the full dataframe:', explained_variance.shape[0])
-
-            print(f'The {self.n_components}-component model explains {round(self.explained_variance_total, n_decimals)}% of the variance')
-            print('------------------\n')
-
-        if (len(self.communalities_and_loadings) <= 50) & (len(self.communalities_and_loadings.columns) <= 50):
-            if self.rotation is None:
-                print('Component loadings')
-            elif self.rotation == 'varimax':
-                print('Rotated component loadings')
-            elif self.rotation in ['natural collinearity', 'promax']:
-                print('Structure matrix')
-            display(self.communalities_and_loadings.head(min(len(self.communalities_and_loadings), threshold_visual)).\
-                        style.format(None, na_rep="", precision=n_decimals).set_caption("attribute .communalities_and_loadings"))
-            if len(self.communalities_and_loadings) > threshold_visual: print(
-'Column count in the full dataframe:', self.communalities_and_loadings.shape[1], '; and row count in the full dataframe:', self.communalities_and_loadings.shape[0]
-                                                                              )
-            # display('self.communalities_and_loadings:', self.communalities_and_loadings) # для отладки
-            
-            print(f'The minimum communality is {round(self.communalities["Communality"].min(), n_decimals)}')
-            if self.rotation in ['natural collinearity', 'promax']:
-                print("Components' correlation")
-                display(self.correlation_matrix_components.style\
-                    .format(None, na_rep="", precision=n_decimals)\
-                    .set_caption("attribute .correlation_matrix_components"))
-
-        communalitiesLow = self.communalities[self.communalities['Communality'] < 0.5].sort_values('Communality')
-        print('------------------\n',
-              'Within the current {self.n_components}-component model, the following entities are insufficiently explained:')
-        display(communalitiesLow)
-
-        print('------------------\n',
-              'To get component scores, use [model].transform()')
-
-    def transform(self, data, standardize=True, add_to_data=False):
-        
-        """
-        Return component scores for every observation in the given dataset. 
-        
-        Parameters
-        ----------
-        data : pd.DataFrame 
-            Data to apply the model.
-            If not specified, data that were used to fit the model will be used.
-        standardize : bool 
-            Whether to apply z-standartization to component scores
-        add_to_data : bool 
-            Whether to add variables of component scores to the given data
-
-        Returns
-        -------
-        pd.DataFrame
-            Requested values
-        """
-        
-        df = data.copy()
-        df = (df - df.mean()) / df.std()
-        if self.rotation is not None and self.rotation == 'natural collinearity':
-            return PCA._nat_collinearity(data, self.n_components, show=False, add_to_data=add_to_data, loadings_matrix=True)[3]
-        else:                     
-            loadings_df = self._necessary_loadings.copy()
-                             
-        df.columns = loadings_df.index
-        try:
-            weights = np.linalg.solve(self.correlation_matrix, loadings_df)
-            #display(weights)
-        except:
-            weights = loadings_df.copy()
-        component_scores_df = pd.DataFrame(np.dot(df, weights), 
-                                           index = df.index,
-                                           columns = loadings_df.columns)
-        if standardize:
-            component_scores_df = (component_scores_df - component_scores_df.mean()) / component_scores_df.std()
-            
-        if add_to_data:
-            component_scores_df = pd.concat([df, component_scores_df], axis=1)
-
-        return component_scores_df
-        
-    @staticmethod
-    def _sort_sign(S, U):
-        idx = S.argsort()[::-1]
-        S = S[idx]
-        U = U[:, idx]
-        for i in range(U.shape[1]):
-            if U[:, i].sum()<0:
-                U[:, i] = -1 * U[:, i]
-        return S, U
-    
-    @staticmethod
-    def _loadings(S, U, vars_list, PCs_list):
-        loadings = U * np.sqrt(S)
-#         print('S',S,'np.sqrt(S)',np.sqrt(S))
-        loadings_df = pd.DataFrame(loadings)
-        loadings_df.columns = PCs_list
-        loadings_df.index = vars_list
-        loadings_df.index.name = 'Variable'
-        return loadings_df
-        
-    def _rotation_matrices(self, data, n_components, vars_list, PCs_list, loadings_, show):
-        if self.rotation == 'natural collinearity':
-            matrices = PCA._nat_collinearity(data, n_components, show=show, add_to_data=False, loadings_matrix=True)
-            component_loadings_rotated = matrices[1]
-            structure_matrix = matrices[2]
-            #print("rotation == 'natural collinearity'")
-
-        else:
-#             start = time.time()
-            rotator = Rotator(vars_list, PCs_list, loadings_, kappa=self.kappa)
-#             print(f"Rotator(): {time.time()-start}")        
-            
-            if self.rotation == 'varimax':
-                loadings,rotation_mtx = rotator._varimax()            
-#                 signs = np.sign(loadings.sum(0))
-#                 signs[(signs==0)] = 1
-#                 loadings = np.dot(loadings,np.diag(signs))
-#                 component_loadings_rotated = pd.DataFrame(loadings,
-#                                                  columns=loadings_.columns,
-#                                                  index=loadings_.index)
-                component_loadings_rotated = loadings
-                structure_matrix = None
-                #print("rotation == 'varimax'")
-            
-            else:
-#                 start = time.time()
-                loadings,rotation_mtx,phi = rotator._promax()
-#                 print(f"_promax(): {time.time()-start}")
-#                 signs = np.sign(loadings.sum(0))
-#                 signs[(signs==0)] = 1
-#                 loadings = np.dot(loadings,np.diag(signs))
-#                 phi = np.dot(np.dot(np.diag(signs),phi),np.diag(signs))
-                component_loadings_rotated = loadings
-#                 start = time.time()
-                structure_matrix = np.dot(loadings,phi)
-#                 print(f".dot(): {time.time()-start}")
-#                 start = time.time()
-                structure_matrix = pd.DataFrame(structure_matrix,
-                                                 columns=loadings.columns,
-                                                 index=loadings.index)
-#                 print(f".DataFrame(): {time.time()-start}")
-                #print("rotation == 'promax'")
-
-        return component_loadings_rotated,structure_matrix
-    
-    @staticmethod
-    def _inflection_point(explained_variance, tol=0.05):
-        percent_df = pd.DataFrame(columns=['Num','Percent'],
-                                  index=range(1, len(explained_variance)+1))
-        percent_df['Num'] = range(1, len(explained_variance)+1)
-        percent_df['Percent'] = (explained_variance.iloc[:, 1]).astype('float')
-        inflection_df = pd.DataFrame(columns=['delta'])
-        for i in range(len(percent_df) - 1,0,-1): # running from the right point on the graph to the left
-            results = smf.ols('Percent~Num', data=percent_df.loc[i:len(percent_df), :]).fit()
-            a = results.rsquared
-            results = smf.ols('Percent~Num', data=percent_df.loc[i - 1:len(percent_df), :]).fit()
-            b = results.rsquared
-            inflection_df.loc[i, 'delta'] = a - b
-
-        inflection_point = inflection_df[inflection_df['delta'] == inflection_df['delta'].max()].index[0] - 1
-        #print(f'The number of selected components by an inflection point = {inflection_point}')
-        return inflection_point
-#         delta = 0
-#         i = len(percent_df) - 1
-#         while delta < tol:
-#             results = smf.ols('Percent ~ Num', data=percent_df.loc[i:len(percent_df), :]).fit()
-#             a = results.rsquared
-#             results = smf.ols('Percent ~ Num', data=percent_df.loc[i-1:len(percent_df), :]).fit()
-#             b = results.rsquared
-#             delta = a - b
-#             i -= 1
-        
-#         return i
-                             
-    @staticmethod
-    def _nat_collinearity(data, n_components, show=True, add_to_data=False, loadings_matrix=False):
-        vrmx_model = PCA(n_components=n_components, rotation='varimax').fit(data, print_decision=False, show_results=False)                         
-        dist_2 = vrmx_model.variables_components_distribution(show=False)[1]                         
-        component_loadings = pd.DataFrame(index=data.columns)
-        component_scores = pd.DataFrame(index=data.index)
-        eigenvalue = 0
-        i = 0
-        for i_v in dist_2['Variables']:
-            i += 1
-            model = PCA().fit(data[i_v], print_decision=False, show_results=False)
-            component_loadings[f'PC{i}_natcol'] = model.component_loadings['PC1']# component loadings -- МОГУТ ВЫВОДИТЬСЯ ПО СПЕЦ.ЗАПРОСУ
-            eigenvalue += model.get_explained_variance(scree_plot=show if i < 5 else False)['Eigenvalue'][1]
-            component_scores[f'PC{i}_natcol'] = model.transform(data[i_v])
-        pc_corr = pd.DataFrame(np.corrcoef(component_scores.T),
-                               columns=component_scores.columns,
-                               index=component_scores.columns) # correlation of the components
-        component_scores = pd.concat([data, component_scores],axis=1)
-        structure_matrix = component_scores.corr()
-        structure_matrix = structure_matrix.loc[data.columns, pc_corr.columns]
-
-        if add_to_data==False:
-            component_scores = component_scores.drop(data.columns, axis=1)
-
-        if show:
-            print(f'The total eigenvalue explained by Natural collinearity PCA (i.e., {len(dist_2)} independent PCA-models) = {round(eigenvalue,3)}',
-            f'The total variance explained by Natural collinearity PCA = {round(100*eigenvalue/len(data.columns),3)}%',
-            '', sep='\n')   
-
-        if loadings_matrix:
-            return pc_corr, component_loadings, structure_matrix, component_scores
-        else:
-            return pc_corr, structure_matrix, component_scores
-
-    def get_communalities(self, min_max=True):
-        
-        """
-        Return communalities for every initial variable. 
-        
-        Parameters
-        ----------
-        min_max : bool 
-            Whether to print minimum and maximum of communalities
-
-        Returns
-        -------
-        pd.DataFrame
-            A table with communalities
-        """
-        loadings = self.component_loadings.copy()
-        vars_list = self.variables.copy()
-        PCs_list = self._PCs_final_list.copy()
-        communalities = pd.DataFrame(index=loadings.index)
-        communalities['Communality'] = (loadings**2).sum(axis=1)
-        if min_max:
-            print(f"The min communality: {round(communalities['Communality'].min(), 3)}, the max communality: {round(communalities['Communality'].max(), 3)}")
-        return communalities
-    
-    def get_explained_variance(self, n_decimals=3, scree_plot=True):
-        
-        """
-        Return summary table with information about variance accounted for. 
-        
-        Parameters
-        ----------
-        scree_plot : bool 
-            Whether to display scree plot        
-        annotate_bars : bool 
-            Whether to annotate exact percentage of variance on each bar
-            (if scree_plot set to True)
-        annotate_current : bool 
-            Whether to show percentage of variance corresponded 
-            to the current solution
-            (if scree_plot set to True)
-
-        Returns
-        -------
-        pd.DataFrame
-            A table with explained variance
-        """          
-                  
-        S = self._eigenvalues.copy()
-        PCs_list = self._PCs_init_list.copy()
-        exp = 100 * S / np.sum(S)
-        acc_sum = np.cumsum(exp)
-        explained_variance = np.array([S, exp, acc_sum])
-        explained_variance = pd.DataFrame(explained_variance.T, 
-                                   columns=['Eigenvalue','Variance accounted for, %','Cumulative %'],
-                                   index = range(1, len(PCs_list)+1))
-        explained_variance.index.name = 'Component'
-        explained_variance = round(explained_variance, n_decimals)
-
-        if scree_plot:
-            self.scree_plot()
-        
-        return explained_variance
-    
-    def scree_plot(self, annotate_bars=True, annotate_current=True):
-                  
-        """
-        Vizualize distribution of the variance accounted for.  
-        
-        Parameters
-        ----------
-        annotate_bars : bool 
-            Whether to annotate exact percentage of variance on each bar
-        annotate_current : bool 
-            Whether to show percentage of variance corresponded 
-            to the current solution
-        """ 
-            
-        explained_variance = self.explained_variance.copy()    
-        plt.figure(figsize=(6, 6))
-        
-        pc_num = list(explained_variance.index)
-        each_exp = explained_variance.iloc[:, 1].tolist()
-        acc_sum = explained_variance.iloc[:, 2].tolist()
-        plt.bar(pc_num, acc_sum, width=0.5, color='lightsalmon', alpha=0.2, label='Cumulative %')
-        plt.plot(pc_num, each_exp, label='Variance accounted for, %')
-        plt.plot(pc_num, each_exp, 'ro', label='_nolegend_')
-        
-        if annotate_bars:
-            for x, y in zip(pc_num, acc_sum):
-                plt.annotate(f'{round(y)}%', (x-0.25, y+0.75))
-        
-        if annotate_current:
-            acc_sum_by_n_components = [explained_variance.iloc[self.n_components-1, 2]] * len(pc_num)
-            plt.plot(pc_num, acc_sum_by_n_components, linestyle='--', label='Current solution', c='black')
+                docs_snippetS = pandas.concat([docs_snippetS, doc_snippetS])
                 
-        plt.xlabel('Principal components')
-        plt.ylabel('Variance accounted for, %')
-        plt.title('Variance accounted by components', fontsize=16)
-        plt.legend(loc='upper left')
-        plt.show()
-        
-    def variables_components_distribution(self,
-                                          threshold=0.5,
-                                          delta=0.1,
-                                          show=True):
-                  
-        """
-        Return several useful tables (as tuple) that may help to interpret solution:
-        the distribution of variables through components,
-        the distribution of components through variables,
-        the competing components within variables.  
-        
-        Parameters
-        ----------
-        threshold : float 
-            What value of an absolute component loading 
-            to use when deciding about which variable belongs mostly to which component
-            (default: 0.5)
-        
-        delta : float 
-            What value of an absolute component loading 
-            to consider as big enough to exclude component from competing
-            (default: 0.1)
-        
-        show : bool 
-            Whether to display all dataframes at once in a convinient way
-            (default: True)
+                # print('Отладка')
+                # display(docs_snippetS)
+                # from openpyxl import Workbook
+                # wb = Workbook()
+                # ws = wb.create_sheet(title='topicName')
+                # for r in dataframe_to_rows(docs_snippetS, index=False, header=True):
+                #     ws.append(r)
 
-        Returns
-        -------
-        tuple
-            A sequence of the requested dataframes
-        """
-        if self.n_components < 2:
-            print('The distributions would not be shown because number of dimensions is 1.')
-        else:
-            loadings_df = self._necessary_loadings.copy()
-            PCs_list = self._PCs_final_list.copy()
+            # doc_snippetS_all = pandas.concat([doc_snippetS_all, doc_snippetS])
 
-            PCs_through_vars = loadings_df.copy() # the components distribution through variables (loading >= 0.5 by module)
-            for PC in PCs_list:
-                PCs_through_vars[PC] = PCs_through_vars[PC].apply(lambda loading: '+' if abs(loading)>=threshold else '')
+        if len(docs_snippetS) == 0: print(message_tokens_0)
+        print('\n')
+        # display('Итоговый docs_snippetS в рамках функции:', docs_snippetS) # для отладки
+    return docs_snippetS
 
-            vars_through_PCs = loadings_df.copy() # the variables distribution through components (loading >= 0.5 by module)
-            vars_through_PCs_list = []
-            for PC in PCs_list:
-                vars_candidates_plus = list(vars_through_PCs[PC][vars_through_PCs[PC]>=threshold].index)
-                vars_candidates_minus = list(vars_through_PCs[PC][vars_through_PCs[PC]<=-threshold].index)
-                #if vars_candidates != []:
-                vars_through_PCs_list.append([PC, vars_candidates_plus, vars_candidates_minus])
-            vars_through_PCs = pd.DataFrame(vars_through_PCs_list)
-            vars_through_PCs.columns = ['Component', 'Variables (positive side)', 'Variables (negative side)']
-            vars_through_PCs.set_index('Component', inplace=True)
+# 1.3 ..оформления токенов на полюсах топиков
+def summaryPole(minusPlus, tokenS_topic_pole_inUse_list, docS_topic, topicLoadingS, topicName):
+    summaryPole = pandas.DataFrame()
+    if len(tokenS_topic_pole_inUse_list) > 0:
+        summaryPole = docS_topic[docS_topic[topicName] * minusPlus > 0].round(3)      
+        summaryPole.loc[:, 'Топики'] = topicName
+        summaryPole.loc[:, 'Токены'] = ', '.join(tokenS_topic_pole_inUse_list)
+        summaryPole.loc[:, 'Усреднённая связь токена с топиком'] = round(topicLoadingS.loc[tokenS_topic_pole_inUse_list, topicName].mean(), 3)
+        summaryPole.loc[:, 'Релевантность теме исследования'] = ''
+        summaryPole.loc[:, 'Интерпретация топика'] = ''
+    return summaryPole
 
-            #переименовать переменные для лучшей читаемости
-            try:
-                loadings_df_3 = loadings_df.copy() # the competing components within variables (loading >= 0.5 by module & difference < 0.1)
-                for PC in PCs_list:
-                    loadings_df_3[PC] = loadings_df_3[PC].apply(lambda loading: abs(loading) if abs(loading)>=threshold else None)
-                loadings_df_3_1 = loadings_df_3.T
-                v_PC_multi_list_3 = []
-                for var in loadings_df_3_1.columns:
-                    loadings_df_3_2 = loadings_df_3_1[var].copy()
-                    loadings_df_3_2 = loadings_df_3_2.sort_values(ascending=False)
-                    n_competing_components = loadings_df_3_2.count()
-                    if n_competing_components > 1:
-                        if loadings_df_3_2[0]-loadings_df_3_2[1] >= delta:
-                            v_PC_multi_list_3.append([var, 
-                                                      n_competing_components, 
-                                                      (loadings_df_3_2[loadings_df_3_2 == loadings_df_3_2[0]].index)[0],
-                                                      None])
-                        else:
-                        # БЕРУ ТОЛЬКО 2 КОНКУРИРУЮЩИЕ КОМПОНЕНТЫ (т.к. при вращении вряд ли потребуется больше)
-                            try:
-                                v_PC_multi_list_3.append([var, 
-                                                          n_competing_components, 
-                                                          (loadings_df_3_2[loadings_df_3_2 == loadings_df_3_2[0]].index)[0],
-                                                          (loadings_df_3_2[loadings_df_3_2 == loadings_df_3_2[1]].index)[0]])
-                            except:
-                                v_PC_multi_list_3.append([var, 
-                                                          0, 
-                                                          None,
-                                                          None])
-                  
-                    else:
-                        try:
-                            v_PC_multi_list_3.append([var, 
-                                                  n_competing_components, 
-                                                  (loadings_df_3_2[loadings_df_3_2 == loadings_df_3_2[0]].index)[0],
-                                                  None])
-                        except:
-                            v_PC_multi_list_3.append([var, 
-                                                          0, 
-                                                          None,
-                                                          None])
-                v_PC_multi_df_3 = pd.DataFrame(v_PC_multi_list_3,
-                                               columns=['Variable',
-                                                        'N of competing components',
-                                                        'Stronger component',
-                                                        'Weaker component'])
-                v_PC_multi_df_3.set_index('Variable', inplace=True)
+# 1.4 ..внедрения вспомогательных полей (supplementaries) в итоговые датафреймы
+def supplementariesExecuter(dfOriginator, dfRecipient, docIndex, dfRecipient_row, supplementarieS):
+    if supplementarieS != None:
+        # display('dfRecipient:', dfRecipient) # для отладки
+        for supplementary in supplementarieS:
+            try: dfRecipient.loc[dfRecipient_row, supplementary] = dfOriginator[supplementary][docIndex]
             except:
-                v_PC_multi_df_3 = None
+                # print(sys.exc_info()[1]) # для отладки
+                # print('supplementary:', supplementary) # для отладки
+                # print('dfRecipient.columns:', dfRecipient.columns) # для отладки
+                dfOriginator[supplementary] = dfOriginator[supplementary].astype(str)
+                dfRecipient.loc[dfRecipient_row, supplementary] = dfOriginator[supplementary][docIndex]
+        return dfRecipient
 
-            if show:
-                print('The fist dataframe represents the distribution of variables across components.')
-                display(PCs_through_vars)
-                print('-------------')
-                print('The second dataframe represents the distribution of components across variables.')      
-                display(vars_through_PCs)
-                print('-------------')
-                print(f'''The third dataframe represents the competing components within variables 
-                (which loadings >= {threshold} & difference between loadings <= {delta})''')
-                display(v_PC_multi_df_3)
-
-            return PCs_through_vars, vars_through_PCs, v_PC_multi_df_3
-
-
-# previous version
-# class PCA:
+# 1.5 ..выбора датафрейма и списка ключевых токенов полюса топика
+def tokensSelector(docS_topic_pole, loadingsThreshold, minusPlus, textFull_lemmatized, tokensLimit, topicLoadingS, topicName):
+    message_tokens_0 = ''
+    message_tokens_1 = ''
+    tokenS_topic = topicLoadingS.sort_values(topicName, ascending=False) if minusPlus == 1 else topicLoadingS.sort_values(topicName)
+    # display('tokenS_topic.head(25):', tokenS_topic.head(25)) # для отладки
     
-#     """
-#     A class for implementing principal component analysis (PCA).
-    
-#     Parameters
-#     ----------
-#     n_components : int or str 
-#         The exact number of dimensions
-#         in solution or the criterion for its automatic selection.
-#         Current possible values: 'kaiser' (defualt),
-#         which corresponds to Kaiser's criterion
-#     rotation : None or 'varimax' 
-#         Rotation to perform on factor loadings.
-#         Currently, only varimax rotation is available
+    tokenS_topic = tokenS_topic[tokenS_topic[topicName] * minusPlus > 0]
+    tokenS_topic_list = tokenS_topic.index
+    # print('tokenS_topic_list:', tokenS_topic_list) # для отладки
 
-#     Attributes
-#     ----------
-#     correlation_matrix : pd.DataFrame
-#         A correlation matrix
-#     explained_variance : pd.DataFrame
-#         A table with eigenvalues and variance accounted for
-#     explained_variance_total : float
-#         Total percentage of the explained variance
-#     component_loadings : pd.DataFrame
-#         Component (factor) loadings
-#     component_loadings_rotated : pd.DataFrame
-#         Component (factor) loadings after rotation
-#     communalities : pd.DataFrame
-#         Communalities
-#     communalities_and_loadings : pd.DataFrame
-#         A joint table of component (factor) loadings and communalities
-#     """
-    
-#     def __init__(self, n_components='Kaiser', rotation=None):
-#         if str(n_components).lower() == 'kaiser':
-#             self.n_components_criterion = 'Kaiser'
-#         elif isinstance(n_components, int):
-#             self.n_components = n_components
-#             self.n_components_criterion = 'User based'
-#         else:
-#             raise ValueError(f"""Invalid number of components was passed.
-#             Possible values: exact number of components or 'Kaiser'.""")
-            
-#         possible_rotations = ['varimax']
-        
-#         if rotation is not None:
-#             if rotation.lower() not in possible_rotations:
-#                 phrase = ', '.join(possible_rotations)
-#                 raise ValueError(f"Invalid type of rotation was passed. Possible values: {phrase}.")
+    # print('loadingsThreshold:', loadingsThreshold) # для отладки
+    tokenS_topic_pole_inUse = tokenS_topic[tokenS_topic[topicName] * minusPlus > loadingsThreshold]
+    tokenS_topic_pole_inUse = tokenS_topic_pole_inUse.[:min(tokensLimit, len(tokenS_topic_pole_inUse)), :]
+    tokenS_topic_pole_inUse_list = list(tokenS_topic_pole_inUse.index)
+    # print('tokenS_topic_pole_inUse_list:', tokenS_topic_pole_inUse_list) # для отладки
 
+    if len(tokenS_topic_pole_inUse_list) > 0: # если хотя бы один токен преодолевает порог loadingsThreshold
+
+        docS_topic_pole_list = docS_topic_pole[textFull_lemmatized].tolist()
+        docS_topic_pole_list = ' '.join(docS_topic_pole_list)
+        docS_topic_pole_list = docS_topic_pole_list.split(' ')
+        # print('docS_topic_pole_list:', docS_topic_pole_list) # для отладки
+
+        goC = True
+        while goC: # Определение списка ключевых токенов с учётом необходимости встречаемости хотя бы одного из них в ключевых документах того же полюса
+            for token in tokenS_topic_pole_inUse_list:
+                if token in docS_topic_pole_list:
+                    goC = False
+                    # print('Ключевой токен найден в хотя бы одном ключевом документе того же полюса') # для отладки
+                    break
+                else: message_tokens_1 = 'Порог tokensLimit был смягчён для обеспечения встречаемости хотя бы одного ключевого токена в ключевых документах того же полюса'
+            if goC == True:
+                tokensLimit += 1
+                tokenS_topic_pole_inUse_new = tokenS_topic.iloc[:min(tokensLimit, len(tokenS_topic)), :] # добавить один ключевой токен полюса
+                tokenS_topic_pole_inUse_new_list = list(tokenS_topic_pole_inUse_new.index)
+                # print('tokenS_topic_pole_inUse_new_list:', tokenS_topic_pole_inUse_new_list) # для отладки
+                if len(tokenS_topic_pole_inUse_list) == len(tokenS_topic_pole_inUse_new_list):
+                    # если добавка ключевого токена полюса невозможна в силу исчерпания ключевых токенов полюса или достижения предела по loadingsThreshold
+                    message_tokens_0 += '''В ключевых документах этого полюса не встречаются ключевые токены этого полюса. Возможная причина: ключевых токенов слишком мало в силу строгости порога loadingsThreshold или высокого порога tokensLimit.
+--- Если хотите получить фрагменты ключевых документов, относящихся к ключевым токенам, попробуйте снизить перечисленные пороги и перезапустить функцию randanTopic .'''
+                    goC = False
+                else: tokenS_topic_pole_inUse_list = tokenS_topic_pole_inUse_new_list # подготовка новой итерации после добавки одного ключевого токена полюса
+    # print('message_tokens:', message_tokens) # для отладки
+    return message_tokens_0, message_tokens_1, tokenS_topic_pole_inUse, tokenS_topic_pole_inUse_list
+
+def randanTopic(dfIn, matrix_df, docsLimit=5, loadingsThreshold=0.5, returnDfs=False, rowsNumerator=None, supplementarieS=None, textFull_lemmatized='textFull_lemmatized', textFull_simbolsCleaned='textFull_simbolsCleaned', tokensLimit=10, topicsCount=None):
+    '''    Метод тематического моделирования randanTopic основан на методе главных компонент (по-английски: principal components analisys, PCA). То есть он НЕ использует нейросети и embeddings, а работает с "мешком слов" (по-английски: bag of words, BoW). Поэтому важно качественно подготовить "мешок слов" через очистку исходного текста от лишних символов, лемматизацию и удаление стоп-слов. Эти три этапа предобработки исходного текста, а также (при необходимости) автокоррекция грамматических ошибок могут быть выполнены функциями из скрипта textPreprocessor пакета randan https://github.com/RandanCSS/randan/blob/master/randan/tools/textPreprocessor.py . Причём для удобства последующей интерпретации рекомендую результаты очистки от лишних символов и результаты лемматизации сохранить в отдельные столбцы: textFull_simbolsCleaned и textFull_lemmatized соответственно.
+        Если для последующей интерпретации Вам пригодятся дополнительные столбцы (скажем, заголовок, дата и т.п.), впишите их в формате списка текстовых объектов в аргумент supplementaries= текущей функции.
+    
+    Parameters
+    --------------------
+                   dfIn : DataFrame -- таблица с исходными данными (текстами и, при ихналичии, вспомогательными переменными)
+              matrix_df : DataFrame -- мешок слов
+      loadingsThreshold : float -- порог (по модулю) усреднённой связи токена с топиком; нужен для отбора токенов, косвенно лимитирует число токенов при интерпретации         
+              docsLimit : int -- лимит на число документов на полюсе топика; нужен для отбора документов            
+              returnDfs : bool -- в случае True функция возвращает датафреймы с фрагментами документов docs_snippetS и реквизитами документов и вспомогательными переменными scoreS
+          rowsNumerator : str -- имя столбца, значения которого будут использоваться в качестве обозначения строк итоговых таблиц
+        supplementarieS : list -- дополнительные столбцы для последующей интерпретации
+    textFull_lemmatized : str -- имя столбца с текстом, прошедшем лемматизацию, но из которого НЕ удалены стоп-слова
+textFull_simbolsCleaned : str -- имя столбца с текстом, прошедшем удаление лишних символов, но НЕ прошедший лемматизацию и из которого НЕ удалены стоп-слова
+            tokensLimit : int -- лимит на число ключевых токенов на полюсе топика. Этот порог может быть автоматически смягчён в процессе исполнения алгоритма для обеспечения встречаемости хотя бы одного ключевого токена в ключевых документах того же полюса
+            topicsCount : int -- частота самого высокочастотного слова из тех, которые предложены автокорректором в качестве правильного варианта; этот аргумент необходим для корректной работы аргумента userWordS'''
+
+    df = dfIn.copy()
+
+    if (returnDfs == False) & (rowsNumerator == None) & (supplementarieS == None) & (topicsCount == None):
+        # print('Пользователь не подал аргументы') # для отладки
+        expiriencedMode = False
+    else:
+        expiriencedMode = True
+
+    if expiriencedMode == False:
+        print(
+'''    Метод тематического моделирования randanTopic основан на методе главных компонент (по-английски: principal components analisys, PCA). То есть он НЕ использует нейросети и embeddings, а работает с "мешком слов" (по-английски: bag of words, BoW). Поэтому важно качественно подготовить "мешок слов" через очистку исходного текста от лишних символов, лемматизацию и удаление стоп-слов. Эти три этапа предобработки исходного текста, а также (при необходимости) автокоррекция грамматических ошибок могут быть выполнены функциями из скрипта textPreprocessor пакета randan https://github.com/RandanCSS/randan/blob/master/randan/tools/textPreprocessor.py . Причём для удобства последующей интерпретации рекомендую результаты очистки от лишних символов и результаты лемматизации сохранить в отдельные столбцы: textFull_simbolsCleaned и textFull_lemmatized соответственно.
+--- После прочтения этой инструкции нажмите Enter'''
+              )
+        input()
+
+    # print('textFull_lemmatized', textFull_lemmatized) # для отладки
+    # print('textFull_lemmatized in df.columns', textFull_lemmatized in df.columns) # для отладки
+    textFull_lemmatized = columnTargetChecker(textFull_lemmatized, 'Какой столбец в поданном Вами датафрейме содержит лемматизированные тексты (из которого НЕ удалены стоп-слова)?', df)
+#     if textFull_lemmatized not in df.columns:
+#         print(
+# f'''В поданном Вами датафрейме отсутствует столбец '{textFull_lemmatized}' . Какой столбец в поданном Вами датафрейме содержит лемматизированные тексты (из которого НЕ удалены стоп-слова)?'''
+#               )
+#         while True:
+#             print('--- Впишите, пожалуйста, его название')
+#             textFull_lemmatized = input()
+#             if textFull_lemmatized in df.columns: break
 #             else:
-#                 self.rotation = rotation.lower()
-#         else:
-#             self.rotation = None
-                                
-#         #self.kappa = kappa
-#         #self._pc_max_list = None
+#                 print('--- Вы вписали что-то не то')
+
+    # print('textFull_simbolsCleaned', textFull_simbolsCleaned) # для отладки
+    # print('textFull_simbolsCleaned in df.columns', textFull_simbolsCleaned in df.columns) # для отладки
+    textFull_simbolsCleaned = columnTargetChecker(textFull_simbolsCleaned, 'Какой столбец в поданном Вами датафрейме содержит тексты, из которых удалены лишние символы, но НЕ лемматизированные?', df)
+#     if textFull_simbolsCleaned not in df.columns:
+#         print(
+# f'''В поданном Вами датафрейме отсутствует столбец '{textFull_simbolsCleaned}' . Какой столбец в поданном Вами датафрейме содержит тексты, из которых удалены лишние символы, но НЕ лемматизированные?'''
+#               )
+#         while True:
+#             print('--- Впишите, пожалуйста, его название')
+#             textFull_lemmatized = input()
+#             if textFull_lemmatized in df.columns: break
+#             else:
+#                 print('--- Вы вписали что-то не то')  
                     
-#     def fit(
-#         self, 
-#         data, 
-#         variables=None,
-#         scale=True,
-#         show_results=True, 
-#         n_decimals=3
-#     ):
-        
-#         """
-#         Fit a model to the given data.
-        
-#         Parameters
-#         ----------
-        
-#         data : pd.DataFrame 
-#             Data to fit a model
-#             variables (None or list): variables from data to include in a model.
-#             If not specified, all variables will be used.
-#         variables : list
-#             Names of variables from data that should be used in a model.
-#             If not specified, all variables from data are used. Variables should have a numeric dtype.
-#         scale : bool 
-#             Whether data should be considered as scale variables. 
-#             If set to False, data will be transformed to ranks. 
-#         show_results :bool 
-#             Whether to show results of the analysis
-#         n_decimals : int 
-#             Number of digits to round results when showing them
+# 0. Определение желаемого числа топиков
+    if topicsCount == None:
+        print(
+'''Вы уже знаете, сколько топиков хотите, или предпочитаете посмотреть на возможные ориентиры числа топиков, чтобы затем выбрать их число?
+--- Если знаете, то введите желаемое число топиков и нажмите Enter
 
-#         Returns
-#         -------
-#         self
-#             The current instance of the PCA class
-#         """    
-        
-#         if variables is not None:
-#             data = data[variables].dropna()
-#         else:
-#             data = data.dropna()
-                                 
-#         if not scale:
-#             data = data.rank()
-                                 
-#         self._data = data.copy()
-#         self.variables = list(data.columns)
-#         self.max_n_components = len(self.variables)
-#         self._PCs_init_list = [f'PC{i+1}' for i in range(self.max_n_components)]
-#         self.correlation_matrix = pd.DataFrame(
-#             np.corrcoef(data.T),
-#             columns=data.columns,
-#             index=data.columns
-#         )
-#         self.correlation_matrix.index.name = 'Variable'
-                                 
-#         self._eigenvectors, self._eigenvalues, self._eigenvectors_t = np.linalg.svd(self.correlation_matrix)
-#         self._eigenvalues, self._eigenvectors = PCA._sort_sign(self._eigenvalues, self._eigenvectors)
-        
-#         #max_n_components solution
-#         init_component_loadings = PCA._loadings(self._eigenvalues, 
-#                                           self._eigenvectors,
-#                                           self.variables,
-#                                           self._PCs_init_list)
-                                 
-#         self.explained_variance = self.get_explained_variance(scree_plot=False)
-        
-#         if self.n_components_criterion == 'Kaiser':
-            
-#             self.n_components = len(self.explained_variance[self.explained_variance.iloc[:, 0].astype('float') >= 1])
-                                 
-#         self.explained_variance_total = self.explained_variance.loc[self.n_components, 'Cumulative %']
-        
-#         #n_components solution
-#         self.component_loadings = init_component_loadings.iloc[:, :self.n_components]
-#         self.component_loadings_rotated = None
-                             
-#         self._PCs_final_list = self._PCs_init_list[:self.n_components]
-        
-#         if self.rotation is not None:
-#             if self.n_components > 1:
-#                 self.component_loadings_rotated, self.structure_matrix = self._rotation_matrices()
+--- Если предпочитаете посмотреть, то просто нажмите Enter -- по умолчанию будут выведены ориентиры для выбора числа топиков:
+(а) диаграмма и таблица процента охвата содержания документов -- она ограничена 75-процентами, поскольку:
+    - зачастую вообще достаточно 50%
+    - дальнейшее увеличение охвата содержания документов зашумляет модель
+    - слишком большое число топиков затруднительно интерпретировать и громоздко описывать
+
+(б) таблица токенов, охваченных моделью, но недостаточно, то есть не во всех контекстах;
+посмотрите внимательно на токены в этой таблице; если недостаточно охвачены моделью важные токены, увеличьте число топиков.
+
+--- Выбирая число топиков, учтите, что в текущей версии randanTopic ИЗМЕНЕНИЕ ЧИСЛА ТОПИКОВ ВЛЕЧЁТ ИЗМЕНЕНИЕ ИХ СОДЕРЖИМОГО и,
+следовательно, необходимость итерпретировать топики заново, поэтому желательно выбирать число топиков тщательно и не спеша
+'''
+              )
+        while True:
+            topicsCount = input()
+            try:
+                topicsCount = None if topicsCount == '' else int(topicsCount)
+                break
+            except ValueError:
+                print('--- Вы вписали что-то не то'
+                      , '\n--- Впишите, пожалуйста, целое число и нажмите Enter: ')
+
+        if topicsCount == None:
+            print(
+'''Ориентиры для выбора числа топиков: (а) описательная статистика частотности токенов во всём корпусе и в отдельных документах, (б) приемлемый уровнь объяснительной способности модели, критерий Кайзера и скачки объяснительной способности модели (диаграмма "каменистой осыпи"), (в) Ваша субъективная готовность проинтерпретировать не более стольки-то топиков.'''
+                  )
+# 1.0. Первичный анализ частот токенов в корпусе документов в целом и по каждому документу
+# Посчитать сумму по ТОКЕНАМ
+            встречаемостьТокенов = pandas.DataFrame(matrix_df.sum(), columns=['Встречаемость токенов'])
+            # display(встречаемостьТокенов)
+# Посчитать сумму по ДОКУМЕНТАМ
+            токеныДокумент = pandas.DataFrame(matrix_df.T.sum(), columns=['Наполненность токенами документов'])
+            # display(токеныДокумент)
+# 1.1. Описательная статистика для интервальной переменной встречаемостьТокенов
+            descriptive_statistics.ScaleStatistics(встречаемостьТокенов[['Встречаемость токенов']])
+    # .. и для интервальной переменной токеныДокумент
+            descriptive_statistics.ScaleStatistics(токеныДокумент[['Наполненность токенами документов']])
+
+# 2. Пробный запуск (без вращения, но с выводом результатов), чтобы посмотреть `Explained variance`
+            pca = dimension_reduction.PCA(n_components='Kaiser').fit(matrix_df) # if len(matrix_df.columns) < 30 else 30
+            component_loadings_rotated = pca.component_loadings
+            # component_loadings_rotated = component_loadings_rotated.iloc[:, :topicsCount] # если ограничивать модель неким большим числом топиков для псевдо-устойчивости
+            display(component_loadings_rotated) # для отладки
+            print('\n--- Введите желаемое число топиков и нажмите Enter')
+            while True:
+                topicsCount = input()
+                try:
+                    topicsCount = int(topicsCount)
+                    break
+                except ValueError:
+                    print('--- Вы вписали что-то не то'
+                          , '\n--- Впишите, пожалуйста, целое число и нажмите Enter: ')
+
+# 3. Итоговый запуск (с вращением, но с без вывода части результатов)
+# Настроить класс PCA: предупредить, сколько будет топиков и какое будет вращение
+    if topicsCount > len(matrix_df.columns):
+        print('Число топиков принудительно снижено до', len(matrix_df.columns), ', поскольку значение topicsCount, равное', topicsCount, ', слишком велико для располагаемых данных.')
+        topicsCount = len(matrix_df.columns)
+    pca = dimension_reduction.PCA(n_components=topicsCount, rotation='varimax').fit(matrix_df, show_results=False) # !!! 300 и быстро, и устойчиво
+
+# 4. Четыре датафрейма, ключевых для оформления и интерпретации результатов тематического моделирования, плюс один датафрейм
+    component_loadings_rotated = pca.component_loadings_rotated
+    # component_loadings_rotated = component_loadings_rotated.iloc[:, :topicsCount] # если ограничивать модель неким большим числом топиков для псевдо-устойчивости
+    # display(component_loadings_rotated) # для отладки
+    topicNameS = component_loadings_rotated.columns
+
+# Матрица "документы-топики" (и величины в ячейках матрицы названы так же)
+    scoreS = pca.transform(matrix_df)
+    # scoreS = scoreS.iloc[:, :topicsCount] # если ограничивать модель неким большим числом топиков для псевдо-устойчивости
+    # display(scoreS) # для отладки	
     
-#                 self._PCs_final_list = list(self.component_loadings_rotated.columns)
-#             else:
-#                 print('Rotation could not be performed because number of dimensions is 1.')
-#                 self.rotation = None
+    if rowsNumerator != None:
+        if (sum(df[rowsNumerator].isna()) == 0) & (len(list(set(df[rowsNumerator].tolist()))) == len(df)): df.index = df[rowsNumerator] # значения назначенного пользователем столбца будут использоваться в качестве обозначения строк итоговых таблиц, только если эти значения без NaN и без дубликатов
+        else: print(
+'''
+Назначенный Вами столбец для обозначения строк итоговых таблиц содержит NaN или дубликаты, поэтому не будет использоваться.
+'''
+                    )
+    else: # в противном случае останутся исходные обозначения строк, но если эти значения без дубликатов -- иначе reset_index
+        if len(list(set(list(df.index)))) != len(df): df.reset_index(drop=True)
+        print(
+'''
+Cреди обозначений строк исходной таблицы есть дубликаты, поэтому эти обозначения заменяю на сквозную нумерацию.
+'''
+              )
 
-#         if self.rotation == 'varimax':
-#             necessary_loadings = self.component_loadings_rotated.copy()
-#         else:
-#             necessary_loadings = self.component_loadings.copy()
-            
-#         #communalities through the component loadings
-#         self._necessary_loadings = necessary_loadings.copy()
-#         self.communalities = self.get_communalities(min_max=False)        
-        
-#         self.communalities_and_loadings = pd.concat([necessary_loadings, self.communalities], axis=1)
-            
-#         if show_results:
-#             self.show_results(n_decimals=n_decimals)
-                                 
-#         return self
+# Добавить столбец со списками дублирующих (по столбцу textFull_lemmatized) каждый текст текстов и убрать неиспользуемые столбцы
+    df_columnS = [textFull_lemmatized, textFull_simbolsCleaned]
+    if supplementarieS != None: df_columnS.extend(supplementarieS)
+    df = df[df_columnS]
+                               
+    # Добавить столбец со списком всех номеров строк для каждого текста
+    df['indicesDuplicate'] = df.groupby(textFull_lemmatized)[textFull_lemmatized].transform(lambda group: [group.index.tolist()] * len(group)) # 'textFull_stopwordsDropped'
 
-#     def show_results(self, n_decimals=3):
-#         """
-#         Show results of the analysis in a readable form.
-        
-#         Parameters
-#         ----------
-#         n_decimals : int 
-#             Number of digits to round results when showing them
-#         """
-#         print('\nPCA SUMMARY')
-#         print('------------------\n')                                 
-#         if self.n_components_criterion=='Kaiser':
-#             print(f'The number of selected components by Kaiser criterion: {self.n_components}')
-#             print('------------------\n')
-#         print('Explained variance')
-#         display(self.get_explained_variance(scree_plot=True).style\
-#                     .format(None, na_rep="", precision=n_decimals)\
-#                     .set_caption("methods .get_explained_variance() and .scree_plot()"))
-#         print(f'The model explains {round(self.explained_variance_total, 3)}% of variance.')
-#         print('------------------\n')
-#         if self.rotation is None:
-#             print('Component loadings')
-#         elif self.rotation == 'varimax':
-#             print('Rotated component loadings')
-#         display(self.communalities_and_loadings.style\
-#                 .format(None, na_rep="", precision=n_decimals)\
-#                 .set_caption("attribute .communalities_and_loadings"))
-#         print(f'The minimum communality is {round(self.communalities["Communality"].min(), 3)}.')
-#         print('------------------\n')
-#         print('To get component scores, use [model].transform().')
+    # Убрать собственный индекс из списка дубликатов в каждой оставшейся строке
+    df['indicesDuplicate'] = df.apply(lambda row: [i for i in row['indicesDuplicate'] if i != row.name], axis=1)
+    # display('df:', df) # для отладки
 
-#     def transform(self, data=None, standardize=True, add_to_data=False):
-        
-#         """
-#         Return component scores for every observation in the given dataset. 
-        
-#         Parameters
-#         ----------
-#         data : pd.DataFrame 
-#             Data to apply the model.
-#             If not specified, data that were used to fit the model will be used.
-#         standardize : bool 
-#             Whether to apply z-standartization to component scores
-#         add_to_data : bool 
-#             Whether to add variables of component scores to the given data
+    scoreS.index = df.index # связать документы и scoreS
 
-#         Returns
-#         -------
-#         pd.DataFrame
-#             Requested values
-#         """
-#         if data is None:
-#             data = self._data.copy()
-#             df = self._data.copy()
-#         else:
-#             df = data[self.variables].dropna().copy()
-              
-#         df = (df - df.mean()) / df.std()
-#         loadings_df = self._necessary_loadings.copy()                     
-#         df.columns = loadings_df.index
-                  
-#         try:
-#             weights = np.linalg.solve(self.correlation_matrix, loadings_df)
-#         except:
-#             weights = loadings_df.copy()
-#         component_scores_df = pd.DataFrame(np.dot(df, weights), 
-#                                            index = df.index,
-#                                            columns = loadings_df.columns)
-#         if standardize:
-#             component_scores_df = (component_scores_df - component_scores_df.mean()) / component_scores_df.std()
-            
-#         if add_to_data:
-#             component_scores_df = pd.concat([data, component_scores_df], axis=1)
-
-#         return component_scores_df
-        
-#     @staticmethod
-#     def _sort_sign(S, U):
-#         idx = S.argsort()[::-1]
-#         S = S[idx]
-#         U = U[:, idx]
-#         for i in range(U.shape[1]):
-#             if U[:, i].sum()<0:
-#                 U[:, i] = -1 * U[:, i]
-#         return S, U
+# 5. Цикл для прохода по всем топикам
+    poleS = ['лев', 'прав']
     
-#     @staticmethod
-#     def _loadings(S, U, vars_list, PCs_list):
-#         loadings = U * np.sqrt(S)
-#         loadings_df = pd.DataFrame(loadings)
-#         loadings_df.columns = PCs_list
-#         loadings_df.index = vars_list
-#         loadings_df.index.name = 'Variable'
-#         return loadings_df
-        
-#     def _rotation_matrices(self):
-#         if self.rotation == 'varimax':
-#             rot = Rotator(method='varimax', normalize=True)
-#             loadings = rot.fit_transform(self.component_loadings)
-#             loadings = pd.DataFrame(loadings,
-#                                    columns=[f'PC{i+1}_vrmx' for i in range(self.n_components)],
-#                                    index=self.variables)
-#             structure_matrix = None
+    summary = pandas.DataFrame()
+    docs_snippetS = pandas.DataFrame()
 
-#         return loadings, structure_matrix
+    wb = Workbook()
+    summary_ws = wb.active
+    summary_ws.title = "Сводка"
 
+    for topicName in topicNameS[:topicsCount]:
+    # for topicName in topicNameS[2:4]: # для отладки
+        print('\n\nTopic', topicName)
 
-#     def get_communalities(self, min_max=True):
-        
-#         """
-#         Return communalities for every initial variable. 
-        
-#         Parameters
-#         ----------
-#         min_max : bool 
-#             Whether to print minimum and maximum of communalities
+        # Документы-топики
+        topicScoreS = scoreS[[topicName]]
 
-#         Returns
-#         -------
-#         pd.DataFrame
-#             A table with communalities
-#         """
-#         loadings = self.component_loadings.copy()
-#         communalities = pd.DataFrame(index=loadings.index)
-#         communalities['Communality'] = (loadings**2).sum(axis=1)
-         
-#         if min_max:
-#             min_ = round(communalities['Communality'].min(), 3)
-#             max_ = round(communalities['Communality'].max(), 3)
-#             print(f"The min communality: {min_}, the max communality: {max_}")
+        # Токены-топики
+        topicLoadingS = component_loadings_rotated[[topicName]]
+        # display(topicLoadingS) # для отладки
+
+        # Максимум (по модулю) нагрузки внутри компоненты
+        maxLoading = topicLoadingS[topicName].abs().max()
+        # print('maxLoading:', maxLoading) # для отладки
+        loadingsThreshold_user = loadingsThreshold # чтобы по истечении итерации вернуться к заданному пользователем значени		
+        if loadingsThreshold > maxLoading:
+            print('Порог (по модулю) усреднённой связи токена с топиком снижен до', round(maxLoading, 2), ', поскольку значение loadingsThreshold, равное', round(loadingsThreshold, 2), ', слишком велико для располагаемых данных.')
+            loadingsThreshold = maxLoading * 0.99 # не выше минимума из максимальных по модулю loadings среди компонент			
+
+        plt.figure(figsize=(9, 9))
+
+    # Распределение документов по осям
+        # Гистограмма
+        plt.subplot(3, 2, 1) # три строки, три столбца, первое место
+        plt.hist(topicScoreS, color='grey')
+        plt.title(f"Docs Distribution by Scores\nin {topicName}")
+        plt.xlabel('Scores')
+        plt.ylabel('Frequency');
+
+        # Боксплот
+        plt.subplot(3, 2, 2) # три строки, три столбца, третье место
+        plt.boxplot(topicScoreS)
+        plt.title(f"Docs Distribution by Scores\nin {topicName}")
+        plt.xticks([])
+        plt.ylabel('Scores')
+        # plt.show()
+
+    # Распределение токенов по осям
+        # Гистограмма
+        plt.subplot(3, 2, 3) # три строки, три столбца, седьмое место
+        plt.hist(topicLoadingS.dropna(), color='grey')
+        plt.title(f"Tokens Distribution by Loadings\nin {topicName}")
+        plt.xlabel('Loadings')
+        plt.ylabel('Frequency');
+
+        # Боксплот
+        plt.subplot(3, 2, 4) # три строки, три столбца, девятое место
+        plt.boxplot(topicLoadingS.dropna())
+        plt.title(f"Tokens Distribution by Loadings\nin {topicName}")
+        plt.xticks([])
+        plt.ylabel('Loadings')
         
-#         return communalities
+        plt.tight_layout()
+        img_data = BytesIO()
+        plt.savefig(img_data, format='png')
+        plt.show() # обязательно после savefig
+
+        # Полярные документы, причём уникальные
+
+        # Добавить столбец со scoreS документов в рамках рассматриваемого топика
+        # display('topicScoreS:', topicScoreS) # для отладки        
+        df_topicScoreS = pandas.concat([df, topicScoreS], axis=1)
     
-#     def get_explained_variance(self, scree_plot=True, **kwargs):
-        
-#         """
-#         Return summary table with information about variance accounted for. 
-        
-#         Parameters
-#         ----------
-#         scree_plot : bool 
-#             Whether to display scree plot        
-#         annotate_bars : bool 
-#             Whether to annotate exact percentage of variance on each bar
-#             (if scree_plot set to True)
-#         annotate_current : bool 
-#             Whether to show percentage of variance corresponded 
-#             to the current solution
-#             (if scree_plot set to True)
-
-#         Returns
-#         -------
-#         pd.DataFrame
-#             A table with explained variance
-#         """          
-                  
-#         S = self._eigenvalues
-#         PCs_list = self._PCs_init_list
-#         exp = 100 * S / np.sum(S)
-#         acc_sum = np.cumsum(exp)
-#         explained_variance = np.array([S, exp, acc_sum])
-#         explained_variance = pd.DataFrame(explained_variance.T, 
-#                                    columns=['Eigenvalue','Variance accounted for, %','Cumulative %'],
-#                                    index = range(1, len(PCs_list)+1))
-#         explained_variance.index.name = 'Component'
-
-#         if scree_plot:
-#             self.scree_plot(**kwargs)
-        
-#         return explained_variance
+        # Оставить только уникальные (по столбцу textFull_lemmatized) тексты (первые вхождения)
+        dfUnique_topicScoreS = df_topicScoreS.drop_duplicates(textFull_lemmatized, keep='first') # 'textFull_stopwordsDropped'
     
-#     def scree_plot(self, annotate_bars=True, annotate_current=True):
-                  
-#         """
-#         Vizualize distribution of the variance accounted for.  
+        # Убрать собственный индекс из списка дубликатов в каждой оставшейся строке
+        dfUnique_topicScoreS['indicesDuplicate'] = dfUnique_topicScoreS.apply(lambda row: [i for i in row['indicesDuplicate'] if i != row.name], axis=1)
+        # display('dfUnique_topicScoreS:', dfUnique_topicScoreS) # для отладки
+    
+        docS_topic_minus = docsSelector(dfUnique_topicScoreS, -1, docsLimit, topicName)
+        docS_topic_plus = docsSelector(dfUnique_topicScoreS, 1, docsLimit, topicName)
         
-#         Parameters
-#         ----------
-#         annotate_bars : bool 
-#             Whether to annotate exact percentage of variance on each bar
-#         annotate_current : bool 
-#             Whether to show percentage of variance corresponded 
-#             to the current solution
-#         """ 
-            
-#         explained_variance = self.explained_variance.copy()    
-#         plt.figure(figsize=(6, 6))
+        # Полярные токены
+        message_tokens_0, message_tokens_1, tokenS_topic_minus_inUse, tokenS_topic_minus_inUse_list = tokensSelector(docS_topic_minus, loadingsThreshold, -1, textFull_lemmatized, tokensLimit, topicLoadingS, topicName)
+        message_tokens_0, message_tokens_1, tokenS_topic_plus_inUse, tokenS_topic_plus_inUse_list = tokensSelector(docS_topic_plus, loadingsThreshold, 1, textFull_lemmatized, tokensLimit, topicLoadingS, topicName)
+
+        print('Токены на полюсах топика', topicName)
+        display(pandas.concat([tokenS_topic_minus_inUse, tokenS_topic_plus_inUse])) #.dropna()
         
-#         pc_num = list(explained_variance.index)
-#         each_exp = explained_variance.iloc[:, 1].tolist()
-#         acc_sum = explained_variance.iloc[:, 2].tolist()
-#         plt.bar(pc_num, acc_sum, width=0.5, color='lightsalmon', alpha=0.2, label='Cumulative %')
-#         plt.plot(pc_num, each_exp, label='Variance accounted for, %')
-#         plt.plot(pc_num, each_exp, 'ro', label='_nolegend_')
+        # Описание каждого топика через его полюса и формирующие их токены и релевантные фрагменты располагаемых на них документов
+        # display('topicLoadingS:', topicLoadingS) # для отладки
+
+        # print('tokenS_topic_minus_inUse_list:', tokenS_topic_minus_inUse_list) # для отладки
+        # display('Средняя связь ключевых токенов с топиком:', tokenS_topic_minus_inUse[topicName].mean()) # для отладки
+
+        # print('docS_topic_minus_list:', docS_topic_minus_list[:2]) # для отладки
+        docs_snippetS_minus = snippetByDoc(docS_topic_minus, loadingsThreshold, message_tokens_0, message_tokens_1, poleS[0], supplementarieS, textFull_lemmatized, textFull_simbolsCleaned, tokenS_topic_minus_inUse_list)
         
-#         if annotate_bars:
-#             for x, y in zip(pc_num, acc_sum):
-#                 plt.annotate(f'{round(y)}%', (x-0.25, y+0.75))
+        # print('tokenS_topic_plus_inUse_list:', tokenS_topic_plus_inUse_list) # для отладки
+        # display('Средняя связь ключевых токенов с топиком:', tokenS_topic_plus_inUse[topicName].mean()) # для отладки
+
+        # print('docS_topic_plus_list:', docS_topic_plus_list[:2]) # для отладки
+        docs_snippetS_plus = snippetByDoc(docS_topic_plus, loadingsThreshold, message_tokens_0, message_tokens_1, poleS[-1], supplementarieS, textFull_lemmatized, textFull_simbolsCleaned, tokenS_topic_plus_inUse_list)
         
-#         if annotate_current:
-#             acc_sum_by_n_components = [explained_variance.iloc[self.n_components-1, 2]] * len(pc_num)
-#             plt.plot(pc_num, acc_sum_by_n_components, linestyle='--', label='Current solution', c='black')
-                
-#         plt.xlabel('Principal components')
-#         plt.ylabel('Variance accounted for, %')
-#         plt.title('Variance accounted by components', fontsize=16)
-#         plt.legend(loc='upper left')
-#         plt.show()
+        # print('Отладка')
+        # display(docs_snippetS_minus, docs_snippetS_plus)
+        # from openpyxl import Workbook
+        # wb = Workbook()
+        # ws = wb.create_sheet(title='topicName')
+        # for r in dataframe_to_rows(docs_snippetS_minus, index=False, header=True):
+        #     ws.append(r)
+        # for r in dataframe_to_rows(docs_snippetS_plus, index=False, header=True):
+        #     ws.append(r)
+
+        docs_snippetS_additional = pandas.concat([docs_snippetS_minus, docs_snippetS_plus])
+        # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки
+        
+        docs_snippetS_additional = docs_snippetS_additional.drop(['min', 'max'], axis=1)
+        docs_snippetS_additional = docs_snippetS_additional.reset_index(drop=True)
+        
+    # Обработка полярных документов и токенов; запись в датафрейм
+        docS_topic = pandas.concat([docS_topic_minus, docS_topic_plus])
+        # display('docS_topic:', docS_topic) # для отладки
+
+        # Заполнение docs_snippetS_additional , если он пустой
+        if len(docs_snippetS_additional) == 0:
+            docs_snippetS_additional = docS_topic[[textFull_simbolsCleaned]]
+            if len(tokenS_topic_minus_inUse_list) > 0: docs_snippetS_additional.loc[docS_topic_minus.index, 'pole'] = poleS[0].capitalize() + 'ый'
+            else: docs_snippetS_additional = docs_snippetS_additional.drop(docS_topic_minus.index) # чтобы не выводить в эксельке ключевые документы при отсутствии ключевых токенов
+
+            if len(tokenS_topic_plus_inUse_list) > 0: docs_snippetS_additional.loc[docS_topic_plus.index, 'pole'] = poleS[-1].capitalize() + 'ый'
+            else: docs_snippetS_additional = docs_snippetS_additional.drop(docS_topic_plus.index) # чтобы не выводить в эксельке ключевые документы при отсутствии ключевых токенов
+
+            docs_snippetS_additional = docs_snippetS_additional[['pole', textFull_simbolsCleaned]]
+            for doc in docs_snippetS_additional.index: # гипотетически, проблема невосприимчивости экселя к сложной структуре внутри ячеек решается , когда датафрейм проходит через for in
+                # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки
+                docs_snippetS_additional = supplementariesExecuter(df, docs_snippetS_additional, doc, doc, supplementarieS)
+        
+        # display('docs_snippetS_additional:', docs_snippetS_additional) # для отладки            
+        docs_snippetS_additional.loc[:, 'Интерпретация топика'] = ''
+        docs_snippetS = pandas.concat([docs_snippetS, docs_snippetS_additional])
+        print('\n')
+        
+        summaryMinus = summaryPole(-1, tokenS_topic_minus_inUse_list, docS_topic, topicLoadingS, topicName)
+        summaryPlus = summaryPole(1, tokenS_topic_plus_inUse_list, docS_topic, topicLoadingS, topicName)
+        summary_additional = pandas.concat([summaryMinus, summaryPlus])
+        # display('summary_additional:', summary_additional) # для отладки
+
+        summary = pandas.concat([summary, summary_additional])
+        summary['Документы'] = summary.index
+        # display('summary:', summary) # для отладки
+
+        # print('Отладка')
+        # display(docs_snippetS_additional)
+        # from openpyxl import Workbook
+        # wb = Workbook()
+        # ws = wb.create_sheet(title='topicName')
+        # for r in dataframe_to_rows(docs_snippetS_additional, index=False, header=True):
+        #     ws.append(r)        
+
+        ws = wb.create_sheet(title=topicName)
+        for r in dataframe_to_rows(docs_snippetS_additional, index=False, header=True):
+            ws.append(r)
+        
+        # while True:
+        #     try:
+        #         ws = wb.create_sheet(title=topicName)
+        #         for r in dataframe_to_rows(docs_snippetS_additional, index=False, header=True):
+        #             ws.append(r)
+        #             # r_previous = r
+        #         break
+        #     except:
+        #         # ws.remove(r_previous)
+        #         # print(sys.exc_info()[1]) # для отладки
+        #         # docs_snippetS_additional['title'] = docs_snippetS_additional['title'].astype(str)
+        #         docs_snippetS_additional = docs_snippetS_additional.astype(str)
+
+        img_data.seek(0)
+        img = Image(img_data)
+        ws.add_image(img, "K1")
+        loadingsThreshold = loadingsThreshold_user # возврат к заданному пользователем значению по истечении итерации
+
+    docs_snippetS = docs_snippetS.reset_index(drop=True)
+
+# 6. Если норм, отправить эти документы в Excel
+    # Желательно после начала интерпретации назвать Excel по-новому, чтобы он не перезаписался в дальнейшем.
+    summaryColumns = ['Топики', 'Токены', 'Усреднённая связь токена с топиком', 'Документы'] 
+    summaryColumns.extend(scoreS.columns)
+    summaryColumns.extend(['Релевантность теме исследования', 'Интерпретация топика'])
+
+    for r in dataframe_to_rows(summary[summaryColumns], index=False, header=True):
+        summary_ws.append(r)
+
+    fileName = 'Топики'
+    attempt = 0
+
+    # Чтобы не перезаписать ранее созднный файл, в котором может быть интерпретация
+    while os.path.exists(fileName + ' ' + str(attempt) + ".xlsx"):
+        attempt += 1
+
+    print(f'''\nCоздаю файл "{fileName + ' ' + str(attempt)}.xlsx"''')
+    wb.save(fileName + ' ' + str(attempt) + ".xlsx")
+
+    print(
+'''
+Рекомендации по дальнейшей интерпретации топиков:
+1.1. Интерпретация топиков по ключевым токенам: на листе Сводка посмотрите перечень ключевых токенов каждого топика. Если токенов слишком мало или много, перезапустите скрипт, понизив или повысив порог loadingsThreshold соответственно, либо повысив или понизив порог tokensLimit соответственно.
+1.2. Попробуйте в одной или нескольких фразах сормулировать смысл каждого топика по его ключевым токенам и внесите сформулированный смысл в столбец Интерпретация топика. Если у топика два полюса, лучше для каждого из них формулировать смысл отдельно.
+
+2.1. Интерпретация топиков по выдержкам из ключевых документов и ключевым токенам: на листе Сводка посмотрите перечень ключевых документов каждого топика. Если документов слишком мало или много, перезапустите скрипт, повысив или понизив порог docsLimit соответственно.
+2.2. На листе PC1_vrmx читайте выдержки (с акцентом на соответствующие ключевые токены) и при обнаружении принципиально нового смысла, вносите его в свободный столбец. Нюансы и оттенки уже выписанных смыслов лучше игнорировать, чтобы не "закопаться".
+2.3. Повторите процедуру для остальных листов PC..._vrmx. По завершении постарайтесь в одной или нескольких фразах обобщить смыслы для каждого листа (топика) и внесите сформулированные обобщения в столбец Интерпретация топика листа Сводка. Если у топика два полюса, лучше для каждого из них формулировать смысл отдельно.
+
+3.1. Интерпретация топиков по ключевым документам и ключевым токенам с помощью ИИ: на листе Сводка посмотрите перечень ключевых токенов и документов каждого топика. Если их слишком мало или много, выполните пункты 2.1 или 3.1.
+3.2. На листе Сводка выберите несколько (можете ориентироваться на диаграмму Docs distribution by scores...) ключевых документов с максимальным значением в столбце PC1_vrmx , подайте их в ИИ с просьбой вычленить основные мысли с привязкой к соответствующим ключевым токенам.
+3.3. Ответ ИИ внесите в столбец Интерпретация топика напротив первого топика. Повторите процедуру для остальных топиков.'''
+          )
+    if returnDfs: return docs_snippetS, scoreS
