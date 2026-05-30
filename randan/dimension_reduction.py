@@ -1077,7 +1077,7 @@ class PCA: # первичен
 
         communalitiesLow = self.communalities[self.communalities['Communality'] < 0.5].sort_values('Communality')
         print('------------------\n',
-              'Within the current model, the following entities are insufficiently explained:')
+              'Within the current {self.n_components}-component model, the following entities are insufficiently explained:')
         display(communalitiesLow)
 
         print('------------------\n',
