@@ -237,7 +237,7 @@ class CA:
                                                 index = self.correspondence_matrix.columns)
         
         if show_results:
-            self.show_results(n_decimals)
+            self.show_results(n_decimals) # CA
             
         if plot_dimensions:
             print('------------------\n')
@@ -252,7 +252,7 @@ class CA:
         
         return self
     
-    def show_results(self, n_decimals):
+    def show_results(self, n_decimals): # CA
         """
         Show results of the analysis in a readable form.
         
@@ -1008,11 +1008,11 @@ class PCA: # первичен
             self._pc_max_list = _pc_max_list.copy()
             
         if show_results:
-            self.show_results()
+            self.show_results() # PCA
                                  
         return self
 
-    def show_results(self, print_decision=True, n_decimals=3):
+    def show_results(self, print_decision=True, n_decimals=3): # PCA
         """
         Show results of the analysis in a readable form.
         
@@ -1024,8 +1024,7 @@ class PCA: # первичен
             Whether to print decision on what number of dimensions was exctracted
         """
         if self.rotation != 'natural collinearity':
-            print('\nPCA SUMMARY')
-            print('------------------\n')                                 
+            print('\nPCA SUMMARY', '------------------\n')                                 
             if print_decision:
                 if self.n_components_criterion=='Kaiser': 
                     print(f'The number of selected components by Kaiser criterion: {self.n_components}')
@@ -1033,40 +1032,57 @@ class PCA: # первичен
                     print(f'The number of selected components by an inflection point: {self.n_components}')
                 print('------------------\n')
         
-        threshold_visual = 30
+        # Потенциальные граничные значения в тематическом моделировании: от критерия Кайзера до 75% объяснённой дисперсии -- больше смысла точно нет
+        
+        topicsCountMaх = self.n_components + 1 # + 1 -- чтобы посмотреть на величину Eigenvalue после строки таблицы объяснённой дисперсии, соответствующей критерию Кайзера
+        # print('topicsCountMaх:', topicsCountMaх) # для отладки
+        threshold_visual = topicsCountMaх
 
         if self.rotation != 'natural collinearity':
             print('Explained variance')
             explained_variance = self.get_explained_variance()
+            # display(explained_variance[explained_variance['Cumulative %'] < 75]) # для отладки
+            topicsCountMaх = explained_variance[explained_variance['Cumulative %'] < 75].index[-1] + 1
+                # + 1 -- чтобы посмотреть на величину Eigenvalue после строки таблицы объяснённой дисперсии, соответствующей 75%
+            # print('topicsCountMaх:', topicsCountMaх) # для отладки
+            threshold_visual = topicsCountMaх
+            
             display(explained_variance.head(min(len(self.communalities_and_loadings), threshold_visual))\
                         .style.format(None, na_rep="", precision=n_decimals).set_caption("methods .get_explained_variance() and .scree_plot()"))
             if len(explained_variance) > threshold_visual: print('Row count in the full dataframe:', explained_variance.shape[0])
 
-            print(f'The model explains {round(self.explained_variance_total, n_decimals)}% of variance.')
+            print(f'The {self.n_components}-component model explains {round(self.explained_variance_total, n_decimals)}% of the variance')
             print('------------------\n')
-        if self.rotation is None:
-            print('Component loadings')
-        elif self.rotation == 'varimax':
-            print('Rotated component loadings')
-        elif self.rotation in ['natural collinearity', 'promax']:
-            print('Structure matrix')
 
-        display(self.communalities_and_loadings.head(min(len(self.communalities_and_loadings), threshold_visual)).\
-                    style.format(None, na_rep="", precision=n_decimals).set_caption("attribute .communalities_and_loadings"))
-        if len(self.communalities_and_loadings) > threshold_visual: print(
+        if (len(self.communalities_and_loadings) <= 50) & (len(self.communalities_and_loadings.columns) <= 50):
+            if self.rotation is None:
+                print('Component loadings')
+            elif self.rotation == 'varimax':
+                print('Rotated component loadings')
+            elif self.rotation in ['natural collinearity', 'promax']:
+                print('Structure matrix')
+            display(self.communalities_and_loadings.head(min(len(self.communalities_and_loadings), threshold_visual)).\
+                        style.format(None, na_rep="", precision=n_decimals).set_caption("attribute .communalities_and_loadings"))
+            if len(self.communalities_and_loadings) > threshold_visual: print(
 'Column count in the full dataframe:', self.communalities_and_loadings.shape[1], '; and row count in the full dataframe:', self.communalities_and_loadings.shape[0]
-                                                                          )
-        # print('self.communalities_and_loadings:') # для отладки
-        # display(self.communalities_and_loadings) # для отладки
-        
-        print(f'The minimum communality is {round(self.communalities["Communality"].min(), n_decimals)}.')
-        if self.rotation in ['natural collinearity', 'promax']:
-            print("Components' correlation")
-            display(self.correlation_matrix_components.style\
-                .format(None, na_rep="", precision=n_decimals)\
-                .set_caption("attribute .correlation_matrix_components"))
-        print('------------------\n')
-        print('To get component scores, use [model].transform().')
+                                                                              )
+            # display('self.communalities_and_loadings:', self.communalities_and_loadings) # для отладки
+            
+            print(f'The minimum communality is {round(self.communalities["Communality"].min(), n_decimals)}')
+            if self.rotation in ['natural collinearity', 'promax']:
+                print("Components' correlation")
+                display(self.correlation_matrix_components.style\
+                    .format(None, na_rep="", precision=n_decimals)\
+                    .set_caption("attribute .correlation_matrix_components"))
+
+        communalitiesLow = self.communalities[self.communalities['Communality'] < 0.5].sort_values('Communality')
+        print('------------------\n',
+              'Within the current model, the following entities are insufficiently explained:')
+        display(communalitiesLow)
+
+        print('------------------\n',
+              'To get component scores, use [model].transform()')
+
     def transform(self, data, standardize=True, add_to_data=False):
         
         """
