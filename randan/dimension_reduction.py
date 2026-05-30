@@ -274,7 +274,7 @@ def tokensSelector(docS_topic_pole, loadingsThreshold, minusPlus, textFull_lemma
 
     # print('loadingsThreshold:', loadingsThreshold) # для отладки
     tokenS_topic_pole_inUse = tokenS_topic[tokenS_topic[topicName] * minusPlus > loadingsThreshold]
-    tokenS_topic_pole_inUse = tokenS_topic_pole_inUse.[:min(tokensLimit, len(tokenS_topic_pole_inUse)), :]
+    tokenS_topic_pole_inUse = tokenS_topic_pole_inUse.iloc[:min(tokensLimit, len(tokenS_topic_pole_inUse)), :]
     tokenS_topic_pole_inUse_list = list(tokenS_topic_pole_inUse.index)
     # print('tokenS_topic_pole_inUse_list:', tokenS_topic_pole_inUse_list) # для отладки
 
