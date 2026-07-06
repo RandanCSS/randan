@@ -241,7 +241,7 @@ def ratingDigitizer(letters, raitingSource):
     # обработки эмитентов и их облигаций, оставшихся без рейтинга
 def ratingMoExForBondsWithoutRating(bondS_in, byIssuer=True):
     bondS = bondS_in.copy()
-    bondS_withoutRating = bondS[bondS['Rating D'].isna()]
+    bondS_withoutRating = bondS[bondS['Bond D Rating'].isna()]
     # display('bondS_withoutRating:', bondS_withoutRating) # для отладки
 
     if len(bondS_withoutRating) == 0: print('Отсутствуют эмитенты и их облигации оставшиеся без рейтинга')
@@ -265,7 +265,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, byIssuer=True):
                 isin = identifier
                 print('ISIN', isin)    
 
-            textTargetDict = {'Кредитный рейтинг эмитента': 'Rating D', 'Кредитный рейтинг выпуска облигаций': 'Bond Rating D'}
+            textTargetDict = {'Кредитный рейтинг эмитента': 'Bond D Rating', 'Кредитный рейтинг выпуска облигаций': 'Bond Rating D'}
             for textTarget in textTargetDict.keys():
                 try: # на случай обрыва связи
                     bondS = getRatingFromMoEx(bondS, textTargetDict[textTarget], driver, identifier, isin, textTarget)
@@ -282,7 +282,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, byIssuer=True):
             print("="*60 + "\n")
     
         print('На сайте moex.com могут оказаться рейтинги не для всех облигаций, поэтому следует проверить визуально:')
-        display(bondS[bondS['Rating D'].isna()])
+        display(bondS[bondS['Bond D Rating'].isna()])
         driver.quit()
 
     return bondS
