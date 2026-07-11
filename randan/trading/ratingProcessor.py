@@ -242,7 +242,6 @@ def ratingDigitizer(letters, raitingSource):
     # print('len(letters) :', len(letters)) # для отладки
     return (3 * (len(letters) - subtracted) + y) + 9 * x
 
-    # перевода в число рейтинга с эмитентов торгуемых на МосБирже облигаций
 def ratingMoExForBondsWithoutRating(bondS_in, byIssuer=True):
     bondS = bondS_in.copy()
     bondS_withoutRating = bondS[bondS['Bond D Rating'].isna()]
@@ -259,10 +258,10 @@ def ratingMoExForBondsWithoutRating(bondS_in, byIssuer=True):
         if byIssuer: identifierS = bondS_withoutRating.drop_duplicates('Эмитент')['Эмитент'].tolist()
         else: identifierS = bondS_withoutRating['ISIN'].tolist()
 
-        # print('identifierS:', identifierS) # для отладки
         identifierS.sort()
+        # print('identifierS:', identifierS) # для отладки
     
-# Импорт рейтинга с сайта moex.com    
+        # Импорт рейтинга с сайта moex.com    
         counter = 0
         for identifier in identifierS:
         # for identifier in identifierS[0:10]: # для отладки
