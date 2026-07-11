@@ -46,6 +46,11 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
+options = undetected_chromedriver.ChromeOptions()
+options.add_argument('--disable-backgrounding-occluded-windows') # запрет браузеру засыпать в фоне
+options.add_argument('--disable-background-timer-throttling') # отключить троттлинг таймеров
+# options.headless = True # невидимый режим
+
 # Авторские функции..
     # .. импорта рейтинга с сайта moex.com
 def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, textTarget):
