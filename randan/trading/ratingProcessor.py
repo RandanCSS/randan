@@ -159,7 +159,7 @@ def ratingDigitizer(letters, raitingSource):
     # print('len(letters) :', len(letters)) # для отладки
     return (3 * (len(letters) - subtracted) + y) + 9 * x
 
-def ratingMoExForBondsWithoutRating(bondS_in):
+def ratingMoExForBondsWithoutRating(bondS_in, pause):
     bondS = bondS_in.copy()
 
     textTargetDict = {'Кредитный рейтинг эмитента': 'Issuer D Rating', 'Кредитный рейтинг выпуска облигаций': 'Bond D Rating'}
