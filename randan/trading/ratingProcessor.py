@@ -45,11 +45,6 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
-options = undetected_chromedriver.ChromeOptions()
-options.add_argument('--disable-backgrounding-occluded-windows') # запрет браузеру засыпать в фоне
-options.add_argument('--disable-background-timer-throttling') # отключить троттлинг таймеров
-# options.headless = True # невидимый режим
-
 # Авторские функции..
     # .. импорта рейтинга с сайта moex.com
 def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, textTarget):
@@ -249,11 +244,11 @@ def ratingMoExForBondsWithoutRating(bondS_in, byIssuer=True):
 
     if len(bondS_withoutRating) == 0: print('Отсутствуют эмитенты и их облигации оставшиеся без рейтинга')
     else:
-        driver = undetected_chromedriver.Chrome()
         options = undetected_chromedriver.ChromeOptions()
         options.add_argument('--disable-backgrounding-occluded-windows') # запрет браузеру засыпать в фоне
         options.add_argument('--disable-background-timer-throttling') # отключить троттлинг таймеров
         # options.headless = True # невидимый режим
+        driver = undetected_chromedriver.Chrome(options=options)
 
         if byIssuer: identifierS = bondS_withoutRating.drop_duplicates('Эмитент')['Эмитент'].tolist()
         else: identifierS = bondS_withoutRating['ISIN'].tolist()
