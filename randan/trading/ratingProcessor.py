@@ -168,11 +168,11 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
         else:
             if identifier != isin:
                 # print('identifier != isin') # для отладки
-                bondS.loc[bondS['Эмитент'] == identifier, columnWithRating] = 'Рейтинг отозван или неизвестен'
+                bondS.loc[bondS['Эмитент'] == identifier, columnWithRating] = 'Рейтинг не присвоен или неизвестен, или отозван'
                     # присвоить рейтинг эмитента всем его облигациям в bondS
             else:
                 # print('identifier == isin') # для отладки
-                bondS.loc[bondS['ISIN'] == identifier, columnWithRating] = 'Рейтинг отозван или неизвестен'
+                bondS.loc[bondS['ISIN'] == identifier, columnWithRating] = 'Рейтинг не присвоен или неизвестен, или отозван'
 
     return bondS
 
