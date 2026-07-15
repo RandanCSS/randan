@@ -65,8 +65,8 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
         print(Exception)
         print(traceback.format_exc()) # показ точной строчки кода с ошибкой                  
         print('  ✅ Облигация НЕ найдена по ISIN, ищу по SECID') # , end='\r'
-        secidIndex = bondsRB.loc[bondsRB['ISIN'] == 'RU0002868001', 'SECID'].index
-        secid = bondsRB.loc[secidIndex[0], 'SECID']
+        secidIndex = bondS.loc[bondS['ISIN'] == isin, 'SECID'].index
+        secid = bondS.loc[secidIndex[0], 'SECID']
         driver.get(f'https://www.moex.com/ru/issue.aspx?code={secid}')
     body_text = driver.find_element("tag name", "body").text
     # Не_согласен_pattern = re.compile(rf"\b{re.escape('Не согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
