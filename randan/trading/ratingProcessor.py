@@ -65,7 +65,7 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
     Согласен_pattern = re.compile(rf"\b{re.escape('Согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
     СогласенНе_согласен_pattern = re.compile(rf"\b{re.escape('СогласенНе согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
     
-    if (not Не_согласен_pattern.search(body_text.strip())) & Согласен_pattern.search(body_text.strip()): # чтобы не спутать с похожими формулировками
+    if Согласен_pattern.search(body_text.strip()) and not Не_согласен_pattern.search(body_text.strip()):
         driver.find_element(By.XPATH, "//p[text()='Согласен']").click()
         print('  ✅ Предупреждение про Cookie закрыто') # , end='\r'
 
