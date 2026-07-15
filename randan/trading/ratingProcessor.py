@@ -231,7 +231,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause):
             # Импорт рейтинга с сайта moex.com    
             counter = 0
             for identifier in identifierS:
-            # for identifier in identifierS[0:10]: # для отладки
+            # for identifier in identifierS[0:5]: # для отладки
                 if textTarget == 'Кредитный рейтинг эмитента':
                     isin = bondS_withoutRating[bondS_withoutRating['Эмитент'] == identifier]['ISIN'].tolist()[-1] # последний попавшийся ISIN итерируемого эмитента
                     print('issuer', identifier, '; ISIN', isin)  
