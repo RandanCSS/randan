@@ -22,7 +22,7 @@ while True:
         from selenium.webdriver.common.by import By
         from selenium.webdriver.support import expected_conditions
         from selenium.webdriver.support.ui import WebDriverWait
-        import pandas, re, undetected_chromedriver
+        import pandas, re, undetected_chromedriver, traceback
         break
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
@@ -61,28 +61,17 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
         ))
     
     body_text = driver.find_element("tag name", "body").text
+    Не_согласен_pattern = re.compile(rf"\b{re.escape('Не согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
     Согласен_pattern = re.compile(rf"\b{re.escape('Согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
     СогласенНе_согласен_pattern = re.compile(rf"\b{re.escape('СогласенНе согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
     
-    if Согласен_pattern.search(body_text.strip()):
+    if Не_согласен_pattern.search(body_text.strip()) != True & Согласен_pattern.search(body_text.strip()): # чтобы не спутать с похожими формулировками
         driver.find_element(By.XPATH, "//p[text()='Согласен']").click()
         print('  ✅ Предупреждение про Cookie закрыто') # , end='\r'
 
     if СогласенНе_согласен_pattern.search(body_text.strip()):
-        try:
-            WebDriverWait(driver, 3 * pause).until(expected_conditions.presence_of_element_located(
-                (By.XPATH, "//button[text()='Согласен']")
-                ))
-            # driver.find_element(By.XPATH, "//button[text()='Согласен']").click()
-            print('  ✅ Дисклеймер закрыт') # , end='\r'
-        except Exception:
-            print(Exception)
-            print(traceback.format_exc()) # показ точной строчки кода с ошибкой                  
-            return bondS
-            print('--- Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть. Автоматическое исполнение скрипта приостанавливается. Далее вручную перезапустите текущий чанк и последующие')
-            input()
-            driver.quit()
-            sys.exit()
+        driver.find_element(By.XPATH, "//button[text()='Согласен']").click()
+        print('  ✅ Дисклеймер закрыт') # , end='\r'
 
     # textTarget = 'Кредитный рейтинг эмитента' # для отладки
     # textTarget = 'Кредитный рейтинг выпуска облигаций' # для отладки
