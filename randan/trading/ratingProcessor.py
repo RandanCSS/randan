@@ -196,8 +196,9 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause):
     
                 # На всякий случай, например, обрыва связи
                 try: bondS = getRatingFromMoEx(bondS, textTargetDict[textTarget], driver, identifier, isin, pause, textTarget)
-                except:
-                    print(sys.exc_info())
+                except Exception:
+                    print(Exception)
+                    print(traceback.format_exc()) # показ точной строчки кода с ошибкой                  
                     return bondS
                     print('--- Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть. Автоматическое исполнение скрипта приостанавливается. Далее вручную перезапустите текущий чанк и последующие')
                     input()
