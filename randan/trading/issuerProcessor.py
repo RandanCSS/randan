@@ -52,6 +52,7 @@ def issuersComposer(bondS):
             rowS_bondS_withoutRating = bondS[(bondS['Эмитент'] == issuerS['Эмитент'][row_issuerS])\
                 & (bondS['Bond D Rating'] == 'Рейтинг не присвоен или неизвестен, или отозван')].index # обрабатываемые строчки bondS
 
+            rowS_bondS = list(rowS_bondS)
             rowS_bondS.remove(rowS_bondS_withoutRating)
             ratingS = bondS['Bond D Rating'][rowS_bondS].dropna().tolist()
             # print('ratingS:', ratingS) # для отладки
