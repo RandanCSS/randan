@@ -64,13 +64,13 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
     Согласен_pattern = re.compile(rf"\b{re.escape('Согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
     СогласенНе_согласен_pattern = re.compile(rf"\b{re.escape('СогласенНе согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
     
-    if СогласенНе_согласен_pattern.search(body_text.strip()):
-        driver.find_element(By.XPATH, "//button[text()='Согласен']").click()
-        print('  ✅ Дисклеймер закрыт') # , end='\r'
-
     if Согласен_pattern.search(body_text.strip()):
         driver.find_element(By.XPATH, "//p[text()='Согласен']").click()
         print('  ✅ Предупреждение про Cookie закрыто') # , end='\r'
+
+    if СогласенНе_согласен_pattern.search(body_text.strip()):
+        driver.find_element(By.XPATH, "//button[text()='Согласен']").click()
+        print('  ✅ Дисклеймер закрыт') # , end='\r'
 
     # textTarget = 'Кредитный рейтинг эмитента' # для отладки
     # textTarget = 'Кредитный рейтинг выпуска облигаций' # для отладки
@@ -194,15 +194,15 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause):
                     isin = identifier
                     print('ISIN', isin)    
     
-                # try: # на случай обрыва связи
-                bondS = getRatingFromMoEx(bondS, textTargetDict[textTarget], driver, identifier, isin, pause, textTarget)
-                # except: # на случай обрыва связи
-                #     print(sys.exc_info())
-                #     return bondS
-                #     print('--- Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть. Автоматическое исполнение скрипта приостанавливается. Далее вручную перезапустите текущий чанк и последующие')
-                #     input()
-                #     driver.quit()
-                #     sys.exit()
+                # На всякий случай, например, обрыва связи
+                try: bondS = getRatingFromMoEx(bondS, textTargetDict[textTarget], driver, identifier, isin, pause, textTarget)
+                except:
+                    print(sys.exc_info())
+                    return bondS
+                    print('--- Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть. Автоматическое исполнение скрипта приостанавливается. Далее вручную перезапустите текущий чанк и последующие')
+                    input()
+                    driver.quit()
+                    sys.exit()
     
                 counter += 1
                 print('Элементов множества обработано:', counter, 'из', len(identifierS))
