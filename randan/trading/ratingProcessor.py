@@ -123,23 +123,23 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
             for dataRow in tableWithRating.find_elements(By.XPATH, ".//tbody//tr | .//tr[td]"):
                 dataCellS = dataRow.find_elements(By.TAG_NAME, "td")
                 dataCellTextS = [cell.text.strip() for cell in dataCellS if cell.text.strip()]
-    
+
                 # отбор строк с содержательными данными (обычно 3+ ячейки)
                 if len(dataCellTextS) >= 3 and any(keyword in ' '.join(dataCellTextS) for keyword in ['АКРА', 'НКР', 'НРА', 'Эксперт']):
                     # воспроизвести таблицу, сопоставляя данные с заголовками
                     record = {"Тип рейтинга": textTarget.replace('Кредитный рейтинг ', '').strip()}
-    
+
                     # Заполнить известные поля
                     for i, header in enumerate(headerS[:len(dataCellTextS)]):
                         record[header] = dataCellTextS[i]
-    
+
                     # Заполняем оставшиеся данные, если столбцов больше, чем заголовков
                     for i in range(len(headerS), len(dataCellTextS)):
                         record[f"Доп. поле {i + 1}"] = dataCellTextS[i]
-    
+
                     dictS_withRating.append(record)
             # print('dictS_withRating:', dictS_withRating) # для отладки
-    
+
             oneBondRating = pandas.DataFrame(dictS_withRating)
             display('oneBondRating:', oneBondRating) # для отладки
             oneBondRating = oneBondRating[oneBondRating['Значение кредитного рейтинга'].str.contains('Отозван', case=False) != True] # не интересует, если рейтинг отозван
@@ -152,6 +152,15 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
             else:
                 # print('identifier == isin') # для отладки
                 bondS.loc[bondS['ISIN'] == identifier, columnWithRating] = oneBondRating[columnWithRating].mean()
+
+        else:
+            if identifier != isin:
+                # print('identifier != isin') # для отладки
+                bondS.loc[bondS['Эмитент'] == identifier, columnWithRating] = 'Рейтинг отозван или неизвестен'
+                    # присвоить рейтинг эмитента всем его облигациям в bondS
+            else:
+                # print('identifier == isin') # для отладки
+                bondS.loc[bondS['ISIN'] == identifier, columnWithRating] = 'Рейтинг отозван или неизвестен'
 
     return bondS
 
