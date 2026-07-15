@@ -56,10 +56,18 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
     # Ожидание, чтобы страница прогрузилась
     # Архитектура
     # /html/body/div[3]/div[6]/div/div/div[1]/div/div/div/div/div[3]/div/div[3]/div[2]/div[1]/h2
-    WebDriverWait(driver, pause).until(expected_conditions.presence_of_element_located(
-        (By.XPATH, f"//div[@class='tab-content']//h2[contains(., 'Параметры инструмента')]")
-        ))
-    
+    try:
+        WebDriverWait(driver, pause).until(expected_conditions.presence_of_element_located(
+            (By.XPATH, f"//div[@class='tab-content']//h2[contains(., 'Параметры инструмента')]")
+            ))
+        print('  ✅ Облигация найдена по ISIN') # , end='\r'
+    except Exception:
+        print(Exception)
+        print(traceback.format_exc()) # показ точной строчки кода с ошибкой                  
+        print('  ✅ Облигация НЕ найдена по ISIN, ищу по SECID') # , end='\r'
+        secidIndex = bondsRB.loc[bondsRB['ISIN'] == 'RU0002868001', 'SECID'].index
+        secid = bondsRB.loc[secidIndex[0], 'SECID']
+        driver.get(f'https://www.moex.com/ru/issue.aspx?code={secid}')
     body_text = driver.find_element("tag name", "body").text
     # Не_согласен_pattern = re.compile(rf"\b{re.escape('Не согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
     Согласен_pattern = re.compile(rf"\b{re.escape('Согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
