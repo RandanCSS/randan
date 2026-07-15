@@ -68,6 +68,10 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
         secidIndex = bondS.loc[bondS['ISIN'] == isin, 'SECID'].index
         secid = bondS.loc[secidIndex[0], 'SECID']
         driver.get(f'https://www.moex.com/ru/issue.aspx?code={secid}')
+        WebDriverWait(driver, pause).until(expected_conditions.presence_of_element_located(
+            (By.XPATH, f"//div[@class='tab-content']//h2[contains(., 'Параметры инструмента')]")
+            ))
+        print('  ✅ Облигация найдена по SECID') # , end='\r'
     body_text = driver.find_element("tag name", "body").text
     # Не_согласен_pattern = re.compile(rf"\b{re.escape('Не согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
     Согласен_pattern = re.compile(rf"\b{re.escape('Согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
