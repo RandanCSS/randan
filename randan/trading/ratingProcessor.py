@@ -61,17 +61,40 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
         ))
     
     body_text = driver.find_element("tag name", "body").text
-    Не_согласен_pattern = re.compile(rf"\b{re.escape('Не согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
+    # Не_согласен_pattern = re.compile(rf"\b{re.escape('Не согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
     Согласен_pattern = re.compile(rf"\b{re.escape('Согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
-    СогласенНе_согласен_pattern = re.compile(rf"\b{re.escape('СогласенНе согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
-    
-    if Согласен_pattern.search(body_text.strip()) and not Не_согласен_pattern.search(body_text.strip()):
-        driver.find_element(By.XPATH, "//p[text()='Согласен']").click()
-        print('  ✅ Предупреждение про Cookie закрыто') # , end='\r'
+    # СогласенНе_согласен_pattern = re.compile(rf"\b{re.escape('СогласенНе согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
 
-    if СогласенНе_согласен_pattern.search(body_text.strip()):
-        driver.find_element(By.XPATH, "//button[text()='Согласен']").click()
-        print('  ✅ Дисклеймер закрыт') # , end='\r'
+    if Согласен_pattern.search(body_text.strip()): # наличие этго слова -- сигнал к проверке предупреждения про Cookie и дисклеймера
+        try:
+            cookieAnchor = WebDriverWait(driver, pause).until(expected_conditions.presence_of_element_located(
+                (By.XPATH, "//div[@class='_usagePolicy']")
+                ))
+            cookieAnchor.find_element(By.XPATH, ".//p[text()='Согласен']").click()
+            print('  ✅ Предупреждение про Cookie закрыто') # , end='\r'
+        except Exception:
+            print(Exception)
+            print(traceback.format_exc()) # показ точной строчки кода с ошибкой                  
+            print('  ✅ Предупреждение про Cookie не найдено') # , end='\r'
+
+        try:
+            disclaimerAnchor = WebDriverWait(driver, pause).until(expected_conditions.presence_of_element_located(
+                (By.XPATH, "//div[@class='ui-dialog-buttonset']")
+                ))        
+            disclaimerAnchor.find_element(By.XPATH, ".//button[text()='Согласен']").click()
+            print('  ✅ Дисклеймер закрыт') # , end='\r'
+        except Exception:
+            print(Exception)
+            print(traceback.format_exc()) # показ точной строчки кода с ошибкой                  
+            print('  ✅ Дисклеймер не найден') # , end='\r'
+
+    # if Согласен_pattern.search(body_text.strip()):
+    #     driver.find_element(By.XPATH, "//p[text()='Согласен']").click()
+    #     print('  ✅ Предупреждение про Cookie закрыто') # , end='\r'
+
+    # if СогласенНе_согласен_pattern.search(body_text.strip()):
+    #     driver.find_element(By.XPATH, "//button[text()='Согласен']").click()
+    #     print('  ✅ Дисклеймер закрыт') # , end='\r'
 
     # textTarget = 'Кредитный рейтинг эмитента' # для отладки
     # textTarget = 'Кредитный рейтинг выпуска облигаций' # для отладки
