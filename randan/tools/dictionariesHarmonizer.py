@@ -47,7 +47,7 @@ def dictionariesHarmonizer(df_editing, df_standard, columnName):
     df_editing_new_2 = df_editing_new_1.copy()
     elementS_editing = df_editing_new_1[columnName]
     
-    Два цикла для сверки поячеечно столбцов df_editing_new_1[columnName] и df_standard[columnName]
+    # Два цикла для сверки поячеечно столбцов df_editing_new_1[columnName] и df_standard[columnName]
     for element_editing in elementS_editing:
         # print('element_editing:', element_editing) # для отладки , end='\r'
         for element_standard in df_standard[columnName]:
