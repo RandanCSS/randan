@@ -51,7 +51,8 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
     bondS = bondS_in.copy()
 
     # 'https://www.moex.com/ru/issue.aspx?board=TQOD&code=RU000A10DYP0' # для отладки
-    driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
+    try: driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
+    except selenium.common.exceptions.TimeoutException: driver = timeoutExceptionProcesser(driver, isin, pause)
 
     # Ожидание, чтобы страница прогрузилась
     # Архитектура
@@ -221,6 +222,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause):
             options.add_argument('--disable-background-timer-throttling') # отключить троттлинг таймеров
             # options.headless = True # невидимый режим
             driver = undetected_chromedriver.Chrome(options=options)
+            driver.set_page_load_timeout(30 * pause)
     
             if textTarget == 'Кредитный рейтинг эмитента': identifierS = bondS_withoutRating.drop_duplicates('Эмитент')['Эмитент'].tolist()
             else: identifierS = bondS_withoutRating['ISIN'].tolist() # т.е. textTarget == 'Кредитный рейтинг выпуска облигаций'
@@ -259,3 +261,26 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause):
             driver.quit()
 
     return bondS
+
+def timeoutExceptionProcesser(driver, isin, pause):
+    for attempt in range(3):
+        print('attempt:', attempt) # для отладки    
+        driver.quit()
+        options = undetected_chromedriver.ChromeOptions()
+        options.add_argument("--pageLoadStrategy=none") # стратегия загрузки: 'none' -- не ждать загрузки вообще;
+            # это позволяет начать парсить сразу после получения HTML
+
+        driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=150)
+        driver.set_page_load_timeout(3 * pause)
+
+        try: driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
+        except selenium.common.exceptions.TimeoutException:
+            print('Загрука страницы прервана для проверки наличия на ней искомого текста') # для отладки
+
+        pageSource = driver.page_source
+        # print(pageSource) # для отладки
+
+        if ('инструмент' in pageSource.lower()) | ('согласен' in pageSource.lower()):
+            print('Условие наличия на странице искомого текста выполнено') # для отладки
+            return driver
+            break # выход из цикла for attempt in range(3)
