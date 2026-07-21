@@ -265,7 +265,15 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause):
 def timeoutExceptionProcesser(driver, isin, pause):
     for attempt in range(3):
         print('attempt:', attempt) # для отладки    
-        driver.quit()
+
+        if driver is not None:
+            try:
+                driver.quit()
+            except Exception:
+                print(f"Не удалось закрыть драйвер: {Exception}")
+            finally:
+                driver = None  # Обнуляем ссылку
+
         options = undetected_chromedriver.ChromeOptions()
         options.add_argument("--pageLoadStrategy=none") # стратегия загрузки: 'none' -- не ждать загрузки вообще;
             # это позволяет начать парсить сразу после получения HTML
@@ -283,4 +291,4 @@ def timeoutExceptionProcesser(driver, isin, pause):
         if ('инструмент' in pageSource.lower()) | ('согласен' in pageSource.lower()):
             print('Условие наличия на странице искомого текста выполнено') # для отладки
             return driver
-            break # выход из цикла for attempt in range(3)
+            # break # выход из цикла for attempt in range(3)
