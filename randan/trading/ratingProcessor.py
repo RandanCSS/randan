@@ -22,8 +22,7 @@ while True:
         from selenium.webdriver.common.by import By
         from selenium.webdriver.support import expected_conditions
         from selenium.webdriver.support.ui import WebDriverWait
-        from webdriver_manager.chrome import ChromeDriverManager
-        import pandas, re, traceback # , undetected_chromedriver
+        import pandas, re, traceback, undetected_chromedriver
         break
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
@@ -221,8 +220,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause):
             options.add_argument('--disable-backgrounding-occluded-windows') # запрет браузеру засыпать в фоне
             options.add_argument('--disable-background-timer-throttling') # отключить троттлинг таймеров
             # options.headless = True # невидимый режим
-            driver = webdriver.Chrome(options=options)            
-            # driver = undetected_chromedriver.Chrome(options=options)
+            driver = undetected_chromedriver.Chrome(options=options)
     
             if textTarget == 'Кредитный рейтинг эмитента': identifierS = bondS_withoutRating.drop_duplicates('Эмитент')['Эмитент'].tolist()
             else: identifierS = bondS_withoutRating['ISIN'].tolist() # т.е. textTarget == 'Кредитный рейтинг выпуска облигаций'
