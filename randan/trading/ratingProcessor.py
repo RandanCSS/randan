@@ -18,7 +18,7 @@ while True:
             # (а) адаптации текущего скрипта к файловой системе CoLab
             # (б) упрощения некоторых оперций в selenium
 
-        from selenium.common.exceptions import NoSuchElementException, TimeoutException
+        from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException
         from selenium.webdriver.common.by import By
         from selenium.webdriver.support import expected_conditions
         from selenium.webdriver.support.ui import WebDriverWait
@@ -52,7 +52,7 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
 
     # 'https://www.moex.com/ru/issue.aspx?board=TQOD&code=RU000A10DYP0' # для отладки
     try: driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
-    except TimeoutException:
+    except (TimeoutError, TimeoutException, WebDriverException):
         print('Загрука страницы длится слишком долго; перехожу к timeoutExceptionProcesser') # для отладки
         driver = timeoutExceptionProcesser(driver, isin, pause)
 
