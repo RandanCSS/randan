@@ -51,7 +51,8 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
     bondS = bondS_in.copy()
 
     # 'https://www.moex.com/ru/issue.aspx?board=TQOD&code=RU000A10DYP0' # для отладки
-    try: driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
+    try:
+        driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
         print('Страница загрузилась успешно') # для отладки
     except (TimeoutError, TimeoutException, WebDriverException):
         print('Загрузка страницы длится слишком долго; перехожу к timeoutExceptionProcesser') # для отладки
