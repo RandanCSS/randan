@@ -77,6 +77,10 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
             secidIndex = bondS.loc[bondS['ISIN'] == isin, 'SECID'].index
             secid = bondS.loc[secidIndex[0], 'SECID']
             driver.get(f'https://www.moex.com/ru/issue.aspx?code={secid}')
+
+
+
+            
             WebDriverWait(driver, pause).until(expected_conditions.presence_of_element_located(
                 (By.XPATH, f"//div[@class='tab-content']//h2[contains(., 'Параметры инструмента')]")
                 ))
@@ -108,14 +112,6 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
                 print(Exception)
                 print(traceback.format_exc()) # показ точной строчки кода с ошибкой                  
                 print('  ✅ Дисклеймер не найден') # , end='\r'
-    
-        # if Согласен_pattern.search(body_text.strip()):
-        #     driver.find_element(By.XPATH, "//p[text()='Согласен']").click()
-        #     print('  ✅ Предупреждение про Cookie закрыто') # , end='\r'
-    
-        # if СогласенНе_согласен_pattern.search(body_text.strip()):
-        #     driver.find_element(By.XPATH, "//button[text()='Согласен']").click()
-        #     print('  ✅ Дисклеймер закрыт') # , end='\r'
     
         # textTarget = 'Кредитный рейтинг эмитента' # для отладки
         # textTarget = 'Кредитный рейтинг выпуска облигаций' # для отладки
