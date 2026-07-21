@@ -293,7 +293,7 @@ def timeoutExceptionProcesser(driver, isin, pause):
             print('Загрука страницы прервана для проверки наличия на ней искомого текста') # для отладки
 
         pageSource = driver.page_source
-        # print(pageSource) # для отладки
+        print(pageSource) # для отладки
 
         if ('инструмент' in pageSource.lower()) | ('согласен' in pageSource.lower()):
             print('Условие наличия на странице искомого текста выполнено') # для отладки
