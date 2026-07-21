@@ -52,7 +52,7 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
 
     # 'https://www.moex.com/ru/issue.aspx?board=TQOD&code=RU000A10DYP0' # для отладки
     try: driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
-    except selenium.common.exceptions.TimeoutException: driver = timeoutExceptionProcesser(driver, isin, pause)
+    except TimeoutException: driver = timeoutExceptionProcesser(driver, isin, pause)
 
     # Ожидание, чтобы страница прогрузилась
     # Архитектура
@@ -282,7 +282,7 @@ def timeoutExceptionProcesser(driver, isin, pause):
         driver.set_page_load_timeout(3 * pause)
 
         try: driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
-        except selenium.common.exceptions.TimeoutException:
+        except TimeoutException:
             print('Загрука страницы прервана для проверки наличия на ней искомого текста') # для отладки
 
         pageSource = driver.page_source
