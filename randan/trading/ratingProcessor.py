@@ -51,7 +51,9 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
     bondS = bondS_in.copy()
 
     # 'https://www.moex.com/ru/issue.aspx?board=TQOD&code=RU000A10DYP0' # для отладки
-    try: driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
+    try:
+        driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
+        print('Загрука страницы длится слишком долго; перехожу к timeoutExceptionProcesser') # для отладки
     except TimeoutException: driver = timeoutExceptionProcesser(driver, isin, pause)
 
     # Ожидание, чтобы страница прогрузилась
@@ -279,7 +281,7 @@ def timeoutExceptionProcesser(driver, isin, pause):
             # это позволяет начать парсить сразу после получения HTML
 
         driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=150)
-        driver.set_page_load_timeout(3 * pause)
+        driver.set_page_load_timeout(100 * pause)
 
         try: driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
         except TimeoutException:
