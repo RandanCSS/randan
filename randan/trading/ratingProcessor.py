@@ -52,8 +52,9 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
 
     # 'https://www.moex.com/ru/issue.aspx?board=TQOD&code=RU000A10DYP0' # для отладки
     try: driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
+        print('Страница загрузилась успешно') # для отладки
     except (TimeoutError, TimeoutException, WebDriverException):
-        print('Загрука страницы длится слишком долго; перехожу к timeoutExceptionProcesser') # для отладки
+        print('Загрузка страницы длится слишком долго; перехожу к timeoutExceptionProcesser') # для отладки
         driver = timeoutExceptionProcesser(driver, isin, pause)
 
     # Ожидание, чтобы страница прогрузилась
@@ -65,6 +66,9 @@ def getRatingFromMoEx(bondS_in, columnWithRating, driver, identifier, isin, paus
             ))
         print('  ✅ Облигация найдена по ISIN') # , end='\r'
     except Exception:
+        pageSource = driver.page_source
+        print(pageSource) # для отладки
+        
         print(Exception)
         print(traceback.format_exc()) # показ точной строчки кода с ошибкой                  
         print('  ✅ Облигация НЕ найдена по ISIN, ищу по SECID') # , end='\r'
