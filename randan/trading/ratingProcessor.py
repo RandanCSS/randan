@@ -224,7 +224,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause):
             options.add_argument('--disable-background-timer-throttling') # отключить троттлинг таймеров
             # options.headless = True # невидимый режим
             driver = undetected_chromedriver.Chrome(options=options)
-            driver.set_page_load_timeout(30 * pause)
+            driver.set_page_load_timeout(100 * pause)
     
             if textTarget == 'Кредитный рейтинг эмитента': identifierS = bondS_withoutRating.drop_duplicates('Эмитент')['Эмитент'].tolist()
             else: identifierS = bondS_withoutRating['ISIN'].tolist() # т.е. textTarget == 'Кредитный рейтинг выпуска облигаций'
@@ -281,7 +281,7 @@ def timeoutExceptionProcesser(driver, isin, pause):
             # это позволяет начать парсить сразу после получения HTML
 
         driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=150)
-        driver.set_page_load_timeout(100 * pause)
+        driver.set_page_load_timeout(10 * pause)
 
         try: driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
         except TimeoutException:
