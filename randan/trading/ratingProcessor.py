@@ -219,10 +219,10 @@ def ratingFromIssuer(bondS_in, columnTarget):
 # У некоторых облигаций в столбцах Issuer D Rating и Bond D Rating рейтинг отсутствует
 # Функция заполняет эти стобцы, если у другой облигации того же эмитента отражён рейтинг в столбце Issuer D Rating
     bondS = bondS_in.copy()
-    issuerS_withRating = bondS[bondS['Эмитент'].notna()].drop_duplicates('Эмитент', ignore_index=True)
+    issuerS_withRating = bondS[(bondS['Эмитент'].notna()) & (bondS['Issuer D Rating'].notna())].drop_duplicates('Эмитент', ignore_index=True)
     display('issuerS_withRating:', issuerS_withRating) # для отладки, это датафрейм
 
-    issuerS_withoutRating = bondS[bondS['Эмитент'].notna()]['Эмитент'].drop_duplicates().tolist()
+    issuerS_withoutRating = bondS[(bondS['Эмитент'].notna()) & (bondS['Issuer D Rating'].isna())]['Эмитент'].drop_duplicates().tolist()
     issuerS_withoutRating.sort()
     print('issuerS_withoutRating:', issuerS_withoutRating) # для отладки, это список
 
