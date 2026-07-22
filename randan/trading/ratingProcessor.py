@@ -306,7 +306,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause):
         bondS = ratingFromIssuer(bondS, 'Bond D Rating')
         # заполнить эти стобец Bond D Rating, если у этой же или другой облигации того же эмитента отражён рейтинг в столбце Issuer D Rating
 
-     return bondS, bondS_rowS_processed
+    return bondS, bondS_rowS_processed
 
 def timeoutExceptionProcesser(driver, isin, pause):
     for attempt in range(3):
