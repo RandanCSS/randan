@@ -222,7 +222,7 @@ def ratingFromIssuer(bondS_in, columnTarget):
     issuerS_withRating = bondS[(bondS['Эмитент'].notna()) & (bondS['Issuer D Rating'].notna())].drop_duplicates('Эмитент', ignore_index=True)
     display('issuerS_withRating:', issuerS_withRating) # для отладки, это датафрейм
 
-    issuerS_withoutRating = bondS[(bondS['Эмитент'].notna()) & (bondS['Issuer D Rating'].isna())]['Эмитент'].drop_duplicates().tolist()
+    issuerS_withoutRating = bondS[(bondS['Эмитент'].notna()) & (bondS[columnTarget].isna())]['Эмитент'].drop_duplicates().tolist()
     issuerS_withoutRating.sort()
     print('issuerS_withoutRating:', issuerS_withoutRating) # для отладки, это список
 
