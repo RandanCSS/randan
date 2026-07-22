@@ -18,7 +18,7 @@ for attempt in range(1, 4):
         from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
         from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException
         from selenium.webdriver.common.by import By
-        from selenium.webdriver.support import expected_conditionsф
+        from selenium.webdriver.support import expected_conditions
         from selenium.webdriver.support.ui import WebDriverWait
         import pandas, re, traceback, undetected_chromedriver
         break # выход из цикла for attempt in range(3)
