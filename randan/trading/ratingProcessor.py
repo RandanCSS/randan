@@ -220,21 +220,21 @@ def ratingFromIssuer(bondS_in, columnTarget):
 # Функция заполняет эти стобцы, если у другой облигации того же эмитента отражён рейтинг в столбце Issuer D Rating
     bondS = bondS_in.copy()
     issuerS_withRating = bondS[(bondS['Эмитент'].notna()) & (bondS['Issuer D Rating'].notna())].drop_duplicates('Эмитент', ignore_index=True)
-    display('issuerS_withRating:', issuerS_withRating) # для отладки, это датафрейм
+    # display('issuerS_withRating:', issuerS_withRating) # для отладки, это датафрейм
 
     issuerS_withoutRating = bondS[(bondS['Эмитент'].notna()) & (bondS[columnTarget].isna())]['Эмитент'].drop_duplicates().tolist()
     issuerS_withoutRating.sort()
-    print('issuerS_withoutRating:', issuerS_withoutRating) # для отладки, это список
+    # print('issuerS_withoutRating:', issuerS_withoutRating) # для отладки, это список
 
     # Сравнить issuerS_withoutRating с issuerS_withRating['Эмитент'].tolist() и в случае совпадения заполнить bondS[columnTarget]
     for issuer_withoutRating in issuerS_withoutRating:
         if issuer_withoutRating in issuerS_withRating['Эмитент'].tolist():
-            print('issuer_withoutRating:', issuer_withoutRating) # для отладки
+            # print('issuer_withoutRating:', issuer_withoutRating) # для отладки
     
-            issuerS_withRating_index = issuerS_withRating.loc[issuerS_withRating['Эмитент'] == issuer_withoutRating, 'Issuer D Rating'].index
+            # issuerS_withRating_index = issuerS_withRating.loc[issuerS_withRating['Эмитент'] == issuer_withoutRating, 'Issuer D Rating'].index
             print('issuerS_withRating_index:', issuerS_withRating_index) # для отладки
     
-            bondS.loc[(bondS['Эмитент'] == issuer_withoutRating) & (bondS['Issuer D Rating'].isna()), columnTarget] =\
+            bondS.loc[(bondS['Эмитент'] == issuer_withoutRating) & (bondS[columnTarget].isna()), columnTarget] =\
                 issuerS_withRating.loc[issuerS_withRating_index, 'Issuer D Rating'][issuerS_withRating_index[0]]    
     return bondS
 
