@@ -310,7 +310,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause):
             driver.quit()
 
     if len(userChoice) == 0:
-        print('Приступаю к функции ratingFromIssuer') # для отладки
+        print('\nПриступаю к функции ratingFromIssuer') # для отладки
         bondS = ratingFromIssuer(bondS, 'Bond D Rating')
         # заполнить эти стобец Bond D Rating, если у этой же или другой облигации того же эмитента отражён рейтинг в столбце Issuer D Rating
 
