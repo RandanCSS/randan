@@ -261,7 +261,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause):
             options.add_argument('--disable-backgrounding-occluded-windows') # запрет браузеру засыпать в фоне
             options.add_argument('--disable-background-timer-throttling') # отключить троттлинг таймеров
             # options.headless = True # невидимый режим
-            driver = undetected_chromedriver.Chrome(, use_subprocess=True)
+            driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True)
             driver.set_page_load_timeout(100 * pause)
 
             if textTarget == 'Кредитный рейтинг эмитента': identifierS = bondS_withoutRating.drop_duplicates('Эмитент')['Эмитент'].tolist()
