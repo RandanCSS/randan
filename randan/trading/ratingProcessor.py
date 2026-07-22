@@ -46,7 +46,7 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
     # .. импорта рейтинга с сайта moex.com
 def getRatingFromMoEx(bondS_in: pandas.DataFrame,
                       columnWithRating: str, 
-                      driver: WebDriver,
+                      driver: undetected_chromedriver,
                       identifier: str,
                       isin: str, 
                       pause: int,
