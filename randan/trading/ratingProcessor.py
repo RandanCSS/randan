@@ -182,9 +182,10 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
                 bondS.loc[bondS['ISIN'] == identifier, columnWithRating] = oneBondRating[columnWithRating].mean()
 
         else:
-            bondS.loc[bondS['Эмитент'] == identifier, 'Rating Notation'] = 'Рейтинг не присвоен или неизвестен, или отозван'
+            bondS_rowS = list(bondS.loc[bondS['Эмитент'] == identifier, 'Rating Notation'].index)
+            bondS.loc[bondS_rowS, 'Rating Notation'] = 'Рейтинг не присвоен или неизвестен, или отозван'
 
-    return bondS, driver
+    return bondS, bondS_rowS, driver
 
     # перевода в число рейтинга с эмитентов торгуемых на МосБирже облигаций
 def ratingDigitizer(letters, raitingSource):
@@ -231,8 +232,8 @@ def ratingFromIssuer(bondS_in, columnTarget):
         if issuer_withoutRating in issuerS_withRating['Эмитент'].tolist():
             # print('issuer_withoutRating:', issuer_withoutRating) # для отладки
     
-            # issuerS_withRating_index = issuerS_withRating.loc[issuerS_withRating['Эмитент'] == issuer_withoutRating, 'Issuer D Rating'].index
-            print('issuerS_withRating_index:', issuerS_withRating_index) # для отладки
+            issuerS_withRating_index = issuerS_withRating.loc[issuerS_withRating['Эмитент'] == issuer_withoutRating, 'Issuer D Rating'].index
+            # print('issuerS_withRating_index:', issuerS_withRating_index) # для отладки
     
             bondS.loc[(bondS['Эмитент'] == issuer_withoutRating) & (bondS[columnTarget].isna()), columnTarget] =\
                 issuerS_withRating.loc[issuerS_withRating_index, 'Issuer D Rating'][issuerS_withRating_index[0]]    
@@ -271,6 +272,9 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause):
             print('identifierS:', identifierS) # для отладки
 
             # Импорт рейтинга с сайта moex.com    
+            bondS_rowS_processed = [] # список обработанных строк датафрейма bondS ;
+                # подаётся при повторных запусках функции ratingMoExForBondsWithoutRating и её оболочек, чтобы избежать повторных в рамках сессии скрипта обращений к этим строкам
+
             counter = 0
             for identifier in identifierS:
             # for identifier in identifierS[0:5]: # для отладки
@@ -282,12 +286,13 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause):
                     print('ISIN', isin)    
 
                 # На всякий случай, например, обрыва связи
-                try: bondS, driver = getRatingFromMoEx(bondS, textTargetDict[textTarget], driver, identifier, isin, pause, textTarget)
+                try: bondS, bondS_rowS, driver = getRatingFromMoEx(bondS, textTargetDict[textTarget], driver, identifier, isin, pause, textTarget)
                 except Exception as excptn:
                     print('Exception 1:', excptn)
                     print(traceback.format_exc()) # показ точной строчки кода с ошибкой
-                    return bondS
+                    return bondS, bondS_rowS_processed
 
+                bondS_rowS_processed.extend(bondS_rowS)
                 counter += 1
                 print('Элементов множества обработано:', counter, 'из', len(identifierS))
                 print("="*60 + "\n")
@@ -301,7 +306,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause):
         bondS = ratingFromIssuer(bondS, 'Bond D Rating')
         # заполнить эти стобец Bond D Rating, если у этой же или другой облигации того же эмитента отражён рейтинг в столбце Issuer D Rating
 
-    return bondS
+     return bondS, bondS_rowS_processed
 
 def timeoutExceptionProcesser(driver, isin, pause):
     for attempt in range(3):
