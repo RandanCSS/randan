@@ -52,6 +52,7 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
                       pause: int,
                       textTarget: str) -> pandas.DataFrame:
     bondS = bondS_in.copy()
+    bondS_rowS = []
 
     # 'https://www.moex.com/ru/issue.aspx?board=TQOD&code=RU000A10DYP0' # для отладки
     try:
@@ -60,7 +61,7 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
     except (TimeoutError, TimeoutException, WebDriverException):
         print('Загрузка страницы длится слишком долго; перехожу к timeoutExceptionProcesser') # для отладки
         driver = timeoutExceptionProcesser(driver, isin, pause)
-        if driver == None: return bondS, driver # выход из функции
+        if driver == None: return bondS, bondS_rowS, driver # выход из функции
 
     # Ожидание, чтобы страница прогрузилась
     # Архитектура
@@ -88,7 +89,7 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
 
             bondS.loc[bondS['Эмитент'] == identifier, 'Rating Notation'] = 'Проблема загрузки страницы'
 
-            return bondS, driver # выход из функции
+            return bondS, bondS_rowS, driver # выход из функции
 
         WebDriverWait(driver, pause).until(expected_conditions.presence_of_element_located(
             (By.XPATH, f"//div[@class='tab-content']//h2[contains(., 'Параметры инструмента')]")
@@ -190,7 +191,7 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
             #     bondS.loc[bondS['Эмитент'] == identifier, columnWithRating] = oneBondRating[columnWithRating].mean()
             #         # присвоить рейтинг эмитента всем его облигациям в bondS
             # else:
-            #     # print('identifier == isin') # для отладки
+            #     # print('idenatifier == isin') # для отладки
             #     bondS.loc[bondS['ISIN'] == identifier, columnWithRating] = oneBondRating[columnWithRating].mean()
 
     return bondS, bondS_rowS, driver
