@@ -146,7 +146,15 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
         headerS = [th.text.strip() for th in headerElementS if th.text.strip()]
         print('headerS:', headerS) # для отладки
 
-        if len(headerS) > 0:
+        if identifier != isin:
+            # print('identifier != isin') # для отладки
+            bondS_rowS = list(bondS[bondS['Эмитент'] == identifier].index)
+        else:
+            # print('identifier == isin') # для отладки
+            bondS_rowS = list(bondS[bondS['ISIN'] == identifier].index)
+
+        if len(headerS) == 0: bondS.loc[bondS_rowS, 'Rating Notation'] = 'Рейтинг не присвоен или неизвестен, или отозван'
+        else:
             dictS_withRating = []
             for dataRow in tableWithRating.find_elements(By.XPATH, ".//tbody//tr | .//tr[td]"):
                 dataCellS = dataRow.find_elements(By.TAG_NAME, "td")
@@ -173,17 +181,17 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
             oneBondRating = oneBondRating[oneBondRating['Значение кредитного рейтинга'].str.contains('Отозван', case=False) != True] # не интересует, если рейтинг отозван
             oneBondRating[columnWithRating] = oneBondRating['Значение кредитного рейтинга'].apply(ratingDigitizer, args=('RB',))
             # display(oneBondRating) # для отладки
-            if identifier != isin:
-                # print('identifier != isin') # для отладки
-                bondS.loc[bondS['Эмитент'] == identifier, columnWithRating] = oneBondRating[columnWithRating].mean()
-                    # присвоить рейтинг эмитента всем его облигациям в bondS
-            else:
-                # print('identifier == isin') # для отладки
-                bondS.loc[bondS['ISIN'] == identifier, columnWithRating] = oneBondRating[columnWithRating].mean()
 
-        else:
-            bondS_rowS = list(bondS.loc[bondS['Эмитент'] == identifier, 'Rating Notation'].index)
-            bondS.loc[bondS_rowS, 'Rating Notation'] = 'Рейтинг не присвоен или неизвестен, или отозван'
+            bondS.loc[bondS_rowS, columnWithRating] = oneBondRating[columnWithRating].mean()
+                # присвоить рейтинг эмитента всем его облигациям в bondS
+
+            # if identifier != isin:
+            #     # print('identifier != isin') # для отладки
+            #     bondS.loc[bondS['Эмитент'] == identifier, columnWithRating] = oneBondRating[columnWithRating].mean()
+            #         # присвоить рейтинг эмитента всем его облигациям в bondS
+            # else:
+            #     # print('identifier == isin') # для отладки
+            #     bondS.loc[bondS['ISIN'] == identifier, columnWithRating] = oneBondRating[columnWithRating].mean()
 
     return bondS, bondS_rowS, driver
 
