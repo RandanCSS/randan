@@ -217,7 +217,14 @@ def ratingDigitizer(letters, raitingSource):
 def ratingMoExForBondsWithoutRating(bondS_in, pause):
     bondS = bondS_in.copy()
 
+    print('''
+    --- Если предпочитаете выставить каждой облигации без рейтинга рейтинг её эмитента, нажмите Enter (так быстрее)
+    --- Если предпочитаете, чтобы рейтинг каждой такой облигации выяснялся на сайте moex.ru , нажмите ПРОБЕЛ и Enter (так медленнее, но точнее)
+    ''')
+    userChoice = input()
+
     textTargetDict = {'Кредитный рейтинг эмитента': 'Issuer D Rating', 'Кредитный рейтинг выпуска облигаций': 'Bond D Rating'}
+    if len(userChoice) == 0: del textTargetDict['Кредитный рейтинг выпуска облигаций'] # в этом случе следующий далее цикл будет иметь одну итерацию
     for textTarget in textTargetDict.keys():
         column_tagert = textTargetDict[textTarget]
         bondS_withoutRating = bondS[bondS[column_tagert].isna()]
@@ -232,13 +239,13 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause):
             # options.headless = True # невидимый режим
             driver = undetected_chromedriver.Chrome(options=options)
             driver.set_page_load_timeout(100 * pause)
-    
+
             if textTarget == 'Кредитный рейтинг эмитента': identifierS = bondS_withoutRating.drop_duplicates('Эмитент')['Эмитент'].tolist()
             else: identifierS = bondS_withoutRating['ISIN'].tolist() # т.е. textTarget == 'Кредитный рейтинг выпуска облигаций'
-    
+
             identifierS.sort()
             print('identifierS:', identifierS) # для отладки
-        
+
             # Импорт рейтинга с сайта moex.com    
             counter = 0
             for identifier in identifierS:
@@ -249,21 +256,24 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause):
                 else:
                     isin = identifier
                     print('ISIN', isin)    
-    
+
                 # На всякий случай, например, обрыва связи
                 try: bondS, driver = getRatingFromMoEx(bondS, textTargetDict[textTarget], driver, identifier, isin, pause, textTarget)
                 except Exception as excptn:
                     print('Exception 1:', excptn)
                     print(traceback.format_exc()) # показ точной строчки кода с ошибкой
                     return bondS
-    
+
                 counter += 1
                 print('Элементов множества обработано:', counter, 'из', len(identifierS))
                 print("="*60 + "\n")
-        
+
             print('На сайте moex.com могут оказаться рейтинги не для всех облигаций, поэтому следует проверить визуально:')
             display(bondS[bondS[column_tagert].isna()])
             driver.quit()
+
+    if len(userChoice) == 0:
+        
 
     finally:
         if driver: driver.quit()
