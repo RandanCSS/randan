@@ -321,7 +321,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
     if len(userChoice) == 0:
         print('\nПриступаю к функции ratingThroughIssuer') # для отладки
         bondS = ratingThroughIssuer(bondS, 'Issuer D Rating', 'Bond D Rating')
-        # заполнить эти стобец Bond D Rating, если у этой же или другой облигации того же эмитента отражён рейтинг в столбце Issuer D Rating
+            # заполнить стобец Bond D Rating, если у этой же или другой облигации того же эмитента отражён рейтинг в столбце Issuer D Rating
 
     return bondS, bondS_rowS_processed
 
