@@ -43,7 +43,33 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
 # Авторские функции..
-    # .. импорта рейтинга с сайта moex.com
+# .. поиска эмитентов, у облигаций которых в столбце Bond D Rating (а) ни у одной нет рейтинга,
+    # (б) у некоторых есть рейтинг и у некоторых его нет и (в) у всех есть рейтинг
+def bondS_ofIssuer_ratingChecker(bondS_in):
+    bondS = bondS_in.copy()
+
+    issuerS_fromBonds = bondS[bondS['Эмитент'].notna()]['Эмитент'].drop_duplicates().tolist()
+    # print('issuerS_fromBonds:', issuerS_fromBonds) # для отладки
+
+    issuerS_fromBonds_fullRating = []
+    issuerS_fromBonds_noRating = []
+    issuerS_fromBonds_partialRating = []
+
+    for issuer_fromBonds in tqdm(issuerS_fromBonds):
+        bondS_ofIssuer = bondS[bondS['Эмитент'] == issuer_fromBonds]
+        # display('bondS_ofIssuer:', bondS_ofIssuer) # для отладки
+
+        if sum(bondS_ofIssuer['Bond D Rating'].notna()) == 0: issuerS_fromBonds_noRating.append(issuer_fromBonds)
+        elif sum(bondS_ofIssuer['Bond D Rating'].notna()) == len(bondS_ofIssuer): issuerS_fromBonds_fullRating.append(issuer_fromBonds)
+        else: issuerS_fromBonds_partialRating.append(issuer_fromBonds)
+            # len(bondS_ofIssuer['Bond D Rating'].notna()) > 0 , но не == len(bondS_ofIssuer)
+
+    print('Проверка:',
+          len(issuerS_fromBonds_fullRating) + len(issuerS_fromBonds_noRating) + len(issuerS_fromBonds_partialRating) == len(issuerS_fromBonds))
+
+    return issuerS_fromBonds_fullRating, issuerS_fromBonds_noRating, issuerS_fromBonds_partialRating
+
+# .. импорта рейтинга с сайта moex.com
 def getRatingFromMoEx(bondS_in: pandas.DataFrame,
                       columnWithRating: str, 
                       driver: undetected_chromedriver,
