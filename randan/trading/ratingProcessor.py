@@ -338,7 +338,7 @@ def timeoutExceptionProcesser(driver, isin, pause):
                 # это позволяет начать парсить сразу после получения HTML
 
             driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=150) # 
-            driver.set_page_load_timeout((1 + attempt) * 10 * pause)
+            driver.set_page_load_timeout((1 + attempt) * 100 * pause)
 
             try: driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
             except TimeoutException:
