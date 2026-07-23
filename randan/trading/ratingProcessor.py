@@ -20,6 +20,7 @@ for attempt in range(1, 4):
         from selenium.webdriver.common.by import By
         from selenium.webdriver.support import expected_conditions
         from selenium.webdriver.support.ui import WebDriverWait
+        from tqdm import tqdm
         import pandas, re, traceback, undetected_chromedriver
         break # выход из цикла for attempt in range(3)
     except ModuleNotFoundError:
