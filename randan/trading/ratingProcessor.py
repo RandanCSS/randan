@@ -224,38 +224,19 @@ def ratingDigitizer(letters, raitingSource):
     # print('len(letters) :', len(letters)) # для отладки
     return (3 * (len(letters) - subtracted) + y) + 9 * x
 
-def ratingFromIssuer(bondS_in, columnTarget):
-# Обработка эмитентов и их облигаций, оставшихся без рейтинга
-# У некоторых облигаций в столбцах Issuer D Rating и Bond D Rating рейтинг отсутствует
-# Функция заполняет эти стобцы, если у другой облигации того же эмитента отражён рейтинг в столбце Issuer D Rating
-    bondS = bondS_in.copy()
-    issuerS_withRating = bondS[(bondS['Эмитент'].notna()) & (bondS['Issuer D Rating'].notna())].drop_duplicates('Эмитент', ignore_index=True)
-    # display('issuerS_withRating:', issuerS_withRating) # для отладки, это датафрейм
-
-    issuerS_withoutRating = bondS[(bondS['Эмитент'].notna()) & (bondS[columnTarget].isna())]['Эмитент'].drop_duplicates().tolist()
-    issuerS_withoutRating.sort()
-    # print('issuerS_withoutRating:', issuerS_withoutRating) # для отладки, это список
-
-    # Сравнить issuerS_withoutRating с issuerS_withRating['Эмитент'].tolist() и в случае совпадения заполнить bondS[columnTarget]
-    for issuer_withoutRating in issuerS_withoutRating:
-        if issuer_withoutRating in issuerS_withRating['Эмитент'].tolist():
-            # print('issuer_withoutRating:', issuer_withoutRating) # для отладки
-    
-            issuerS_withRating_index = issuerS_withRating.loc[issuerS_withRating['Эмитент'] == issuer_withoutRating, 'Issuer D Rating'].index
-            # print('issuerS_withRating_index:', issuerS_withRating_index) # для отладки
-    
-            bondS.loc[(bondS['Эмитент'] == issuer_withoutRating) & (bondS[columnTarget].isna()), columnTarget] =\
-                issuerS_withRating.loc[issuerS_withRating_index, 'Issuer D Rating'][issuerS_withRating_index[0]]    
-    return bondS
-
-def ratingMoExForBondsWithoutRating(bondS_in, pause):
+def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
     bondS = bondS_in.copy()
 
-    print('''
-    --- Если предпочитаете выставить каждой облигации без рейтинга рейтинг её эмитента, нажмите Enter (так быстрее)
-    --- Если предпочитаете, чтобы рейтинг каждой такой облигации выяснялся на сайте moex.ru , нажмите ПРОБЕЛ затем и Enter (так медленнее, но точнее)
-    ''')
-    userChoice = input()
+    userChoice = ' '
+    if subordinated != True:
+        print(
+'''
+Если обнаружу облигации без рейтинга в столбце Bond D Rating и при этом обнаружу у этой или другой облигации того же эмитента рейтинг в столбце Issuer D Rating, то
+--- хотите, чтобы я пошерил располагаемый рейтинг? Тогда нажмите Enter (так быстрее)
+--- хотите, чтобы я выяснял неостающий на сайте moex.ru ? Тогда нажмите ПРОБЕЛ затем и Enter (так медленнее, но потенциально точнее, хотя обычно рейтинги эмитента и его несубординированной облигации одинаковы)
+'''
+              )
+        userChoice = input()
 
     textTargetDict = {'Кредитный рейтинг эмитента': 'Issuer D Rating', 'Кредитный рейтинг выпуска облигаций': 'Bond D Rating'}
     if len(userChoice) == 0: del textTargetDict['Кредитный рейтинг выпуска облигаций'] # в этом случе следующий далее цикл будет иметь одну итерацию
@@ -311,8 +292,8 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause):
             driver.quit()
 
     if len(userChoice) == 0:
-        print('\nПриступаю к функции ratingFromIssuer') # для отладки
-        bondS = ratingFromIssuer(bondS, 'Bond D Rating')
+        print('\nПриступаю к функции ratingThroughIssuer') # для отладки
+        bondS = ratingThroughIssuer(bondS, 'Issuer D Rating', 'Bond D Rating')
         # заполнить эти стобец Bond D Rating, если у этой же или другой облигации того же эмитента отражён рейтинг в столбце Issuer D Rating
 
     return bondS, bondS_rowS_processed
@@ -362,3 +343,29 @@ def timeoutExceptionProcesser(driver, isin, pause):
             continue
     
     return None
+
+def ratingThroughIssuer(bondS_in, columnSource, columnTarget):
+# Обработка облигаций без рейтинга в столбце Issuer D Rating или Bond D Rating
+# Функция заполняет эти стобцы, если у другой облигации того же эмитента отражён рейтинг в столбце Issuer D Rating или Bond D Rating
+    bondS = bondS_in.copy()
+    issuerS_withRating = bondS[bondS[['Эмитент', columnSource]].notna()].drop_duplicates('Эмитент', ignore_index=True)
+    # display('issuerS_withRating:', issuerS_withRating) # для отладки, это датафрейм
+
+    issuerS_withoutRating = bondS[(bondS['Эмитент'].notna()) & (bondS[columnTarget].isna())]['Эмитент'].drop_duplicates().tolist()
+    issuerS_withoutRating.sort()
+    # print('issuerS_withoutRating:', issuerS_withoutRating) # для отладки, это список
+
+    # Сравнить issuerS_withoutRating с issuerS_withRating['Эмитент'].tolist() и в случае совпадения заполнить bondS[columnTarget]
+    for issuer_withoutRating in issuerS_withoutRating:
+        if issuer_withoutRating in issuerS_withRating['Эмитент'].tolist():
+            # если у эмитента облигации без рейтинга в columnTarget есть облигация с рейтингом в columnSource, расшерить этот рейтинг
+            # (допустимо только для несубординированных облигаций)
+
+            # print('issuer_withoutRating:', issuer_withoutRating) # для отладки
+
+            issuerS_withRating_index = issuerS_withRating[issuerS_withRating['Эмитент'] == issuer_withoutRating].index
+            # print('issuerS_withRating_index:', issuerS_withRating_index) # для отладки
+
+            bondS.loc[bondS['Эмитент'] == issuer_withoutRating, columnTarget] =\
+                issuerS_withRating.loc[issuerS_withRating_index, columnSource][issuerS_withRating_index[0]]
+    return bondS
