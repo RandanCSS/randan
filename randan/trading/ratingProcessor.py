@@ -253,6 +253,8 @@ def ratingDigitizer(letters, raitingSource):
 
 def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
     bondS = bondS_in.copy()
+    bondS_rowS_processed = [] # список обработанных строк датафрейма bondS ;
+        # подаётся при повторных запусках функции ratingMoExForBondsWithoutRating и её оболочек, чтобы избежать повторных в рамках сессии скрипта обращений к этим строкам
 
     userChoice = ' '
     if subordinated != True:
@@ -289,9 +291,6 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
             print('identifierS:', identifierS) # для отладки
 
             # Импорт рейтинга с сайта moex.com    
-            bondS_rowS_processed = [] # список обработанных строк датафрейма bondS ;
-                # подаётся при повторных запусках функции ratingMoExForBondsWithoutRating и её оболочек, чтобы избежать повторных в рамках сессии скрипта обращений к этим строкам
-
             counter = 0
             for identifier in identifierS:
             # for identifier in identifierS[0:5]: # для отладки
