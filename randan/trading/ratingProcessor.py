@@ -105,7 +105,7 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
 
         pageSource = driver.page_source
         print(pageSource) # для отладки
-        
+
         print('  ✅ Облигация НЕ найдена по ISIN, ищу по SECID') # , end='\r'
         secidIndex = bondS.loc[bondS['ISIN'] == isin, 'SECID'].index
         secid = bondS.loc[secidIndex[0], 'SECID']
@@ -144,7 +144,7 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
         try:
             disclaimerAnchor = WebDriverWait(driver, pause).until(expected_conditions.presence_of_element_located(
                 (By.XPATH, "//div[@class='ui-dialog-buttonset']")
-                ))        
+                ))
             disclaimerAnchor.find_element(By.XPATH, ".//button[text()='Согласен']").click()
             print('  ✅ Дисклеймер закрыт') # , end='\r'
         except Exception as excptn:
@@ -162,7 +162,7 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
         # Поиск таблицы с соответствующим кредитным рейтингом
         tableWithRating = driver.find_element(By.XPATH, f"//h2[contains(., '{textTarget}')]/following-sibling::div")
         # print('tableWithRating.text:', tableWithRating.text) # для отладки
-        
+
         # Извлечь заголовки столбцов
         try:
             headerElementS = tableWithRating.find_elements(By.XPATH, ".//thead//th")
@@ -291,7 +291,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
             identifierS.sort()
             print('identifierS:', identifierS) # для отладки
 
-            # Импорт рейтинга с сайта moex.com    
+            # Импорт рейтинга с сайта moex.com
             counter = 0
             for identifier in identifierS:
             # for identifier in identifierS[0:5]: # для отладки
@@ -300,7 +300,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
                     print('issuer', identifier, '; ISIN', isin)  
                 else:
                     isin = identifier
-                    print('ISIN', isin)    
+                    print('ISIN', isin)
 
                 # На всякий случай, например, обрыва связи
                 try: bondS, bondS_rowS, driver = getRatingFromMoEx(bondS, textTargetDict[textTarget], driver, identifier, isin, pause, textTarget)
@@ -337,7 +337,7 @@ def timeoutExceptionProcesser(driver, isin, pause):
         driver = None # обнулить драйвер
 
     for attempt in range(3):
-        print('attempt:', attempt) # для отладки    
+        print('attempt:', attempt) # для отладки
 
         try:
 
