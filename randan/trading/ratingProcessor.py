@@ -282,7 +282,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
             options.add_argument('--disable-backgrounding-occluded-windows') # запрет браузеру засыпать в фоне
             options.add_argument('--disable-background-timer-throttling') # отключить троттлинг таймеров
             # options.headless = True # невидимый режим
-            driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=version_main) # 
+            driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=version_main)
             driver.set_page_load_timeout(100 * pause)
 
             if textTarget == 'Кредитный рейтинг эмитента': identifierS = bondS_withoutRating.drop_duplicates('Эмитент')['Эмитент'].tolist()
@@ -326,26 +326,27 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
     return bondS, bondS_rowS_processed
 
 def timeoutExceptionProcesser(driver, isin, pause):
+
+    # Закрыть или обнулить драйвер предварительно
+    if driver is not None:
+        try:
+            driver.quit()
+        except Exception as excptn: # не удалось закрыть драйвер
+            print('Exception 1:', excptn)
+            print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+        driver = None # обнулить драйвер
+
     for attempt in range(3):
         print('attempt:', attempt) # для отладки    
 
-        if driver is not None:
-            try:
-                driver.quit()
-            except Exception as excptn:
-                print('Exception 1:', excptn)
-                print(traceback.format_exc()) # показ точной строчки кода с ошибкой
-
-                print(f"Не удалось закрыть драйвер")
-            finally:
-                driver = None  # Обнуляем ссылку
-
         try:
+
+            # Воссоздать драйвер
             options = undetected_chromedriver.ChromeOptions()
             options.add_argument("--pageLoadStrategy=none") # стратегия загрузки: 'none' -- не ждать загрузки вообще;
                 # это позволяет начать парсить сразу после получения HTML
 
-            driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=version_main) # 
+            driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=version_main)
             driver.set_page_load_timeout((1 + attempt) * 100 * pause)
 
             try: driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
@@ -363,13 +364,16 @@ def timeoutExceptionProcesser(driver, isin, pause):
             print('Exception 1:', excptn)
             print(traceback.format_exc()) # показ точной строчки кода с ошибкой
 
-            if driver:
-                try: driver.quit()
-                except: pass
-                driver = None
-            continue
-    
-    return None
+            # Закрыть или обнулить драйвер
+            if driver is not None:
+                try:
+                    driver.quit()
+                except Exception as excptn: # не удалось закрыть драйвер
+                    print('Exception 1:', excptn)
+                    print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+                driver = None # обнулить драйвер
+
+    return driver
 
 def ratingThroughIssuer(bondS_in, columnSource, columnTarget):
 # Обработка облигаций без рейтинга в столбце Issuer D Rating или Bond D Rating
