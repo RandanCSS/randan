@@ -107,19 +107,20 @@ def issuerNameProcessor(bondS_in, issuerS):
     bondS_notna = pandas.DataFrame()
 
     if len(bondS_new_2) > 0:
-        for column in issuerS.columns: # issuerS -- это 'Словарь эмитентов' (без информации о рейтинге),
-                # в котором несколько столбцов, в названии которых слово 'Эмитент'
-            # Причём более общие наименования одного и того же эмитента находятся в более правых столбцах
-                # и, как следствие, при объединении столбцов в один -- попадают в более нижние ячейки
         # for column in issuerS.columns[:1]: # для отладки
+        for column in issuerS.columns: # issuerS -- это 'Словарь эмитентов' (без информации о рейтинге),
+                    # в котором несколько столбцов, в названии которых слово 'Эмитент'
+                # Причём более общие наименования одного и того же эмитента находятся в более правых столбцах
+                    # и, как следствие, при объединении столбцов в один -- попадают в более нижние ячейки
+
             if 'Эмитент' in column:
-                issuerS_byColumns = issuerS[issuerS[column].notna()][[column]] # текущий столбец эмитентов
-                if len(issuerS_byColumns) > 0:
-                    issuerS_byColumns = issuerS_byColumns.rename(columns={column: 'Эмитент'})
-                    # display('issuerS_byColumns:', issuerS_byColumns) # для отладки
+                issuerS_byColumn = issuerS[issuerS[column].notna()][[column]] # текущий столбец эмитентов
+                if len(issuerS_byColumn) > 0:
+                    issuerS_byColumn = issuerS_byColumn.rename(columns={column: 'Эмитент'})
+                    # display('issuerS_byColumn:', issuerS_byColumn) # для отладки
 
                     bondS_matching, bondS_new_1, bondS_new_2 =\
-                        dictionariesHarmonizer.dictionariesHarmonizer(bondS_new_2, issuerS_byColumns, 'Эмитент')
+                        dictionariesHarmonizer.dictionariesHarmonizer(bondS_new_2, issuerS_byColumn, 'Эмитент')
                         # bondS_new_1 -- часть редактируемого датафрейма (df_editing), которая не прошла грубую сверку, но прошла тонкую сверку
                         # bondS_new_2 -- часть редактируемого датафрейма (df_editing), которая не прошла ни грубую, ни тонкую сверку
                     # display('bondS_new_2:', bondS_new_2) # для отладки
