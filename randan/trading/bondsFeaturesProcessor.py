@@ -44,6 +44,7 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
 
 def bondsFeaturesProcessor(
                            bondsIn,
+                           issuerS,
                            path=coLabFolder,
                            returnDfs=False
                            ):
@@ -62,75 +63,69 @@ def bondsFeaturesProcessor(
     bondS = bondsIn.copy()
     bondS = bondS.drop_duplicates('ISIN', keep='last', ignore_index=True)
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+
     if path == None: path = ''
     else: path += slash
 
     warnings.filterwarnings("ignore")
 
 # 1.1 Добавить характеристики облигаций из БД МосБиржи
-    boardS, columnsDescriptionS, сharacteristicsFromMoEx = getMoExData.getMoExData(market='bonds', returnDfs=True)
-    # print('сharacteristicsFromMoEx.columns:', сharacteristicsFromMoEx.columns) # для отладки
-
-    bondS = bondS.merge(сharacteristicsFromMoEx, on='ISIN', suffixes=("_drop", ""), how="left")
-    bondS = bondS[[column for column in bondS.columns if not column.endswith("_drop")]]
+    boardS, columnsDescriptionS, securitieS = getMoExData.getMoExData(market='bonds', returnDfs=True)
+    bondS = bondS.merge(securitieS, how='left', on='ISIN', suffixes=('_drop', ''))
+    bondS = bondS[[column for column in bondS.columns if not column.endswith('_drop')]]
     # print('bondS.columns:', bondS.columns) # для отладки
 
-    bondS = bondS[bondS['SECNAME'].notna()] # убрать акции
-    # display(bondS) # для отладки
+# 1.1 Добавить столбцы Эмитент и  Bond D Rating и Issuer D Rating; при необходимости, дозаполнить последние
+    bondS = issuerProcessor.issuerNameProcessor(bondS_in, issuerS)
+        # теперь в bondS у каждой облигации указан эмитент с названием, соотнесённым со Словарём эмитентов
+            # (все эти эмитенты представлены в issuerS)
 
-    # 1.1.0 Предобработка названий облигаций
-    bondS_isna = bondS[bondS['SECNAME'].isna()]
-    # display('bondS_isna:', bondS_isna) # для отладки
+    # 2. Разделение облигаций по субординированности, поскольку для несубординированных обычно рейтинг эмитента и облигации совпадают
+        # и для них можно выводить Bond D Rating и Issuer D Rating друг из друга.
+        # А для субординированных облигаций рейтинг следует брать с сайтов
+    bondS_subordinated = bondS_notna[bondS_notna['Субординированность'] == 'Да']
+    display('bondS_subordinated 1:', bondS_subordinated) # для отладки
 
-    # Создать столбец 'Эмитент'
-    bondS_notna = issuerProcessor.issuerExtractor(bondS[bondS['SECNAME'].notna()])
-        # bondS['SECNAME'].notna() , потому что отсекаются вышедшие из обращения
+    bondS_unsubordinated = bondS_notna[bondS_notna['Субординированность'] == 'Нет']
+    display('bondS_unsubordinated 1:', bondS_unsubordinated) # для отладки
 
-    # display('bondS_notna:', bondS_notna) # для отладки
+# !!! Написать код для шаринга рейтинга из issuerS
 
-    # 1.1.1 Поиск эмитентов, которые до сих пор отсутствуют в словарях; их внесение в словарь
-    bondS_new_2 = bondS_notna.copy() # на каждой итерации bondS_New_2 будет сокращаться
-    bondS_notna = pandas.DataFrame()
 
-    if len(bondS_new_2) > 0:
-        for column in issuerS.columns: # issuerS -- это 'Словарь эмитентов' (без информации о рейтинге),
-                # в котором несколько столбцов, в названии которых слово 'Эмитент'
-            # Причём более общие наименования одного и того же эмитента находятся в более правых столбцах
-                # и, как следствие, при объединении столбцов в один -- попадают в более нижние ячейки
-        # for column in issuerS.columns[:1]: # для отладки
-            if 'Эмитент' in column:
-                issuerS_byColumns = issuerS[issuerS[column].notna()][[column]] # текущий столбец эмитентов
-                if len(issuerS_byColumns) > 0:
-                    issuerS_byColumns = issuerS_byColumns.rename(columns={column: 'Эмитент'})
-                    # display('issuerS_byColumns:', issuerS_byColumns) # для отладки
-                    bondS_matching, bondS_new_1, bondS_new_2 =\
-                        dictionariesHarmonizer.dictionariesHarmonizer(bondS_new_2, issuerS_byColumns, 'Эмитент')
-                        # bondS_new_1 -- часть редактируемого датафрейма (df_editing), которая не прошла грубую сверку, но прошла тонкую сверку
-                        # bondS_new_2 -- часть редактируемого датафрейма (df_editing), которая не прошла ни грубую, ни тонкую сверку
-                    # display('bondS_new_2:', bondS_new_2) # для отладки
-                    bondS_notna = pandas.concat([bondS_notna, bondS_matching, bondS_new_1])
-                    # display('bondS_notna:', bondS_notna) # для отладки
-            else: break
+    # 3. "Расшерить" располагаемый рейтинг внутри столбца Bond D Rating (применимо только для несубординированных облигаций,
+        # соответствующих эмитентам из списка issuerS_fromBonds_partialRating)
 
-    if len(bondS_new_2) > 0:
-        issuerS_new = issuerProcessor.issuersComposer(bondS_new_2)
-        print('Эмитенты, до сих пор отсутствующие в словарях (их следует внести в Словарь эмитентов.xlsx):')
-        display(issuerS_new)
-        issuerS_new.to_excel('Новые эмитенты.xlsx', index=False)
-        print(
-'''До внесения их в словарь скрипт приостанавливается. После внесения перезапустите скрипт сначала или с текущего чанка
-А сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'''
-              )
-        input()
-        sys.exit()
+    # Поиск эмитентов, у облигаций которых в столбце Bond D Rating (а) ни у одной нет рейтинга,
+        # (б) у некоторых есть рейтинг и у некоторых его нет и (в) у всех есть рейтинг
+    issuerS_fromBonds_fullRating, issuerS_fromBonds_noRating, issuerS_fromBonds_partialRating =\
+        ratingProcessor.bondS_ofIssuer_ratingChecker(bondS_unsubordinated)
 
-    bondS_notna = pandas.concat([bondS_notna, bondS_new_2])
-    # display('bondS_notna:', bondS_notna) # для отладки
+    # print('issuerS_fromBonds_fullRating:', issuerS_fromBonds_fullRating) # для отладки
+    print('issuerS_fromBonds_noRating:', issuerS_fromBonds_noRating) # для отладки
+    print('issuerS_fromBonds_partialRating:', issuerS_fromBonds_partialRating) # для отладки
 
-    bondS = pandas.concat([bondS_notna, bondS_isna]) # теперь в bondS у каждой облигации указан эмитент;
-        # все эти эмитенты представлены в issuerS
+    if len(issuerS_fromBonds_partialRating) > 0:
+        bondS_unsubordinated_partialRating = bondS_unsubordinated[bondS_unsubordinated['Эмитент'].isin(issuerS_fromBonds_partialRating)]
 
-    # display('bondS:', bondS) # для отладки
+        bondS_unsubordinated_partialRating = ratingProcessor.ratingThroughIssuer(bondS_unsubordinated_partialRating,
+                                                                                 'Bond D Rating',
+                                                                                 'Bond D Rating')
+            # заполнить стобец Bond D Rating, если у этой же или другой облигации того же эмитента отражён рейтинг в том же столбце
+
+        # display('bondS_unsubordinated_partialRating:', bondS_unsubordinated_partialRating) # для отладки
+
+        bondS_unsubordinated = bondS_unsubordinated.merge(bondS_unsubordinated_partialRating[['URL RB', 'Bond D Rating']],
+                                                          how="left",
+                                                          on='URL RB',
+                                                          suffixes=("", "_drop"))
+
+        bondS_unsubordinated['Bond D Rating'] = bondS_unsubordinated['Bond D Rating_drop'].combine_first(bondS_unsubordinated['Bond D Rating'])
+            # замена старых значений новыми только там, где новые не NaN
+
+        bondS_unsubordinated = bondS_unsubordinated.drop('Bond D Rating_drop', axis=1)
+        display('bondS_unsubordinated 2:', bondS_unsubordinated) # для отладки
+
+# !!! При непустом issuerS_fromBonds_noRating следует написать код для шаринга рейтинга из issuerS и взять код из bondsRatingS для выгрузки рейтинга с сайта moex.ru
 
 # 1.2 Рейтинг и другие важные характеристики из Акуальные эмитенты.xlsx
     # print('path:', path) # для отладки
