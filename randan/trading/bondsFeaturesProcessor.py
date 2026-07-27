@@ -78,7 +78,60 @@ def bondsFeaturesProcessor(
     bondS = bondS[bondS['SECNAME'].notna()] # убрать акции
     # display(bondS) # для отладки
 
-    bondS = issuerProcessor.issuerExtractor(bondS[bondS['SECNAME'].notna()])
+    # 1.1.0 Предобработка названий облигаций
+    bondS_isna = bondS[bondS['SECNAME'].isna()]
+    # display('bondS_isna:', bondS_isna) # для отладки
+
+    # Создать столбец 'Эмитент'
+    bondS_notna = issuerProcessor.issuerExtractor(bondS[bondS['SECNAME'].notna()])
+        # bondS['SECNAME'].notna() , потому что отсекаются вышедшие из обращения
+
+    # display('bondS_notna:', bondS_notna) # для отладки
+
+    # 1.1.1 Поиск эмитентов, которые до сих пор отсутствуют в словарях; их внесение в словарь
+    bondS_new_2 = bondS_notna.copy() # на каждой итерации bondS_New_2 будет сокращаться
+    bondS_notna = pandas.DataFrame()
+
+    if len(bondS_new_2) > 0:
+        for column in issuerS.columns: # issuerS -- это 'Словарь эмитентов' (без информации о рейтинге),
+                # в котором несколько столбцов, в названии которых слово 'Эмитент'
+            # Причём более общие наименования одного и того же эмитента находятся в более правых столбцах
+                # и, как следствие, при объединении столбцов в один -- попадают в более нижние ячейки
+        # for column in issuerS.columns[:1]: # для отладки
+            if 'Эмитент' in column:
+                issuerS_byColumns = issuerS[issuerS[column].notna()][[column]] # текущий столбец эмитентов
+                if len(issuerS_byColumns) > 0:
+                    issuerS_byColumns = issuerS_byColumns.rename(columns={column: 'Эмитент'})
+                    # display('issuerS_byColumns:', issuerS_byColumns) # для отладки
+                    bondS_matching, bondS_new_1, bondS_new_2 =\
+                        dictionariesHarmonizer.dictionariesHarmonizer(bondS_new_2, issuerS_byColumns, 'Эмитент')
+                        # bondS_new_1 -- часть редактируемого датафрейма (df_editing), которая не прошла грубую сверку, но прошла тонкую сверку
+                        # bondS_new_2 -- часть редактируемого датафрейма (df_editing), которая не прошла ни грубую, ни тонкую сверку
+                    # display('bondS_new_2:', bondS_new_2) # для отладки
+                    bondS_notna = pandas.concat([bondS_notna, bondS_matching, bondS_new_1])
+                    # display('bondS_notna:', bondS_notna) # для отладки
+            else: break
+
+    if len(bondS_new_2) > 0:
+        issuerS_new = issuerProcessor.issuersComposer(bondS_new_2)
+        print('Эмитенты, до сих пор отсутствующие в словарях (их следует внести в Словарь эмитентов.xlsx):')
+        display(issuerS_new)
+        issuerS_new.to_excel('Новые эмитенты.xlsx', index=False)
+        print(
+'''До внесения их в словарь скрипт приостанавливается. После внесения перезапустите скрипт сначала или с текущего чанка
+А сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'''
+              )
+        input()
+        sys.exit()
+
+    bondS_notna = pandas.concat([bondS_notna, bondS_new_2])
+    # display('bondS_notna:', bondS_notna) # для отладки
+
+    bondS = pandas.concat([bondS_notna, bondS_isna]) # теперь в bondS у каждой облигации указан эмитент;
+        # все эти эмитенты представлены в issuerS
+
+    # display('bondS:', bondS) # для отладки
+
 # 1.2 Рейтинг и другие важные характеристики из Акуальные эмитенты.xlsx
     # print('path:', path) # для отладки
     if os.path.exists(path + 'Замеры рейтингов'):
