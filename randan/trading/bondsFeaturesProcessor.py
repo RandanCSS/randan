@@ -9,10 +9,14 @@ from subprocess import check_call
 for attempt in range(1, 4):
     try:
         from datetime import date
-        from randan.trading import getMoExData # авторский модуль для выгрузки характеристик торгуемых на МосБирже облигаций
+        from randan.trading import getMoExData, issuerProcessor, ratingProcessor # авторские модули для
+            # (а) выгрузки характеристик торгуемых на МосБирже облигаций,
+            # (б) операций с эмитентами торгуемых на МосБирже облигаций
+
         from randan.tools import coLabAdaptor, files2df # авторские модули для
             # (а) адаптации текущего скрипта к файловой системе CoLab,
             # (б) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
+
         import os, pandas, warnings
         break # выход из цикла for attempt in range(3)
 
@@ -66,12 +70,15 @@ def bondsFeaturesProcessor(
 # 1.1 Добавить характеристики облигаций из БД МосБиржи
     boardS, columnsDescriptionS, сharacteristicsFromMoEx = getMoExData.getMoExData(market='bonds', returnDfs=True)
     # print('сharacteristicsFromMoEx.columns:', сharacteristicsFromMoEx.columns) # для отладки
+
     bondS = bondS.merge(сharacteristicsFromMoEx, on='ISIN', suffixes=("_drop", ""), how="left")
     bondS = bondS[[column for column in bondS.columns if not column.endswith("_drop")]]
     # print('bondS.columns:', bondS.columns) # для отладки
+
     bondS = bondS[bondS['SECNAME'].notna()] # убрать акции
     # display(bondS) # для отладки
 
+    bondS = issuerProcessor.issuerExtractor(bondS[bondS['SECNAME'].notna()])
 # 1.2 Рейтинг и другие важные характеристики из Акуальные эмитенты.xlsx
     # print('path:', path) # для отладки
     if os.path.exists(path + 'Замеры рейтингов'):
@@ -81,7 +88,7 @@ def bondsFeaturesProcessor(
         issuerS_withActualRating = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_0)
         # display('issuerS_withActualRating:', issuerS_withActualRating) # для отладки
 
-        fileUptodateName_1 = files2df.getFileUptodateName('_bondS_actual_for_trade', [fileUptodateName_0], path + 'Замеры рейтингов')
+        fileUptodateName_1 = files2df.getFileUptodateName('__Акуальные эмитенты', [fileUptodateName_0], path + 'Замеры рейтингов')
         # print('fileUptodateName_1:', fileUptodateName_1) # для отладки
 
         issuerS_withActualRating_previous = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_1)
