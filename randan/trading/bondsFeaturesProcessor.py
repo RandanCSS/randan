@@ -6,7 +6,7 @@ import sys
 from subprocess import check_call
 
 # --- остальные модули и пакеты
-while True:
+for attempt in range(1, 4):
     try:
         from datetime import date
         from randan.trading import getMoExData # авторский модуль для выгрузки характеристик торгуемых на МосБирже облигаций
@@ -14,19 +14,19 @@ while True:
             # (а) адаптации текущего скрипта к файловой системе CoLab,
             # (б) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
         import os, pandas, warnings
-        break
+        break # выход из цикла for attempt in range(3)
+
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
         if '.' in module: module = module.split('.')[0]
         print(
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка № {attempt} из 10
+Попытка № {attempt} из 3
 '''
               )
         check_call([sys.executable, "-m", "pip", "install", module])
-        attempt += 1
-        if  attempt == 10:
+        if  attempt == 3:
             print(
 f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
@@ -75,8 +75,8 @@ def bondsFeaturesProcessor(
 # 1.2 Рейтинг и другие важные характеристики из bondsRatingS
     # print('path:', path) # для отладки
     if os.path.exists(path + 'Замеры рейтингов'):
-        fileUptodateName_0 = files2df.getFileUptodateName('_bonds', None, path + 'Замеры рейтингов')
-        # print('fileUptodateName_0:', fileUptodateName_0) # для отладки
+        fileUptodateName_0 = files2df.getFileUptodateName('_bondS_actual_for_trade', None, path + 'Замеры рейтингов')
+        print('fileUptodateName_0:', fileUptodateName_0) # для отладки
         fileUptodateName_1 = files2df.getFileUptodateName('_bonds', [fileUptodateName_0], path + 'Замеры рейтингов')
 
     #     # print("Директория 'Замеры рейтингов' существует") # для отладки
