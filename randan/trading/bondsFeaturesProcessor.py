@@ -72,7 +72,7 @@ def bondsFeaturesProcessor(
     bondS = bondS[bondS['SECNAME'].notna()] # убрать акции
     # display(bondS) # для отладки
 
-# 1.2 Рейтинг и другие важные характеристики из bondsRatingS
+# 1.2 Рейтинг и другие важные характеристики из Акуальные эмитенты.xlsx
     # print('path:', path) # для отладки
     if os.path.exists(path + 'Замеры рейтингов'):
         fileUptodateName_0 = files2df.getFileUptodateName('_Акуальные эмитенты', None, path + 'Замеры рейтингов')
@@ -102,7 +102,7 @@ def bondsFeaturesProcessor(
         display(issuerS_withActualRating_up)
 
         print('  Понижение')
-        issuerS_withActualRating_down = bondsRatingS[(bondsRatingS['Issuer D Rating'].notna()) & (bondsRatingS['Issuer D Rating Previous'].notna()) &\
+        issuerS_withActualRating_down = issuerS_withActualRating[
             (issuerS_withActualRating['Issuer D Rating'].notna()) & (issuerS_withActualRating['Issuer D Rating Previous'].notna()) &\
             (issuerS_withActualRating['Issuer D Rating'] < issuerS_withActualRating['Issuer D Rating Previous'])
             ]
@@ -276,4 +276,4 @@ def bondsFeaturesProcessor(
 
     display(bondS['Специфика'].value_counts().sort_index())
 
-    if returnDfs: return bondS, bondsRatingS, bondsRatingS_change
+    if returnDfs: return bondS, issuerS_withActualRating, issuerS_withActualRating_change
