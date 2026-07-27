@@ -75,40 +75,43 @@ def bondsFeaturesProcessor(
 # 1.2 Рейтинг и другие важные характеристики из bondsRatingS
     # print('path:', path) # для отладки
     if os.path.exists(path + 'Замеры рейтингов'):
-        fileUptodateName_0 = files2df.getFileUptodateName('_bondS_actual_for_trade', None, path + 'Замеры рейтингов')
+        fileUptodateName_0 = files2df.getFileUptodateName('_Акуальные эмитенты', None, path + 'Замеры рейтингов')
         # print('fileUptodateName_0:', fileUptodateName_0) # для отладки
 
+        issuerS_withActualRating = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_0)
+        # display('issuerS_withActualRating:', issuerS_withActualRating) # для отладки
+
         fileUptodateName_1 = files2df.getFileUptodateName('_bondS_actual_for_trade', [fileUptodateName_0], path + 'Замеры рейтингов')
-        bondsRatingS = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_0)
-        bondsRatingS = bondsRatingS.drop_duplicates('ISIN', keep='last', ignore_index=True)
-        # display('bondsRatingS:', bondsRatingS) # для отладки
+        # print('fileUptodateName_1:', fileUptodateName_1) # для отладки
 
-        bondsRatingS_previous = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_1)
-        bondsRatingS_previous = bondsRatingS_previous.drop_duplicates('ISIN', keep='last', ignore_index=True)
-        # display('bondsRatingS_previous:', bondsRatingS_previous) # для отладки
-        # display('bondsRatingS:', bondsRatingS) # для отладки
+        issuerS_withActualRating_previous = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_1)
+        # display('issuerS_withActualRating_previous:', issuerS_withActualRating_previous) # для отладки
 
-        bondsRatingS = bondsRatingS.merge(bondsRatingS_previous[['ISIN', 'Issuer D Rating']], on='ISIN', suffixes=("", " Previous"), how="left")
-        # display('bondsRatingS:', bondsRatingS) # для отладки
+        issuerS_withActualRating = issuerS_withActualRating.merge(issuerS_withActualRating_previous[['Эмитент', 'Issuer D Rating']], on='Эмитент', suffixes=("", " Previous"))
+        # display('issuerS_withActualRating:', issuerS_withActualRating) # для отладки
 
-        bondsRatingS.loc[bondsRatingS['Issuer D Rating'] != bondsRatingS['Issuer D Rating Previous'], 'С прошлого замера'] = 'Рейтинг изменился'
+        issuerS_withActualRating.loc[issuerS_withActualRating['Issuer D Rating'] != issuerS_withActualRating['Issuer D Rating Previous'], 'С прошлого замера'] = 'Рейтинг изменился'
     
         print('\n Изменения рейтинга с прошлого замера:')
         print('  Повышение')
-        bondsRatingS_up = bondsRatingS[(bondsRatingS['Issuer D Rating'].notna()) & (bondsRatingS['Issuer D Rating Previous'].notna()) &\
-                                       (bondsRatingS['Issuer D Rating'] > bondsRatingS['Issuer D Rating Previous'])
-                                       ][['Эмитент', 'SECNAME', 'ISIN', 'Issuer D Rating Previous', 'Issuer D Rating', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL MoEx']]
-        display(bondsRatingS_up)
+        issuerS_withActualRating_up = issuerS_withActualRating[
+            (issuerS_withActualRating['Issuer D Rating'].notna()) & (issuerS_withActualRating['Issuer D Rating Previous'].notna()) &\
+            (issuerS_withActualRating['Issuer D Rating'] > issuerS_withActualRating['Issuer D Rating Previous'])
+            ]
+
+        display(issuerS_withActualRating_up)
+
         print('  Понижение')
-        bondsRatingS_down = bondsRatingS[(bondsRatingS['Issuer D Rating'].notna()) & (bondsRatingS['Issuer D Rating Previous'].notna()) &\
-                                         (bondsRatingS['Issuer D Rating'] < bondsRatingS['Issuer D Rating Previous'])
-                                         ][['Эмитент', 'SECNAME', 'ISIN', 'Issuer D Rating Previous', 'Issuer D Rating', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL MoEx']]
+        issuerS_withActualRating_down = bondsRatingS[(bondsRatingS['Issuer D Rating'].notna()) & (bondsRatingS['Issuer D Rating Previous'].notna()) &\
+            (issuerS_withActualRating['Issuer D Rating'].notna()) & (issuerS_withActualRating['Issuer D Rating Previous'].notna()) &\
+            (issuerS_withActualRating['Issuer D Rating'] < issuerS_withActualRating['Issuer D Rating Previous'])
+            ]
 
-        display(bondsRatingS_down)
+        display(issuerS_withActualRating_down)
 
-        bondsRatingS_change = pandas.concat([bondsRatingS_up, bondsRatingS_down])
+        issuerS_withActualRating_change = pandas.concat([issuerS_withActualRating_up, issuerS_withActualRating_down])
 
-        bondS = bondS.merge(bondsRatingS, on='ISIN', suffixes=("_drop", ""), how="left")
+        bondS = bondS.merge(issuerS_withActualRating, how="left", on='Эмитент', suffixes=("_drop", ""))
         bondS = bondS[[column for column in bondS.columns if not column.endswith("_drop")]]
 
     else:
