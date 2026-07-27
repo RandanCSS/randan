@@ -97,12 +97,12 @@ def bondsFeaturesProcessor(
         print('  Повышение')
         bondsRatingS_up = bondsRatingS[(bondsRatingS['Issuer D Rating'].notna()) & (bondsRatingS['Issuer D Rating Previous'].notna()) &\
                                        (bondsRatingS['Issuer D Rating'] > bondsRatingS['Issuer D Rating Previous'])
-                                       ][['SECNAME', 'ISIN', 'Issuer D Rating Previous', 'Issuer D Rating', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL MoEx']]
+                                       ][['Эмитент', 'SECNAME', 'ISIN', 'Issuer D Rating Previous', 'Issuer D Rating', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL MoEx']]
         display(bondsRatingS_up)
         print('  Понижение')
         bondsRatingS_down = bondsRatingS[(bondsRatingS['Issuer D Rating'].notna()) & (bondsRatingS['Issuer D Rating Previous'].notna()) &\
                                          (bondsRatingS['Issuer D Rating'] < bondsRatingS['Issuer D Rating Previous'])
-                                         ][['SECNAME', 'ISIN', 'Issuer D Rating Previous', 'Issuer D Rating', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL MoEx']]
+                                         ][['Эмитент', 'SECNAME', 'ISIN', 'Issuer D Rating Previous', 'Issuer D Rating', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL MoEx']]
 
         display(bondsRatingS_down)
 
