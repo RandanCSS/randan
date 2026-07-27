@@ -76,19 +76,21 @@ def bondsFeaturesProcessor(
     # print('path:', path) # для отладки
     if os.path.exists(path + 'Замеры рейтингов'):
         fileUptodateName_0 = files2df.getFileUptodateName('_bondS_actual_for_trade', None, path + 'Замеры рейтингов')
-        print('fileUptodateName_0:', fileUptodateName_0) # для отладки
+        # print('fileUptodateName_0:', fileUptodateName_0) # для отладки
 
-        fileUptodateName_1 = files2df.getFileUptodateName('_bonds', [fileUptodateName_0], path + 'Замеры рейтингов')
+        fileUptodateName_1 = files2df.getFileUptodateName('_bondS_actual_for_trade', [fileUptodateName_0], path + 'Замеры рейтингов')
         bondsRatingS = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_0)
         bondsRatingS = bondsRatingS.drop_duplicates('ISIN', keep='last', ignore_index=True)
         # display('bondsRatingS:', bondsRatingS) # для отладки
+
         bondsRatingS_previous = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_1)
         bondsRatingS_previous = bondsRatingS_previous.drop_duplicates('ISIN', keep='last', ignore_index=True)
         # display('bondsRatingS_previous:', bondsRatingS_previous) # для отладки
-        # bondsRatingS = bondsRatingS[bondsRatingS['ISIN'].isin(bondS['ISIN'])]
         # display('bondsRatingS:', bondsRatingS) # для отладки
+
         bondsRatingS = bondsRatingS.merge(bondsRatingS_previous[['ISIN', 'Issuer D Rating']], on='ISIN', suffixes=("", " Previous"), how="left")
         # display('bondsRatingS:', bondsRatingS) # для отладки
+
         bondsRatingS.loc[bondsRatingS['Issuer D Rating'] != bondsRatingS['Issuer D Rating Previous'], 'С прошлого замера'] = 'Рейтинг изменился'
     
         print('\n Изменения рейтинга с прошлого замера:')
@@ -101,7 +103,9 @@ def bondsFeaturesProcessor(
         bondsRatingS_down = bondsRatingS[(bondsRatingS['Issuer D Rating'].notna()) & (bondsRatingS['Issuer D Rating Previous'].notna()) &\
                                          (bondsRatingS['Issuer D Rating'] < bondsRatingS['Issuer D Rating Previous'])
                                          ][['SECNAME', 'ISIN', 'Issuer D Rating Previous', 'Issuer D Rating', 'PRICE', 'BUYBACKDATE', 'OFFERDATE', 'PUTOPTIONDATE', 'MATDATE', 'Rating RB', 'URL MoEx']]
+
         display(bondsRatingS_down)
+
         bondsRatingS_change = pandas.concat([bondsRatingS_up, bondsRatingS_down])
 
         bondS = bondS.merge(bondsRatingS, on='ISIN', suffixes=("_drop", ""), how="left")
@@ -125,6 +129,7 @@ def bondsFeaturesProcessor(
     # display(bondS['MATDATE'].sort_values()) # для отладки
     # display(bondS[['MATDATE', 'NEXTCOUPON', 'SETTLEDATE']].head(50)) # для отладки
     # display(bondS[['MATDATE', 'NEXTCOUPON', 'SETTLEDATE']].tail(50)) # для отладки
+
     bondS['До купона'] = bondS['NEXTCOUPON'].astype('datetime64[ns]') - bondS['SETTLEDATE'].astype('datetime64[ns]')
     bondS['До купона'] = bondS['До купона'].astype(str)
     bondS['До купона'] = bondS['До купона'].str.split(' ').str[0]
@@ -265,6 +270,7 @@ def bondsFeaturesProcessor(
     for column in ['Сектор рынка', 'Амортизация FinAm' if 'Амортизация FinAm' in bondS.columns else 'Амортизация T', 'Купон определён']:
         bondS[column] = bondS[column].fillna('--')
         bondS['Специфика'] += ' ' + bondS[column].astype(str).str[:1]
+
     display(bondS['Специфика'].value_counts().sort_index())
 
     if returnDfs: return bondS, bondsRatingS, bondsRatingS_change
