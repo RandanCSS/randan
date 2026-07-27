@@ -23,6 +23,7 @@ for attempt in range(1, 4):
         from tqdm import tqdm
         import pandas, re, traceback, undetected_chromedriver
         break # выход из цикла for attempt in range(3)
+
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
