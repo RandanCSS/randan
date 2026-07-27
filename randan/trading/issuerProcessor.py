@@ -6,7 +6,7 @@ import sys
 from subprocess import check_call
 
 # --- остальные модули и пакеты
-while True:
+for attempt in range(1, 4):
     try:
         from randan.tools import coLabAdaptor, textPreprocessor # авторские модули для
         # (а) адаптации текущего скрипта к файловой системе CoLab и
@@ -19,12 +19,11 @@ while True:
         if '.' in module: module = module.split('.')[0]
         print(
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка № {attempt} из 10
+Попытка № {attempt} из 3
 '''
               )
         check_call([sys.executable, "-m", "pip", "install", module])
-        attempt += 1
-        if  attempt == 10:
+        if  attempt == 3:
             print(
 f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
