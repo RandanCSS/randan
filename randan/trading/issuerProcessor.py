@@ -12,7 +12,7 @@ for attempt in range(1, 4):
         # (а) адаптации текущего скрипта к файловой системе CoLab и
         # (б) предобработки нестандартизированнрого текста
         import os, pandas, re
-        break
+        break # выход из цикла for attempt in range(3)
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
