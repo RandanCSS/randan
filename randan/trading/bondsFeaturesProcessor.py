@@ -77,19 +77,8 @@ def bondsFeaturesProcessor(
     if os.path.exists(path + 'Замеры рейтингов'):
         fileUptodateName_0 = files2df.getFileUptodateName('_bondS_actual_for_trade', None, path + 'Замеры рейтингов')
         print('fileUptodateName_0:', fileUptodateName_0) # для отладки
+
         fileUptodateName_1 = files2df.getFileUptodateName('_bonds', [fileUptodateName_0], path + 'Замеры рейтингов')
-
-    #     # print("Директория 'Замеры рейтингов' существует") # для отладки
-    #     fileNameS_inDirectory = os.listdir('Замеры рейтингов')
-    #     fileNameS_inDirectory.sort(reverse=True)        
-    #     fileNameS_forUse = []
-    #     for fileName in fileNameS_inDirectory:
-    #         if '_bondsRatingS' in fileName:
-    #             # print(f"Работаю с файлом '{fileName}'") # для отладки
-    #             fileNameS_forUse.append(fileName)
-    #             if len(fileNameS_forUse) == 2: break
-    #     print(f"\nРаботаю с файлом bondsRatingS_previous:'{fileName}'")
-
         bondsRatingS = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_0)
         bondsRatingS = bondsRatingS.drop_duplicates('ISIN', keep='last', ignore_index=True)
         # display('bondsRatingS:', bondsRatingS) # для отладки
@@ -257,7 +246,7 @@ def bondsFeaturesProcessor(
         (
         100 * (1000 + bondS['Купоный доход к погашению'] + bondS['Маржа к погашению'])\
         / bondS['Полная цена покупки'] - 100\
-        )/ bondS['До возможности погасить']
+        ) / bondS['До возможности погасить']
     bondS['% доходности в день к погашению'] = bondS['% доходности в день к погашению'].astype(float).round(4)
 
     # !!! Стоимость!!!
