@@ -138,7 +138,7 @@ def bondsFeaturesProcessor(
 
 # При отсутствии столбца Issuer D Rating добавить его, "расшерив" рейтинг из issuerS_withActualRating # и выгрузка с сайта moex.ru
     for issuer_withActualRating in issuerS_withActualRating['Эмитент']:
-        print('issuer_withActualRating:', issuer_withActualRating) # для отладки
+        # print('issuer_withActualRating:', issuer_withActualRating) # для отладки
         issuerS_withActualRating_index = issuerS_withActualRating[issuerS_withActualRating['Эмитент'] == issuer_withActualRating].index
         bondS.loc[bondS['Эмитент'] == issuer_withActualRating, 'Issuer D Rating'] = issuerS_withActualRating.loc[issuerS_withActualRating_index[0], 'Issuer D Rating']
 
