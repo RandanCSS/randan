@@ -78,7 +78,7 @@ def bondsFeaturesProcessor(
     bondS = bondS[[column for column in bondS.columns if not column.endswith('_drop')]]
     # print('bondS.columns:', bondS.columns) # для отладки
 
-# Добавить столбцы Эмитент и  Bond D Rating и Issuer D Rating; при необходимости, дозаполнить последние
+# Добавить столбцы Эмитент и Bond D Rating и Issuer D Rating; при необходимости, дозаполнить последние
     bondS = issuerProcessor.issuerNameProcessor(bondS, issuerS)
         # теперь в bondS у каждой облигации указан эмитент с названием, соотнесённым со Словарём эмитентов
             # (все эти эмитенты представлены в issuerS)
@@ -101,103 +101,106 @@ def bondsFeaturesProcessor(
         issuerS_withActualRating = issuerS_withActualRating.merge(issuerS_withActualRating_previous[['Эмитент', 'Issuer D Rating']], on='Эмитент', suffixes=("", " Previous"))
         # display('issuerS_withActualRating:', issuerS_withActualRating) # для отладки
 
-        issuerS_withActualRating.loc[issuerS_withActualRating['Issuer D Rating'] != issuerS_withActualRating['Issuer D Rating Previous'], 'С прошлого замера'] = 'Рейтинг изменился'
-    
-        print('\n Изменения рейтинга с прошлого замера:')
-        print('  Повышение')
-        issuerS_withActualRating_up = issuerS_withActualRating[
-            (issuerS_withActualRating['Issuer D Rating'].notna()) & (issuerS_withActualRating['Issuer D Rating Previous'].notna()) &\
-            (issuerS_withActualRating['Issuer D Rating'] > issuerS_withActualRating['Issuer D Rating Previous'])
-            ]
-
-        display(issuerS_withActualRating_up)
-
-        print('  Понижение')
-        issuerS_withActualRating_down = issuerS_withActualRating[
-            (issuerS_withActualRating['Issuer D Rating'].notna()) & (issuerS_withActualRating['Issuer D Rating Previous'].notna()) &\
-            (issuerS_withActualRating['Issuer D Rating'] < issuerS_withActualRating['Issuer D Rating Previous'])
-            ]
-
-        display(issuerS_withActualRating_down)
-
-        issuerS_withActualRating_change = pandas.concat([issuerS_withActualRating_up, issuerS_withActualRating_down])
-
-        bondS = bondS.merge(issuerS_withActualRating, how="left", on='Эмитент', suffixes=("_drop", ""))
-        bondS = bondS[[column for column in bondS.columns if not column.endswith("_drop")]]
-
     else:
         print("Найдите и запустите скрипт bondsRatingS")
-        bondsRatingS = pandas.DataFrame()
+        issuerS_withActualRating = pandas.DataFrame()
+
+    issuerS_withActualRating = issuerS_withActualRating[issuerS_withActualRating['Эмитент'].isin(bondS['Эмитент'].unique())]
+        # убрать эмитенты, не относящиеся к рассматриваемым облигациям
+
+    issuerS_withActualRating.loc[issuerS_withActualRating['Issuer D Rating'] != issuerS_withActualRating['Issuer D Rating Previous'], 'С прошлого замера'] = 'Рейтинг изменился'
+
+    print('\n Изменения рейтинга с прошлого замера:')
+    print('  Повышение')
+    issuerS_withActualRating_up = issuerS_withActualRating[
+        (issuerS_withActualRating['Issuer D Rating'].notna()) & (issuerS_withActualRating['Issuer D Rating Previous'].notna()) &\
+        (issuerS_withActualRating['Issuer D Rating'] > issuerS_withActualRating['Issuer D Rating Previous'])
+        ]
+
+    display(issuerS_withActualRating_up)
+
+    print('  Понижение')
+    issuerS_withActualRating_down = issuerS_withActualRating[
+        (issuerS_withActualRating['Issuer D Rating'].notna()) & (issuerS_withActualRating['Issuer D Rating Previous'].notna()) &\
+        (issuerS_withActualRating['Issuer D Rating'] < issuerS_withActualRating['Issuer D Rating Previous'])
+        ]
+
+    display(issuerS_withActualRating_down)
+
+    issuerS_withActualRating_change = pandas.concat([issuerS_withActualRating_up, issuerS_withActualRating_down])
+
+    bondS = bondS.merge(issuerS_withActualRating, how="left", on='Эмитент', suffixes=("_drop", ""))
+    bondS = bondS[[column for column in bondS.columns if not column.endswith("_drop")]]
 
     # display('bondS:', bondS) # для отладки
 
-# 1.3 "Шеринг" рейтинга из issuerS_withActualRating и выгрузка с сайта moex.ru
+# 1.3 "Шеринг" рейтинга из issuerS_withActualRating# и выгрузка с сайта moex.ru
     for issuer_withActualRating in issuerS_withActualRating['Эмитент']:
         print('issuer_withActualRating:', issuer_withActualRating) # для отладки
         issuerS_withActualRating_index = issuerS_withActualRating[issuerS_withActualRating['Эмитент'] == issuer_withActualRating].index
         bondS.loc[bondS['Эмитент'] == issuer_withActualRating, 'Issuer D Rating'] = issuerS_withActualRating.loc[issuerS_withActualRating_index[0], 'Issuer D Rating']
 
-    # Разделение облигаций по субординированности, поскольку для несубординированных обычно рейтинг эмитента и облигации совпадают
-        # и для них можно выводить Bond D Rating и Issuer D Rating друг из друга.
-        # А для субординированных облигаций рейтинг следует брать с сайтов
-    bondS_subordinated = bondS[bondS['Субординированность'] == 'Да']
-    display('bondS_subordinated 1:', bondS_subordinated) # для отладки
+#     # Разделение облигаций по субординированности, поскольку для несубординированных обычно рейтинг эмитента и облигации совпадают
+#         # и для них можно выводить Bond D Rating и Issuer D Rating друг из друга.
+#         # А для субординированных облигаций рейтинг следует брать с сайтов
+#     bondS_subordinated = bondS[bondS['Субординированность'] == 'Да']
+#     display('bondS_subordinated 1:', bondS_subordinated) # для отладки
 
-    bondS_unsubordinated = bondS[bondS['Субординированность'] == 'Нет']
-    display('bondS_unsubordinated 1:', bondS_unsubordinated) # для отладки
+#     bondS_unsubordinated = bondS[bondS['Субординированность'] == 'Нет']
+#     display('bondS_unsubordinated 1:', bondS_unsubordinated) # для отладки
 
-    # Поиск эмитентов, у облигаций которых в столбце Bond D Rating (а) ни у одной нет рейтинга,
-        # (б) у некоторых есть рейтинг и у некоторых его нет и (в) у всех есть рейтинг
-    issuerS_fromBonds_fullRating, issuerS_fromBonds_noRating, issuerS_fromBonds_partialRating =\
-        ratingProcessor.bondS_ofIssuer_ratingChecker(bondS_unsubordinated)
+#     # Поиск эмитентов, у облигаций которых в столбце Bond D Rating (а) ни у одной нет рейтинга,
+#         # (б) у некоторых есть рейтинг и у некоторых его нет и (в) у всех есть рейтинг
+#     issuerS_fromBonds_fullRating, issuerS_fromBonds_noRating, issuerS_fromBonds_partialRating =\
+#         ratingProcessor.bondS_ofIssuer_ratingChecker(bondS_unsubordinated)
 
-    # print('issuerS_fromBonds_fullRating:', issuerS_fromBonds_fullRating) # для отладки
-    print('issuerS_fromBonds_noRating:', issuerS_fromBonds_noRating) # для отладки
-    print('issuerS_fromBonds_partialRating:', issuerS_fromBonds_partialRating) # для отладки
+#     # print('issuerS_fromBonds_fullRating:', issuerS_fromBonds_fullRating) # для отладки
+#     print('issuerS_fromBonds_noRating:', issuerS_fromBonds_noRating) # для отладки
+#     print('issuerS_fromBonds_partialRating:', issuerS_fromBonds_partialRating) # для отладки
 
-    # Выгрузить НЕрасполагаемый рейтинг с сайта moex.ru для столбцов Issuer D Rating и Bond D Rating
-        # для НЕсубординированных облигаций
-    if len(issuerS_fromBonds_noRating) > 0:
-        bondS_unsubordinated_noRating = bondS_unsubordinated[
-            (bondS_unsubordinated['Эмитент'].isin(issuerS_fromBonds_noRating)) & (bondS['ISIN'].notna()) & (bondS['Эмитент'].notna())
-            ]
+#     # Выгрузить НЕрасполагаемый рейтинг с сайта moex.ru для столбцов Issuer D Rating и Bond D Rating
+#         # для НЕсубординированных облигаций
+#     if len(issuerS_fromBonds_noRating) > 0:
+#         bondS_unsubordinated_noRating = bondS_unsubordinated[
+#             (bondS_unsubordinated['Эмитент'].isin(issuerS_fromBonds_noRating)) & (bondS['ISIN'].notna()) & (bondS['Эмитент'].notna())
+#             ]
 
-        bondS_unsubordinated_noRating, bondS_unsubordinated_noRating_rowS_processed =\
-            ratingProcessor.ratingMoExForBondsWithoutRating(bondS_unsubordinated_noRating, pause)
-                # NB: Почему-то некоторые облигации не имеют SECNAME
+#         bondS_unsubordinated_noRating, bondS_unsubordinated_noRating_rowS_processed =\
+#             ratingProcessor.ratingMoExForBondsWithoutRating(bondS_unsubordinated_noRating, pause)
+#                 # NB: Почему-то некоторые облигации не имеют SECNAME
 
-        # display('bondS_unsubordinated_noRating:', bondS_unsubordinated_noRating) # для отладки
+#         # display('bondS_unsubordinated_noRating:', bondS_unsubordinated_noRating) # для отладки
 
-        bondS_rowS_processed.extend(bondS_unsubordinated_noRating_rowS_processed)
+#         bondS_rowS_processed.extend(bondS_unsubordinated_noRating_rowS_processed)
 
-        bondS_unsubordinated = bondS_unsubordinated.merge(bondS_unsubordinated_noRating[['URL RB', 'Bond D Rating', 'Issuer D Rating']],
-                                                          how="left",
-                                                          on='URL RB',
-                                                          suffixes=("", "_drop"))
+#         bondS_unsubordinated = bondS_unsubordinated.merge(bondS_unsubordinated_noRating[['URL RB', 'Bond D Rating', 'Issuer D Rating']],
+#                                                           how="left",
+#                                                           on='URL RB',
+#                                                           suffixes=("", "_drop"))
 
-        bondS_unsubordinated['Bond D Rating'] = bondS_unsubordinated['Bond D Rating_drop'].combine_first(bondS_unsubordinated['Bond D Rating'])
-            # замена старых значений новыми только там, где новые не NaN
+#         bondS_unsubordinated['Bond D Rating'] = bondS_unsubordinated['Bond D Rating_drop'].combine_first(bondS_unsubordinated['Bond D Rating'])
+#             # замена старых значений новыми только там, где новые не NaN
 
-        bondS_unsubordinated['Issuer D Rating'] = bondS_unsubordinated['Issuer D Rating_drop'].combine_first(bondS_unsubordinated['Issuer D Rating'])
-            # замена старых значений новыми только там, где новые не NaN
+#         bondS_unsubordinated['Issuer D Rating'] = bondS_unsubordinated['Issuer D Rating_drop'].combine_first(bondS_unsubordinated['Issuer D Rating'])
+#             # замена старых значений новыми только там, где новые не NaN
 
-        bondS_unsubordinated = bondS_unsubordinated.drop(['Bond D Rating_drop', 'Issuer D Rating_drop'], axis=1)
-        display('bondS_unsubordinated 2:', bondS_unsubordinated) # для отладки
+#         bondS_unsubordinated = bondS_unsubordinated.drop(['Bond D Rating_drop', 'Issuer D Rating_drop'], axis=1)
+#         display('bondS_unsubordinated 2:', bondS_unsubordinated) # для отладки
 
-    # Выгрузить НЕрасполагаемый рейтинг с сайта moex.ru для столбцов Issuer D Rating и Bond D Rating
-        # для субординированных облигаций
-    bondS_subordinated = bondS_subordinated[
-        (bondS['ISIN'].notna()) & (bondS['Эмитент'].notna())
-        ]
+#     # Выгрузить НЕрасполагаемый рейтинг с сайта moex.ru для столбцов Issuer D Rating и Bond D Rating
+#         # для субординированных облигаций
+#     bondS_subordinated = bondS_subordinated[
+#         (bondS['ISIN'].notna()) & (bondS['Эмитент'].notna())
+#         ]
 
-    bondS_subordinated, bondS_subordinated_rowS_processed =\
-        ratingProcessor.ratingMoExForBondsWithoutRating(bondS_subordinated, pause, subordinated=True)
-        # NB: Почему-то некоторые облигации не имеют SECNAME
+#     bondS_subordinated, bondS_subordinated_rowS_processed =\
+#         ratingProcessor.ratingMoExForBondsWithoutRating(bondS_subordinated, pause, subordinated=True)
+#         # NB: Почему-то некоторые облигации не имеют SECNAME
 
-    display('bondS_subordinated 2:', bondS_subordinated) # для отладки
+#     display('bondS_subordinated 2:', bondS_subordinated) # для отладки
 
-    bondS_rowS_processed.extend(bondS_subordinated_rowS_processed)
-    bondS = pandas.concat([bondS_unsubordinated, bondS_subordinated])
+#     bondS_rowS_processed.extend(bondS_subordinated_rowS_processed)
+#     bondS = pandas.concat([bondS_unsubordinated, bondS_subordinated])
 
 # 1.4 Фильтры по датам
     for column in ['MATDATE', 'NEXTCOUPON']:
