@@ -92,7 +92,7 @@ def bondsFeaturesProcessor(
         issuerS_withActualRating = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_0)
         # display('issuerS_withActualRating:', issuerS_withActualRating) # для отладки
 
-        fileUptodateName_1 = files2df.getFileUptodateName('__Акуальные эмитенты', [fileUptodateName_0], path + 'Замеры рейтингов')
+        fileUptodateName_1 = files2df.getFileUptodateName('_Акуальные эмитенты', [fileUptodateName_0], path + 'Замеры рейтингов')
         # print('fileUptodateName_1:', fileUptodateName_1) # для отладки
 
         issuerS_withActualRating_previous = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_1)
