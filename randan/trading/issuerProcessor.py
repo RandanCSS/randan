@@ -97,7 +97,7 @@ def issuerNameProcessor(bondS_in, issuerS):
     # display('bondS_isna:', bondS_isna) # для отладки
 
     # Создать столбец 'Эмитент'
-    bondS_notna = issuerProcessor.issuerExtractor(bondS[bondS['SECNAME'].notna()])
+    bondS_notna = issuerExtractor(bondS[bondS['SECNAME'].notna()])
         # bondS['SECNAME'].notna() , потому что отсекаются вышедшие из обращения облигации и акции
 
     # display('bondS_notna:', bondS_notna) # для отладки
