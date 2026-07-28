@@ -45,8 +45,8 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
 def bondsFeaturesProcessor(
                            bondsIn,
                            issuerS,
-                           path=coLabFolder,
                            pause,
+                           path=coLabFolder,
                            returnDfs=False
                            ):
     """
@@ -56,9 +56,9 @@ def bondsFeaturesProcessor(
     ----------
       bondsIn : DataFrame -- датафрейм с облигациями, характеристики которых требуется получить; должен содержать хотя бы столбец ISIN
       issuerS : DataFrame -- датафрейм со Словарём эмитентов
+        pause : int -- период засыпания исполнения функций selenium
          path : str -- путь к директории, включая её имя, в которой будут искаться файлы и куда будут сохраняться; по умолчанию, не в CoLab поиск и сохранение происходят в директории, в которой вызывается текущая функция, а в CoLab в директории Colab Notebooks
 
-        pause : int -- период засыпания исполнения функций selenium
     returnDfs : bool -- в случае True функция возвращает итоговые датафрейм bondS
     """
         
