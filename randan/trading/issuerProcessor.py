@@ -90,7 +90,7 @@ def issuerExtractor(dfIn):
     return df
 
 def issuerNameProcessor(bondS_in, issuerS):
-    bondS = bondsIn.copy()
+    bondS = bondS_in.copy()
 
     # 1.1.0 Предобработка названий облигаций
     bondS_isna = bondS[bondS['SECNAME'].isna()]
