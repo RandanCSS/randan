@@ -57,7 +57,8 @@ def bondsFeaturesProcessor(
       bondsIn : DataFrame -- датафрейм с облигациями, характеристики которых требуется получить; должен содержать хотя бы столбец ISIN
       issuerS : DataFrame -- датафрейм со Словарём эмитентов
         pause : int -- период засыпания исполнения функций selenium
-         path : str -- путь к директории, включая её имя, в которой будут искаться файлы и куда будут сохраняться; по умолчанию, не в CoLab поиск и сохранение происходят в директории, в которой вызывается текущая функция, а в CoLab в директории Colab Notebooks
+         path : str -- путь к директории, включая её имя, в которой будут искаться файлы и куда будут сохраняться;
+                     по умолчанию, не в CoLab поиск и сохранение происходят в директории, в которой вызывается текущая функция, а в CoLab в директории Colab Notebooks
 
     returnDfs : bool -- в случае True функция возвращает итоговые датафрейм bondS
     """
@@ -78,10 +79,11 @@ def bondsFeaturesProcessor(
     bondS = bondS[[column for column in bondS.columns if not column.endswith('_drop')]]
     # print('bondS.columns:', bondS.columns) # для отладки
 
-# Добавить столбцы Эмитент и Bond D Rating и Issuer D Rating; при необходимости, дозаполнить последние
-    bondS = issuerProcessor.issuerNameProcessor(bondS, issuerS)
-        # теперь в bondS у каждой облигации указан эмитент с названием, соотнесённым со Словарём эмитентов
-            # (все эти эмитенты представлены в issuerS)
+# При отсутствии столбца Эмитент добавить его
+    if 'Эмитент' not in bondS.columns:
+        bondS = issuerProcessor.issuerNameProcessor(bondS, issuerS)
+            # теперь в bondS у каждой облигации указан эмитент с названием, соотнесённым со Словарём эмитентов
+                # (все эти эмитенты представлены в issuerS)
 
 # 1.2 Импорт словарей (актуального и прошлого) эмитентов с рейтингом из Акуальные эмитенты.xlsx в issuerS_withActualRating
     # print('path:', path) # для отладки
@@ -134,7 +136,7 @@ def bondsFeaturesProcessor(
 
     # display('bondS:', bondS) # для отладки
 
-# 1.3 "Шеринг" рейтинга из issuerS_withActualRating# и выгрузка с сайта moex.ru
+# При отсутствии столбца Issuer D Rating добавить его, "расшерив" рейтинг из issuerS_withActualRating # и выгрузка с сайта moex.ru
     for issuer_withActualRating in issuerS_withActualRating['Эмитент']:
         print('issuer_withActualRating:', issuer_withActualRating) # для отладки
         issuerS_withActualRating_index = issuerS_withActualRating[issuerS_withActualRating['Эмитент'] == issuer_withActualRating].index
@@ -319,8 +321,10 @@ def bondsFeaturesProcessor(
     bondS['Полная цена покупки'] = bondS['Полная цена покупки'].astype(float).round(2)
     
     # На 1000 единиц валюты к погашению будет начислен купоный доход
-    bondS.loc[(bondS['COUPONPERCENT'].isna()) | (bondS['COUPONPERCENT'] == ''), 'Сводный купон'] =\
-        bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'Купон RB']
+    if 'Купон RB' in bondS.columns:
+        bondS.loc[(bondS['COUPONPERCENT'].isna()) | (bondS['COUPONPERCENT'] == ''), 'Сводный купон'] =\
+            bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'Купон RB']
+
     bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'Сводный купон'] =\
         bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'COUPONPERCENT']
     
