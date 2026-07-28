@@ -142,6 +142,7 @@ def bondsFeaturesProcessor(
         issuerS_withActualRating_index = issuerS_withActualRating[issuerS_withActualRating['Эмитент'] == issuer_withActualRating].index
         bondS.loc[bondS['Эмитент'] == issuer_withActualRating, 'Issuer D Rating'] = issuerS_withActualRating.loc[issuerS_withActualRating_index[0], 'Issuer D Rating']
 
+    bondS_rowS_processed = [] # заглушка на время неактивности сток кода ниже
 #     # Разделение облигаций по субординированности, поскольку для несубординированных обычно рейтинг эмитента и облигации совпадают
 #         # и для них можно выводить Bond D Rating и Issuer D Rating друг из друга.
 #         # А для субординированных облигаций рейтинг следует брать с сайтов
@@ -349,16 +350,20 @@ def bondsFeaturesProcessor(
     # display(bondS) # для отладки
 
 # 1.7 Интегральная переменная Специфика
-    bondS.loc[(bondS['Сектор рынка'] == 'Гос') | (bondS['SECNAME'].str.contains('ОФЗ|Россия', case=False)), 'Сектор рынка'] = 'Гос'
-    bondS.loc[(bondS['Сектор рынка'].str.contains('Гос|Корп|Мун', case=False) != True), 'Сектор рынка'] = 'Корп'
+    if 'Сектор рынка' in bondS.columns:
+        bondS.loc[(bondS['Сектор рынка'] == 'Гос') | (bondS['SECNAME'].str.contains('ОФЗ|Россия', case=False)), 'Сектор рынка'] = 'Гос'
+        bondS.loc[(bondS['Сектор рынка'].str.contains('Гос|Корп|Мун', case=False) != True), 'Сектор рынка'] = 'Корп'
+
     bondS.loc[(bondS['COUPONPERCENT'].isna()) | (bondS['COUPONPERCENT'] == ''), 'Купон определён'] = 0
     bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'Купон определён'] = 1
     # display("bondS['Купон определён']:", bondS['Купон определён'].value_counts()) # для отладки
     
     bondS['Специфика'] = bondS['FACEUNIT'].str[:2]
+
     for column in ['Сектор рынка', 'Амортизация FinAm' if 'Амортизация FinAm' in bondS.columns else 'Амортизация T', 'Купон определён']:
-        bondS[column] = bondS[column].fillna('--')
-        bondS['Специфика'] += ' ' + bondS[column].astype(str).str[:1]
+        if column in bondS.columns:
+            bondS[column] = bondS[column].fillna('--')
+            bondS['Специфика'] += ' ' + bondS[column].astype(str).str[:1]
 
     display(bondS['Специфика'].value_counts().sort_index())
 
