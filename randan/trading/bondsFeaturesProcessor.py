@@ -131,7 +131,7 @@ def bondsFeaturesProcessor(
 
     issuerS_withActualRating_change = pandas.concat([issuerS_withActualRating_up, issuerS_withActualRating_down])
 
-    bondS = bondS.merge(issuerS_withActualRating, how="left", on='Эмитент', suffixes=("_drop", ""))
+    bondS = bondS.merge(issuerS_withActualRating[['Эмитент', 'Issuer D Rating']], how="left", on='Эмитент', suffixes=("_drop", ""))
     bondS = bondS[[column for column in bondS.columns if not column.endswith("_drop")]]
 
     # display('bondS:', bondS) # для отладки
