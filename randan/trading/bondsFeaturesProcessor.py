@@ -46,6 +46,7 @@ def bondsFeaturesProcessor(
                            bondsIn,
                            issuerS,
                            path=coLabFolder,
+                           pause,
                            returnDfs=False
                            ):
     """
@@ -54,8 +55,10 @@ def bondsFeaturesProcessor(
     Parameters
     ----------
       bondsIn : DataFrame -- датафрейм с облигациями, характеристики которых требуется получить; должен содержать хотя бы столбец ISIN
+      issuerS : DataFrame -- датафрейм со Словарём эмитентов
          path : str -- путь к директории, включая её имя, в которой будут искаться файлы и куда будут сохраняться; по умолчанию, не в CoLab поиск и сохранение происходят в директории, в которой вызывается текущая функция, а в CoLab в директории Colab Notebooks
 
+        pause : int -- период засыпания исполнения функций selenium
     returnDfs : bool -- в случае True функция возвращает итоговые датафрейм bondS
     """
         
@@ -75,59 +78,12 @@ def bondsFeaturesProcessor(
     bondS = bondS[[column for column in bondS.columns if not column.endswith('_drop')]]
     # print('bondS.columns:', bondS.columns) # для отладки
 
-# 1.1 Добавить столбцы Эмитент и  Bond D Rating и Issuer D Rating; при необходимости, дозаполнить последние
+# Добавить столбцы Эмитент и  Bond D Rating и Issuer D Rating; при необходимости, дозаполнить последние
     bondS = issuerProcessor.issuerNameProcessor(bondS_in, issuerS)
         # теперь в bondS у каждой облигации указан эмитент с названием, соотнесённым со Словарём эмитентов
             # (все эти эмитенты представлены в issuerS)
 
-    # 2. Разделение облигаций по субординированности, поскольку для несубординированных обычно рейтинг эмитента и облигации совпадают
-        # и для них можно выводить Bond D Rating и Issuer D Rating друг из друга.
-        # А для субординированных облигаций рейтинг следует брать с сайтов
-    bondS_subordinated = bondS_notna[bondS_notna['Субординированность'] == 'Да']
-    display('bondS_subordinated 1:', bondS_subordinated) # для отладки
-
-    bondS_unsubordinated = bondS_notna[bondS_notna['Субординированность'] == 'Нет']
-    display('bondS_unsubordinated 1:', bondS_unsubordinated) # для отладки
-
-# !!! Написать код для шаринга рейтинга из issuerS
-
-
-    # 3. "Расшерить" располагаемый рейтинг внутри столбца Bond D Rating (применимо только для несубординированных облигаций,
-        # соответствующих эмитентам из списка issuerS_fromBonds_partialRating)
-
-    # Поиск эмитентов, у облигаций которых в столбце Bond D Rating (а) ни у одной нет рейтинга,
-        # (б) у некоторых есть рейтинг и у некоторых его нет и (в) у всех есть рейтинг
-    issuerS_fromBonds_fullRating, issuerS_fromBonds_noRating, issuerS_fromBonds_partialRating =\
-        ratingProcessor.bondS_ofIssuer_ratingChecker(bondS_unsubordinated)
-
-    # print('issuerS_fromBonds_fullRating:', issuerS_fromBonds_fullRating) # для отладки
-    print('issuerS_fromBonds_noRating:', issuerS_fromBonds_noRating) # для отладки
-    print('issuerS_fromBonds_partialRating:', issuerS_fromBonds_partialRating) # для отладки
-
-    if len(issuerS_fromBonds_partialRating) > 0:
-        bondS_unsubordinated_partialRating = bondS_unsubordinated[bondS_unsubordinated['Эмитент'].isin(issuerS_fromBonds_partialRating)]
-
-        bondS_unsubordinated_partialRating = ratingProcessor.ratingThroughIssuer(bondS_unsubordinated_partialRating,
-                                                                                 'Bond D Rating',
-                                                                                 'Bond D Rating')
-            # заполнить стобец Bond D Rating, если у этой же или другой облигации того же эмитента отражён рейтинг в том же столбце
-
-        # display('bondS_unsubordinated_partialRating:', bondS_unsubordinated_partialRating) # для отладки
-
-        bondS_unsubordinated = bondS_unsubordinated.merge(bondS_unsubordinated_partialRating[['URL RB', 'Bond D Rating']],
-                                                          how="left",
-                                                          on='URL RB',
-                                                          suffixes=("", "_drop"))
-
-        bondS_unsubordinated['Bond D Rating'] = bondS_unsubordinated['Bond D Rating_drop'].combine_first(bondS_unsubordinated['Bond D Rating'])
-            # замена старых значений новыми только там, где новые не NaN
-
-        bondS_unsubordinated = bondS_unsubordinated.drop('Bond D Rating_drop', axis=1)
-        display('bondS_unsubordinated 2:', bondS_unsubordinated) # для отладки
-
-# !!! При непустом issuerS_fromBonds_noRating следует написать код для шаринга рейтинга из issuerS и взять код из bondsRatingS для выгрузки рейтинга с сайта moex.ru
-
-# 1.2 Рейтинг и другие важные характеристики из Акуальные эмитенты.xlsx
+# 1.2 Импорт словарей (актуального и прошлого) эмитентов с рейтингом из Акуальные эмитенты.xlsx в issuerS_withActualRating
     # print('path:', path) # для отладки
     if os.path.exists(path + 'Замеры рейтингов'):
         fileUptodateName_0 = files2df.getFileUptodateName('_Акуальные эмитенты', None, path + 'Замеры рейтингов')
@@ -175,7 +131,75 @@ def bondsFeaturesProcessor(
 
     # display('bondS:', bondS) # для отладки
 
-# 1.3 Фильтры по датам
+# 1.3 "Шеринг" рейтинга из issuerS_withActualRating и выгрузка с сайта moex.ru
+    for issuer_withActualRating in issuerS_withActualRating['Эмитент']:
+        print('issuer_withActualRating:', issuer_withActualRating) # для отладки
+        issuerS_withActualRating_index = issuerS_withActualRating[issuerS_withActualRating['Эмитент'] == issuer_withActualRating, 'Issuer D Rating'].index
+        bondS.loc[bondS['Эмитент'] == issuer_withActualRating, 'Issuer D Rating'] = issuerS_withActualRating[issuerS_withActualRating_index[0], 'Issuer D Rating']
+
+    # Разделение облигаций по субординированности, поскольку для несубординированных обычно рейтинг эмитента и облигации совпадают
+        # и для них можно выводить Bond D Rating и Issuer D Rating друг из друга.
+        # А для субординированных облигаций рейтинг следует брать с сайтов
+    bondS_subordinated = bondS[bondS['Субординированность'] == 'Да']
+    display('bondS_subordinated 1:', bondS_subordinated) # для отладки
+
+    bondS_unsubordinated = bondS[bondS['Субординированность'] == 'Нет']
+    display('bondS_unsubordinated 1:', bondS_unsubordinated) # для отладки
+
+    # Поиск эмитентов, у облигаций которых в столбце Bond D Rating (а) ни у одной нет рейтинга,
+        # (б) у некоторых есть рейтинг и у некоторых его нет и (в) у всех есть рейтинг
+    issuerS_fromBonds_fullRating, issuerS_fromBonds_noRating, issuerS_fromBonds_partialRating =\
+        ratingProcessor.bondS_ofIssuer_ratingChecker(bondS_unsubordinated)
+
+    # print('issuerS_fromBonds_fullRating:', issuerS_fromBonds_fullRating) # для отладки
+    print('issuerS_fromBonds_noRating:', issuerS_fromBonds_noRating) # для отладки
+    print('issuerS_fromBonds_partialRating:', issuerS_fromBonds_partialRating) # для отладки
+
+    # Выгрузить НЕрасполагаемый рейтинг с сайта moex.ru для столбцов Issuer D Rating и Bond D Rating
+        # для НЕсубординированных облигаций
+    if len(issuerS_fromBonds_noRating) > 0:
+        bondS_unsubordinated_noRating = bondS_unsubordinated[
+            (bondS_unsubordinated['Эмитент'].isin(issuerS_fromBonds_noRating)) & (bondS['ISIN'].notna()) & (bondS['Эмитент'].notna())
+            ]
+
+        bondS_unsubordinated_noRating, bondS_unsubordinated_noRating_rowS_processed =\
+            ratingProcessor.ratingMoExForBondsWithoutRating(bondS_unsubordinated_noRating, pause)
+                # NB: Почему-то некоторые облигации не имеют SECNAME
+
+        # display('bondS_unsubordinated_noRating:', bondS_unsubordinated_noRating) # для отладки
+
+        bondS_rowS_processed.extend(bondS_unsubordinated_noRating_rowS_processed)
+
+        bondS_unsubordinated = bondS_unsubordinated.merge(bondS_unsubordinated_noRating[['URL RB', 'Bond D Rating', 'Issuer D Rating']],
+                                                          how="left",
+                                                          on='URL RB',
+                                                          suffixes=("", "_drop"))
+
+        bondS_unsubordinated['Bond D Rating'] = bondS_unsubordinated['Bond D Rating_drop'].combine_first(bondS_unsubordinated['Bond D Rating'])
+            # замена старых значений новыми только там, где новые не NaN
+
+        bondS_unsubordinated['Issuer D Rating'] = bondS_unsubordinated['Issuer D Rating_drop'].combine_first(bondS_unsubordinated['Issuer D Rating'])
+            # замена старых значений новыми только там, где новые не NaN
+
+        bondS_unsubordinated = bondS_unsubordinated.drop(['Bond D Rating_drop', 'Issuer D Rating_drop'], axis=1)
+        display('bondS_unsubordinated 2:', bondS_unsubordinated) # для отладки
+
+    # Выгрузить НЕрасполагаемый рейтинг с сайта moex.ru для столбцов Issuer D Rating и Bond D Rating
+        # для субординированных облигаций
+    bondS_subordinated = bondS_subordinated[
+        (bondS['ISIN'].notna()) & (bondS['Эмитент'].notna())
+        ]
+
+    bondS_subordinated, bondS_subordinated_rowS_processed =\
+        ratingProcessor.ratingMoExForBondsWithoutRating(bondS_subordinated, pause, subordinated=True)
+        # NB: Почему-то некоторые облигации не имеют SECNAME
+
+    display('bondS_subordinated 2:', bondS_subordinated) # для отладки
+
+    bondS_rowS_processed.extend(bondS_subordinated_rowS_processed)
+    bondS = pandas.concat([bondS_unsubordinated, bondS_subordinated])
+
+# 1.4 Фильтры по датам
     for column in ['MATDATE', 'NEXTCOUPON']:
         bondS = bondS[bondS[column].notna()]
         bondS.loc[bondS[column] == '0000-00-00', column] =\
@@ -232,7 +256,7 @@ def bondsFeaturesProcessor(
     bondS = pandas.concat([bondS_offer, bondS_other])
     # display(bondS) # для отладки
 
-# 1.4 Предобрабока столбцов с финансовой информацией
+# 1.5 Предобрабока столбцов с финансовой информацией
     for column in ['ACCRUEDINT', 'COUPONPERCENT', 'FACEVALUE', 'PRICE']:
         bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column] = bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column].astype(float)
 
@@ -286,7 +310,7 @@ def bondsFeaturesProcessor(
 
     # display(bondS) # для отладки
 
-# 1.5 Расчёт доходности в день до возможности погасить 
+# 1.6 Расчёт доходности в день до возможности погасить 
     # Если купить примерно на 1000 единиц валюты, то придётся заплатить
     bondS['Полная цена покупки'] = 1000 + 1000 / bondS['FACEVALUE'] * bondS['ACCRUEDINT']
     bondS['Полная цена покупки'] = bondS['Полная цена покупки'].astype(float).round(2)
@@ -317,7 +341,7 @@ def bondsFeaturesProcessor(
         # если поданы на вход облигации из портфеля (уже купленные)
     # display(bondS) # для отладки
 
-# 1.6 Интегральная переменная Специфика
+# 1.7 Интегральная переменная Специфика
     bondS.loc[(bondS['Сектор рынка'] == 'Гос') | (bondS['SECNAME'].str.contains('ОФЗ|Россия', case=False)), 'Сектор рынка'] = 'Гос'
     bondS.loc[(bondS['Сектор рынка'].str.contains('Гос|Корп|Мун', case=False) != True), 'Сектор рынка'] = 'Корп'
     bondS.loc[(bondS['COUPONPERCENT'].isna()) | (bondS['COUPONPERCENT'] == ''), 'Купон определён'] = 0
@@ -331,4 +355,4 @@ def bondsFeaturesProcessor(
 
     display(bondS['Специфика'].value_counts().sort_index())
 
-    if returnDfs: return bondS, issuerS_withActualRating, issuerS_withActualRating_change
+    if returnDfs: return bondS, bondS_rowS_processed, issuerS_withActualRating, issuerS_withActualRating_change
