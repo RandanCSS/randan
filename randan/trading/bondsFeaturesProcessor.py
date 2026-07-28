@@ -79,7 +79,7 @@ def bondsFeaturesProcessor(
     # print('bondS.columns:', bondS.columns) # для отладки
 
 # Добавить столбцы Эмитент и  Bond D Rating и Issuer D Rating; при необходимости, дозаполнить последние
-    bondS = issuerProcessor.issuerNameProcessor(bondS_in, issuerS)
+    bondS = issuerProcessor.issuerNameProcessor(bondS, issuerS)
         # теперь в bondS у каждой облигации указан эмитент с названием, соотнесённым со Словарём эмитентов
             # (все эти эмитенты представлены в issuerS)
 
