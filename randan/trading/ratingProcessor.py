@@ -382,12 +382,14 @@ def ratingThroughIssuer(bondS_in, columnSource, columnTarget):
     bondS = bondS_in.copy()
     issuerS_withRating = bondS[
         (bondS[['Эмитент', columnSource]].notna()) & (bondS['Эмитент'] != '') & (bondS['columnSource'] != '')
-        ].drop_duplicates('Эмитент', ignore_index=True)[['Эмитент', columnSource, columnTarget]]
+        ]
+    issuerS_withRating = issuerS_withRating.drop_duplicates('Эмитент', ignore_index=True)[['Эмитент', columnSource, columnTarget]]
     display('issuerS_withRating:', issuerS_withRating) # для отладки, это датафрейм
 
     issuerS_withoutRating = bondS[
         (bondS['Эмитент'].notna()) & (bondS['Эмитент'] != '') & ((bondS[columnTarget].isna()) | (bondS[columnTarget] == ''))
-        ]['Эмитент'].drop_duplicates().tolist()
+        ]
+    issuerS_withoutRating = issuerS_withoutRating['Эмитент'].drop_duplicates().tolist()
     issuerS_withoutRating.sort()
     print('issuerS_withoutRating:', issuerS_withoutRating) # для отладки, это список
 
