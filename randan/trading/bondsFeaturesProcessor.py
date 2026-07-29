@@ -10,11 +10,11 @@ for attempt in range(1, 4):
     try:
         from datetime import date
         from randan.trading import getMoExData, issuerProcessor, ratingProcessor # авторские модули для
-            # (а) выгрузки характеристик торгуемых на МосБирже облигаций,
+            # (а) выгрузки характеристик торгуемых на МосБирже облигаций
             # (б) операций с эмитентами торгуемых на МосБирже облигаций
 
         from randan.tools import coLabAdaptor, files2df # авторские модули для
-            # (а) адаптации текущего скрипта к файловой системе CoLab,
+            # (а) адаптации текущего скрипта к файловой системе CoLab
             # (б) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
 
         import os, pandas, warnings
