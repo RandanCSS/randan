@@ -381,7 +381,7 @@ def ratingThroughIssuer(bondS_in, columnSource, columnTarget):
 # Функция заполняет эти стобцы, если у другой облигации того же эмитента отражён рейтинг в столбце Issuer D Rating или Bond D Rating
     bondS = bondS_in.copy()
     issuerS_withRating = bondS[
-        (bondS[['Эмитент', columnSource]].notna()) & (bondS['Эмитент'] != '') & (bondS['columnSource'] != '')
+        (bondS['Эмитент'].notna()) & (bondS[columnSource].notna()) & (bondS['Эмитент'] != '') & (bondS['columnSource'] != '')
         ]
     issuerS_withRating = issuerS_withRating.drop_duplicates('Эмитент', ignore_index=True)[['Эмитент', columnSource, columnTarget]]
     display('issuerS_withRating:', issuerS_withRating) # для отладки, это датафрейм
