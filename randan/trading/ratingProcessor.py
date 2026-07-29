@@ -255,8 +255,6 @@ def ratingDigitizer(letters, raitingSource):
 
 def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
     bondS = bondS_in.copy()
-    bondS_rowS_processed = [] # список обработанных строк датафрейма bondS ;
-        # подаётся при повторных запусках функции ratingMoExForBondsWithoutRating и её оболочек, чтобы избежать повторных в рамках сессии скрипта обращений к этим строкам
 
     userChoice = ' '
     if subordinated != True:
@@ -279,12 +277,6 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
 
         if len(bondS_withoutRating) == 0: print('В bondS у всех эмитентов и их облигаций отражён их рейтинг')
         else:
-            options = undetected_chromedriver.ChromeOptions()
-            options.add_argument('--disable-backgrounding-occluded-windows') # запрет браузеру засыпать в фоне
-            options.add_argument('--disable-background-timer-throttling') # отключить троттлинг таймеров
-            # options.headless = True # невидимый режим
-            driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=version_main)
-            driver.set_page_load_timeout(100 * pause)
 
             if textTarget == 'Кредитный рейтинг эмитента': identifierS = bondS_withoutRating.drop_duplicates('Эмитент')['Эмитент'].tolist()
             else: identifierS = bondS_withoutRating['ISIN'].tolist() # т.е. textTarget == 'Кредитный рейтинг выпуска облигаций'
@@ -292,39 +284,97 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
             identifierS.sort()
             print('identifierS:', identifierS) # для отладки
 
-            # Импорт рейтинга с сайта moex.com
-            counter = 0
-            for identifier in identifierS:
-            # for identifier in identifierS[0:5]: # для отладки
-                if textTarget == 'Кредитный рейтинг эмитента':
-                    isin = bondS_withoutRating[bondS_withoutRating['Эмитент'] == identifier]['ISIN'].tolist()[-1] # последний попавшийся ISIN итерируемого эмитента
-                    print('issuer', identifier, '; ISIN', isin)  
-                else:
-                    isin = identifier
-                    print('ISIN', isin)
+            bondS_rowS_processed = [] # список обработанных строк датафрейма bondS ;
+                # подаётся при повторных запусках функции ratingMoExForBondsWithoutRating и итераций цикла while goC , чтобы избежать повторных обращений к этим строкам
 
-                # На всякий случай, например, обрыва связи
-                try: bondS, bondS_rowS, driver = getRatingFromMoEx(bondS, textTargetDict[textTarget], driver, identifier, isin, pause, textTarget)
-                except Exception as excptn:
-                    print('Exception 1:', excptn)
-                    print(traceback.format_exc()) # показ точной строчки кода с ошибкой
-                    return bondS, bondS_rowS_processed
+            goC = True
+            while goC:
 
-                bondS_rowS_processed.extend(bondS_rowS)
-                counter += 1
-                print('Элементов множества обработано:', counter, 'из', len(identifierS))
-                print("="*60 + "\n")
+                options = undetected_chromedriver.ChromeOptions()
+                options.add_argument('--disable-backgrounding-occluded-windows') # запрет браузеру засыпать в фоне
+                options.add_argument('--disable-background-timer-throttling') # отключить троттлинг таймеров
+                # options.headless = True # невидимый режим
+                driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=version_main)
+                driver.set_page_load_timeout(100 * pause)
+    
+                # Импорт рейтинга с сайта moex.com
+                counter = 1
+                identifierS_double = identifierS.copy() # список будущих НЕобработанных identifier ;
+                    # подаётся при повторных итерациях цикла while goC и, как следствие, повторных запусках цикла for identifier in identifierS ,
+                        # чтобы избежать повторных обращений к этим identifier , чтобы избежать повторных обращений к этим identifier
 
-            print('На сайте moex.com могут оказаться рейтинги не для всех облигаций, поэтому следует проверить визуально:')
-            display(bondS[bondS[column_tagert].isna()])
-            driver.quit()
+                for identifier in identifierS:
+                # for identifier in identifierS[0:5]: # для отладки
+                    if textTarget == 'Кредитный рейтинг эмитента':
+                        isin = bondS_withoutRating[bondS_withoutRating['Эмитент'] == identifier]['ISIN'].tolist()[-1] # последний попавшийся ISIN итерируемого эмитента
+                        print('issuer', identifier, '; ISIN', isin)
+
+                    else:
+                        isin = identifier
+                        print('ISIN', isin)
+    
+                    # На всякий случай, например, обрыва связи
+                    try:
+                        bondS_processed, bondS_rowS, driver = getRatingFromMoEx(bondS.drop(bondS_rowS_processed),
+                                                                                    # чтобы после ошибки избежать повторного захода в уже обработанные записи датафрейма bondS
+        
+                                                                                textTargetDict[textTarget],
+                                                                                driver,
+                                                                                identifier,
+                                                                                isin,
+                                                                                pause,
+                                                                                textTarget)
+                        
+                        bondS_rowS_processed.extend(bondS_rowS)
+                        goC = False
+                        identifierS_double.remove(identifier)
+
+                    except Exception as excptn:
+                        print('Exception 1:', excptn)
+                        print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+
+                        # Заглушки вместо выдачи функции getRatingFromMoEx при её неуспехе
+                        bondS_processed = pandas.DataFrame()
+                        bondS_rowS = []
+
+                        options = undetected_chromedriver.ChromeOptions()
+                        options.add_argument('--disable-backgrounding-occluded-windows') # запрет браузеру засыпать в фоне
+                        options.add_argument('--disable-background-timer-throttling') # отключить троттлинг таймеров
+                        # options.headless = True # невидимый режим
+                        driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=version_main)
+
+                    # Добавить в bondS инфромацию из bondS_processed, но поячеечно: заменять старые значения новыми только там, где новые не NaN
+                    # Следует мёрджить по ISIN                    
+                    bondS = bondS_FinAM_RB.merge(bondS_processed, how='left', on='ISIN', suffixes=('', '_drop'))
+                    
+                    columnS_toDrop = []
+                    for column in bondS.columns:
+                        if '_drop' in column:
+                            bondS[column.replace('_drop', '')] = bondS[column].combine_first(bondS[column.replace('_drop', '')])
+                                # замена старых значений новыми только там, где новые не NaN
+                    
+                            columnS_toDrop.append(column)
+                    
+                    bondS = bondS.drop(columnS_toDrop, axis=1)
+                    display('bondS:', bondS) # для отладки
+
+                    counter += 1
+                    print('Элементов множества обработано:', counter, 'из', len(identifierS))
+                    print("=" * 10 + "\n")
+    
+                identifierS = identifierS_double.copy() # подаётся при повторных итерациях цикла while goC
+                    # и, как следствие, повторных запусках цикла for identifier in identifierS , чтобы избежать повторных обращений к этим identifier
+                
+                print('На сайте moex.com могут оказаться рейтинги не для всех облигаций, поэтому следует проверить визуально:')
+                display(bondS[bondS[column_tagert].isna()])
+                driver.quit()
 
     if len(userChoice) == 0:
         print('\nПриступаю к функции ratingThroughIssuer') # для отладки
         bondS = ratingThroughIssuer(bondS, 'Issuer D Rating', 'Bond D Rating')
             # заполнить стобец Bond D Rating, если у этой же или другой облигации того же эмитента отражён рейтинг в столбце Issuer D Rating
 
-    return bondS, bondS_rowS_processed
+    return bondS
 
 def timeoutExceptionProcesser(driver, isin, pause):
 
