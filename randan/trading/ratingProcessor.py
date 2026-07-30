@@ -338,6 +338,9 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
 
                     # Добавить в bondS_withoutRating инфромацию из bondS_withoutRating_processed, но поячеечно: заменять старые значения новыми только там, где новые не NaN
                     # Следует мёрджить по ISIN
+
+                    # Сохраняем индекс
+                    bondS_withoutRating = bondS_withoutRating.reset_index().rename(columns={'index': 'indexOriginal'}) # сохранить индекс как новый столбец indexOriginal
                     bondS_withoutRating = bondS_withoutRating.merge(bondS_withoutRating_processed, how='left', on='ISIN', suffixes=('', '_drop'))
 
                     columnS_toDrop = []
@@ -349,7 +352,8 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
                             columnS_toDrop.append(column)
 
                     bondS_withoutRating = bondS_withoutRating.drop(columnS_toDrop, axis=1)
-                    display('bondS_withoutRating:', bondS_withoutRating) # для отладки
+                    bondS_withoutRating = bondS_withoutRating.set_index('indexOriginal') # восстановить индекс из столбца indexOriginal
+                    display('bondS_withoutRating (срез столбцов):', bondS_withoutRating[['ISIN', 'SECNAME', 'Эмитент', 'Issuer D Rating', 'Bond D Rating']]) # для отладки
 
                     counter += 1
                     print('Элементов множества обработано:', counter, 'из', len(identifierS))
@@ -375,7 +379,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
                     columnS_toDrop.append(column)
     
             bondS = bondS.drop(columnS_toDrop, axis=1)
-            display('bondS:', bondS) # для отладки
+            display('bondS (срез столбцов):', bondS[['ISIN', 'SECNAME', 'Эмитент', 'Issuer D Rating', 'Bond D Rating']]) # для отладки
     
         if len(userChoice) == 0:
             print('\nПриступаю к функции ratingThroughIssuer') # для отладки
