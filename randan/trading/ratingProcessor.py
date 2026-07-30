@@ -280,7 +280,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
             identifierS.sort()
             print('identifierS:', identifierS) # для отладки
 
-            bondS_rowS_processed = [] # список обработанных строк датафрейма bondS ;
+            bondS_withoutRating_rowS_processed = [] # список обработанных строк датафрейма bondS_withoutRating ;
                 # подаётся при повторных запусках функции ratingMoExForBondsWithoutRating и итераций цикла while goC , чтобы избежать повторных обращений к этим строкам
 
             goC = True
@@ -307,8 +307,8 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
 
                     # На всякий случай, например, обрыва связи
                     try:
-                        bondS_processed, bondS_rowS, driver = getRatingFromMoEx(bondS.drop(bondS_rowS_processed),
-                                                                                    # чтобы после ошибки избежать повторного захода в уже обработанные записи датафрейма bondS
+                        bondS_withoutRating_processed, bondS_withoutRating_rowS, driver = getRatingFromMoEx(bondS_withoutRating.drop(bondS_withoutRating_rowS_processed),
+                                                                                    # чтобы после ошибки избежать повторного захода в уже обработанные записи датафрейма bondS_withoutRating
 
                                                                                 textTargetDict[textTarget],
                                                                                 driver,
@@ -317,7 +317,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
                                                                                 pause,
                                                                                 textTarget)
 
-                        bondS_rowS_processed.extend(bondS_rowS)
+                        bondS_withoutRating_rowS_processed.extend(bondS_withoutRating_rowS)
                         goC = False
                         identifierS_double.remove(identifier)
 
@@ -326,8 +326,8 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
                         print(traceback.format_exc()) # показ точной строчки кода с ошибкой
 
                         # Заглушки вместо выдачи функции getRatingFromMoEx при её неуспехе
-                        bondS_processed = pandas.DataFrame()
-                        bondS_rowS = []
+                        bondS_withoutRating_processed = pandas.DataFrame()
+                        bondS_withoutRating_rowS = []
 
                         driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
                         # options = undetected_chromedriver.ChromeOptions()
@@ -336,20 +336,20 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
                         # # options.headless = True # невидимый режим
                         # driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=version_main)
 
-                    # Добавить в bondS инфромацию из bondS_processed, но поячеечно: заменять старые значения новыми только там, где новые не NaN
+                    # Добавить в bondS_withoutRating инфромацию из bondS_withoutRating_processed, но поячеечно: заменять старые значения новыми только там, где новые не NaN
                     # Следует мёрджить по ISIN
-                    bondS = bondS.merge(bondS_processed, how='left', on='ISIN', suffixes=('', '_drop'))
+                    bondS_withoutRating = bondS_withoutRating.merge(bondS_withoutRating_processed, how='left', on='ISIN', suffixes=('', '_drop'))
 
                     columnS_toDrop = []
-                    for column in bondS.columns:
+                    for column in bondS_withoutRating.columns:
                         if '_drop' in column:
-                            bondS[column.replace('_drop', '')] = bondS[column].combine_first(bondS[column.replace('_drop', '')])
+                            bondS_withoutRating[column.replace('_drop', '')] = bondS_withoutRating[column].combine_first(bondS_withoutRating[column.replace('_drop', '')])
                                 # замена старых значений новыми только там, где новые не NaN
 
                             columnS_toDrop.append(column)
 
-                    bondS = bondS.drop(columnS_toDrop, axis=1)
-                    display('bondS:', bondS) # для отладки
+                    bondS_withoutRating = bondS_withoutRating.drop(columnS_toDrop, axis=1)
+                    display('bondS_withoutRating:', bondS_withoutRating) # для отладки
 
                     counter += 1
                     print('Элементов множества обработано:', counter, 'из', len(identifierS))
@@ -362,10 +362,25 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
                 display(bondS[bondS[column_target].isna()])
                 driver.quit()
 
-    if len(userChoice) == 0:
-        print('\nПриступаю к функции ratingThroughIssuer') # для отладки
-        bondS = ratingThroughIssuer(bondS, 'Issuer D Rating', 'Bond D Rating')
-            # заполнить стобец Bond D Rating, если у этой же или другой облигации того же эмитента отражён рейтинг в столбце Issuer D Rating
+            # Добавить в bondS инфромацию из bondS_processed, но поячеечно: заменять старые значения новыми только там, где новые не NaN
+            # Следует мёрджить по ISIN
+            bondS = bondS.merge(bondS_processed, how='left', on='ISIN', suffixes=('', '_drop'))
+    
+            columnS_toDrop = []
+            for column in bondS.columns:
+                if '_drop' in column:
+                    bondS[column.replace('_drop', '')] = bondS[column].combine_first(bondS[column.replace('_drop', '')])
+                        # замена старых значений новыми только там, где новые не NaN
+    
+                    columnS_toDrop.append(column)
+    
+            bondS = bondS.drop(columnS_toDrop, axis=1)
+            display('bondS:', bondS) # для отладки
+    
+        if len(userChoice) == 0:
+            print('\nПриступаю к функции ratingThroughIssuer') # для отладки
+            bondS = ratingThroughIssuer(bondS, 'Issuer D Rating', 'Bond D Rating')
+                # заполнить стобец Bond D Rating, если у этой же или другой облигации того же эмитента отражён рейтинг в столбце Issuer D Rating
 
     return bondS
 
