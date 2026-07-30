@@ -269,7 +269,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
     for textTarget in textTargetDict.keys():
         print('textTarget:', textTarget) # для отладки
         column_target = textTargetDict[textTarget]
-        bondS_withoutRating = bondS[bondS[column_target].isna()]
+        bondS_withoutRating = bondS[(bondS[column_target].isna()) | (bondS[column_target] == '')]
         display(textTarget, 'отсутствует у следующих облигаций (срез столбцов):', bondS_withoutRating[['ISIN', 'SECNAME', 'Эмитент', 'Issuer D Rating', 'Bond D Rating']])
 
         if len(bondS_withoutRating) == 0: print('В bondS у всех эмитентов и их облигаций отражён их рейтинг')
