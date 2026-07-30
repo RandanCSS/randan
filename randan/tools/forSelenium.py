@@ -54,7 +54,7 @@ def blockSearch(attemptsMax, driver, text, xPathS):
             if trCounter > attemptsMax: break # против бесконечного цикла при пустом блоке страницы
     return block if text in block else None
 
-def driverCreator(version_main, headless=False, use_subprocess=True,):
+def driverCreator(version_main, headless=False, use_subprocess=True):
     options = undetected_chromedriver.ChromeOptions()
     options.add_argument('--disable-backgrounding-occluded-windows')
     options.add_argument('--disable-background-timer-throttling')
