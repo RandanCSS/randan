@@ -436,7 +436,7 @@ def timeoutExceptionProcesser(driver, isin, pause):
 
     return driver
 
-def ratingThroughIssuer(bondS_in, columnSource, columnTarget):
+def ratingThroughIssuer(bondS_in, columnSource, columnTarget): # работает и в обратную сторону: для заполнения Issuer D Rating из Bond D Rating
 # Обработка облигаций без рейтинга в столбце Issuer D Rating или Bond D Rating
 # Функция заполняет эти стобцы, если у другой облигации того же эмитента отражён рейтинг в столбце Issuer D Rating или Bond D Rating
     bondS = bondS_in.copy()
