@@ -291,7 +291,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
                 driver.set_page_load_timeout(100 * pause)
 
                 # Импорт рейтинга с сайта moex.com
-                counter = 1
+                counter = 0
                 identifierS_double = identifierS.copy() # список будущих НЕобработанных identifier ;
                     # подаётся при повторных итерациях цикла while goC и, как следствие, повторных запусках цикла for identifier in identifierS ,
                         # чтобы избежать повторных обращений к этим identifier , чтобы избежать повторных обращений к этим identifier
