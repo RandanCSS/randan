@@ -15,9 +15,10 @@ from subprocess import check_call
 for attempt in range(1, 4):
     try:
         from IPython.display import display
-        from randan.tools import coLabAdaptor, forSelenium # авторские модули для..
-            # (а) адаптации текущего скрипта к файловой системе CoLab
-            # (б) упрощения некоторых оперций в selenium
+        from randan.tools import cellsLeftMerger, coLabAdaptor, forSelenium # авторские модули для..
+            # (а) упрощения операции левостороннего присоединения датафрейма-донора к датафрейму-реципиенту по специальному столбцу
+            # (б) адаптации текущего скрипта к файловой системе CoLab
+            # (в) упрощения некоторых оперций в selenium
 
         from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException
         from selenium.webdriver.common.by import By
@@ -285,7 +286,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
 
             goC = True
             while goC:
-                
+
                 driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
                 driver.set_page_load_timeout(100 * pause)
 
@@ -332,21 +333,21 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
                         driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
 
                     # Добавить в bondS_withoutRating инфромацию из bondS_withoutRating_processed, но поячеечно: заменять старые значения новыми только там, где новые не NaN
-                    # Следует мёрджить по ISIN
+                    bondS_withoutRating = cellsLeftMerger(bondS_withoutRating_processed, bondS_withoutRating, 'ISIN') # следует мёрджить по ISIN
 
-                    bondS_withoutRating = bondS_withoutRating.reset_index().rename(columns={'index': 'indexOriginal'}) # сохранить индекс как новый столбец indexOriginal
-                    bondS_withoutRating = bondS_withoutRating.merge(bondS_withoutRating_processed, how='left', on='ISIN', suffixes=('', '_drop'))
+                    # bondS_withoutRating = bondS_withoutRating.reset_index().rename(columns={'index': 'indexOriginal'}) # сохранить индекс как новый столбец indexOriginal
+                    # bondS_withoutRating = bondS_withoutRating.merge(bondS_withoutRating_processed, how='left', on='ISIN', suffixes=('', '_drop'))
 
-                    columnS_toDrop = []
-                    for column in bondS_withoutRating.columns:
-                        if '_drop' in column:
-                            bondS_withoutRating[column.replace('_drop', '')] = bondS_withoutRating[column].combine_first(bondS_withoutRating[column.replace('_drop', '')])
-                                # замена старых значений новыми только там, где новые не NaN
+                    # columnS_toDrop = []
+                    # for column in bondS_withoutRating.columns:
+                    #     if '_drop' in column:
+                    #         bondS_withoutRating[column.replace('_drop', '')] = bondS_withoutRating[column].combine_first(bondS_withoutRating[column.replace('_drop', '')])
+                    #             # замена старых значений новыми только там, где новые не NaN
 
-                            columnS_toDrop.append(column)
+                    #         columnS_toDrop.append(column)
 
-                    bondS_withoutRating = bondS_withoutRating.drop(columnS_toDrop, axis=1)
-                    bondS_withoutRating = bondS_withoutRating.set_index('indexOriginal') # восстановить индекс из столбца indexOriginal
+                    # bondS_withoutRating = bondS_withoutRating.drop(columnS_toDrop, axis=1)
+                    # bondS_withoutRating = bondS_withoutRating.set_index('indexOriginal') # восстановить индекс из столбца indexOriginal
                     display('bondS_withoutRating (срез столбцов):', bondS_withoutRating[['ISIN', 'SECNAME', 'Эмитент', 'Issuer D Rating', 'Bond D Rating']]) # для отладки
 
                     counter += 1
@@ -360,23 +361,24 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
                 display(bondS[bondS[column_target].isna()])
                 driver.quit()
 
-            # Добавить в bondS инфромацию из bondS_processed, но поячеечно: заменять старые значения новыми только там, где новые не NaN
-            # Следует мёрджить по ISIN
-            bondS = bondS.reset_index().rename(columns={'index': 'indexOriginal'}) # сохранить индекс как новый столбец indexOriginal
-            bondS = bondS.merge(bondS_withoutRating, how='left', on='ISIN', suffixes=('', '_drop'))
-    
-            columnS_toDrop = []
-            for column in bondS.columns:
-                if '_drop' in column:
-                    bondS[column.replace('_drop', '')] = bondS[column].combine_first(bondS[column.replace('_drop', '')])
-                        # замена старых значений новыми только там, где новые не NaN
-    
-                    columnS_toDrop.append(column)
-    
-            bondS = bondS.drop(columnS_toDrop, axis=1)
-            bondS = bondS.set_index('indexOriginal') # восстановить индекс из столбца indexOriginal
+            # Добавить в bondS инфромацию из bondS_withoutRating, но поячеечно: заменять старые значения новыми только там, где новые не NaN
+            bondS = cellsLeftMerger(bondS_withoutRating, bondS, 'ISIN') # следует мёрджить по ISIN
+
+            # bondS = bondS.reset_index().rename(columns={'index': 'indexOriginal'}) # сохранить индекс как новый столбец indexOriginal
+            # bondS = bondS.merge(bondS_withoutRating, how='left', on='ISIN', suffixes=('', '_drop'))
+
+            # columnS_toDrop = []
+            # for column in bondS.columns:
+            #     if '_drop' in column:
+            #         bondS[column.replace('_drop', '')] = bondS[column].combine_first(bondS[column.replace('_drop', '')])
+            #             # замена старых значений новыми только там, где новые не NaN
+
+            #         columnS_toDrop.append(column)
+
+            # bondS = bondS.drop(columnS_toDrop, axis=1)
+            # bondS = bondS.set_index('indexOriginal') # восстановить индекс из столбца indexOriginal
             display('bondS (срез столбцов):', bondS[['ISIN', 'SECNAME', 'Эмитент', 'Issuer D Rating', 'Bond D Rating']]) # для отладки
-    
+
         if len(userChoice) == 0:
             print('\nПриступаю к функции ratingThroughIssuer') # для отладки
             bondS = ratingThroughIssuer(bondS, 'Issuer D Rating', 'Bond D Rating')
