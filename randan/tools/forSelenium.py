@@ -13,33 +13,32 @@ import sys
 from subprocess import check_call
 
 # --- остальные модули и пакеты
-attempt = 0
-while True:
+for attempt in range(1, 4):
     try:
         from selenium import webdriver
         from selenium.webdriver.common.by import By # для поиска элементов HTML-кода
         from selenium.webdriver.support import expected_conditions
         from selenium.webdriver.support.ui import WebDriverWait
-        import re, selenium.common.exceptions, time
-        break
+        import re, selenium.common.exceptions, time, undetected_chromedriver
+        break # выход из цикла for attempt in range(3)
+
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
         print(
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка № {attempt} из 10
+Попытка № {attempt} из 3
 '''
               )
         check_call([sys.executable, "-m", "pip", "install", module])
-        attempt += 1
-        if  attempt == 10:
+        if  attempt == 3:
             print(
 f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
                   )
-            break
-            
+            break # выход из цикла for attempt in range(3)
+
 def blockSearch(attemptsMax, driver, text, xPathS):
     block = None 
     trCounter = 1
@@ -54,7 +53,14 @@ def blockSearch(attemptsMax, driver, text, xPathS):
             trCounter += 1
             if trCounter > attemptsMax: break # против бесконечного цикла при пустом блоке страницы
     return block if text in block else None
-    
+
+def driverCreator(version_main, headless=False, use_subprocess=True,):
+    options = undetected_chromedriver.ChromeOptions()
+    options.add_argument('--disable-backgrounding-occluded-windows')
+    options.add_argument('--disable-background-timer-throttling')
+    if headless: options.add_argument('--headless')
+    return undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=version_main)
+
 def pathRelative(driver, pathAnchor, pathTarget, pause, textAnchor, textTarget):
     if pathAnchor == None: pathAnchor = pathTarget
     if textAnchor == None: textAnchor = textTarget
@@ -74,7 +80,7 @@ def pathRelative(driver, pathAnchor, pathTarget, pause, textAnchor, textTarget):
 def tryerSleeper(attemptsMax, boundarieS, driver, pause, xPathS):
     goS = True
     goC = True
-    
+
     attempt = 1
     while (attempt < attemptsMax) & goC:
         if boundarieS != None:
