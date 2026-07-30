@@ -15,6 +15,9 @@ from subprocess import check_call
 for attempt in range(1, 4):
     try:
         from IPython.display import display
+        from randan.tools import coLabAdaptor # авторский модуль для..
+            # (а) адаптации текущего скрипта к файловой системе CoLab
+
         import pandas
         break # выход из цикла for attempt in range(3)
 
