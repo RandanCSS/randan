@@ -286,7 +286,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
             goC = True
             while goC:
                 
-                driver = forSelenium.driverCreator(version_main, options=options, use_subprocess=True)
+                driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
                 driver.set_page_load_timeout(100 * pause)
 
                 # Импорт рейтинга с сайта moex.com
@@ -329,7 +329,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
                         bondS_processed = pandas.DataFrame()
                         bondS_rowS = []
 
-                        driver = forSelenium.driverCreator(version_main, options=options, use_subprocess=True)
+                        driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
                         # options = undetected_chromedriver.ChromeOptions()
                         # options.add_argument('--disable-backgrounding-occluded-windows') # запрет браузеру засыпать в фоне
                         # options.add_argument('--disable-background-timer-throttling') # отключить троттлинг таймеров
