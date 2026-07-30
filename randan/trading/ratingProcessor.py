@@ -330,16 +330,10 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
                         bondS_withoutRating_rowS = []
 
                         driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
-                        # options = undetected_chromedriver.ChromeOptions()
-                        # options.add_argument('--disable-backgrounding-occluded-windows') # запрет браузеру засыпать в фоне
-                        # options.add_argument('--disable-background-timer-throttling') # отключить троттлинг таймеров
-                        # # options.headless = True # невидимый режим
-                        # driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=version_main)
 
                     # Добавить в bondS_withoutRating инфромацию из bondS_withoutRating_processed, но поячеечно: заменять старые значения новыми только там, где новые не NaN
                     # Следует мёрджить по ISIN
 
-                    # Сохраняем индекс
                     bondS_withoutRating = bondS_withoutRating.reset_index().rename(columns={'index': 'indexOriginal'}) # сохранить индекс как новый столбец indexOriginal
                     bondS_withoutRating = bondS_withoutRating.merge(bondS_withoutRating_processed, how='left', on='ISIN', suffixes=('', '_drop'))
 
@@ -368,7 +362,8 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
 
             # Добавить в bondS инфромацию из bondS_processed, но поячеечно: заменять старые значения новыми только там, где новые не NaN
             # Следует мёрджить по ISIN
-            bondS = bondS.merge(bondS_processed, how='left', on='ISIN', suffixes=('', '_drop'))
+            bondS = bondS.reset_index().rename(columns={'index': 'indexOriginal'}) # сохранить индекс как новый столбец indexOriginal
+            bondS = bondS.merge(bondS_withoutRating, how='left', on='ISIN', suffixes=('', '_drop'))
     
             columnS_toDrop = []
             for column in bondS.columns:
@@ -379,6 +374,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
                     columnS_toDrop.append(column)
     
             bondS = bondS.drop(columnS_toDrop, axis=1)
+            bondS = bondS.set_index('indexOriginal') # восстановить индекс из столбца indexOriginal
             display('bondS (срез столбцов):', bondS[['ISIN', 'SECNAME', 'Эмитент', 'Issuer D Rating', 'Bond D Rating']]) # для отладки
     
         if len(userChoice) == 0:
