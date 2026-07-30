@@ -338,7 +338,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
 
                     # Добавить в bondS инфромацию из bondS_processed, но поячеечно: заменять старые значения новыми только там, где новые не NaN
                     # Следует мёрджить по ISIN
-                    bondS = bondS_FinAM_RB.merge(bondS_processed, how='left', on='ISIN', suffixes=('', '_drop'))
+                    bondS = bondS.merge(bondS_processed, how='left', on='ISIN', suffixes=('', '_drop'))
 
                     columnS_toDrop = []
                     for column in bondS.columns:
