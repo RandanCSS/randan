@@ -326,7 +326,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
                         print(traceback.format_exc()) # показ точной строчки кода с ошибкой
 
                         # Заглушки вместо выдачи функции getRatingFromMoEx при её неуспехе
-                        bondS_withoutRating_processed = pandas.DataFrame()
+                        bondS_withoutRating_processed = pandas.DataFrame(columns=['ISIN'])
                         bondS_withoutRating_rowS = []
 
                         driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
