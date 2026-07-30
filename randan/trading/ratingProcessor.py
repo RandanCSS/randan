@@ -15,7 +15,10 @@ from subprocess import check_call
 for attempt in range(1, 4):
     try:
         from IPython.display import display
-        from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
+        from randan.tools import coLabAdaptor, forSelenium # авторские модули для..
+            # (а) адаптации текущего скрипта к файловой системе CoLab
+            # (б) упрощения некоторых оперций в selenium
+
         from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException
         from selenium.webdriver.common.by import By
         from selenium.webdriver.support import expected_conditions
@@ -40,7 +43,7 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
                   )
-            break
+            break # выход из цикла for attempt in range(3)
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 version_main = 150
@@ -72,7 +75,7 @@ def bondS_ofIssuer_ratingChecker(bondS_in):
 
     return issuerS_fromBonds_fullRating, issuerS_fromBonds_noRating, issuerS_fromBonds_partialRating
 
-# .. импорта рейтинга с сайта moex.com
+# .. импорта рейтинга с сайта moex.ru
 def getRatingFromMoEx(bondS_in: pandas.DataFrame,
                       columnWithRating: str, 
                       driver: undetected_chromedriver,
@@ -80,6 +83,7 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
                       isin: str, 
                       pause: int,
                       textTarget: str) -> pandas.DataFrame:
+
     bondS = bondS_in.copy()
     bondS_rowS = []
 
@@ -215,14 +219,6 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
             bondS.loc[bondS_rowS, columnWithRating] = oneBondRating[columnWithRating].mean()
                 # присвоить рейтинг эмитента всем его облигациям в bondS
 
-            # if identifier != isin:
-            #     # print('identifier != isin') # для отладки
-            #     bondS.loc[bondS['Эмитент'] == identifier, columnWithRating] = oneBondRating[columnWithRating].mean()
-            #         # присвоить рейтинг эмитента всем его облигациям в bondS
-            # else:
-            #     # print('idenatifier == isin') # для отладки
-            #     bondS.loc[bondS['ISIN'] == identifier, columnWithRating] = oneBondRating[columnWithRating].mean()
-
     return bondS, bondS_rowS, driver
 
     # перевода в число рейтинга с эмитентов торгуемых на МосБирже облигаций
@@ -270,8 +266,8 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
     textTargetDict = {'Кредитный рейтинг эмитента': 'Issuer D Rating', 'Кредитный рейтинг выпуска облигаций': 'Bond D Rating'}
     if len(userChoice) == 0: del textTargetDict['Кредитный рейтинг выпуска облигаций'] # в этом случе следующий далее цикл будет иметь одну итерацию
     for textTarget in textTargetDict.keys():
-        column_tagert = textTargetDict[textTarget]
-        bondS_withoutRating = bondS[bondS[column_tagert].isna()]
+        column_target = textTargetDict[textTarget]
+        bondS_withoutRating = bondS[bondS[column_target].isna()]
         # bondS_withoutRating = bondS_withoutRating.head() # для отладки
         display(textTarget, 'отсутствует у следующих облигаций:', bondS_withoutRating) # для отладки
 
@@ -289,14 +285,10 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
 
             goC = True
             while goC:
-
-                options = undetected_chromedriver.ChromeOptions()
-                options.add_argument('--disable-backgrounding-occluded-windows') # запрет браузеру засыпать в фоне
-                options.add_argument('--disable-background-timer-throttling') # отключить троттлинг таймеров
-                # options.headless = True # невидимый режим
-                driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=version_main)
+                
+                driver = forSelenium.driverCreator(version_main, options=options, use_subprocess=True)
                 driver.set_page_load_timeout(100 * pause)
-    
+
                 # Импорт рейтинга с сайта moex.com
                 counter = 1
                 identifierS_double = identifierS.copy() # список будущих НЕобработанных identifier ;
@@ -312,19 +304,19 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
                     else:
                         isin = identifier
                         print('ISIN', isin)
-    
+
                     # На всякий случай, например, обрыва связи
                     try:
                         bondS_processed, bondS_rowS, driver = getRatingFromMoEx(bondS.drop(bondS_rowS_processed),
                                                                                     # чтобы после ошибки избежать повторного захода в уже обработанные записи датафрейма bondS
-        
+
                                                                                 textTargetDict[textTarget],
                                                                                 driver,
                                                                                 identifier,
                                                                                 isin,
                                                                                 pause,
                                                                                 textTarget)
-                        
+
                         bondS_rowS_processed.extend(bondS_rowS)
                         goC = False
                         identifierS_double.remove(identifier)
@@ -337,36 +329,37 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
                         bondS_processed = pandas.DataFrame()
                         bondS_rowS = []
 
-                        options = undetected_chromedriver.ChromeOptions()
-                        options.add_argument('--disable-backgrounding-occluded-windows') # запрет браузеру засыпать в фоне
-                        options.add_argument('--disable-background-timer-throttling') # отключить троттлинг таймеров
-                        # options.headless = True # невидимый режим
-                        driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=version_main)
+                        driver = forSelenium.driverCreator(version_main, options=options, use_subprocess=True)
+                        # options = undetected_chromedriver.ChromeOptions()
+                        # options.add_argument('--disable-backgrounding-occluded-windows') # запрет браузеру засыпать в фоне
+                        # options.add_argument('--disable-background-timer-throttling') # отключить троттлинг таймеров
+                        # # options.headless = True # невидимый режим
+                        # driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=version_main)
 
                     # Добавить в bondS инфромацию из bondS_processed, но поячеечно: заменять старые значения новыми только там, где новые не NaN
-                    # Следует мёрджить по ISIN                    
+                    # Следует мёрджить по ISIN
                     bondS = bondS_FinAM_RB.merge(bondS_processed, how='left', on='ISIN', suffixes=('', '_drop'))
-                    
+
                     columnS_toDrop = []
                     for column in bondS.columns:
                         if '_drop' in column:
                             bondS[column.replace('_drop', '')] = bondS[column].combine_first(bondS[column.replace('_drop', '')])
                                 # замена старых значений новыми только там, где новые не NaN
-                    
+
                             columnS_toDrop.append(column)
-                    
+
                     bondS = bondS.drop(columnS_toDrop, axis=1)
                     display('bondS:', bondS) # для отладки
 
                     counter += 1
                     print('Элементов множества обработано:', counter, 'из', len(identifierS))
                     print("=" * 10 + "\n")
-    
+
                 identifierS = identifierS_double.copy() # подаётся при повторных итерациях цикла while goC
                     # и, как следствие, повторных запусках цикла for identifier in identifierS , чтобы избежать повторных обращений к этим identifier
-                
+
                 print('На сайте moex.com могут оказаться рейтинги не для всех облигаций, поэтому следует проверить визуально:')
-                display(bondS[bondS[column_tagert].isna()])
+                display(bondS[bondS[column_target].isna()])
                 driver.quit()
 
     if len(userChoice) == 0:
