@@ -142,7 +142,6 @@ def bondsFeaturesProcessor(
         issuerS_withActualRating_index = issuerS_withActualRating[issuerS_withActualRating['Эмитент'] == issuer_withActualRating].index
         bondS.loc[bondS['Эмитент'] == issuer_withActualRating, 'Issuer D Rating'] = issuerS_withActualRating.loc[issuerS_withActualRating_index[0], 'Issuer D Rating']
 
-    bondS_rowS_processed = [] # заглушка на время неактивности сток кода ниже
 #     # Разделение облигаций по субординированности, поскольку для несубординированных обычно рейтинг эмитента и облигации совпадают
 #         # и для них можно выводить Bond D Rating и Issuer D Rating друг из друга.
 #         # А для субординированных облигаций рейтинг следует брать с сайтов
@@ -168,13 +167,10 @@ def bondsFeaturesProcessor(
 #             (bondS_unsubordinated['Эмитент'].isin(issuerS_fromBonds_noRating)) & (bondS['ISIN'].notna()) & (bondS['Эмитент'].notna())
 #             ]
 
-#         bondS_unsubordinated_noRating, bondS_unsubordinated_noRating_rowS_processed =\
-#             ratingProcessor.ratingMoExForBondsWithoutRating(bondS_unsubordinated_noRating, pause)
+#         bondS_unsubordinated_noRating = ratingProcessor.ratingMoExForBondsWithoutRating(bondS_unsubordinated_noRating, pause)
 #                 # NB: Почему-то некоторые облигации не имеют SECNAME
 
 #         # display('bondS_unsubordinated_noRating:', bondS_unsubordinated_noRating) # для отладки
-
-#         bondS_rowS_processed.extend(bondS_unsubordinated_noRating_rowS_processed)
 
 #         bondS_unsubordinated = bondS_unsubordinated.merge(bondS_unsubordinated_noRating[['URL RB', 'Bond D Rating', 'Issuer D Rating']],
 #                                                           how="left",
@@ -196,13 +192,9 @@ def bondsFeaturesProcessor(
 #         (bondS['ISIN'].notna()) & (bondS['Эмитент'].notna())
 #         ]
 
-#     bondS_subordinated, bondS_subordinated_rowS_processed =\
-#         ratingProcessor.ratingMoExForBondsWithoutRating(bondS_subordinated, pause, subordinated=True)
-#         # NB: Почему-то некоторые облигации не имеют SECNAME
-
+#     bondS_subordinated = ratingProcessor.ratingMoExForBondsWithoutRating(bondS_subordinated, pause, subordinated=True)
 #     display('bondS_subordinated 2:', bondS_subordinated) # для отладки
 
-#     bondS_rowS_processed.extend(bondS_subordinated_rowS_processed)
 #     bondS = pandas.concat([bondS_unsubordinated, bondS_subordinated])
 
 # 1.4 Фильтры по датам
@@ -367,4 +359,4 @@ def bondsFeaturesProcessor(
 
     display(bondS['Специфика'].value_counts().sort_index())
 
-    if returnDfs: return bondS, bondS_rowS_processed, issuerS_withActualRating, issuerS_withActualRating_change
+    if returnDfs: return bondS, issuerS_withActualRating, issuerS_withActualRating_change
