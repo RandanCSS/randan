@@ -333,7 +333,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
                         driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
 
                     # Добавить в bondS_withoutRating инфромацию из bondS_withoutRating_processed, но поячеечно: заменять старые значения новыми только там, где новые не NaN
-                    bondS_withoutRating = cellsLeftMerger(bondS_withoutRating_processed, bondS_withoutRating, 'ISIN') # следует мёрджить по ISIN
+                    bondS_withoutRating = cellsLeftMerger.cellsLeftMerger(bondS_withoutRating_processed, bondS_withoutRating, 'ISIN') # следует мёрджить по ISIN
 
                     # bondS_withoutRating = bondS_withoutRating.reset_index().rename(columns={'index': 'indexOriginal'}) # сохранить индекс как новый столбец indexOriginal
                     # bondS_withoutRating = bondS_withoutRating.merge(bondS_withoutRating_processed, how='left', on='ISIN', suffixes=('', '_drop'))
@@ -362,7 +362,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
                 driver.quit()
 
             # Добавить в bondS инфромацию из bondS_withoutRating, но поячеечно: заменять старые значения новыми только там, где новые не NaN
-            bondS = cellsLeftMerger(bondS_withoutRating, bondS, 'ISIN') # следует мёрджить по ISIN
+            bondS = cellsLeftMerger.cellsLeftMerger(bondS_withoutRating, bondS, 'ISIN') # следует мёрджить по ISIN
 
             # bondS = bondS.reset_index().rename(columns={'index': 'indexOriginal'}) # сохранить индекс как новый столбец indexOriginal
             # bondS = bondS.merge(bondS_withoutRating, how='left', on='ISIN', suffixes=('', '_drop'))
