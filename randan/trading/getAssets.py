@@ -66,23 +66,25 @@ def brokerReportsProcessor(broker, fileNameS, path, period, slash):
         # display(assetS) # для отладки
     return assetS
 
-# 1.0.2 поиска в брокерском отчёте столбцов, содержащих ключевые данные
-def columnFinder(assetS, name):
-    # Найти первый слева столбец, содержащий искомое слово(сочетание)
-    # print('assetS.columns:', assetS.columns) # для оталдки
-    for col in assetS.columns:
-        if sum(assetS.loc[:, col].dropna().astype(str).str.contains(name)) > 0:
-            # print('col:', col) # для оталдки
+# 1.0.2 .. поиска в таблице столбцов, чьи ячейки содержат ключевой текст
+def columnFinder(df, text):
+    # Найти первый слева столбец, содержащий ключевой текст
+    # print('df.columns:', df.columns) # для оталдки
+    for column in df.columns:
+        if sum(df.loc[:, column].dropna().astype(str).str.contains(text)) > 0:
+            # print('column:', column) # для оталдки
             break
-    return col
+    column = column if sum(df.loc[:, column].dropna().astype(str).str.contains(text)) > 0 else None
+    return column
 
-# 1.0.3 поиска в брокерском отчёте имён столбцов, содержащих ключевые данные
-def columnNameFinder(assetS, name):
-    # Найти первый слева столбец, содержащий искомое слово(сочетание)
-    for col in assetS.columns:
-        if name in col:
+# 1.0.3 .. поиска в таблице столбцов, содержащих в своих заголовках ключевой текст
+def columnNameFinder(df, text):
+    # Найти первый слева столбец, содержащий ключевой текст
+    for column in df.columns:
+        if text in column:
             break
-    return col
+    column = column if text in column else None
+    return column
 
 # 1.0.4 поиска в директориях брокеров отчётов за интересующий период
 def reportSearch(broker, path, period, slash):
