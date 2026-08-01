@@ -35,17 +35,30 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
 # 1.0 Авторские функции
-# 1.0.0 поиска в брокерском отчёте строчек, ограничивающих интересующий раздел
-def boundColibrator(assetS, bound, col, name):
-    if len(bound) == 1:
-        bound = bound[0]
+# # 1.0.0 поиска в брокерском отчёте строчек, ограничивающих интересующий раздел
+# def boundColibrator(assetS, bound, col, name):
+#     if len(bound) == 1:
+#         bound = bound[0]
+#     elif len(bound) > 1:
+#         # print('Найдено строк:', len(bound)) # для оталдки
+#         # display(assetS.loc[bound, col]) # для оталдки
+#         bound = assetS.loc[bound, col][
+#             assetS.loc[bound, col].dropna().astype(str).str.contains(name)
+#                 ].index[0]
+#     return bound
+
+# .. поиска в таблице строчек, ограничивающих интересующий раздел
+def boundColibrator(bound, column, df, softCondition, text):
+    # if type(bound) == list:
+    if len(bound) == 1: bound = bound[0]
     elif len(bound) > 1:
         # print('Найдено строк:', len(bound)) # для оталдки
-        # display(assetS.loc[bound, col]) # для оталдки
-        bound = assetS.loc[bound, col][
-            assetS.loc[bound, col].dropna().astype(str).str.contains(name)
-                ].index[0]
+        # display(df.loc[bound, column]) # для оталдки
+        if softCondition: bound = df.loc[bound, column][df.loc[bound, column].dropna().astype(str).str.contains(text)].index[0]
+        else: bound = df.loc[bound, column][df.loc[bound, column] == text].index[0]
+
     return bound
+
 
 # 1.0.1 организации обработки отчётов каждого брокера за интересующий период
 def brokerReportsProcessor(broker, fileNameS, path, period, slash):
@@ -110,35 +123,35 @@ def reportSearch(broker, path, period, slash):
                 break
 
 # 1.0.5 поиска в брокерском отчёте фрагментов, соответствующих интересующим разделам
-def sectionFinder(assetS, name, nameNext):
-    col = columnFinder(assetS, name)
+def sectionFinder(assetS, text, textNext):
+    column = columnFinder(assetS, name)
     upper_bound = assetS[assetS[col].notna() & assetS[col].str.contains(name)].index
-    upper_bound = boundColibrator(assetS, upper_bound, col, name)
+    upper_bound = boundColibrator(upper_bound, column, assetS, True, text)
 
     lower_bound = assetS[assetS[col].notna()].index[-1]
-    if nameNext != '':
-        lower_bound = assetS[assetS[col].notna() & assetS[col].str.contains(nameNext)].index
-        lower_bound = boundColibrator(assetS, lower_bound, col, name)
+    if textNext != '':
+        lower_bound = assetS[assetS[col].notna() & assetS[col].str.contains(textNext)].index
+        lower_bound = boundColibrator(lower_bound, column, assetS, True, text)
     return assetS, lower_bound, upper_bound
 
 # 1.1 Авторские функции-адаптеры по брокерам
 def ВТБ(assetS):
     # display(assetS) # для отладки
     # Найти срез датафрейма, соответствующий искомому разделу (раздел предполагает свои наименования столбцов)
-    name = 'т об остатках ценных бумаг' # вместо "Отчет", чтобы избежать чередования букв е и ё
-    nameNext = ''
+    text = 'т об остатках ценных бумаг' # вместо "Отчет", чтобы избежать чередования букв е и ё
+    textNext = ''
     # print('\nИскомый раздел:', name) # для оталдки
-    # if nameNext != '': print('Раздел, следующий за искомым:', nameNext) # для оталдки
-    assetS, lower_bound, upper_bound = sectionFinder(assetS, name, nameNext)
+    # if textNext != '': print('Раздел, следующий за искомым:', textNext) # для оталдки
+    assetS, lower_bound, upper_bound = sectionFinder(assetS, text, textNext)
     colS = list(assetS.loc[upper_bound + 1, :].astype(str)) # поскольку раздел предполагает свои наименования столбцов
     assetS = assetS.loc[upper_bound + 2: lower_bound - 1, :]
 
     # Найти срез датафрейма, соответствующий искомому подразделу (подраздел НЕ предполагает свои наименования столбцов)
     name = 'ОБЛИГАЦИЯ'
-    nameNext = 'ИТОГО:' # Слово(сочетание), следующие за искомым подразделом, должно располагаться в том же столбце
+    textNext = 'ИТОГО:' # Слово(сочетание), следующие за искомым подразделом, должно располагаться в том же столбце
     # print('\nИскомый подраздел:', name) # для оталдки
-    # if nameNext != '': print('Слово(сочетание), следующие за искомым подразделом:', nameNext) # для оталдки
-    assetS, lower_bound, upper_bound = sectionFinder(assetS, name, nameNext)
+    # if textNext != '': print('Слово(сочетание), следующие за искомым подразделом:', textNext) # для оталдки
+    assetS, lower_bound, upper_bound = sectionFinder(assetS, name, textNext)
     assetS = assetS.loc[upper_bound + 1: lower_bound - 1, :]
     assetS.columns = colS
 
