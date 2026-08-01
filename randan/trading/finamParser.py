@@ -51,6 +51,11 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
             break # выход из цикла for attempt in range(3)
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
+
+slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+if folder == None: folder = ''
+else: folder += slash
+
 version_main = 150
 
 # Авторские функции..
@@ -417,7 +422,7 @@ def finamParser(attemptsMax,
             columnS_target_FinAM[1]: 'REGNUMBER FinAM',
             columnS_target_FinAM[2]: 'Описание платежей'
             })[bondsFinAM_columns].to_excel(
-            path + 'Замеры рейтингов' + slash + momentCurrent.strftime("%Y%m%d_%H%M") + '_bondsFinAM.xlsx', index=False
+            folder + 'Замеры рейтингов' + slash + momentCurrent.strftime("%Y%m%d_%H%M") + '_bondsFinAM.xlsx', index=False
                 )
 
         if conumnName == 'ISIN': time.sleep(pause) # для замедления перехода между эмитентами или ISIN; почему-то именно во втором случае сервер банит
