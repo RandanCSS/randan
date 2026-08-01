@@ -136,7 +136,7 @@ def reportSearch(broker, path, period, slash):
 
 # .. поиска в таблице фрагментов, содержащих ключевой текст
 def sectionFinder(df, softCondition, text, textClosing): # textClosing -- текст, следующий за искомым подразделом; должен располагаться в том же столбце
-    column = getAssets.columnFinder(df, text)
+    column = columnFinder(df, text)
     # print('column:', column) # для оталдки
 
     boundSmaller = df[df[column].notna() & df[column].str.contains(text)].index if softCondition else df[df[column] == text].index
@@ -152,8 +152,7 @@ def sectionFinder(df, softCondition, text, textClosing): # textClosing -- тек
 
         boundLarger = getAssets.boundColibrator(boundLarger, column, df, softCondition, text)
     # print('boundLarger:', boundLarger) # для оталдки
-    return df, boundLarger, boundSmaller
-
+    return boundLarger, boundSmaller
 
 # 1.1 Авторские функции-адаптеры по брокерам
 def ВТБ(assetS):
@@ -163,7 +162,7 @@ def ВТБ(assetS):
     textNext = ''
     # print('\nИскомый раздел:', name) # для оталдки
     # if textNext != '': print('Раздел, следующий за искомым:', textNext) # для оталдки
-    assetS, upper_bound, lower_bound = sectionFinder(assetS, True, text, textNext)
+    upper_bound, lower_bound = sectionFinder(assetS, True, text, textNext)
     colS = list(assetS.loc[upper_bound + 1, :].astype(str)) # поскольку раздел предполагает свои наименования столбцов
     assetS = assetS.loc[upper_bound + 2: lower_bound - 1, :]
 
@@ -172,7 +171,7 @@ def ВТБ(assetS):
     textNext = 'ИТОГО:' # Слово(сочетание), следующие за искомым подразделом, должно располагаться в том же столбце
     # print('\nИскомый подраздел:', name) # для оталдки
     # if textNext != '': print('Слово(сочетание), следующие за искомым подразделом:', textNext) # для оталдки
-    assetS, upper_bound, lower_bound = sectionFinder(assetS, True, text, textNext)
+    upper_bound, lower_bound = sectionFinder(assetS, True, text, textNext)
     assetS = assetS.loc[upper_bound + 1: lower_bound - 1, :]
     assetS.columns = colS
 
