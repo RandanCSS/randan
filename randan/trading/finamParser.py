@@ -160,6 +160,7 @@ def finamParser(attemptsMax,
                 bondsFinAM,
                 bondS_FinAM_RB,
                 bondS_FinAM_RB_row,
+                momentCurrent,
                 pause,
                 source,
                 version_main):
