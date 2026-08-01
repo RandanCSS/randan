@@ -46,7 +46,7 @@ def bondsFeaturesProcessor(
                            bondsIn,
                            issuerS,
                            pause,
-                           path=coLabFolder,
+                           folder=coLabFolder,
                            returnDfs=False
                            ):
     """
@@ -57,7 +57,7 @@ def bondsFeaturesProcessor(
       bondsIn : DataFrame -- датафрейм с облигациями, характеристики которых требуется получить; должен содержать хотя бы столбец ISIN
       issuerS : DataFrame -- датафрейм со Словарём эмитентов
         pause : int -- период засыпания исполнения функций selenium
-         path : str -- путь к директории, включая её имя, в которой будут искаться файлы и куда будут сохраняться;
+       folder : str -- путь к директории, включая её имя, в которой будут искаться файлы и куда будут сохраняться;
                      по умолчанию, не в CoLab поиск и сохранение происходят в директории, в которой вызывается текущая функция, а в CoLab в директории Colab Notebooks
 
     returnDfs : bool -- в случае True функция возвращает итоговые датафрейм bondS
@@ -68,8 +68,8 @@ def bondsFeaturesProcessor(
     bondS = bondS.drop_duplicates('ISIN', keep='last', ignore_index=True)
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
 
-    if path == None: path = ''
-    else: path += slash
+    if folder == None: folder = ''
+    else: folder += slash
 
     warnings.filterwarnings("ignore")
 
@@ -86,18 +86,18 @@ def bondsFeaturesProcessor(
                 # (все эти эмитенты представлены в issuerS)
 
 # 1.2 Импорт словарей (актуального и прошлого) эмитентов с рейтингом из Акуальные эмитенты.xlsx в issuerS_withActualRating
-    # print('path:', path) # для отладки
-    if os.path.exists(path + 'Замеры рейтингов'):
-        fileUptodateName_0 = files2df.getFileUptodateName('_Акуальные эмитенты', None, path + 'Замеры рейтингов')
+    # print('folder:', folder) # для отладки
+    if os.path.exists(folder + 'Замеры рейтингов'):
+        fileUptodateName_0 = files2df.getFileUptodateName('_Акуальные эмитенты', None, folder + 'Замеры рейтингов')
         # print('fileUptodateName_0:', fileUptodateName_0) # для отладки
 
-        issuerS_withActualRating = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_0)
+        issuerS_withActualRating = pandas.read_excel(folder + 'Замеры рейтингов' + slash + fileUptodateName_0)
         # display('issuerS_withActualRating:', issuerS_withActualRating) # для отладки
 
-        fileUptodateName_1 = files2df.getFileUptodateName('_Акуальные эмитенты', [fileUptodateName_0], path + 'Замеры рейтингов')
+        fileUptodateName_1 = files2df.getFileUptodateName('_Акуальные эмитенты', [fileUptodateName_0], folder + 'Замеры рейтингов')
         # print('fileUptodateName_1:', fileUptodateName_1) # для отладки
 
-        issuerS_withActualRating_previous = pandas.read_excel(path + 'Замеры рейтингов' + slash + fileUptodateName_1)
+        issuerS_withActualRating_previous = pandas.read_excel(folder + 'Замеры рейтингов' + slash + fileUptodateName_1)
         # display('issuerS_withActualRating_previous:', issuerS_withActualRating_previous) # для отладки
 
         issuerS_withActualRating = issuerS_withActualRating.merge(issuerS_withActualRating_previous[['Эмитент', 'Issuer D Rating']], on='Эмитент', suffixes=("", " Previous"))
