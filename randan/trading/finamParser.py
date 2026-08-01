@@ -510,13 +510,13 @@ def getFeaturesByURL_FinAM(columnS_target_FinAM, dfIn, driver, row):
     return df
 
 # .. поиска в таблице фрагментов, содержащих ключевой текст
-def sectionSearch(df, strictCondition, text, textClosing): # textClosing -- текст, следующий за искомым подразделом; должен располагаться в том же столбце
+def sectionSearch(df, softCondition, text, textClosing): # textClosing -- текст, следующий за искомым подразделом; должен располагаться в том же столбце
     column = getAssets.columnFinder(df, text)
     # print('column:', column) # для оталдки
     if strictCondition: boundSmaller = df[df[column] == text].index
     else: boundSmaller = df[df[column].notna() & df[column].str.contains(text)].index
     # print('boundSmaller:', boundSmaller) # для оталдки
-    boundSmaller = boundColibrator(boundSmaller, column, df, strictCondition, text)
+    boundSmaller = getAssets.boundColibrator(boundSmaller, column, df, softCondition, text)
     # print('boundSmaller:', boundSmaller) # для оталдки
 
     boundLarger = df[df[column].notna()].index[-1]
@@ -524,6 +524,6 @@ def sectionSearch(df, strictCondition, text, textClosing): # textClosing -- те
         if strictCondition: boundLarger = df[df[column] == textClosing].index
         else: boundLarger = df[df[column].notna() & df[column].str.contains(textClosing)].index
         # print('boundLarger:', boundLarger) # для оталдки
-        boundLarger = boundColibrator(boundLarger, column, df, strictCondition, text)
+        boundLarger = getAssets.boundColibrator(boundLarger, column, df, softCondition, text)
     # print('boundLarger:', boundLarger) # для оталдки
     return df, boundLarger, boundSmaller
