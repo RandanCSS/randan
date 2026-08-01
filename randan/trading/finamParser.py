@@ -93,7 +93,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsOfIdentifier, columnS_target_Fi
         df.loc[df_row, 'URL FinAM'] = driver.find_element(By.XPATH, xPathBond).get_attribute('href').replace('/default.asp', '00002')
         # display('df:', df) # для отладки
 
-        df = getFeaturesByURL_FinAM(attemptsMax, columnS_target_FinAM, df, driver, df_row)
+        df = getFeaturesByURL_FinAM(attemptsMax, columnS_target_FinAM, df, df_row, driver, pause)
 
         df_row += 1 # у некоторых облигаций без ISIN не будут заполнены и поля из описания платежей;
             # такие облигации нужны в базе, чтобы повторно не обращаться к ним
@@ -429,7 +429,7 @@ def finamParser(attemptsMax,
         columnS_target_FinAM[2]: 'Описание платежей'
         }), bondS_FinAM_RB_row, counter
 
-def getFeaturesByURL_FinAM(attemptsMax, columnS_target_FinAM, dfIn, driver, row):
+def getFeaturesByURL_FinAM(attemptsMax, columnS_target_FinAM, dfIn, row, driver, pause):
     df = dfIn.copy()
 
     driver.set_page_load_timeout(100) # включить ограниченный таймаут загрузки
