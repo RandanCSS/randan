@@ -357,6 +357,7 @@ def bondsFeaturesProcessor(
             bondS[column] = bondS[column].fillna('--')
             bondS['Специфика'] += ' ' + bondS[column].astype(str).str[:1]
 
+    print('Компоненты специфики: валюта, сектор рынка, амортизация, определён ли купон')
     display(bondS['Специфика'].value_counts().sort_index())
 
     if returnDfs: return bondS, issuerS_withActualRating, issuerS_withActualRating_change
