@@ -122,17 +122,38 @@ def reportSearch(broker, path, period, slash):
                 sys.exit()
                 break
 
-# 1.0.5 поиска в брокерском отчёте фрагментов, соответствующих интересующим разделам
-def sectionFinder(assetS, text, textNext):
-    column = columnFinder(assetS, name)
-    upper_bound = assetS[assetS[col].notna() & assetS[col].str.contains(name)].index
-    upper_bound = boundColibrator(upper_bound, column, assetS, True, text)
+# # 1.0.5 поиска в брокерском отчёте фрагментов, соответствующих интересующим разделам
+# def sectionFinder(assetS, text, textNext):
+#     column = columnFinder(assetS, name)
+#     upper_bound = assetS[assetS[col].notna() & assetS[col].str.contains(name)].index
+#     upper_bound = boundColibrator(upper_bound, column, assetS, True, text)
 
-    lower_bound = assetS[assetS[col].notna()].index[-1]
-    if textNext != '':
-        lower_bound = assetS[assetS[col].notna() & assetS[col].str.contains(textNext)].index
-        lower_bound = boundColibrator(lower_bound, column, assetS, True, text)
-    return assetS, lower_bound, upper_bound
+#     lower_bound = assetS[assetS[col].notna()].index[-1]
+#     if textNext != '':
+#         lower_bound = assetS[assetS[col].notna() & assetS[col].str.contains(textNext)].index
+#         lower_bound = boundColibrator(lower_bound, column, assetS, True, text)
+#     return assetS, lower_bound, upper_bound
+
+# .. поиска в таблице фрагментов, содержащих ключевой текст
+def sectionFinder(df, softCondition, text, textClosing): # textClosing -- текст, следующий за искомым подразделом; должен располагаться в том же столбце
+    column = getAssets.columnFinder(df, text)
+    # print('column:', column) # для оталдки
+
+    boundSmaller = df[df[column].notna() & df[column].str.contains(text)].index if softCondition else df[df[column] == text].index
+    # print('boundSmaller:', boundSmaller) # для оталдки
+
+    boundSmaller = getAssets.boundColibrator(boundSmaller, column, df, softCondition, text)
+    # print('boundSmaller:', boundSmaller) # для оталдки
+
+    boundLarger = df[df[column].notna()].index[-1]
+    if textClosing != '':
+        boundLarger = df[df[column].notna() & df[column].str.contains(textClosing)].index if softCondition else df[df[column] == textClosing].index
+        # print('boundLarger:', boundLarger) # для оталдки
+
+        boundLarger = getAssets.boundColibrator(boundLarger, column, df, softCondition, text)
+    # print('boundLarger:', boundLarger) # для оталдки
+    return df, boundLarger, boundSmaller
+
 
 # 1.1 Авторские функции-адаптеры по брокерам
 def ВТБ(assetS):
@@ -142,7 +163,7 @@ def ВТБ(assetS):
     textNext = ''
     # print('\nИскомый раздел:', name) # для оталдки
     # if textNext != '': print('Раздел, следующий за искомым:', textNext) # для оталдки
-    assetS, lower_bound, upper_bound = sectionFinder(assetS, text, textNext)
+    assetS, upper_bound, lower_bound = sectionFinder(assetS, True, text, textNext)
     colS = list(assetS.loc[upper_bound + 1, :].astype(str)) # поскольку раздел предполагает свои наименования столбцов
     assetS = assetS.loc[upper_bound + 2: lower_bound - 1, :]
 
@@ -151,7 +172,7 @@ def ВТБ(assetS):
     textNext = 'ИТОГО:' # Слово(сочетание), следующие за искомым подразделом, должно располагаться в том же столбце
     # print('\nИскомый подраздел:', name) # для оталдки
     # if textNext != '': print('Слово(сочетание), следующие за искомым подразделом:', textNext) # для оталдки
-    assetS, lower_bound, upper_bound = sectionFinder(assetS, name, textNext)
+    assetS, upper_bound, lower_bound = sectionFinder(assetS, True, text, textNext)
     assetS = assetS.loc[upper_bound + 1: lower_bound - 1, :]
     assetS.columns = colS
 
