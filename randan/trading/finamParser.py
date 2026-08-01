@@ -508,3 +508,13 @@ def getFeaturesByURL_FinAM(columnS_target_FinAM, dfIn, driver, row):
             print(f"  Параметр '{textTarget}' не отображён для облигации по ссылке {df['URL FinAM'][row]}")
 
     return df
+
+# .. поиска в таблице фрагментов, содержащих ключевой текст
+def sectionSearch(df, strictCondition, text, textClosing): # textClosing -- текст, следующий за искомым подразделом; должен располагаться в том же столбце
+    column = getAssets.columnFindercolumnFinder(df, text)
+    # print('column:', column) # для оталдки
+    if strictCondition: boundSmaller = df[df[column] == text].index
+    else: boundSmaller = df[df[column].notna() & df[column].str.contains(text)].index
+    # print('boundSmaller:', boundSmaller) # для оталдки
+    boundSmaller = boundColibrator(boundSmaller, column, df, strictCondition, text)
+    # print('boundSmaller:', boundSmaller) # для оталдки
