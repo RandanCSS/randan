@@ -518,3 +518,12 @@ def sectionSearch(df, strictCondition, text, textClosing): # textClosing -- те
     # print('boundSmaller:', boundSmaller) # для оталдки
     boundSmaller = boundColibrator(boundSmaller, column, df, strictCondition, text)
     # print('boundSmaller:', boundSmaller) # для оталдки
+
+    boundLarger = df[df[column].notna()].index[-1]
+    if textClosing != '':
+        if strictCondition: boundLarger = df[df[column] == textClosing].index
+        else: boundLarger = df[df[column].notna() & df[column].str.contains(textClosing)].index
+        # print('boundLarger:', boundLarger) # для оталдки
+        boundLarger = boundColibrator(boundLarger, column, df, strictCondition, text)
+    # print('boundLarger:', boundLarger) # для оталдки
+    return df, boundLarger, boundSmaller
