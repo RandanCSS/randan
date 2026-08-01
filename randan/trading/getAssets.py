@@ -142,7 +142,7 @@ def sectionFinder(df, softCondition, text, textClosing): # textClosing -- тек
     boundSmaller = df[df[column].notna() & df[column].str.contains(text)].index if softCondition else df[df[column] == text].index
     # print('boundSmaller:', boundSmaller) # для оталдки
 
-    boundSmaller = getAssets.boundColibrator(boundSmaller, column, df, softCondition, text)
+    boundSmaller = boundColibrator(boundSmaller, column, df, softCondition, text)
     # print('boundSmaller:', boundSmaller) # для оталдки
 
     boundLarger = df[df[column].notna()].index[-1]
@@ -150,7 +150,7 @@ def sectionFinder(df, softCondition, text, textClosing): # textClosing -- тек
         boundLarger = df[df[column].notna() & df[column].str.contains(textClosing)].index if softCondition else df[df[column] == textClosing].index
         # print('boundLarger:', boundLarger) # для оталдки
 
-        boundLarger = getAssets.boundColibrator(boundLarger, column, df, softCondition, text)
+        boundLarger = boundColibrator(boundLarger, column, df, softCondition, text)
     # print('boundLarger:', boundLarger) # для оталдки
     return boundLarger, boundSmaller
 
