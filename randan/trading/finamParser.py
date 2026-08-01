@@ -1,8 +1,8 @@
 # coding: utf-8
 
 '''
-A proprietary module that facilitates left-merging a source dataframe into a target dataframe on a specified merge column
-Авторский модуль для упрощения операции левостороннего присоединения датафрейма-донора к датафрейму-реципиенту по специальному столбцу 
+A proprietary module designed to facilitate the scraping and parsing of data from the finam.ru website
+Авторский модуль для упрощения выгрузки данных с сайта finam.ru и их парсинга
 '''
 # import sys
 # sys.path.append(r"C:\Users\Alexey\Dropbox\Мои\RAnDan\myModules")
@@ -15,10 +15,16 @@ from subprocess import check_call
 for attempt in range(1, 4):
     try:
         from IPython.display import display
-        from randan.tools import coLabAdaptor # авторский модуль для..
+        from randan.tools import coLabAdaptor, forSelenium # авторские модули для..
             # (а) адаптации текущего скрипта к файловой системе CoLab
+            # (б) упрощения некоторых оперций в selenium
 
-        import pandas
+        from selenium import webdriver
+        from selenium.webdriver.common.by import By # для поиска элементов HTML-кода
+        from selenium.webdriver.support import expected_conditions
+        from selenium.webdriver.support.ui import WebDriverWait
+
+        import pandas, selenium.common.exceptions, time, traceback
         break # выход из цикла for attempt in range(3)
 
     except ModuleNotFoundError:
@@ -40,10 +46,11 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
             break # выход из цикла for attempt in range(3)
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
+version_main = 150
 
 # Авторские функции..
 # .. обработки облигаций, относящихся к одному Identifier
-def bondsOfIdentifierProcessor(attemptsMax, bondsOfIdentifier, columnS_target_FinAM, dfIn, df_row, driver, pause, source, sourceRow, urlInitial):
+def bondsOfIdentifierProcessor(attemptsMax, bondsOfIdentifier, columnS_target_FinAM, dfIn, df_row, driver, pause, source, sourceRow, urlInitial, version_main):
     df = dfIn.copy()
     # print('bondsOfIdentifier.index :', bondsOfIdentifier.index) # для отладки
 
@@ -64,6 +71,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsOfIdentifier, columnS_target_Fi
 
         xPathBond = xPath + f'/table/tbody/tr/td[1]/table/tbody/tr[2]/td/table/tbody/tr[{trCounterOut}]/td[2]/a'
         # print('xPathBond:', xPathBond) # для отладки
+
         df.loc[df_row, 'Эмитент'] = source['Эмитент'][sourceRow]
         if 'RatingS' in source.columns: # когда source -- это датафрейм с эмитентами
             # print("source['Issuer D Rating'][sourceRow]:", source['Issuer D Rating'][sourceRow]) # для отладки
@@ -118,11 +126,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsOfIdentifier, columnS_target_Fi
                     driver = None # обнулить драйвер
 
                 # Воссоздать драйвер и подготовить для следующей итерации цикла for attempt in range(3) или обращения вне цика
-                options = undetected_chromedriver.ChromeOptions()
-                options.add_argument("--pageLoadStrategy=none") # стратегия загрузки: 'none' -- не ждать загрузки вообще;
-                    # это позволяет начать парсить сразу после получения HTML
-
-                driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=version_main)
+                driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
                 driver.set_page_load_timeout((1 + attempt) * 100 * pause)
 
                 # Если число попыток истекло, а результат так и не достигнут
@@ -145,7 +149,8 @@ def finamParser(attemptsMax,
                 bondS_FinAM_RB,
                 bondS_FinAM_RB_row,
                 pause,
-                source):
+                source,
+                version_main):
 
     bondsFinAM = bondsFinAM.rename(columns={
         'ISIN': columnS_target_FinAM[0],
@@ -200,11 +205,7 @@ def finamParser(attemptsMax,
                         driver = None # обнулить драйвер
 
                     # Воссоздать драйвер и подготовить для следующей итерации цикла for attempt in range(3) или обращения вне цика
-                    options = undetected_chromedriver.ChromeOptions()
-                    options.add_argument("--pageLoadStrategy=none") # стратегия загрузки: 'none' -- не ждать загрузки вообще;
-                        # это позволяет начать парсить сразу после получения HTML
-
-                    driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=version_main)
+                    driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
                     driver.set_page_load_timeout((1 + attempt) * 100 * pause)
 
                     # Если число попыток истекло, а результат так и не достигнут
@@ -218,7 +219,7 @@ def finamParser(attemptsMax,
             if 'Я согласен' in pageSource: driver.find_element(By.XPATH, "//button[text()='Я согласен']").click()
 
             if 'По Вашему запросу ничего не найдено' in driver.find_element("tag name", "body").text:
-                break # по запросу для эмитента ничего не найдено => сразу break
+                break # выход из цикла while True ; по запросу для эмитента ничего не найдено => сразу break
 
             else:
                 print('\n\nИдентификатор:', source[conumnName][sourceRow]) # для отладки
@@ -268,7 +269,7 @@ def finamParser(attemptsMax,
                     bondsOfIdentifier.index = bondsOfIdentifier[sectionText]
                     bondsOfIdentifier = bondsOfIdentifier.drop(sectionText, axis=1)
 
-                    # Чтобы на каждой page номера строк наинались с 1
+                    # Чтобы на каждой page номера строк начинались с 1
                     bondsOfIdentifierIndexNew = [str(i) for i in range(1, len(bondsOfIdentifier))]
                     bondsOfIdentifierIndexNew.append(bondsOfIdentifier.index[-1] if 'Страница: ' in bondsOfIdentifier.index[-1] else str(len(bondsOfIdentifier)))
                     bondsOfIdentifier.index = bondsOfIdentifierIndexNew
@@ -296,8 +297,10 @@ def finamParser(attemptsMax,
                             bondsOfIdentifier_rowsUpper = bondsOfIdentifier.iloc[:-1, :]
                             bondsOfIdentifier_rowsUpper =\
                                 bondsOfIdentifier_rowsUpper[bondsOfIdentifier_rowsUpper['Выпуск'].apply(textPreprocessor.simbolsCleaner).str.contains(identifier, case=False)]
+
                             bondsOfIdentifier_rowLower = bondsOfIdentifier.drop(bondsOfIdentifier.index[:-1])
                             bondsOfIdentifier = pandas.concat([bondsOfIdentifier_rowsUpper, bondsOfIdentifier_rowLower])
+
                         else: # вся таблица обрабатывается целиком
                             bondsOfIdentifier = bondsOfIdentifier[bondsOfIdentifier['Выпуск'].apply(textPreprocessor.simbolsCleaner).str.contains(identifier, case=False)]
 
@@ -305,7 +308,7 @@ def finamParser(attemptsMax,
 
                 if len(bondsOfIdentifier) == 0:
                     print('Таблица пуста и в ней нет указания переходить на следующую страницу')
-                    break
+                    break # выход из цикла while True
 
                 elif len(bondsOfIdentifier) == 1:
                     print('Таблица имеет одну строку; она указывает на переход? Или содержательная?')
@@ -314,74 +317,72 @@ def finamParser(attemptsMax,
                         if bondsOfIdentifierInitialLenth > 1: # исходная таблица имела содержательные строки, поэтому следует попробовать перейти на следующую страницу
                             page += 1
                             print('Перехожу на page', page)
-                        else: break # исходная таблица НЕ имела содержательные строки, поэтому НЕ следует попробовать переходить на следующую страницу
+                        else: break # выход из цикла while True ; исходная таблица НЕ имела содержательные строки, поэтому НЕ следует попробовать переходить на следующую страницу
                     else:
                         print('  Нет указания на переход')
                         bondsFinAM, bondS_FinAM_RB_row, goS = bondsOfIdentifierProcessor(attemptsMax,
-                                                                                                bondsOfIdentifier,
-                                                                                                columnS_target_FinAM,
-                                                                                                bondsFinAM,
-                                                                                                bondS_FinAM_RB_row,
-                                                                                                driver,
-                                                                                                pause,
-                                                                                                source,
-                                                                                                sourceRow,
-                                                                                                urlInitial)
+                                                                                         bondsOfIdentifier,
+                                                                                         columnS_target_FinAM,
+                                                                                         bondsFinAM,
+                                                                                         bondS_FinAM_RB_row,
+                                                                                         driver,
+                                                                                         pause,
+                                                                                         source,
+                                                                                         sourceRow,
+                                                                                         urlInitial,
+                                                                                         version_main)
+
                         if goS != True:
                             print('return 1') # для отладки
                             return bondsFinAM, bondS_FinAM_RB_row, counter
-                            # warnings.filterwarnings("ignore")
-                            # input()
-                            # sys.exit()
 
                         display('bondsFinAM 1:', bondsFinAM.tail()) # для отладки
-                        break # НЕ указывает на переход; тут перед break можно вставить функцию выгрузки данных с циклом for
+                        break # выход из цикла while True ; НЕ указывает на переход; тут перед break можно вставить функцию выгрузки данных с циклом for
                 else:
                     print('Таблица имеет более одной строки')
                     if 'Страница: ' in bondsOfIdentifier.index[-1]:
                         print('  Эта таблица точно не последняя, поскольку есть указание переходить на следующую страницу и она имеет и содержательные строки')
                         # тут можно вставить функцию выгрузки данных с циклом for
                         bondsFinAM, bondS_FinAM_RBM_row, goS = bondsOfIdentifierProcessor(attemptsMax,
-                                                                                                bondsOfIdentifier,
-                                                                                                columnS_target_FinAM,
-                                                                                                bondsFinAM,
-                                                                                                bondS_FinAM_RB_row,
-                                                                                                driver,
-                                                                                                pause,
-                                                                                                source,
-                                                                                                sourceRow,
-                                                                                                urlInitial)
+                                                                                         bondsOfIdentifier,
+                                                                                         columnS_target_FinAM,
+                                                                                         bondsFinAM,
+                                                                                         bondS_FinAM_RB_row,
+                                                                                         driver,
+                                                                                         pause,
+                                                                                         source,
+                                                                                         sourceRow,
+                                                                                         urlInitial,
+                                                                                         version_main)
+
                         if goS != True:
                             print('return 2') # для отладки
                             return bondsFinAM, bondS_FinAM_RB_row, counter
-                            # warnings.filterwarnings("ignore")
-                            # input()
-                            # sys.exit()
 
                         display('bondsFinAM 2:', bondsFinAM.tail()) # для отладки
                         page += 1
                         print('Перехожу на page', page)
+
                     else:
                         print('  Нет указания на переход')
                         bondsFinAM, bondS_FinAM_RB_row, goS = bondsOfIdentifierProcessor(attemptsMax,
-                                                                                                bondsOfIdentifier,
-                                                                                                columnS_target_FinAM,
-                                                                                                bondsFinAM,
-                                                                                                bondS_FinAM_RB_row,
-                                                                                                driver,
-                                                                                                pause,
-                                                                                                source,
-                                                                                                sourceRow,
-                                                                                                urlInitial)
+                                                                                         bondsOfIdentifier,
+                                                                                         columnS_target_FinAM,
+                                                                                         bondsFinAM,
+                                                                                         bondS_FinAM_RB_row,
+                                                                                         driver,
+                                                                                         pause,
+                                                                                         source,
+                                                                                         sourceRow,
+                                                                                         urlInitial,
+                                                                                         version_main)
+
                         if goS != True:
                             print('return 3') # для отладки
                             return bondsFinAM, bondS_FinAM_RB_row, counter
-                            # warnings.filterwarnings("ignore")
-                            # input()
-                            # sys.exit()
 
                         display('bondsFinAM 3:', bondsFinAM.tail()) # для отладки
-                        break # эта таблица точно последняя; тут перед break можно вставить функцию выгрузки данных с циклом for
+                        break  # выход из цикла while True ; эта таблица точно последняя; тут перед break можно вставить функцию выгрузки данных с циклом for
 
             time.sleep(pause) # для замедления перехода между page
 
@@ -391,6 +392,7 @@ def finamParser(attemptsMax,
         bondsFinAM = bondsFinAM.drop_duplicates('SecName FinAM', keep='first')
             # потому что в "Словаре эмитентов" более общие наименования одного и того же эмитента находятся в более правых столбцах
                 # и, как следствие, при объединении столбцов в один -- попадают в более нижние ячейки
+
         bondsFinAM_columns = ['Эмитент',
                               'ISIN', 
                               'Амортизация FinAm',
@@ -460,7 +462,8 @@ def getFeaturesByURL_FinAM(columnS_target_FinAM, dfIn, driver, row):
                                                                1,
                                                                None,
                                                                textTarget).text
-                        break
+                        break # выход из цикла while attempt < attemptsMax
+
                     except selenium.common.exceptions.StaleElementReferenceException:
                         time.sleep(pause)
                         attempt += 1
@@ -474,6 +477,7 @@ def getFeaturesByURL_FinAM(columnS_target_FinAM, dfIn, driver, row):
                     spread = re.findall(r'\d+,?\d*', spread)
                     if spread != []: df.loc[row, 'Спред'] = float(spread[0].replace(',', '.'))
                     else: df.loc[row, 'Спред'] = 0
+
                 else: df.loc[row, 'Спред'] = 0
 
             else:
@@ -483,7 +487,8 @@ def getFeaturesByURL_FinAM(columnS_target_FinAM, dfIn, driver, row):
                         textFetched = WebDriverWait(driver, pause).until(expected_conditions.presence_of_element_located(
                             (By.XPATH, f"//tbody//td//tbody//td[contains(., '{textTarget}')]")
                             )).text
-                        break
+                        break # выход из цикла while attempt < attemptsMax
+
                     except selenium.common.exceptions.StaleElementReferenceException:
                         time.sleep(pause)
                         attempt += 1
