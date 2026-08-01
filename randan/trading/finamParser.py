@@ -15,9 +15,13 @@ from subprocess import check_call
 for attempt in range(1, 4):
     try:
         from IPython.display import display
+
         from randan.tools import coLabAdaptor, forSelenium # авторские модули для..
             # (а) адаптации текущего скрипта к файловой системе CoLab
             # (б) упрощения некоторых оперций в selenium
+
+        from randan.trading import getAssets # авторский модуль для..
+            # (а) выяснения, какие инструменты (акции, облигации и т.д.) есть в портфеле, на основе брокерских отчётов
 
         from selenium import webdriver
         from selenium.webdriver.common.by import By # для поиска элементов HTML-кода
@@ -259,7 +263,7 @@ def finamParser(attemptsMax,
 
                 sectionText = '№'
                 textClosing = 'Простой поиск'
-                column = columnFinder(bondsOfIdentifier, sectionText)
+                column = getAssets.columnFinder(bondsOfIdentifier, sectionText)
                 if column != None:
                     bondsOfIdentifier, boundLarger, boundSmaller = sectionSearch(bondsOfIdentifier, True, sectionText, textClosing)
                     bondsOfIdentifier = bondsOfIdentifier.loc[boundSmaller:boundLarger, :]
