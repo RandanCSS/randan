@@ -142,6 +142,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsOfIdentifier, columnS_target_Fi
 
 def finamParser(attemptsMax,
                 bondsOfIdentifier_Excluded,
+                columnS_target_FinAM,
                 conumnName,
                 counterStarter,
                 driver,
