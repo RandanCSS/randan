@@ -52,6 +52,7 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
+folder = coLabFolder
 slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
 if folder == None: folder = ''
 else: folder += slash
