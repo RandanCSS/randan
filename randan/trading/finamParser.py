@@ -265,7 +265,7 @@ def finamParser(attemptsMax,
                 textClosing = 'Простой поиск'
                 column = getAssets.columnFinder(bondsOfIdentifier, sectionText)
                 if column != None:
-                    bondsOfIdentifier, boundLarger, boundSmaller = getAssets.sectionFinder(bondsOfIdentifier, False, sectionText, textClosing)
+                    boundLarger, boundSmaller = getAssets.sectionFinder(bondsOfIdentifier, False, sectionText, textClosing)
                     bondsOfIdentifier = bondsOfIdentifier.loc[boundSmaller:boundLarger, :]
                     bondsOfIdentifier.columns = bondsOfIdentifier.loc[boundSmaller, :]
                     bondsOfIdentifier = bondsOfIdentifier[bondsOfIdentifier[sectionText] != textClosing]
