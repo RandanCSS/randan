@@ -16,9 +16,10 @@ for attempt in range(1, 4):
     try:
         from IPython.display import display
 
-        from randan.tools import coLabAdaptor, forSelenium # авторские модули для..
+        from randan.tools import coLabAdaptor, forSelenium, textPreprocessor # авторские модули для..
             # (а) адаптации текущего скрипта к файловой системе CoLab
             # (б) упрощения некоторых оперций в selenium
+            # (в) предобработки нестандартизированнрого текста
 
         from randan.trading import getAssets # авторский модуль для..
             # (а) выяснения, какие инструменты (акции, облигации и т.д.) есть в портфеле, на основе брокерских отчётов
