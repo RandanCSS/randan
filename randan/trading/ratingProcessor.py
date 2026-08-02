@@ -464,6 +464,7 @@ def ratingThroughIssuer(bondS_in, columnSource, columnTarget): # работае�
             issuerS_withRating_index = issuerS_withRating[issuerS_withRating['Эмитент'] == issuer_withoutRating].index
             print('issuerS_withRating_index:', issuerS_withRating_index) # для отладки
 
+            display("bondS.loc[bondS['Эмитент'] == issuer_withoutRating, columnTarget]:", bondS.loc[bondS['Эмитент'] == issuer_withoutRating, columnTarget]) # для отладки          
             bondS.loc[bondS['Эмитент'] == issuer_withoutRating, columnTarget] =\
                 issuerS_withRating.loc[issuerS_withRating_index[0], columnSource]
 
