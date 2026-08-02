@@ -460,15 +460,15 @@ def ratingThroughIssuer(bondS_in, columnSource, columnTarget): # работае�
     for issuer_withoutRating in issuerS_withoutRating:
         if issuer_withoutRating in issuerS_withRating['Эмитент'].tolist():
             # если у эмитента облигации без рейтинга в columnTarget есть облигация с рейтингом в columnSource, расшерить этот рейтинг
-            # (допустимо только для несубординированных облигаций)
+                # (допустимо только для несубординированных облигаций)
 
-            print('issuer_withoutRating:', issuer_withoutRating) # для отладки
+            # print('issuer_withoutRating:', issuer_withoutRating) # для отладки
 
             issuerS_withRating_index = issuerS_withRating[issuerS_withRating['Эмитент'] == issuer_withoutRating].index
             print('issuerS_withRating_index:', issuerS_withRating_index) # для отладки
 
-            display("bondS.loc[bondS['Эмитент'] == issuer_withoutRating, columnTarget]:", bondS.loc[bondS['Эмитент'] == issuer_withoutRating, columnTarget]) # для отладки
-            print("issuerS_withRating.loc[issuerS_withRating_index[0], columnSource]:", issuerS_withRating.loc[issuerS_withRating_index[0], columnSource]) # для отладки
+            # display("bondS.loc[bondS['Эмитент'] == issuer_withoutRating, columnTarget]:", bondS.loc[bondS['Эмитент'] == issuer_withoutRating, columnTarget]) # для отладки
+            # print("issuerS_withRating.loc[issuerS_withRating_index[0], columnSource]:", issuerS_withRating.loc[issuerS_withRating_index[0], columnSource]) # для отладки
             bondS.loc[bondS['Эмитент'] == issuer_withoutRating, columnTarget] =\
                 issuerS_withRating.loc[issuerS_withRating_index[0], columnSource]
 
