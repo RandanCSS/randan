@@ -75,7 +75,7 @@ def bondsFeaturesProcessor(
 
 # 1.1 Добавить характеристики облигаций из БД МосБиржи
     boardS, columnsDescriptionS, securitieS = getMoExData.getMoExData(market='bonds', returnDfs=True)
-    bondS = bondS.merge(securitieS, how='left', on='ISIN', suffixes=('_drop', ''))
+    bondS = bondS.merge(securitieS, how='left', on='ISIN', suffixes=('_drop', '')) # дропнуть старые столбцы, оставить новые
     bondS = bondS[[column for column in bondS.columns if not column.endswith('_drop')]]
     # print('bondS.columns:', bondS.columns) # для отладки
 
