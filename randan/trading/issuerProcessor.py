@@ -133,7 +133,7 @@ def issuerNameProcessor(bondS_in, issuerS):
             else: break
 
     if len(bondS_new_2) > 0:
-        issuerS_new = issuerProcessor.issuersComposer(bondS_new_2)
+        issuerS_new = issuersComposer(bondS_new_2)
         print('Эмитенты, до сих пор отсутствующие в словарях (их следует внести в Словарь эмитентов.xlsx):')
         display(issuerS_new)
         issuerS_new.to_excel('Новые эмитенты.xlsx', index=False)
