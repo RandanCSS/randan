@@ -138,7 +138,7 @@ def issuerNameProcessor(bondS_in, issuerS):
         display(issuerS_new)
         issuerS_new.to_excel('Новые эмитенты.xlsx', index=False)
         print(
-'''До внесения их в словарь скрипт приостанавливается. После внесения перезапустите скрипт сначала или с текущего чанка
+'''До внесения их в словарь скрипт приостанавливается. После внесения перезапустите скрипт сначала или с предыдущего чанка
 А сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'''
               )
         input()
