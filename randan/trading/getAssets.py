@@ -152,7 +152,7 @@ def sectionFinder(df, softCondition, text, textClosing): # textClosing -- тек
 
         boundLarger = boundColibrator(boundLarger, column, df, softCondition, text)
     # print('boundLarger:', boundLarger) # для оталдки
-    return boundLarger, boundSmaller
+    return int(boundLarger), int(boundSmaller)
 
 # 1.1 Авторские функции-адаптеры по брокерам
 def ВТБ(assetS):
@@ -163,7 +163,7 @@ def ВТБ(assetS):
     # print('\nИскомый раздел:', name) # для оталдки
     # if textNext != '': print('Раздел, следующий за искомым:', textNext) # для оталдки
     upper_bound, lower_bound = sectionFinder(assetS, True, text, textNext)
-    print('upper_bound:', upper_bound, ', lower_bound', lower_bound) # для оталдки
+    print('upper_bound:', upper_bound, ', lower_bound:', lower_bound) # для оталдки
     
     colS = list(assetS.loc[upper_bound + 1, :].astype(str)) # поскольку раздел предполагает свои наименования столбцов
     assetS = assetS.loc[upper_bound + 2: lower_bound - 1, :]
