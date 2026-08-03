@@ -6,31 +6,31 @@ import sys
 from subprocess import check_call
 
 # --- остальные модули и пакеты
-while True:
+for attempt in range(1, 4):
     try:
         from datetime import date
         from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
         from randan.trading import bondsFeaturesProcessor # авторский модуль для гармонизации и обработки характеристик облигаций
         import os, pandas, re, warnings
-        break
+        break # выход из цикла for attempt in range(3)
+
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
         if '.' in module: module = module.split('.')[0]
         print(
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка № {attempt} из 10
+Попытка № {attempt} из 3
 '''
               )
         check_call([sys.executable, "-m", "pip", "install", module])
-        attempt += 1
-        if  attempt == 10:
+        if  attempt == 3:
             print(
 f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
                   )
-            break
+            break # выход из цикла for attempt in range(3)
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
@@ -163,6 +163,8 @@ def ВТБ(assetS):
     # print('\nИскомый раздел:', name) # для оталдки
     # if textNext != '': print('Раздел, следующий за искомым:', textNext) # для оталдки
     upper_bound, lower_bound = sectionFinder(assetS, True, text, textNext)
+    print('upper_bound:', upper_bound, ', lower_bound', lower_bound) # для оталдки
+    
     colS = list(assetS.loc[upper_bound + 1, :].astype(str)) # поскольку раздел предполагает свои наименования столбцов
     assetS = assetS.loc[upper_bound + 2: lower_bound - 1, :]
 
@@ -179,6 +181,7 @@ def ВТБ(assetS):
     name = 'ISIN'
     ISIN_clmn = columnNameFinder(assetS, name)
     # print('\nИмя столбца с ISIN:', ISIN_clmn) # для оталдки
+
     name = 'Плановый исходящий остаток'
     pose_clmn = columnNameFinder(assetS, name)
     # print('\nИмя столбца с позицией:', pose_clmn) # для оталдки
