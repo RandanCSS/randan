@@ -6,31 +6,31 @@ import sys
 from subprocess import check_call
 
 # --- остальные модули и пакеты
-while True:
+for attempt in range(1, 4):
     try:
         from bs4 import BeautifulSoup
         from tqdm import tqdm
         from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
         import os, pandas, re, requests, warnings
-        break
+        break # выход из цикла for attempt in range(3)
+
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
         if '.' in module: module = module.split('.')[0]
         print(
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка № {attempt} из 10
+Попытка № {attempt} из 3
 '''
               )
         check_call([sys.executable, "-m", "pip", "install", module])
-        attempt += 1
-        if  attempt == 10:
+        if  attempt == 3:
             print(
 f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
                   )
-            break
+            break # выход из цикла for attempt in range(3)
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
