@@ -150,13 +150,11 @@ def bondsOfIdentifierProcessor(attemptsMax,  bondsFinAM_in, bondsFinAM_row, bond
 def finamParser(attemptsMax,
                 bondsFinAM,
                 bondS_FinAM_RB, # для проверки, есть ли облигация с некоторым SecName FinAM уже в bondS_FinAM_RB
-                bondsOfIdentifier_Excluded,
                 columnS_target_FinAM,
                 conumnName,
-                counterStarter,
                 momentCurrent,
                 pause,
-                source,
+                source, # список ISIN или эмитентов
                 version_main):
 
     bondsFinAM = bondsFinAM.rename(columns={
@@ -167,13 +165,13 @@ def finamParser(attemptsMax,
 
     bondsFinAM_row = 0 # далее bondsFinAM_row увеличивается на 1 при каждом исполнении функции bondsOfIdentifierProcessor
 
+    bondsOfIdentifier_Excluded = pandas.DataFrame()
+
     driver = forSelenium.driverCreator(version_main,
                                        headless=False,
                                        use_subprocess=True),
 
-    for counter in range(counterStarter, len(source)):
-    # for counter in range(counterStarter, counterStarter + 5): # для отладки
-
+    for counter in range(len(source)): # counter совпадает с длиной датафрейма bondsFinAM , если source -- список ISIN , не не совпадает, если source -- список эмитентов
         sourceRow = source.index[counter]
         identifier = source[conumnName][sourceRow]
 
@@ -296,10 +294,11 @@ def finamParser(attemptsMax,
                     bondsOfIdentifier_Excluded_Additional = bondsOfIdentifier[bondsOfIdentifier['Выпуск'].apply(textPreprocessor.simbolsCleaner).str.contains(identifier, case=False) == False]
                     if len(bondsOfIdentifier_Excluded_Additional) > 0:
                         if 'Страница: ' in bondsOfIdentifier.index[-1]: bondsOfIdentifier_Excluded_Additional = pandas.DataFrame()
-                        else:
-                            bondsOfIdentifier_Excluded_Additional['Эмитент'] = identifier
-                            display('bondsOfIdentifier_Excluded_Additional:', bondsOfIdentifier_Excluded_Additional) # для отладки
+                        else: bondsOfIdentifier_Excluded_Additional['Эмитент'] = identifier
+
                     else: bondsOfIdentifier_Excluded_Additional = pandas.DataFrame()
+
+                    display('bondsOfIdentifier_Excluded_Additional:', bondsOfIdentifier_Excluded_Additional) # для отладки
 
                     if len(bondsOfIdentifier) > 0:
                         if 'Страница: ' in bondsOfIdentifier.index[-1]: # придётся обработать верхние строчки таблицы отдельно от нижней
@@ -427,6 +426,7 @@ def finamParser(attemptsMax,
 
         if conumnName == 'ISIN': time.sleep(pause) # для замедления перехода между эмитентами или ISIN; почему-то именно во втором случае сервер банит
 
+    display('bondsOfIdentifier_Excluded:', bondsOfIdentifier_Excluded) # для отладки
     forSelenium.driverCloser(driver)
     print('return 5') # для отладки
     return bondsFinAM.rename(columns={
