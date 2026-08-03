@@ -334,7 +334,7 @@ def bondsFeaturesProcessor(
         100 * (1000 + bondS['Купоный доход к погашению'] + bondS['Маржа к погашению'])\
         / bondS['Полная цена покупки'] - 100\
         ) / bondS['До возможности погасить']
-    bondS['% доходности в день к погашению'] = bondS['% доходности в день к погашению'].astype(float).round(4)
+    bondS['% доходности годовых к погашению'] = bondS['% доходности годовых к погашению'].astype(float).round(4)
 
     # !!! Стоимость!!!
     if 'Лотов' in bondS.columns: bondS['Стоимость'] = bondS['Лотов'] * bondS['PRICE'] * 10 * bondS['FACEVALUE'] / 1000
