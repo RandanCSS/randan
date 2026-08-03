@@ -63,7 +63,7 @@ def pseudojson2df(headerS, index, url):
 # 2. Авторская функция исполнения скрипта
 def getMoExData(
                 market='bonds',
-                path=coLabFolder,
+                folder=coLabFolder,
                 returnDfs=False
                 ):
     """
@@ -73,13 +73,13 @@ def getMoExData(
     ----------
        market : str -- если интересуют облигации, подходит значение по умолчанию 'bonds' , если фьючерсы, впишите 'forts'
 
-         path : str -- путь к директории, включая её имя, в которой будут искаться файлы и куда будут сохраняться; по умолчанию не в CoLab поиск и сохранение происходят в директории, в которой вызывается текущая функция, а в CoLab в директории Colab Notebooks
+       folder : str -- путь к директории, включая её имя, в которой будут искаться файлы и куда будут сохраняться; по умолчанию не в CoLab поиск и сохранение происходят в директории, в которой вызывается текущая функция, а в CoLab в директории Colab Notebooks
 
     returnDfs : bool -- в случае True функция возвращает итоговые датафреймы boardS, columnsDescriptionS и securitieS строго в такой последовательности
     """
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if path == None: path = ''
-    else: path += slash
+    if folder == None: folder = ''
+    else: folder += slash
 
 # Формирование файла с режимами торгов
 # 1.0 Если нет файла с режимами торгов    
@@ -117,14 +117,14 @@ def getMoExData(
 
 # 2.2 Формирование файла с доступными облигациями в интересующих режимах торгов
     decision = ''
-    if os.path.exists(path + market + 'SecuritieS.xlsx'):
+    if os.path.exists(folder + market + 'SecuritieS.xlsx'):
         print(
 '''--- Если НЕ хотите обновить файл с доступными инструментами в интересующих режимах торгов, просто нажмите Enter
 --- Если хотите, то нажмите пробел и затем Enter'''
               )
         decision = input()
 
-    if (os.path.exists(path + market + 'SecuritieS.xlsx') != True) | len(decision) != 0:
+    if (os.path.exists(folder + market + 'SecuritieS.xlsx') != True) | len(decision) != 0:
         print('Создаю файл с доступными инструментами в интересующих режимах торгов')
         securitieS = pandas.DataFrame()
         marketdata_yieldS = pandas.DataFrame()
@@ -147,10 +147,10 @@ def getMoExData(
                 marketdata = pandas.concat([marketdata, marketdata_additional], ignore_index=True)
                 # print('marketdata.columns:', marketdata.columns) # для отладки   
 
-        if os.path.exists(path + market + 'ColumnsDescriptionsSelected.xlsx'):
-            columnsDescriptionS = pandas.read_excel(path + market + 'ColumnsDescriptionsSelected.xlsx')
+        if os.path.exists(folder + market + 'ColumnsDescriptionsSelected.xlsx'):
+            columnsDescriptionS = pandas.read_excel(folder + market + 'ColumnsDescriptionsSelected.xlsx')
         else:
-            columnsDescriptionS = pandas.read_excel(path + market + 'ColumnsDescriptionS.xlsx')
+            columnsDescriptionS = pandas.read_excel(folder + market + 'ColumnsDescriptionS.xlsx')
             # display('columnsDescriptionS:', columnsDescriptionS) # для отладки
             columnsDescriptionS = columnsDescriptionS[columnsDescriptionS['name'] !='BOARDID']
 
@@ -173,11 +173,11 @@ def getMoExData(
         if market == 'bonds': securitieS['URL MoEx'] = 'https://www.moex.com/ru/issue.aspx?code=' + securitieS['ISIN']
         # print('securitieS.columns:', securitieS.columns) # для отладки
         securitieS = securitieS[columnsDescriptionS]
-        securitieS.to_excel(path + market + 'SecuritieS.xlsx', index=False)
+        securitieS.to_excel(folder + market + 'SecuritieS.xlsx', index=False)
         # display(securitieS) # для отладки
     else:
         print('Файл с доступными инструментами в интересующих режимах торгов НЕ обновлялся')
-        securitieS = pandas.read_excel(path + market + 'SecuritieS.xlsx')
+        securitieS = pandas.read_excel(folder + market + 'SecuritieS.xlsx')
 
     if returnDfs: return boardS, columnsDescriptionS, securitieS
     warnings.filterwarnings("ignore")
