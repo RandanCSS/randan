@@ -170,7 +170,7 @@ def ВТБ(assetS):
     
     colS = list(assetS.loc[upper_bound + 1, :].astype(str)) # поскольку раздел предполагает свои наименования столбцов
     assetS = assetS.loc[upper_bound + 2: lower_bound - 1, :]
-    display('assetS:', assetS) # для отладки
+    # display('assetS:', assetS) # для отладки
     
     # Найти срез датафрейма, соответствующий искомому подразделу (подраздел НЕ предполагает свои наименования столбцов)
     name = 'ОБЛИГАЦИЯ'
@@ -197,7 +197,7 @@ def ВТБ(assetS):
     assetS['ISIN'] = assetS['ISIN'].str.split(',').str[-1]
     assetS = assetS[assetS['Лотов'].notna()] # избавиться от заголовка подтаблицы "ПАИ"
     assetS['Лотов'] = assetS['Лотов'].astype(str).str.split('.').str[0].str.replace(',', '').astype(int)
-    # display(assetS) # для отладки
+    display('assetS:', assetS) # для отладки
     return assetS
 
 def Тинькофф(assetS):
