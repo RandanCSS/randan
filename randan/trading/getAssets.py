@@ -137,7 +137,7 @@ def reportSearch(broker, path, period, slash):
 # .. поиска в таблице фрагментов, содержащих ключевой текст
 def sectionFinder(df, softCondition, text, textClosing): # textClosing -- текст, следующий за искомым подразделом; должен располагаться в том же столбце
     column = columnFinder(df, text)
-    # print('column:', column) # для оталдки
+    print('column:', column) # для оталдки
 
     boundSmaller = df[df[column].notna() & df[column].str.contains(text)].index if softCondition else df[df[column] == text].index
     # print('boundSmaller:', boundSmaller) # для оталдки
@@ -156,11 +156,12 @@ def sectionFinder(df, softCondition, text, textClosing): # textClosing -- тек
 
 # 1.1 Авторские функции-адаптеры по брокерам
 def ВТБ(assetS):
-    # display(assetS) # для отладки
+    display(assetS) # для отладки
     # Найти срез датафрейма, соответствующий искомому разделу (раздел предполагает свои наименования столбцов)
     text = 'т об остатках ценных бумаг' # вместо "Отчет", чтобы избежать чередования букв е и ё
     textNext = ''
-    # print('\nИскомый раздел:', name) # для оталдки
+    print('\nИскомый раздел:', text) # для оталдки
+
     # if textNext != '': print('Раздел, следующий за искомым:', textNext) # для оталдки
     upper_bound, lower_bound = sectionFinder(assetS, True, text, textNext)
     print('upper_bound:', upper_bound, ', lower_bound:', lower_bound) # для оталдки
