@@ -218,7 +218,7 @@ def finamParser(attemptsMax,
                         print('Число попыток истекло, а результат так и не достигнут')
                         forSelenium.driverCloser(driver)
                         print('return 1') # для отладки
-                        return bondsFinAM, bondsFinAM_row, counter
+                        return bondsFinAM, counter
 
             # Предупреждение про Cookie закрыть
             # Архитектура: /html/body/div[3]/button
@@ -343,7 +343,7 @@ def finamParser(attemptsMax,
                         if goS != True:
                             forSelenium.driverCloser(driver)
                             print('return 2') # для отладки
-                            return bondsFinAM, bondsFinAM_row, counter
+                            return bondsFinAM, counter
 
                         display('bondsFinAM 1:', bondsFinAM.tail()) # для отладки
                         break # выход из цикла while True ; НЕ указывает на переход; тут перед break можно вставить функцию выгрузки данных с циклом for
@@ -366,7 +366,7 @@ def finamParser(attemptsMax,
                         if goS != True:
                             forSelenium.driverCloser(driver)
                             print('return 3') # для отладки
-                            return bondsFinAM, bondsFinAM_row, counter
+                            return bondsFinAM, counter
 
                         display('bondsFinAM 2:', bondsFinAM.tail()) # для отладки
                         page += 1
@@ -389,7 +389,7 @@ def finamParser(attemptsMax,
                         if goS != True:
                             forSelenium.driverCloser(driver)
                             print('return 4') # для отладки
-                            return bondsFinAM, bondsFinAM_row, counter
+                            return bondsFinAM, counter
 
                         display('bondsFinAM 3:', bondsFinAM.tail()) # для отладки
                         break  # выход из цикла while True ; эта таблица точно последняя; тут перед break можно вставить функцию выгрузки данных с циклом for
@@ -433,7 +433,7 @@ def finamParser(attemptsMax,
         columnS_target_FinAM[0]: 'ISIN',
         columnS_target_FinAM[1]: 'REGNUMBER FinAM',
         columnS_target_FinAM[2]: 'Описание платежей'
-        }), bondsFinAM_row, counter
+        }), counter
 
 def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_target_FinAM, driver, pause):
     bondsFinAM = bondsFinAM_in.copy()
