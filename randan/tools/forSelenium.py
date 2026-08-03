@@ -54,6 +54,15 @@ def blockSearch(attemptsMax, driver, text, xPathS):
             if trCounter > attemptsMax: break # против бесконечного цикла при пустом блоке страницы
     return block if text in block else None
 
+def driverCloser(driver):
+    if driver is not None:
+        try:
+            driver.quit()
+        except Exception as excptn: # не удалось закрыть драйвер
+            print('Exception:', excptn)
+            print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+        driver = None # обнулить драйвер
+
 def driverCreator(version_main, headless=False, use_subprocess=True):
     options = undetected_chromedriver.ChromeOptions()
     options.add_argument('--disable-backgrounding-occluded-windows')
