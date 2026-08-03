@@ -73,6 +73,8 @@ def brokerReportsProcessor(broker, fileNameS, path, period, slash):
         if broker == 'ВТБ': assetS_additional = ВТБ(assetS_additional)
         if broker == 'Тинькофф': assetS_additional = Тинькофф(assetS_additional)
         if broker == 'УралСиб': assetS_additional = УралСиб(assetS_additional)
+        display('assetS_additional:', assetS_additional) # для оталдки        
+
         assetS_additional.loc[:, 'Брокер'] = broker + fileNameSpecification
         assetS = pandas.concat([assetS, assetS_additional], ignore_index=True)
         # display(assetS['Брокер']) # для отладки
