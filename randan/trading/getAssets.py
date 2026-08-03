@@ -163,7 +163,7 @@ def ВТБ(assetS):
     print('\nИскомый раздел:', text) # для оталдки
 
     # if textNext != '': print('Раздел, следующий за искомым:', textNext) # для оталдки
-    upper_bound, lower_bound = sectionFinder(assetS, True, text, textNext)
+    lower_bound, upper_bound = sectionFinder(assetS, True, text, textNext)
     print('upper_bound:', upper_bound, ', lower_bound:', lower_bound) # для оталдки
     
     colS = list(assetS.loc[upper_bound + 1, :].astype(str)) # поскольку раздел предполагает свои наименования столбцов
@@ -174,7 +174,7 @@ def ВТБ(assetS):
     textNext = 'ИТОГО:' # Слово(сочетание), следующие за искомым подразделом, должно располагаться в том же столбце
     # print('\nИскомый подраздел:', name) # для оталдки
     # if textNext != '': print('Слово(сочетание), следующие за искомым подразделом:', textNext) # для оталдки
-    upper_bound, lower_bound = sectionFinder(assetS, True, text, textNext)
+    lower_bound, upper_bound = sectionFinder(assetS, True, text, textNext)
     assetS = assetS.loc[upper_bound + 1: lower_bound - 1, :]
     assetS.columns = colS
 
