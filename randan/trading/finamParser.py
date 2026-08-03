@@ -128,13 +128,7 @@ def bondsOfIdentifierProcessor(attemptsMax,  bondsFinAM_in, bondsFinAM_row, bond
                 print(traceback.format_exc()) # показ точной строчки кода с ошибкой
 
                 # Закрыть или обнулить драйвер
-                if driver is not None:
-                    try:
-                        driver.quit()
-                    except Exception as excptn: # не удалось закрыть драйвер
-                        print('Exception 1:', excptn)
-                        print(traceback.format_exc()) # показ точной строчки кода с ошибкой
-                    driver = None # обнулить драйвер
+                forSelenium.driverCloser(driver)
 
                 # Воссоздать драйвер и подготовить для следующей итерации цикла for attempt in range(3) или обращения вне цика
                 driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
@@ -144,11 +138,13 @@ def bondsOfIdentifierProcessor(attemptsMax,  bondsFinAM_in, bondsFinAM_row, bond
                 if attempt == 2:
                     print('Число попыток истекло, а результат так и не достигнут')
                     goS = False
+                    forSelenium.driverCloser(driver)
                     return bondsFinAM, bondsFinAM_row, goS
 
         pageSource = driver.page_source
         if 'Я согласен' in pageSource: driver.find_element(By.XPATH, "//button[text()='Я согласен']").click()
 
+    forSelenium.driverCloser(driver)
     return bondsFinAM, bondsFinAM_row, goS
 
 def finamParser(attemptsMax,
@@ -158,7 +154,6 @@ def finamParser(attemptsMax,
                 columnS_target_FinAM,
                 conumnName,
                 counterStarter,
-                driver,
                 momentCurrent,
                 pause,
                 source,
@@ -171,6 +166,10 @@ def finamParser(attemptsMax,
         })
 
     bondsFinAM_row = 0 # далее bondsFinAM_row увеличивается на 1 при каждом исполнении функции bondsOfIdentifierProcessor
+
+    driver = forSelenium.driverCreator(version_main,
+                                       headless=False,
+                                       use_subprocess=True),
 
     for counter in range(counterStarter, len(source)):
     # for counter in range(counterStarter, counterStarter + 5): # для отладки
@@ -210,13 +209,7 @@ def finamParser(attemptsMax,
                     print(traceback.format_exc()) # показ точной строчки кода с ошибкой
 
                     # Закрыть или обнулить драйвер
-                    if driver is not None:
-                        try:
-                            driver.quit()
-                        except Exception as excptn: # не удалось закрыть драйвер
-                            print('Exception 1:', excptn)
-                            print(traceback.format_exc()) # показ точной строчки кода с ошибкой
-                        driver = None # обнулить драйвер
+                    forSelenium.driverCloser(driver)
 
                     # Воссоздать драйвер и подготовить для следующей итерации цикла for attempt in range(3) или обращения вне цика
                     driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
@@ -225,6 +218,8 @@ def finamParser(attemptsMax,
                     # Если число попыток истекло, а результат так и не достигнут
                     if attempt == 2:
                         print('Число попыток истекло, а результат так и не достигнут')
+                        forSelenium.driverCloser(driver)
+                        print('return 1') # для отладки
                         return bondsFinAM, bondsFinAM_row, counter
 
             # Предупреждение про Cookie закрыть
@@ -347,7 +342,8 @@ def finamParser(attemptsMax,
                                                                                      version_main)
 
                         if goS != True:
-                            print('return 1') # для отладки
+                            forSelenium.driverCloser(driver)
+                            print('return 2') # для отладки
                             return bondsFinAM, bondsFinAM_row, counter
 
                         display('bondsFinAM 1:', bondsFinAM.tail()) # для отладки
@@ -369,7 +365,8 @@ def finamParser(attemptsMax,
                                                                                      version_main)
 
                         if goS != True:
-                            print('return 2') # для отладки
+                            forSelenium.driverCloser(driver)
+                            print('return 3') # для отладки
                             return bondsFinAM, bondsFinAM_row, counter
 
                         display('bondsFinAM 2:', bondsFinAM.tail()) # для отладки
@@ -391,7 +388,8 @@ def finamParser(attemptsMax,
                                                                                      version_main)
 
                         if goS != True:
-                            print('return 3') # для отладки
+                            forSelenium.driverCloser(driver)
+                            print('return 4') # для отладки
                             return bondsFinAM, bondsFinAM_row, counter
 
                         display('bondsFinAM 3:', bondsFinAM.tail()) # для отладки
@@ -429,8 +427,8 @@ def finamParser(attemptsMax,
 
         if conumnName == 'ISIN': time.sleep(pause) # для замедления перехода между эмитентами или ISIN; почему-то именно во втором случае сервер банит
 
-    print('return 4') # для отладки
-
+    forSelenium.driverCloser(driver)
+    print('return 5') # для отладки
     return bondsFinAM.rename(columns={
         columnS_target_FinAM[0]: 'ISIN',
         columnS_target_FinAM[1]: 'REGNUMBER FinAM',
