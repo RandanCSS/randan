@@ -154,7 +154,7 @@ def sectionFinder(df, softCondition, text, textClosing): # textClosing -- тек
 
         boundLarger = boundColibrator(boundLarger, column, df, softCondition, text)
     # print('boundLarger:', boundLarger) # для оталдки
-    return int(boundLarger), int(boundSmaller)
+    return boundLarger, boundSmaller
 
 # 1.1 Авторские функции-адаптеры по брокерам
 def ВТБ(assetS):
@@ -162,26 +162,26 @@ def ВТБ(assetS):
     # Найти срез датафрейма, соответствующий искомому разделу (раздел предполагает свои наименования столбцов)
     text = 'т об остатках ценных бумаг' # вместо "Отчет", чтобы избежать чередования букв е и ё
     textNext = ''
-    print('\nИскомый раздел:', text) # для оталдки
+    # print('\nИскомый раздел:', text) # для оталдки
 
     # if textNext != '': print('Раздел, следующий за искомым:', textNext) # для оталдки
-    lower_bound, upper_bound = sectionFinder(assetS, True, text, textNext)
-    print('upper_bound:', upper_bound, ', lower_bound:', lower_bound) # для оталдки
+    boundLarger, boundSmaller = sectionFinder(assetS, True, text, textNext)
+    # print('boundSmaller:', boundSmaller, ', boundLarger:', boundLarger) # для оталдки
     
-    colS = list(assetS.loc[upper_bound + 1, :].astype(str)) # поскольку раздел предполагает свои наименования столбцов
-    assetS = assetS.loc[upper_bound + 2: lower_bound - 1, :]
+    colS = list(assetS.loc[boundSmaller + 1, :].astype(str)) # поскольку раздел предполагает свои наименования столбцов
+    assetS = assetS.loc[boundSmaller + 2: boundLarger - 1, :]
     # display('assetS:', assetS) # для отладки
     
     # Найти срез датафрейма, соответствующий искомому подразделу (подраздел НЕ предполагает свои наименования столбцов)
     text = 'ОБЛИГАЦИЯ'
     textNext = 'ИТОГО:' # Слово(сочетание), следующие за искомым подразделом, должно располагаться в том же столбце
-    print('\nИскомый подраздел:', text) # для оталдки
+    # print('\nИскомый подраздел:', text) # для оталдки
 
     # if textNext != '': print('Слово(сочетание), следующие за искомым подразделом:', textNext) # для оталдки
-    lower_bound, upper_bound = sectionFinder(assetS, True, text, textNext)
-    print('upper_bound:', upper_bound, ', lower_bound:', lower_bound) # для оталдки
+    boundLarger, boundSmaller = sectionFinder(assetS, True, text, textNext)
+    # print('boundSmaller:', boundSmaller, ', boundLarger:', boundLarger) # для оталдки
 
-    assetS = assetS.loc[upper_bound + 1: lower_bound - 1, :]
+    assetS = assetS.loc[boundSmaller + 1: boundLarger - 1, :]
     assetS.columns = colS
 
     # Найти в этом срезе столбцы с ISIN и с позицией
@@ -198,7 +198,7 @@ def ВТБ(assetS):
     assetS['ISIN'] = assetS['ISIN'].str.split(',').str[-1]
     assetS = assetS[assetS['Лотов'].notna()] # избавиться от заголовка подтаблицы "ПАИ"
     assetS['Лотов'] = assetS['Лотов'].astype(str).str.split('.').str[0].str.replace(',', '').astype(int)
-    display('assetS:', assetS) # для отладки
+    # display('assetS:', assetS) # для отладки
     return assetS
 
 def Тинькофф(assetS):
@@ -210,9 +210,9 @@ def Тинькофф(assetS):
             break
     boundS = assetS[assetS[i].notna() & assetS[i].str.contains('Движение ')].index
     # print(boundS) # для отладки
-    upper_bound = boundS[0]
-    lower_bound = boundS[-1]
-    assetS = assetS.loc[upper_bound + 1: lower_bound - 1, :]
+    boundSmaller = boundS[0]
+    boundLarger = boundS[-1]
+    assetS = assetS.loc[boundSmaller + 1: boundLarger - 1, :]
     # display(assetS) # для отладки
 
     # Найти столбец с ISIN
