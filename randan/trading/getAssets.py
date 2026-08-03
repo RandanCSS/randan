@@ -73,7 +73,7 @@ def brokerReportsProcessor(broker, fileNameS, path, period, slash):
         if broker == 'ВТБ': assetS_additional = ВТБ(assetS_additional)
         if broker == 'Тинькофф': assetS_additional = Тинькофф(assetS_additional)
         if broker == 'УралСиб': assetS_additional = УралСиб(assetS_additional)
-        display('assetS_additional:', assetS_additional) # для оталдки        
+        # display('assetS_additional:', assetS_additional) # для оталдки        
 
         assetS_additional.loc[:, 'Брокер'] = broker + fileNameSpecification
         assetS = pandas.concat([assetS, assetS_additional], ignore_index=True)
@@ -158,7 +158,7 @@ def sectionFinder(df, softCondition, text, textClosing): # textClosing -- тек
 
 # 1.1 Авторские функции-адаптеры по брокерам
 def ВТБ(assetS):
-    display(assetS) # для отладки
+    # display('assetS:', assetS) # для отладки
     # Найти срез датафрейма, соответствующий искомому разделу (раздел предполагает свои наименования столбцов)
     text = 'т об остатках ценных бумаг' # вместо "Отчет", чтобы избежать чередования букв е и ё
     textNext = ''
@@ -170,13 +170,16 @@ def ВТБ(assetS):
     
     colS = list(assetS.loc[upper_bound + 1, :].astype(str)) # поскольку раздел предполагает свои наименования столбцов
     assetS = assetS.loc[upper_bound + 2: lower_bound - 1, :]
-
+    display('assetS:', assetS) # для отладки
+    
     # Найти срез датафрейма, соответствующий искомому подразделу (подраздел НЕ предполагает свои наименования столбцов)
     name = 'ОБЛИГАЦИЯ'
     textNext = 'ИТОГО:' # Слово(сочетание), следующие за искомым подразделом, должно располагаться в том же столбце
     # print('\nИскомый подраздел:', name) # для оталдки
     # if textNext != '': print('Слово(сочетание), следующие за искомым подразделом:', textNext) # для оталдки
     lower_bound, upper_bound = sectionFinder(assetS, True, text, textNext)
+    print('upper_bound:', upper_bound, ', lower_bound:', lower_bound) # для оталдки
+
     assetS = assetS.loc[upper_bound + 1: lower_bound - 1, :]
     assetS.columns = colS
 
