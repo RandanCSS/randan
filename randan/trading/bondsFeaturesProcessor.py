@@ -100,7 +100,7 @@ def bondsFeaturesProcessor(
         issuerS_withActualRating_previous = pandas.read_excel(folder + 'Замеры рейтингов' + slash + fileUptodateName_1)
         # display('issuerS_withActualRating_previous:', issuerS_withActualRating_previous) # для отладки
 
-        issuerS_withActualRating = issuerS_withActualRating.merge(issuerS_withActualRating_previous[['Эмитент', 'Issuer D Rating']], on='Эмитент', suffixes=("", " Previous"))
+        issuerS_withActualRating = issuerS_withActualRating.merge(issuerS_withActualRating_previous[['Эмитент', 'Issuer D Rating']], how='left', on='Эмитент', suffixes=("", " Previous"))
         # display('issuerS_withActualRating:', issuerS_withActualRating) # для отладки
 
     else:
