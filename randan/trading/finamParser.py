@@ -152,13 +152,13 @@ def bondsOfIdentifierProcessor(attemptsMax,  bondsFinAM_in, bondsFinAM_row, bond
     return bondsFinAM, bondsFinAM_row, goS
 
 def finamParser(attemptsMax,
+                bondsFinAM,
+                bondS_FinAM_RB, # для проверки, есть ли облигация с некоторым SecName FinAM уже в bondS_FinAM_RB
                 bondsOfIdentifier_Excluded,
                 columnS_target_FinAM,
                 conumnName,
                 counterStarter,
                 driver,
-                bondsFinAM,
-                bondS_FinAM_RB, # для проверки, есть ли облигация с некоторым SecName FinAM уже в bondS_FinAM_RB
                 momentCurrent,
                 pause,
                 source,
