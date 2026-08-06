@@ -481,15 +481,17 @@ def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_t
 
                 textFetched = textPreprocessor.multispaceCleaner(textFetched.replace(textTarget, '').replace('\n', ' '))
                 bondsFinAM.loc[bondsFinAM_row, 'Амортизация FinAm'] = 1 if ('погаш' in textFetched.lower()) & ('част' in textFetched.lower()) else 0
-                spread = re.findall(r'Преми.+|Спред.+|RUONIA.+', textFetched, re.IGNORECASE)
-                # print('spread:', spread) # для отладки
-                if spread != []:
-                    spread = spread[0]
-                    spread = re.findall(r'\d+,?\d*', spread)
-                    if spread != []: bondsFinAM.loc[bondsFinAM_row, 'Спред'] = float(spread[0].replace(',', '.'))
-                    else: bondsFinAM.loc[bondsFinAM_row, 'Спред'] = 0
 
-                else: bondsFinAM.loc[bondsFinAM_row, 'Спред'] = 0
+                spread = spreadExtract(textFetched)
+                # spread = re.findall(r'Преми.+|Спред.+|RUONIA.+', textFetched, re.IGNORECASE)
+                # print('spread:', spread) # для отладки
+                # if spread != []:
+                #     spread = spread[0]
+                #     spread = re.findall(r'\d+,?\d*', spread)
+                #     if spread != []: bondsFinAM.loc[bondsFinAM_row, 'Спред'] = float(spread[0].replace(',', '.'))
+                #     else: bondsFinAM.loc[bondsFinAM_row, 'Спред'] = 0
+
+                # else: bondsFinAM.loc[bondsFinAM_row, 'Спред'] = 0
 
             else:
                 attempt = 0
@@ -514,3 +516,48 @@ def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_t
             print(f"  Параметр '{textTarget}' не отображён для облигации по ссылке {bondsFinAM['URL FinAM'][bondsFinAM_row]}")
 
     return bondsFinAM
+
+# .. извлечения значения спреда из текста описания платежей
+def spreadExtract(textFetched):
+    if not textFetched or not isinstance(textFetched, str):
+        return 0
+
+    # Основные паттерны — все требуют наличия ключевого слова и числа с %
+    patternS = [
+        # спред|премия в размере X,XX%
+        r'(?:спред|преми[яю]|надбавк[аи]|марж[аи]|margin)\s+(?:установлен[а]?\s+)?(?:по\s+итогам\s+сбора\s+заявок\s+)?(?:в\s+размере\s+)?(\d+[,.]?\d*)\s*%',
+        
+        # ключевая ставка + спред X,XX%
+        r'ключев[а-я]+\s+ставк[а-я]+\s+(?:Банка\s+России|ЦБ\s+РФ)\s*[+]\s*(?:преми[яю]|спред|надбавк[аи]|марж[аи])\s*(?:котор[а-я]+\s+установлен[а]?\s+)?(?:в\s+размере\s+)?(\d+[,.]?\d*)\s*%',
+        
+        # RUONIA + спред X,XX%
+        r'RUONIA\s*[+]\s*(?:спред|преми[яю]|надбавк[аи]|марж[аи])\s*(?:котор[а-я]+\s+установлен[а]?\s+)?(?:в\s+размере\s+)?(\d+[,.]?\d*)\s*%',
+        
+        # КС + спред X,XX%
+        r'[Кк]лючев[а-я]+\s+ставк[а-я]+\s*[+]\s*(?:преми[яю]|спред|надбавк[аи]|марж[аи])\s*(?:котор[а-я]+\s+установлен[а]?\s+)?(?:в\s+размере\s+)?(\d+[,.]?\d*)\s*%',
+        
+        # спред составляет|равен X,XX%
+        r'(?:спред|преми[яю]|надбавк[аи]|марж[аи])\s+(?:составляет|равен|установлен[а]?\s+в\s+размере)\s+(\d+[,.]?\d*)\s*%',
+        
+        # спред X,XX% годовых (с ограничением контекста)
+        r'(?:спред|преми[яю]|надбавк[аи]|марж[аи])\s+[^.]*?(\d+[,.]?\d*)\s*%\s+годовых',
+        
+        # паттерн для б.п. (базисных пунктов) — переводим в проценты
+        r'(?:спред|преми[яю]|надбавк[аи]|марж[аи])\s+(?:в\s+размере\s+)?(\d+)\s+б\.п\.',
+        ]
+    
+    # Проверяем каждый паттерн
+    for pattern in patternS:
+        match = re.search(pattern, textFetched, re.IGNORECASE)
+        if match:
+            value = match.group(1).replace(',', '.')
+
+            try:
+                # Если это базисные пункты, делим на 100
+                if 'б.п.' in pattern or 'б\.п\.' in pattern: return float(value) / 100
+                return float(value)
+
+            except ValueError:
+                continue
+
+    return 0
