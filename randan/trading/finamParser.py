@@ -186,6 +186,8 @@ def finamParser(attemptsMax,
             if conumnName == 'ISIN':
                 urlInitial = 'https://bonds.finam.ru/issue/search/default.asp?emitterCustomName=' + identifier
 
+            print('urlInitial:', urlInitial) # для отладки
+
             # Обёртка для driver.get() , чтобы не потерять промежуточные результаты
             for attempt in range(3):
                 # print('attempt:', attempt) # для отладки
@@ -519,45 +521,85 @@ def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_t
 
 # .. извлечения значения спреда из текста описания платежей
 def spreadExtract(textFetched):
+
     if not textFetched or not isinstance(textFetched, str):
         return 0
-
-    # Основные паттерны — все требуют наличия ключевого слова и числа с %
-    patternS = [
-        # спред|премия в размере X,XX%
-        r'(?:спред|преми[яю]|надбавк[аи]|марж[аи]|margin)\s+(?:установлен[а]?\s+)?(?:по\s+итогам\s+сбора\s+заявок\s+)?(?:в\s+размере\s+)?(\d+[,.]?\d*)\s*%',
-        
-        # ключевая ставка + спред X,XX%
-        r'ключев[а-я]+\s+ставк[а-я]+\s+(?:Банка\s+России|ЦБ\s+РФ)\s*[+]\s*(?:преми[яю]|спред|надбавк[аи]|марж[аи])\s*(?:котор[а-я]+\s+установлен[а]?\s+)?(?:в\s+размере\s+)?(\d+[,.]?\d*)\s*%',
-        
-        # RUONIA + спред X,XX%
-        r'RUONIA\s*[+]\s*(?:спред|преми[яю]|надбавк[аи]|марж[аи])\s*(?:котор[а-я]+\s+установлен[а]?\s+)?(?:в\s+размере\s+)?(\d+[,.]?\d*)\s*%',
-        
-        # КС + спред X,XX%
-        r'[Кк]лючев[а-я]+\s+ставк[а-я]+\s*[+]\s*(?:преми[яю]|спред|надбавк[аи]|марж[аи])\s*(?:котор[а-я]+\s+установлен[а]?\s+)?(?:в\s+размере\s+)?(\d+[,.]?\d*)\s*%',
-        
-        # спред составляет|равен X,XX%
-        r'(?:спред|преми[яю]|надбавк[аи]|марж[аи])\s+(?:составляет|равен|установлен[а]?\s+в\s+размере)\s+(\d+[,.]?\d*)\s*%',
-        
-        # спред X,XX% годовых (с ограничением контекста)
-        r'(?:спред|преми[яю]|надбавк[аи]|марж[аи])\s+[^.]*?(\d+[,.]?\d*)\s*%\s+годовых',
-        
-        # паттерн для б.п. (базисных пунктов) — переводим в проценты
-        r'(?:спред|преми[яю]|надбавк[аи]|марж[аи])\s+(?:в\s+размере\s+)?(\d+)\s+б\.п\.',
-        ]
     
-    # Проверяем каждый паттерн
-    for pattern in patternS:
-        match = re.search(pattern, textFetched, re.IGNORECASE)
-        if match:
-            value = match.group(1).replace(',', '.')
-
-            try:
-                # Если это базисные пункты, делим на 100
-                if 'б.п.' in pattern or 'б\.п\.' in pattern: return float(value) / 100
-                return float(value)
-
-            except ValueError:
-                continue
-
+    text = textFetched
+    
+    # Исключить ложные срабатывания
+    if re.search(r'ставка\s+[\d,]+\s*%', text, re.IGNORECASE) and not re.search(r'(спред|преми|надбавк|margin|б\.п\.|процентных\s+пункт)', text, re.IGNORECASE):
+        return 0
+    
+    patterns = [
+        # 1. Базисные пункты: 100 б.п. = 1.00%
+        (r'(\d+)\s+б\.п\.', 'bp'),
+        
+        # 2. Процентные пункты: 1,30 п.п. = 1.30%
+        (r'(\d+[,.]?\d*)\s+процентных\s+пункт[а-я]*', 'pp'),
+        
+        # 3. Процентные пункты (сокращение)
+        (r'(\d+[,.]?\d*)\s+п\.п\.', 'pp'),
+        
+        # 4. RUONIA + X,XX%
+        (r'RUONIA\s*\+\s*(\d+[,.]?\d*)\s*%', 'percent'),
+        
+        # 5. RUONIA + X,XX (без %)
+        (r'RUONIA\s*\+\s*(\d+[,.]?\d*)', 'percent'),
+        
+        # 6. Ключевая ставка + X,XX%
+        (r'ключев[а-я]+\s+ставк[а-я]+\s*\+\s*(\d+[,.]?\d*)\s*%', 'percent'),
+        
+        # 7. Ключевая ставка + X,XX (без %)
+        (r'ключев[а-я]+\s+ставк[а-я]+\s*\+\s*(\d+[,.]?\d*)', 'percent'),
+        
+        # 8. Премия X,XX%
+        (r'преми[яю]\s+(\d+[,.]?\d*)\s*%', 'percent'),
+        
+        # 9. Исходный паттерн
+        (r'(Преми.+|Спред.+|Надбавк.+|Margin.+)', 'fragment'),
+    ]
+    
+    for pattern, p_type in patterns:
+        matches = re.findall(pattern, text, re.IGNORECASE)
+        if matches:
+            match = matches[0]
+            
+            if isinstance(match, str):
+                numbers = re.findall(r'(\d+[,.]?\d*)', match)
+                if numbers:
+                    value_str = numbers[0].replace(',', '.')
+                    try:
+                        value = float(value_str)
+                        if 'месяц' in match.lower() and value == 3:
+                            return 0
+                        
+                        # Базисные пункты: 100 б.п. = 1.00%
+                        if p_type == 'bp' or 'б.п.' in match.lower():
+                            return value / 100
+                        
+                        # Процентные пункты: 1,30 п.п. = 1.30% (НЕ ДЕЛИМ!)
+                        if p_type == 'pp' or 'процентных пункт' in match.lower():
+                            return value
+                        
+                        return value
+                    except ValueError:
+                        continue
+            else:
+                value_str = str(match).replace(',', '.')
+                try:
+                    value = float(value_str)
+                    
+                    # Базисные пункты: 100 б.п. = 1.00%
+                    if p_type == 'bp':
+                        return value / 100
+                    
+                    # Процентные пункты: 1,30 п.п. = 1.30% (НЕ ДЕЛИМ!)
+                    if p_type == 'pp':
+                        return value
+                    
+                    return value
+                except ValueError:
+                    continue
+    
     return 0
