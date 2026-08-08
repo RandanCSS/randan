@@ -167,9 +167,7 @@ def finamParser(attemptsMax,
 
     bondsOfIdentifier_Excluded = pandas.DataFrame()
 
-    driver = forSelenium.driverCreator(version_main,
-                                       headless=False,
-                                       use_subprocess=True),
+    driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
 
     for counter in range(len(source)): # counter совпадает с длиной датафрейма bondsFinAM , если source -- список ISIN , не не совпадает, если source -- список эмитентов
         sourceRow = source.index[counter]
@@ -186,7 +184,7 @@ def finamParser(attemptsMax,
             if conumnName == 'ISIN':
                 urlInitial = 'https://bonds.finam.ru/issue/search/default.asp?emitterCustomName=' + identifier
 
-            print('urlInitial:', urlInitial) # для отладки
+            # print('urlInitial:', urlInitial) # для отладки
 
             # Обёртка для driver.get() , чтобы не потерять промежуточные результаты
             for attempt in range(3):
