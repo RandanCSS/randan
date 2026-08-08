@@ -89,9 +89,13 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
     bondS_rowS = []
 
     # 'https://www.moex.com/ru/issue.aspx?board=TQOD&code=RU000A10DYP0' # для отладки
+
+    print('  isin:', isin) # для отладки
+
     try:
         driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
         print('Страница загрузилась успешно') # для отладки
+
     except (TimeoutError, TimeoutException, WebDriverException):
         print('Загрузка страницы длится слишком долго; перехожу к timeoutExceptionProcesser') # для отладки
         driver = timeoutExceptionProcesser(driver, isin, pause)
@@ -100,11 +104,13 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
     # Ожидание, чтобы страница прогрузилась
     # Архитектура
     # /html/body/div[3]/div[6]/div/div/div[1]/div/div/div/div/div[3]/div/div[3]/div[2]/div[1]/h2
+
     try:
         WebDriverWait(driver, pause).until(expected_conditions.presence_of_element_located(
             (By.XPATH, f"//div[@class='tab-content']//h2[contains(., 'Параметры инструмента')]")
             ))
         print('  ✅ Облигация найдена по ISIN') # , end='\r'
+
     except Exception as excptn:
         print('Exception 1:', excptn)
         print(traceback.format_exc()) # показ точной строчки кода с ошибкой
@@ -115,8 +121,10 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
         print('  ✅ Облигация НЕ найдена по ISIN, ищу по SECID') # , end='\r'
         secidIndex = bondS.loc[bondS['ISIN'] == isin, 'SECID'].index
         secid = bondS.loc[secidIndex[0], 'SECID']
+        print('  secid:', secid) # для отладки
 
         try: driver.get(f'https://www.moex.com/ru/issue.aspx?code={secid}')
+
         except Exception as excptn:
             print('Exception 2:', excptn)
             print(traceback.format_exc()) # показ точной строчки кода с ошибкой
