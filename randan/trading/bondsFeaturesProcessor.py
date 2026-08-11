@@ -30,13 +30,13 @@ f'''Пакет {module} НЕ прединсталлирован, но он тр�
 '''
               )
         check_call([sys.executable, "-m", "pip", "install", module])
-        if  attempt == 3:
+        if attempt == 3:
             print(
 f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
                   )
-            break
+            break # выход из цикла for attempt in range(3)
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
