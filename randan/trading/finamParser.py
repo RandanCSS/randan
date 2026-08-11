@@ -580,7 +580,7 @@ def getTableByURL_FinAM(driver, isin, pause):
             # display('table_FinAM 2:', table_FinAM) # для отладки
 
             table_FinAM = table_FinAM.iloc[:table_FinAM[table_FinAM.isna().all(axis=1)].index[0], :]
-            # display('table_FinAM 3:', table_FinAM) # для отладки
+            display('table_FinAM 3:', table_FinAM) # для отладки
 
             table_FinAM[(   'Купоны',        'Ставка')] = table_FinAM[(   'Купоны',        'Ставка')].str.replace('%', '').astype(float)
 
