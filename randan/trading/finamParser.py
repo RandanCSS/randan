@@ -108,7 +108,7 @@ def bondsOfIdentifierProcessor(attemptsMax,  bondsFinAM_in, bondsFinAM_row, bond
         date_call, table_FinAM = getTableByURL_FinAM(driver, isin, pause)
         if len(table_FinAM) > 0:
             if os.path.exists(folder + 'Таблицы FinAM') != True: os.makedirs(folder + 'Таблицы FinAM')
-            table_FinAM.to_excel(folder + 'Таблицы FinAM' + slash + f'{isin}{' ' + date_call if date_call else ''}.xlsx')
+            table_FinAM.to_excel(folder + 'Таблицы FinAM' + slash + f'{date_call + ' ' if date_call else ''}{isin}.xlsx')
 
         # table_FinAM = pandas.read_excel(folder + 'Таблицы FinAM' + slash + f'{isin} {date_call}.xlsx', header=[0, 1], index_col=0)
             # заготовка
