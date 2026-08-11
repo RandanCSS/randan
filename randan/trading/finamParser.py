@@ -50,7 +50,6 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
                   )
-            break # выход из цикла for attempt in range(3)
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
@@ -715,6 +714,8 @@ def getTableByURL_TB(driver_TB, isin, pause):
         time.sleep(pause)
     except: pass
 
+    couponS_data = []
+
     for attempt in range(1, 4):
         try:
 
@@ -750,7 +751,6 @@ def getTableByURL_TB(driver_TB, isin, pause):
             # Найти все строки с данными (исключаем заголовок)
             rowS = table.find_elements(By.XPATH, ".//tr[@data-qa-file='TableRow']")
 
-            couponS_data = []
             for row in rowS:
                 cellS = row.find_elements(By.XPATH, './/td')
 
@@ -771,7 +771,30 @@ def getTableByURL_TB(driver_TB, isin, pause):
                     'Купон': coupon_text
                     })
 
-            break # выход из цикла for attempt in range(3)
+            # Преобразуем в DataFrame для удобного просмотра
+            table_TB = pandas.DataFrame(couponS_data)
+            # display('table_TB 1:', table_TB) # для отладки
+
+            # Замена русских названий на английские
+
+            monthS = {
+                'декабря': 'December', 'января': 'January', 'февраля': 'February',
+                'марта': 'March', 'апреля': 'April', 'мая': 'May',
+                'июня': 'June', 'июля': 'July', 'августа': 'August',
+                'сентября': 'September', 'октября': 'October', 'ноября': 'November',
+                }
+
+            table_TB['Дата En'] = table_TB['Дата'].replace(monthS, regex=True)
+            table_TB['Дата En'] = table_TB['Дата En'].str.strip().str.replace('\s+', ' ', regex=True) # замена множественных пробелов на один
+            table_TB['Дата'] = pandas.to_datetime(table_TB['Дата En'])
+            table_TB = table_TB.drop('Дата En', axis=1)
+            # display('table_TB 2:', table_TB) # для отладки
+
+            table_TB = table_TB.sort_values('Дата', ignore_index=True)
+            table_TB.loc[table_TB['Ставка'] == '—', ['Ставка', 'Купон']] = numpy.nan
+            # display('table_TB 3:', table_TB) # для отладки
+
+            return table_TB
 
         except Exception as excptn:
             print('Exception в getTableByURL_TB :', excptn)
@@ -779,32 +802,8 @@ def getTableByURL_TB(driver_TB, isin, pause):
 
             if attempt == 3:
                 print('Три попытки getTableByURL_TB не увенчались успехом')
-                break # выход из цикла for attempt in range(3)
 
-    # Преобразуем в DataFrame для удобного просмотра
-    table_TB = pandas.DataFrame(couponS_data)
-    # display('table_TB 1:', table_TB) # для отладки
-
-    # Замена русских названий на английские
-
-    monthS = {
-        'декабря': 'December', 'января': 'January', 'февраля': 'February',
-        'марта': 'March', 'апреля': 'April', 'мая': 'May',
-        'июня': 'June', 'июля': 'July', 'августа': 'August',
-        'сентября': 'September', 'октября': 'October', 'ноября': 'November',
-        }
-
-    table_TB['Дата En'] = table_TB['Дата'].replace(monthS, regex=True)
-    table_TB['Дата En'] = table_TB['Дата En'].str.strip().str.replace('\s+', ' ', regex=True)  # замена множественных пробелов на один
-    table_TB['Дата'] = pandas.to_datetime(table_TB['Дата En'])
-    table_TB = table_TB.drop('Дата En', axis=1)
-    # display('table_TB 2:', table_TB) # для отладки
-
-    table_TB = table_TB.sort_values('Дата', ignore_index=True)
-    table_TB.loc[table_TB['Ставка'] == '—', ['Ставка', 'Купон']] = numpy.nan
-    # display('table_TB 3:', table_TB) # для отладки
-
-    return table_TB
+            return pandas.DataFrame() # заглушка
 
 # .. извлечения значения спреда из текста описания платежей
 def spreadExtract(textFetched):
