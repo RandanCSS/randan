@@ -105,7 +105,16 @@ def bondsOfIdentifierProcessor(attemptsMax,  bondsFinAM_in, bondsFinAM_row, bond
         bondsFinAM = getFeaturesByURL_FinAM(attemptsMax, bondsFinAM, bondsFinAM_row, columnS_target, driver, pause)
     
         isin = bondsFinAM.loc[bondsFinAM_row, columnS_target[0]]
-        date_call, table_FinAM = getTableByURL_FinAM(driver, isin, pause)
+        table_FinAM = getTableByURL_FinAM(driver, isin, pause)
+
+        # Добавить table_TB
+        date_call = table_FinAM.loc[
+            table_FinAM[table_FinAM[(   'Купоны',        'Ставка')].notna()].index[-1],
+            (   'Купоны',          'Дата')
+            ].date().strftime("%Y%m%d")
+
+        # print('date_call:', date_call) # для отладки
+
         if len(table_FinAM) > 0:
             if os.path.exists(folder + 'Таблицы FinAM') != True: os.makedirs(folder + 'Таблицы FinAM')
             table_FinAM.to_excel(folder + 'Таблицы FinAM' + slash + f'{date_call + ' ' if date_call else ''}{isin}.xlsx')
@@ -589,22 +598,13 @@ def getTableByURL_FinAM(driver, isin, pause):
             table_FinAM[(             'Купоны',                'Дата')] =\
                 pandas.to_datetime(table_FinAM[(             'Купоны',                'Дата')], format='%d.%m.%Y')
 
-            date_call = table_FinAM.loc[
-                table_FinAM[table_FinAM[(   'Купоны',        'Ставка')].notna()].index[-1],
-                (   'Купоны',          'Дата')
-                ].date().strftime("%Y%m%d")
-
-            # print('date_call:', date_call) # для отладки
-
         else: # заглушка, если не if len(table_FinAM) > 0
-            date_call = None
             table_FinAM = pandas.DataFrame()
 
     else: # заглушка, если не if tableS_table_FinAM
-        date_call = None
         table_FinAM = pandas.DataFrame()
 
-    return date_call, table_FinAM
+    return table_FinAM
 
 # .. извлечения значения спреда из текста описания платежей
 def spreadExtract(textFetched):
