@@ -160,7 +160,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
 
         # Обёртка для driver.get() , чтобы не потерять промежуточные результаты
         for attempt in range(3):
-            # print('attempt:', attempt) # для отладки
+            # print('attempt 1 в bondsOfIdentifierProcessor :', attempt) # для отладки
 
             try:
                 driver.get(urlInitial)
@@ -173,9 +173,9 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
                 break # выход из цикла for attempt in range(3)
 
             except Exception as excptn:
-                print('attempt:', attempt) # для отладки
+                print('attempt 2 в bondsOfIdentifierProcessor :', attempt) # для отладки
 
-                print('Exception 1:', excptn)
+                print('Exception 1 в bondsOfIdentifierProcessor :', excptn)
                 print(traceback.format_exc()) # показ точной строчки кода с ошибкой
 
                 # Закрыть или обнулить драйвер
@@ -239,7 +239,7 @@ def finamParser(attemptsMax,
 
             # Обёртка для driver.get() , чтобы не потерять промежуточные результаты
             for attempt in range(3):
-                # print('attempt:', attempt) # для отладки
+                # print('attempt 1 в finamParser :', attempt) # для отладки
 
                 try:
                     driver.get(urlInitial)
@@ -252,9 +252,9 @@ def finamParser(attemptsMax,
                     break # выход из цикла for attempt in range(3)
 
                 except Exception as excptn:
-                    print('attempt:', attempt) # для отладки
+                    print('attempt 1 в finamParser :', attempt) # для отладки
 
-                    print('Exception 1:', excptn)
+                    print('Exception 1 в finamParser :', excptn)
                     print(traceback.format_exc()) # показ точной строчки кода с ошибкой
 
                     # Закрыть или обнулить драйвер
@@ -518,7 +518,7 @@ def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_t
 
     # Выбор правильного URL FinAM
     for attempt in range(1):
-        # print('attempt:', attempt) # для отладки
+        # print('attempt в getFeaturesByURL_FinAM :', attempt) # для отладки
 
         driver.get(bondsFinAM['URL FinAM'][bondsFinAM_row])
 
@@ -750,7 +750,7 @@ def getTableByURL_TB(driver_TB, isin, pause):
             # Найти все строки с данными (исключаем заголовок)
             rowS = table.find_elements(By.XPATH, ".//tr[@data-qa-file='TableRow']")
 
-            coupons_data = []
+            couponS_data = []
             for row in rowS:
                 cellS = row.find_elements(By.XPATH, './/td')
 
@@ -765,7 +765,7 @@ def getTableByURL_TB(driver_TB, isin, pause):
                 rate_text = rate_text.replace('%', '').strip()
 
                 # Добавляем данные в список
-                coupons_data.append({
+                couponS_data.append({
                     'Дата': date_text,
                     'Ставка': rate_text,
                     'Купон': coupon_text
@@ -773,13 +773,16 @@ def getTableByURL_TB(driver_TB, isin, pause):
 
             break # выход из цикла for attempt in range(3)
 
-        except:
+        except Exception as excptn:
+            print('Exception в getTableByURL_TB :', excptn)
+            print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+
             if attempt == 3:
                 print('Три попытки getTableByURL_TB не увенчались успехом')
                 break # выход из цикла for attempt in range(3)
 
     # Преобразуем в DataFrame для удобного просмотра
-    table_TB = pandas.DataFrame(coupons_data)
+    table_TB = pandas.DataFrame(couponS_data)
     # display('table_TB 1:', table_TB) # для отладки
 
     # Замена русских названий на английские
