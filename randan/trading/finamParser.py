@@ -106,8 +106,9 @@ def bondsOfIdentifierProcessor(attemptsMax,  bondsFinAM_in, bondsFinAM_row, bond
     
         isin = bondsFinAM.loc[bondsFinAM_row, columnS_target[0]]
         date_call, table_FinAM = getTableByURL_FinAM(driver, isin, pause)
-        if os.path.exists(folder + 'Таблицы FinAM') != True: os.makedirs(folder + 'Таблицы FinAM')
-        table_FinAM.to_excel(folder + 'Таблицы FinAM' + slash + f'{isin} {date_call}.xlsx')
+        if len(table_FinAM) > 0:
+            if os.path.exists(folder + 'Таблицы FinAM') != True: os.makedirs(folder + 'Таблицы FinAM')
+            table_FinAM.to_excel(folder + 'Таблицы FinAM' + slash + f'{isin}{'' + date_call if date_call else ''}.xlsx')
 
         # table_FinAM = pandas.read_excel(folder + 'Таблицы FinAM' + slash + f'{isin} {date_call}.xlsx', header=[0, 1], index_col=0)
             # заготовка
@@ -545,53 +546,60 @@ def getTableByURL_FinAM(driver, isin, pause):
     tableS_table_FinAM = pandas.read_html(StringIO(table_html), decimal=',', thousands=None)
 
     if tableS_table_FinAM:
-        # Взять первую таблицу
+
         table_FinAM = tableS_table_FinAM[0]
 
-        # Удалить строки с описанием купонов
-        table_FinAM = table_FinAM[~table_FinAM.apply(lambda row: row.astype(str).str.contains('Описание купонов').any(), axis=1)]
+        if len(table_FinAM) > 0:
 
-        table_FinAM.columns = pandas.MultiIndex.from_tuples(
-            [(col[0], col[1].replace('\xa0', ' ')) for col in table_FinAM.columns]
-            )
+            # Удалить строки с описанием купонов
+            table_FinAM = table_FinAM[~table_FinAM.apply(lambda row: row.astype(str).str.contains('Описание купонов').any(), axis=1)]
 
-        table_FinAM_columnS = table_FinAM.columns
+            table_FinAM.columns = pandas.MultiIndex.from_tuples(
+                [(col[0], col[1].replace('\xa0', ' ')) for col in table_FinAM.columns]
+                )
 
-        for table_FinAM_column in table_FinAM_columnS:
-            if table_FinAM[table_FinAM_column].dtype == 'object':  # Только строковые столбцы
-                table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace('RUR', '', regex=False).str.strip()
-                table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace(',', '.')
-                table_FinAM[table_FinAM_column] = pandas.to_numeric(table_FinAM[table_FinAM_column], errors='ignore')
+            table_FinAM_columnS = table_FinAM.columns
 
-        # display('table_FinAM 1:', table_FinAM) # для отладки
+            for table_FinAM_column in table_FinAM_columnS:
+                if table_FinAM[table_FinAM_column].dtype == 'object':  # Только строковые столбцы
+                    table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace('RUR', '', regex=False).str.strip()
+                    table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace(',', '.')
+                    table_FinAM[table_FinAM_column] = pandas.to_numeric(table_FinAM[table_FinAM_column], errors='ignore')
 
-        for counter in range(len(table_FinAM_columnS)):
-            # print(table_FinAM_columnS[counter]) # для отладки
-            if table_FinAM_columnS[counter] == (          'Погашение',        'Размер (ден)'):
-                # print('Столбец найден') # для отладки
-                break
-        # print('counter:', counter) # для отладки
+            # display('table_FinAM 1:', table_FinAM) # для отладки
 
-        table_FinAM = table_FinAM[table_FinAM_columnS[:counter + 1]]
-        # display('table_FinAM 2:', table_FinAM) # для отладки
+            for counter in range(len(table_FinAM_columnS)):
+                # print(table_FinAM_columnS[counter]) # для отладки
+                if table_FinAM_columnS[counter] == (          'Погашение',        'Размер (ден)'):
+                    # print('Столбец найден') # для отладки
+                    break
 
-        table_FinAM = table_FinAM.iloc[:table_FinAM[table_FinAM.isna().all(axis=1)].index[0], :]
-        # display('table_FinAM 3:', table_FinAM) # для отладки
+            # print('counter:', counter) # для отладки
 
-        table_FinAM[(   'Купоны',        'Ставка')] = table_FinAM[(   'Купоны',        'Ставка')].str.replace('%', '').astype(float)
+            table_FinAM = table_FinAM[table_FinAM_columnS[:counter + 1]]
+            # display('table_FinAM 2:', table_FinAM) # для отладки
 
-        # Преобразовать столбец "Дата" в формат datetime
-        table_FinAM[(             'Купоны',                'Дата')] =\
-            pandas.to_datetime(table_FinAM[(             'Купоны',                'Дата')], format='%d.%m.%Y')
+            table_FinAM = table_FinAM.iloc[:table_FinAM[table_FinAM.isna().all(axis=1)].index[0], :]
+            # display('table_FinAM 3:', table_FinAM) # для отладки
 
-        date_call = table_FinAM.loc[
-            table_FinAM[table_FinAM[(   'Купоны',        'Ставка')].notna()].index[-1],
-            (   'Купоны',          'Дата')
-            ].date().strftime("%Y%m%d")
+            table_FinAM[(   'Купоны',        'Ставка')] = table_FinAM[(   'Купоны',        'Ставка')].str.replace('%', '').astype(float)
 
-        # print('date_call:', date_call) # для отладки
+            # Преобразовать столбец "Дата" в формат datetime
+            table_FinAM[(             'Купоны',                'Дата')] =\
+                pandas.to_datetime(table_FinAM[(             'Купоны',                'Дата')], format='%d.%m.%Y')
 
-    else: table_FinAM = pandas.DataFrame() # заглушка, если не if tableS_table_FinAM
+            date_call = table_FinAM.loc[
+                table_FinAM[table_FinAM[(   'Купоны',        'Ставка')].notna()].index[-1],
+                (   'Купоны',          'Дата')
+                ].date().strftime("%Y%m%d")
+
+            # print('date_call:', date_call) # для отладки
+
+        else: # заглушка, если не if len(table_FinAM) > 0
+
+    else: # заглушка, если не if tableS_table_FinAM
+        date_call = None
+        table_FinAM = pandas.DataFrame()
 
     return date_call, table_FinAM
 
