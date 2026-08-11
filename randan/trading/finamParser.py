@@ -109,6 +109,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
         try: table_TB = getTableByURL_TB(driver_TB, isin, pause)
         except:
             goS = False
+            print('except после getTableByURL_TB в bondsOfIdentifierProcessor') # для отладки
             return bondsFinAM, bondsFinAM_row, driver, goS
 
         for table_TB_row in table_TB[table_TB['Ставка'].notna()].index:
@@ -265,7 +266,7 @@ def finamParser(attemptsMax,
                             columnS_target[0]: 'ISIN',
                             columnS_target[1]: 'REGNUMBER FinAM',
                             columnS_target[2]: 'Описание платежей'
-                            }), counter, driver_TB
+                            }), counter, driver_TB, goS
 
             # Предупреждение про Cookie закрыть
             # Архитектура: /html/body/div[3]/button
@@ -397,10 +398,10 @@ def finamParser(attemptsMax,
                                 columnS_target[0]: 'ISIN',
                                 columnS_target[1]: 'REGNUMBER FinAM',
                                 columnS_target[2]: 'Описание платежей'
-                                }), counter, driver_TB
+                                }), counter, driver_TB, goS
 
                         display('bondsFinAM 1:', bondsFinAM.tail()) # для отладки
-                        break # выход из цикла while True ; НЕ указывает на переход; тут перед break можно вставить функцию выгрузки данных с циклом for
+                        break # выход из цикла while True ; НЕ указывает на переход
                 else:
                     print('Таблица имеет более одной строки')
                     if 'Страница: ' in bondsOfIdentifier.index[-1]:
@@ -427,7 +428,7 @@ def finamParser(attemptsMax,
                                 columnS_target[0]: 'ISIN',
                                 columnS_target[1]: 'REGNUMBER FinAM',
                                 columnS_target[2]: 'Описание платежей'
-                                }), counter, driver_TB
+                                }), counter, driver_TB, goS
 
                         display('bondsFinAM 2:', bondsFinAM.tail()) # для отладки
                         page += 1
@@ -457,7 +458,7 @@ def finamParser(attemptsMax,
                                 columnS_target[0]: 'ISIN',
                                 columnS_target[1]: 'REGNUMBER FinAM',
                                 columnS_target[2]: 'Описание платежей'
-                                }), counter, driver_TB
+                                }), counter, driver_TB, goS
 
                         display('bondsFinAM 3:', bondsFinAM.tail()) # для отладки
                         break  # выход из цикла while True ; эта таблица точно последняя; тут перед break можно вставить функцию выгрузки данных с циклом for
@@ -501,7 +502,7 @@ def finamParser(attemptsMax,
         columnS_target[0]: 'ISIN',
         columnS_target[1]: 'REGNUMBER FinAM',
         columnS_target[2]: 'Описание платежей'
-        }), counter, driver_TB
+        }), counter, driver_TB, goS
 
 def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_target, driver, pause):
     bondsFinAM = bondsFinAM_in.copy()
