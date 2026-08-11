@@ -766,12 +766,12 @@ def getTableByURL_TB(driver_TB, isin, pause):
                     'Купон': coupon_text
                     })
 
-        break # выход из цикла for attempt in range(3)
-
-    except:
-        if attempt == 3:
-            print('Три попытки getTableByURL_TB не увенчались успехом')
             break # выход из цикла for attempt in range(3)
+
+        except:
+            if attempt == 3:
+                print('Три попытки getTableByURL_TB не увенчались успехом')
+                break # выход из цикла for attempt in range(3)
 
     # Преобразуем в DataFrame для удобного просмотра
     table_TB = pandas.DataFrame(coupons_data)
