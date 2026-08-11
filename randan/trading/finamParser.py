@@ -63,7 +63,7 @@ version_main = 150
 
 # Авторские функции..
 # .. обработки облигаций, относящихся к одному Identifier
-def bondsOfIdentifierProcessor(attemptsMax,  bondsFinAM_in, bondsFinAM_row, bondsOfIdentifier, columnS_target, driver, folder, pause, slash, source, sourceRow, urlInitial, version_main):
+def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bondsOfIdentifier, columnS_target, driver, driver_TB, folder, pause, slash, source, sourceRow, urlInitial, version_main):
     bondsFinAM = bondsFinAM_in.copy()
     # print('bondsOfIdentifier.index :', bondsOfIdentifier.index) # для отладки
 
@@ -106,21 +106,41 @@ def bondsOfIdentifierProcessor(attemptsMax,  bondsFinAM_in, bondsFinAM_row, bond
     
         isin = bondsFinAM.loc[bondsFinAM_row, columnS_target[0]]
         table_FinAM = getTableByURL_FinAM(driver, isin, pause)
+        table_TB = getTableByURL_TB(driver_TB, isin, pause)
 
-        # Добавить table_TB
-        date_call = table_FinAM.loc[
+        for table_TB_row in table_TB[table_TB['Ставка'].notna()].index:
+            table_TB_data = table_TB.loc[table_TB_row, 'Дата']
+            table_TB_rate = table_TB.loc[table_TB_row, 'Ставка']
+
+            table_FinAM_index = table_FinAM[table_FinAM[(   'Купоны',          'Дата')] == table_TB_data].index
+            if len(table_FinAM_index) > 0:
+                if pandas.isna(table_FinAM.loc[table_FinAM_index[0], (   'Купоны',        'Ставка')]):
+                    table_FinAM.loc[table_FinAM_index[0], (   'Купоны',        'Ставка')] = table_TB_rate
+
+        # display('table_FinAM:', table_FinAM) # для отладки
+
+        date_call_FinAM = table_FinAM.loc[
             table_FinAM[table_FinAM[(   'Купоны',        'Ставка')].notna()].index[-1],
             (   'Купоны',          'Дата')
-            ].date().strftime("%Y%m%d")
+            ].date()
 
         # print('date_call:', date_call) # для отладки
+
+        date_call_TB = table_TB.loc[table_TB[table_TB['Ставка'].isna()].index[0], 'Дата'].date()
+        # print('date_call_TB:', date_call_TB) # для отладки
+
+        date_call = max(date_call_FinAM, date_call_TB).strftime("%Y%m%d")
 
         if len(table_FinAM) > 0:
             if os.path.exists(folder + 'Таблицы FinAM') != True: os.makedirs(folder + 'Таблицы FinAM')
             table_FinAM.to_excel(folder + 'Таблицы FinAM' + slash + f'{date_call + ' ' if date_call else ''}{isin}.xlsx')
 
-        # table_FinAM = pandas.read_excel(folder + 'Таблицы FinAM' + slash + f'{isin} {date_call}.xlsx', header=[0, 1], index_col=0)
+        # table_FinAM = pandas.read_excel(folder + 'Таблицы FinAM' + slash + '???.xlsx', header=[0, 1], index_col=0)
             # заготовка
+
+        if len(table_TB) > 0:
+            if os.path.exists(folder + 'Таблицы TB') != True: os.makedirs(folder + 'Таблицы TB')
+            table_TB.to_excel(folder + 'Таблицы TB' + slash + f'{date_call + ' ' if date_call else ''}{isin}.xlsx')
 
         bondsFinAM_row += 1 # у некоторых облигаций без ISIN не будут заполнены и поля из описания платежей;
             # такие облигации нужны в базе, чтобы повторно не обращаться к ним
@@ -187,6 +207,7 @@ def finamParser(attemptsMax,
     bondsFinAM_row = 0 # далее bondsFinAM_row увеличивается на 1 при каждом исполнении функции bondsOfIdentifierProcessor
     bondsOfIdentifier_Excluded = pandas.DataFrame()
     driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
+    driver_TB = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
 
     for counter in range(len(source)): # counter совпадает с длиной датафрейма bondsFinAM , если source -- список ISIN , не не совпадает, если source -- список эмитентов
         sourceRow = source.index[counter]
@@ -353,6 +374,7 @@ def finamParser(attemptsMax,
                                                                                              bondsOfIdentifier,
                                                                                              columnS_target,
                                                                                              driver,
+                                                                                             driver_TB,
                                                                                              folder,
                                                                                              pause,
                                                                                              slash, 
@@ -378,6 +400,7 @@ def finamParser(attemptsMax,
                                                                                                      bondsOfIdentifier,
                                                                                                      columnS_target,
                                                                                                      driver,
+                                                                                                     driver_TB,
                                                                                                      folder,
                                                                                                      pause,
                                                                                                      slash, 
@@ -403,6 +426,7 @@ def finamParser(attemptsMax,
                                                                                              bondsOfIdentifier,
                                                                                              columnS_target,
                                                                                              driver,
+                                                                                             driver_TB,
                                                                                              folder,
                                                                                              pause,
                                                                                              slash, 
@@ -605,6 +629,130 @@ def getTableByURL_FinAM(driver, isin, pause):
         table_FinAM = pandas.DataFrame()
 
     return table_FinAM
+
+def getTableByURL_TB(driver_TB, isin, pause):
+    driver_TB.get(f'https://www.tbank.ru/invest/bonds/{isin}/coupons/')
+
+    # Клик на кнопке Войти
+    try:
+        WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
+            (By.XPATH, "//span[@data-qa-file='Login' and contains(text(), 'Войти')]")
+            )).click()
+    except: pass
+
+    # Клик на окне ввода телефона и ввод
+    try:
+        WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
+            (By.XPATH, "//input[@data-cobrowsing-secure='input']")
+            )).click()
+
+        time.sleep(pause)
+
+        WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
+            (By.XPATH, "//input[@data-cobrowsing-secure='input']")
+            )).send_keys('79261485447')
+
+        time.sleep(pause)
+
+        WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
+            (By.XPATH, "//button[@type='submit']")
+            )).click()
+
+        time.sleep(pause)
+    except: pass
+
+    input('Введите код из банка в окно на сайте для входа в аккаунт, после чего нажмите Enter здесь')
+
+    # Авторизация промежуточная
+    pin = [6, 4, 7, 1]
+
+    for counter in range(4): # для установки и ввода пин-кода
+        try:
+            input_pin = WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
+                (By.XPATH, f"//input[@automation-id='pin-code-input-{counter}']")
+                ))
+
+            time.sleep(pause)
+            input_pin.click()
+            time.sleep(pause)
+            input_pin.send_keys(f'{pin[counter]}')
+            time.sleep(pause)
+        except: pass
+
+    try: # для установки пин-кода
+        WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
+            (By.XPATH, "//button[@type='submit']")
+            )).click()
+
+        time.sleep(pause)
+    except: pass
+
+    # Проскролить в самый низ страницы
+    driver_TB.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    time.sleep(pause)
+
+    # Клики на кнопке, чтобы развернуть выплаты
+    while True:
+        try:
+            WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
+                (By.XPATH, '//span[@data-qa-file="BondCouponsTable" and contains(text(), "прошл")]')
+                )).click()
+
+            time.sleep(pause)
+        except: break
+
+    table = WebDriverWait(driver_FinAM, pause).until(expected_conditions.presence_of_element_located(
+        (By.XPATH, "//table[@data-qa-file='Table']")
+        ))
+
+    # Найти все строки с данными (исключаем заголовок)
+    rowS = table.find_elements(By.XPATH, ".//tr[@data-qa-file='TableRow']")
+
+    coupons_data = []
+    for row in rowS:
+        cellS = row.find_elements(By.XPATH, './/td')
+    
+        # Данные из каждой ячейки
+        date_text = cellS[0].text.strip()
+        coupon_text = cellS[1].text.strip()
+        rate_text = cellS[2].text.strip()
+    
+        # Очистка от лишних символов
+        date_text = date_text.replace('\nБлижайшая выплата', '').strip()
+        coupon_text = coupon_text.replace('₽', '').replace(' ', '').replace('\n', '').strip()
+        rate_text = rate_text.replace('%', '').strip()
+    
+        # Добавляем данные в список
+        coupons_data.append({
+            'Дата': date_text,
+            'Ставка': rate_text,
+            'Купон': coupon_text
+            })
+
+    # Преобразуем в DataFrame для удобного просмотра
+    table_TB = pandas.DataFrame(coupons_data)
+    # display('table_TB 1:', table_TB) # для отладки
+
+        monthS = {
+            'декабря': 'December', 'января': 'January', 'февраля': 'February',
+            'марта': 'March', 'апреля': 'April', 'мая': 'May',
+            'июня': 'June', 'июля': 'July', 'августа': 'August',
+            'сентября': 'September', 'октября': 'October', 'ноября': 'November',
+            }
+
+    # Замена русских названий на английские
+    table_TB['Дата En'] = table_TB['Дата'].replace(monthS, regex=True)
+    table_TB['Дата En'] = table_TB['Дата En'].str.strip().str.replace('\s+', ' ', regex=True)  # замена множественных пробелов на один
+    table_TB['Дата'] = pandas.to_datetime(table_TB['Дата En'])
+    table_TB = table_TB.drop('Дата En', axis=1)
+    # display('table_TB 2:', table_TB) # для отладки
+
+    table_TB = table_TB.sort_values('Дата', ignore_index=True)
+    table_TB.loc[table_TB['Ставка'] == '—', ['Ставка', 'Купон']] = numpy.nan
+    # display('table_TB 3:', table_TB) # для отладки
+
+    return table_TB
+
 
 # .. извлечения значения спреда из текста описания платежей
 def spreadExtract(textFetched):
