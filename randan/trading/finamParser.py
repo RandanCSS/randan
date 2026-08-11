@@ -710,9 +710,15 @@ def getTableByURL_TB(driver_TB, isin, pause):
 
     # Проскролить в самый низ страницы
     
-    WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
-        (By.XPATH, f"//p[@data-qa-file='MobilePageHeader' and contains(text(), '{isin}')]")
-        )) # подождать, пока страница прогрузится
+    try: # подождать, пока страница прогрузится
+        WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
+            (By.XPATH, f"//span[@data-qa-file='SecurityHeader' and contains(text(), '{isin}')]")
+            )) # горизонтальный формат
+
+    except:
+        WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
+            (By.XPATH, f"//p[@data-qa-file='MobilePageHeader' and contains(text(), '{isin}')]")
+            )) # вертикальный формат
     
     driver_TB.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     time.sleep(pause) # проскролить
