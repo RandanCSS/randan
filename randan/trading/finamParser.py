@@ -14,6 +14,7 @@ from subprocess import check_call
 # --- остальные модули и пакеты
 for attempt in range(1, 4):
     try:
+        from datetime import date, datetime
         from IPython.display import display
 
         from randan.tools import coLabAdaptor, forSelenium, textPreprocessor # авторские модули для..
@@ -61,7 +62,7 @@ version_main = 150
 
 # Авторские функции..
 # .. обработки облигаций, относящихся к одному Identifier
-def bondsOfIdentifierProcessor(attemptsMax,  bondsFinAM_in, bondsFinAM_row, bondsOfIdentifier, columnS_target_FinAM,driver, pause, source, sourceRow, urlInitial, version_main):
+def bondsOfIdentifierProcessor(attemptsMax,  bondsFinAM_in, bondsFinAM_row, bondsOfIdentifier, columnS_target, driver, folder, pause, slash, source, sourceRow, urlInitial, version_main):
     bondsFinAM = bondsFinAM_in.copy()
     # print('bondsOfIdentifier.index :', bondsOfIdentifier.index) # для отладки
 
@@ -100,7 +101,15 @@ def bondsOfIdentifierProcessor(attemptsMax,  bondsFinAM_in, bondsFinAM_row, bond
         bondsFinAM.loc[bondsFinAM_row, 'URL FinAM'] = driver.find_element(By.XPATH, xPathBond).get_attribute('href').replace('/default.asp', '00002')
         # display('bondsFinAM:', bondsFinAM) # для отладки
 
-        bondsFinAM = getFeaturesByURL_FinAM(attemptsMax, bondsFinAM, bondsFinAM_row, columnS_target_FinAM, driver, pause)
+        bondsFinAM = getFeaturesByURL_FinAM(attemptsMax, bondsFinAM, bondsFinAM_row, columnS_target, driver, pause)
+    
+        isin = bondsFinAM.loc[bondsFinAM_row, columnS_target[0]]
+        date_call, table_FinAM = getTableByURL_FinAM(driver, isin, pause)
+        if os.path.exists(folder + 'Таблицы FinAM') != True: os.makedirs(folder + 'Таблицы FinAM')
+        table_FinAM.to_excel(folder + 'Таблицы FinAM' + slash + f'{isin} {date_call}.xlsx')
+
+        # table_FinAM = pandas.read_excel(folder + 'Таблицы FinAM' + slash + f'{isin} {date_call}.xlsx', header=[0, 1], index_col=0)
+            # заготовка
 
         bondsFinAM_row += 1 # у некоторых облигаций без ISIN не будут заполнены и поля из описания платежей;
             # такие облигации нужны в базе, чтобы повторно не обращаться к ним
@@ -150,23 +159,22 @@ def bondsOfIdentifierProcessor(attemptsMax,  bondsFinAM_in, bondsFinAM_row, bond
 def finamParser(attemptsMax,
                 bondsFinAM,
                 bondS_FinAM_RB, # для проверки, есть ли облигация с некоторым SecName FinAM уже в bondS_FinAM_RB
-                columnS_target_FinAM,
                 conumnName,
                 momentCurrent,
                 pause,
                 source, # список ISIN или эмитентов
                 version_main):
 
+    columnS_target = ['ISIN код:', 'Рег. номер:', 'Описание купонов']
+
     bondsFinAM = bondsFinAM.rename(columns={
-        'ISIN': columnS_target_FinAM[0],
-        'REGNUMBER FinAM': columnS_target_FinAM[1],
-        'Описание платежей': columnS_target_FinAM[2]
+        'ISIN': columnS_target[0],
+        'REGNUMBER FinAM': columnS_target[1],
+        'Описание платежей': columnS_target[2]
         })
 
     bondsFinAM_row = 0 # далее bondsFinAM_row увеличивается на 1 при каждом исполнении функции bondsOfIdentifierProcessor
-
     bondsOfIdentifier_Excluded = pandas.DataFrame()
-
     driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
 
     for counter in range(len(source)): # counter совпадает с длиной датафрейма bondsFinAM , если source -- список ISIN , не не совпадает, если source -- список эмитентов
@@ -332,9 +340,11 @@ def finamParser(attemptsMax,
                                                                                      bondsFinAM,
                                                                                      bondsFinAM_row,
                                                                                      bondsOfIdentifier,
-                                                                                     columnS_target_FinAM,
+                                                                                     columnS_target,
                                                                                      driver,
+                                                                                     folder,
                                                                                      pause,
+                                                                                     slash, 
                                                                                      source,
                                                                                      sourceRow,
                                                                                      urlInitial,
@@ -355,9 +365,11 @@ def finamParser(attemptsMax,
                                                                                      bondsFinAM,
                                                                                      bondsFinAM_row,
                                                                                      bondsOfIdentifier,
-                                                                                     columnS_target_FinAM,
+                                                                                     columnS_target,
                                                                                      driver,
+                                                                                     folder,
                                                                                      pause,
+                                                                                     slash, 
                                                                                      source,
                                                                                      sourceRow,
                                                                                      urlInitial,
@@ -378,9 +390,11 @@ def finamParser(attemptsMax,
                                                                                      bondsFinAM,
                                                                                      bondsFinAM_row,
                                                                                      bondsOfIdentifier,
-                                                                                     columnS_target_FinAM,
+                                                                                     columnS_target,
                                                                                      driver,
+                                                                                     folder,
                                                                                      pause,
+                                                                                     slash, 
                                                                                      source,
                                                                                      sourceRow,
                                                                                      urlInitial,
@@ -414,12 +428,12 @@ def finamParser(attemptsMax,
 
         if 'Issuer D Rating' in bondsFinAM.columns: bondsFinAM_columns.append('Issuer D Rating')
 
-        # print('columnS_target_FinAM:', columnS_target_FinAM) # для отладки
+        # print('columnS_target:', columnS_target) # для отладки
 
         bondsFinAM.rename(columns={
-            columnS_target_FinAM[0]: 'ISIN',
-            columnS_target_FinAM[1]: 'REGNUMBER FinAM',
-            columnS_target_FinAM[2]: 'Описание платежей'
+            columnS_target[0]: 'ISIN',
+            columnS_target[1]: 'REGNUMBER FinAM',
+            columnS_target[2]: 'Описание платежей'
             })[bondsFinAM_columns].to_excel(
             folder + 'Замеры рейтингов' + slash + momentCurrent.strftime("%Y%m%d_%H%M") + '_bondsFinAM.xlsx', index=False
                 )
@@ -430,12 +444,12 @@ def finamParser(attemptsMax,
     forSelenium.driverCloser(driver)
     print('return 5') # для отладки
     return bondsFinAM.rename(columns={
-        columnS_target_FinAM[0]: 'ISIN',
-        columnS_target_FinAM[1]: 'REGNUMBER FinAM',
-        columnS_target_FinAM[2]: 'Описание платежей'
+        columnS_target[0]: 'ISIN',
+        columnS_target[1]: 'REGNUMBER FinAM',
+        columnS_target[2]: 'Описание платежей'
         }), counter
 
-def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_target_FinAM, driver, pause):
+def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_target, driver, pause):
     bondsFinAM = bondsFinAM_in.copy()
 
     driver.set_page_load_timeout(100) # включить ограниченный таймаут загрузки
@@ -460,7 +474,7 @@ def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_t
 
         else: break # выход из цикла for attempt in range(1)
 
-    for textTarget in columnS_target_FinAM:
+    for textTarget in columnS_target:
         # print('textTarget:', textTarget) # для отладки
         if textTarget in driver.find_element("tag name", "body").text:
             if textTarget == 'Описание купонов':
@@ -516,6 +530,69 @@ def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_t
             print(f"  Параметр '{textTarget}' не отображён для облигации по ссылке {bondsFinAM['URL FinAM'][bondsFinAM_row]}")
 
     return bondsFinAM
+
+def getTableByURL_FinAM(driver, folder, isin, pause, slash):
+    # Подождать загрузку таблицы (любой элемент с классом "light")
+    table_element = WebDriverWait(driver, pause).until(
+        expected_conditions.presence_of_element_located((By.CLASS_NAME, "light"))
+        )
+
+    # Получить HTML таблицы
+    table_html = table_element.get_attribute('outerHTML')
+
+    # Парсить посредством pandas с отключением преобразования чисел
+    tableS_table_FinAM = pandas.read_html(StringIO(table_html), decimal=',', thousands=None)
+
+    if tableS_table_FinAM:
+        # Взять первую таблицу
+        table_FinAM = tableS_table_FinAM[0]
+
+        # Удалить строки с описанием купонов
+        table_FinAM = table_FinAM[~table_FinAM.apply(lambda row: row.astype(str).str.contains('Описание купонов').any(), axis=1)]
+
+        table_FinAM.columns = pandas.MultiIndex.from_tuples(
+            [(col[0], col[1].replace('\xa0', ' ')) for col in table_FinAM.columns]
+            )
+
+        table_FinAM_columnS = table_FinAM.columns
+
+        for table_FinAM_column in table_FinAM_columnS:
+            if table_FinAM[table_FinAM_column].dtype == 'object':  # Только строковые столбцы
+                table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace('RUR', '', regex=False).str.strip()
+                table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace(',', '.')
+                table_FinAM[table_FinAM_column] = pandas.to_numeric(table_FinAM[table_FinAM_column], errors='ignore')
+
+        # display('table_FinAM 1:', table_FinAM) # для отладки
+
+        for counter in range(len(table_FinAM_columnS)):
+            # print(table_FinAM_columnS[counter]) # для отладки
+            if table_FinAM_columnS[counter] == (          'Погашение',        'Размер (ден)'):
+                # print('Столбец найден') # для отладки
+                break
+        # print('counter:', counter) # для отладки
+
+        table_FinAM = table_FinAM[table_FinAM_columnS[:counter + 1]]
+        # display('table_FinAM 2:', table_FinAM) # для отладки
+
+        table_FinAM = table_FinAM.iloc[:table_FinAM[table_FinAM.isna().all(axis=1)].index[0], :]
+        # display('table_FinAM 3:', table_FinAM) # для отладки
+
+        table_FinAM[(   'Купоны',        'Ставка')] = table_FinAM[(   'Купоны',        'Ставка')].str.replace('%', '').astype(float)
+
+        # Преобразовать столбец "Дата" в формат datetime
+        table_FinAM[(             'Купоны',                'Дата')] =\
+            pandas.to_datetime(table_FinAM[(             'Купоны',                'Дата')], format='%d.%m.%Y')
+
+        date_call = table_FinAM.loc[
+            table_FinAM[table_FinAM[(   'Купоны',        'Ставка')].notna()].index[-1],
+            (   'Купоны',          'Дата')
+            ].date().strftime("%Y%m%d")
+
+        # print('date_call:', date_call) # для отладки
+
+    else: table_FinAM = pandas.DataFrame() # заглушка, если не if tableS_table_FinAM
+
+    return date_call, table_FinAM
 
 # .. извлечения значения спреда из текста описания платежей
 def spreadExtract(textFetched):
