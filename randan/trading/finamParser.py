@@ -659,9 +659,10 @@ def getTableByURL_TB(driver_TB, isin, pause):
             )).click()
 
         time.sleep(pause)
-    except: pass
 
-    input('Введите код из банка в окно на сайте для входа в аккаунт, после чего нажмите Enter здесь')
+        input('Введите код из банка в окно на сайте для входа в аккаунт, после чего нажмите Enter здесь')
+
+    except: pass
 
     # Авторизация промежуточная
     pin = [6, 4, 7, 1]
@@ -701,7 +702,7 @@ def getTableByURL_TB(driver_TB, isin, pause):
             time.sleep(pause)
         except: break
 
-    table = WebDriverWait(driver_FinAM, pause).until(expected_conditions.presence_of_element_located(
+    table = WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
         (By.XPATH, "//table[@data-qa-file='Table']")
         ))
 
