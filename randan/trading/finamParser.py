@@ -711,60 +711,60 @@ def getTableByURL_TB(driver_TB, isin, pause):
     except: pass
 
     for attempt in range(1, 4):
-    try:
+        try:
 
-        # Проскролить в самый низ страницы
+            # Проскролить в самый низ страницы
     
-        try: # подождать, пока страница прогрузится
-            WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
-                (By.XPATH, f"//span[@data-qa-file='SecurityHeader' and contains(text(), '{isin}')]")
-                )) # горизонтальный формат
-
-        except:
-            WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
-                (By.XPATH, f"//p[@data-qa-file='MobilePageHeader' and contains(text(), '{isin}')]")
-                )) # вертикальный формат
-    
-        driver_TB.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(pause) # проскролить
-
-        # Клики на кнопке, чтобы развернуть выплаты
-        while True:
-            try:
+            try: # подождать, пока страница прогрузится
                 WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
-                    (By.XPATH, '//span[@data-qa-file="BondCouponsTable" and contains(text(), "прошл")]')
-                    )).click()
+                    (By.XPATH, f"//span[@data-qa-file='SecurityHeader' and contains(text(), '{isin}')]")
+                    )) # горизонтальный формат
 
-                time.sleep(pause)
-            except: break
-
-        table = WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
-            (By.XPATH, "//table[@data-qa-file='Table']")
-            ))
-
-        # Найти все строки с данными (исключаем заголовок)
-        rowS = table.find_elements(By.XPATH, ".//tr[@data-qa-file='TableRow']")
-
-        coupons_data = []
-        for row in rowS:
-            cellS = row.find_elements(By.XPATH, './/td')
+            except:
+                WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
+                    (By.XPATH, f"//p[@data-qa-file='MobilePageHeader' and contains(text(), '{isin}')]")
+                    )) # вертикальный формат
     
-            # Данные из каждой ячейки
-            date_text = cellS[0].text.strip()
-            coupon_text = cellS[1].text.strip()
-            rate_text = cellS[2].text.strip()
-    
-            # Очистка от лишних символов
-            date_text = date_text.replace('\nБлижайшая выплата', '').strip()
-            coupon_text = coupon_text.replace('₽', '').replace(' ', '').replace('\n', '').strip()
-            rate_text = rate_text.replace('%', '').strip()
-    
-            # Добавляем данные в список
-            coupons_data.append({
-                'Дата': date_text,
-                'Ставка': rate_text,
-                'Купон': coupon_text
-                })
+            driver_TB.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(pause) # проскролить
+
+            # Клики на кнопке, чтобы развернуть выплаты
+            while True:
+                try:
+                    WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
+                        (By.XPATH, '//span[@data-qa-file="BondCouponsTable" and contains(text(), "прошл")]')
+                        )).click()
+
+                    time.sleep(pause)
+                except: break
+
+            table = WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
+                (By.XPATH, "//table[@data-qa-file='Table']")
+                ))
+
+            # Найти все строки с данными (исключаем заголовок)
+            rowS = table.find_elements(By.XPATH, ".//tr[@data-qa-file='TableRow']")
+
+            coupons_data = []
+            for row in rowS:
+                cellS = row.find_elements(By.XPATH, './/td')
+
+                # Данные из каждой ячейки
+                date_text = cellS[0].text.strip()
+                coupon_text = cellS[1].text.strip()
+                rate_text = cellS[2].text.strip()
+
+                # Очистка от лишних символов
+                date_text = date_text.replace('\nБлижайшая выплата', '').strip()
+                coupon_text = coupon_text.replace('₽', '').replace(' ', '').replace('\n', '').strip()
+                rate_text = rate_text.replace('%', '').strip()
+
+                # Добавляем данные в список
+                coupons_data.append({
+                    'Дата': date_text,
+                    'Ставка': rate_text,
+                    'Купон': coupon_text
+                    })
 
         break # выход из цикла for attempt in range(3)
 
