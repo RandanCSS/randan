@@ -709,8 +709,13 @@ def getTableByURL_TB(driver_TB, isin, pause):
     except: pass
 
     # Проскролить в самый низ страницы
+    
+    WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
+        (By.XPATH, f"//p[@data-qa-file='MobilePageHeader' and contains(text(), '{isin}')]")
+        )) # подождать, пока страница прогрузится
+    
     driver_TB.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    time.sleep(pause)
+    time.sleep(pause) # проскролить
 
     # Клики на кнопке, чтобы развернуть выплаты
     while True:
