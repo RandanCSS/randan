@@ -255,17 +255,17 @@ def finamParser(attemptsMax,
                     break # выход из цикла for attempt in range(3)
 
                 except Exception as excptn:
-                    print('attempt 1 в finamParser :', attempt) # для отладки
+                    print('attempt 2 в finamParser :', attempt) # для отладки
 
                     print('Exception 1 в finamParser :', excptn)
                     print(traceback.format_exc()) # показ точной строчки кода с ошибкой
 
-                    # Закрыть или обнулить драйвер
-                    forSelenium.driverCloser(driver)
+                    # # Закрыть или обнулить драйвер # DS считает, что ненужно. Что на первой итерации соединение нестабильно и если его каждый раз переустанавливать, то оно так и будет нестабильным
+                    # forSelenium.driverCloser(driver)
 
-                    # Воссоздать драйвер и подготовить для следующей итерации цикла for attempt in range(3) или обращения вне цика
-                    driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
-                    driver.set_page_load_timeout((1 + attempt) * 100 * pause)
+                    # # Воссоздать драйвер и подготовить для следующей итерации цикла for attempt in range(3) или обращения вне цика
+                    # driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
+                    # driver.set_page_load_timeout((1 + attempt) * 100 * pause)
 
                     # Если число попыток истекло, а результат так и не достигнут
                     if attempt == 2:
