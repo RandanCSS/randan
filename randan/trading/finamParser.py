@@ -15,6 +15,7 @@ from subprocess import check_call
 for attempt in range(1, 4):
     try:
         from datetime import date, datetime
+        from io import StringIO
         from IPython.display import display
 
         from randan.tools import coLabAdaptor, forSelenium, textPreprocessor # авторские модули для..
