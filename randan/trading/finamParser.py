@@ -737,7 +737,7 @@ def getTableByURL_TB(driver_TB, isin, pause):
             while True:
                 try:
                     WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
-                        (By.XPATH, '//span[@data-qa-file="BondCouponsTable" and contains(text(), "прошл")]')
+                        (By.XPATH, '//span[@data-qa-file="BondCouponsTable" and contains(text(), "выплат")]')
                         )).click()
 
                     time.sleep(pause)
