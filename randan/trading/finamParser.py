@@ -733,14 +733,15 @@ def getTableByURL_TB(driver_TB, isin, pause):
     table_TB = pandas.DataFrame(coupons_data)
     # display('table_TB 1:', table_TB) # для отладки
 
-        monthS = {
-            'декабря': 'December', 'января': 'January', 'февраля': 'February',
-            'марта': 'March', 'апреля': 'April', 'мая': 'May',
-            'июня': 'June', 'июля': 'July', 'августа': 'August',
-            'сентября': 'September', 'октября': 'October', 'ноября': 'November',
-            }
-
     # Замена русских названий на английские
+
+    monthS = {
+        'декабря': 'December', 'января': 'January', 'февраля': 'February',
+        'марта': 'March', 'апреля': 'April', 'мая': 'May',
+        'июня': 'June', 'июля': 'July', 'августа': 'August',
+        'сентября': 'September', 'октября': 'October', 'ноября': 'November',
+        }
+
     table_TB['Дата En'] = table_TB['Дата'].replace(monthS, regex=True)
     table_TB['Дата En'] = table_TB['Дата En'].str.strip().str.replace('\s+', ' ', regex=True)  # замена множественных пробелов на один
     table_TB['Дата'] = pandas.to_datetime(table_TB['Дата En'])
@@ -752,7 +753,6 @@ def getTableByURL_TB(driver_TB, isin, pause):
     # display('table_TB 3:', table_TB) # для отладки
 
     return table_TB
-
 
 # .. извлечения значения спреда из текста описания платежей
 def spreadExtract(textFetched):
