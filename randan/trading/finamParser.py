@@ -156,7 +156,7 @@ def bondsOfIdentifierProcessor(attemptsMax,  bondsFinAM_in, bondsFinAM_row, bond
         if 'Я согласен' in pageSource: driver.find_element(By.XPATH, "//button[text()='Я согласен']").click()
 
     forSelenium.driverCloser(driver)
-    return bondsFinAM, bondsFinAM_row, goS
+    return bondsFinAM, bondsFinAM_row, driver, goS
 
 def finamParser(attemptsMax,
                 bondsFinAM,
@@ -338,19 +338,19 @@ def finamParser(attemptsMax,
                         else: break # выход из цикла while True ; исходная таблица НЕ имела содержательные строки, поэтому НЕ следует попробовать переходить на следующую страницу
                     else:
                         print('  Нет указания на переход')
-                        bondsFinAM, bondsFinAM_row, goS = bondsOfIdentifierProcessor(attemptsMax,
-                                                                                     bondsFinAM,
-                                                                                     bondsFinAM_row,
-                                                                                     bondsOfIdentifier,
-                                                                                     columnS_target,
-                                                                                     driver,
-                                                                                     folder,
-                                                                                     pause,
-                                                                                     slash, 
-                                                                                     source,
-                                                                                     sourceRow,
-                                                                                     urlInitial,
-                                                                                     version_main)
+                        bondsFinAM, bondsFinAM_row, driver, goS = bondsOfIdentifierProcessor(attemptsMax,
+                                                                                             bondsFinAM,
+                                                                                             bondsFinAM_row,
+                                                                                             bondsOfIdentifier,
+                                                                                             columnS_target,
+                                                                                             driver,
+                                                                                             folder,
+                                                                                             pause,
+                                                                                             slash, 
+                                                                                             source,
+                                                                                             sourceRow,
+                                                                                             urlInitial,
+                                                                                             version_main)
 
                         if goS != True:
                             forSelenium.driverCloser(driver)
@@ -363,19 +363,19 @@ def finamParser(attemptsMax,
                     print('Таблица имеет более одной строки')
                     if 'Страница: ' in bondsOfIdentifier.index[-1]:
                         print('  Эта таблица точно не последняя, поскольку есть указание переходить на следующую страницу и она имеет и содержательные строки')
-                        bondsFinAM, bondsFinAM_row, goS = bondsOfIdentifierProcessor(attemptsMax,
-                                                                                     bondsFinAM,
-                                                                                     bondsFinAM_row,
-                                                                                     bondsOfIdentifier,
-                                                                                     columnS_target,
-                                                                                     driver,
-                                                                                     folder,
-                                                                                     pause,
-                                                                                     slash, 
-                                                                                     source,
-                                                                                     sourceRow,
-                                                                                     urlInitial,
-                                                                                     version_main)
+                        bondsFinAM, bondsFinAM_row, driver, driver, goS = bondsOfIdentifierProcessor(attemptsMax,
+                                                                                                     bondsFinAM,
+                                                                                                     bondsFinAM_row,
+                                                                                                     bondsOfIdentifier,
+                                                                                                     columnS_target,
+                                                                                                     driver,
+                                                                                                     folder,
+                                                                                                     pause,
+                                                                                                     slash, 
+                                                                                                     source,
+                                                                                                     sourceRow,
+                                                                                                     urlInitial,
+                                                                                                     version_main)
 
                         if goS != True:
                             forSelenium.driverCloser(driver)
@@ -388,19 +388,19 @@ def finamParser(attemptsMax,
 
                     else:
                         print('  Нет указания на переход')
-                        bondsFinAM, bondsFinAM_row, goS = bondsOfIdentifierProcessor(attemptsMax,
-                                                                                     bondsFinAM,
-                                                                                     bondsFinAM_row,
-                                                                                     bondsOfIdentifier,
-                                                                                     columnS_target,
-                                                                                     driver,
-                                                                                     folder,
-                                                                                     pause,
-                                                                                     slash, 
-                                                                                     source,
-                                                                                     sourceRow,
-                                                                                     urlInitial,
-                                                                                     version_main)
+                        bondsFinAM, bondsFinAM_row, driver, goS = bondsOfIdentifierProcessor(attemptsMax,
+                                                                                             bondsFinAM,
+                                                                                             bondsFinAM_row,
+                                                                                             bondsOfIdentifier,
+                                                                                             columnS_target,
+                                                                                             driver,
+                                                                                             folder,
+                                                                                             pause,
+                                                                                             slash, 
+                                                                                             source,
+                                                                                             sourceRow,
+                                                                                             urlInitial,
+                                                                                             version_main)
 
                         if goS != True:
                             forSelenium.driverCloser(driver)
