@@ -132,7 +132,11 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
 
         # print('date_call:', date_call) # для отладки
 
-        date_call_TB = table_TB.loc[table_TB[table_TB['Ставка'].isna()].index[0], 'Дата'].date()
+        if sum(table_TB[table_TB['Ставка'].isna()) > 0: # если есть даты с неизвестной ставкой, берётся первая из таких дат
+            date_call_TB = table_TB.loc[table_TB[table_TB['Ставка'].isna()].index[0], 'Дата'].date()
+        else: # если нет дат с неизвестной ставкой, берётся последняя из дат
+            date_call_TB = table_TB.loc[-1, 'Дата'].date() 
+
         # print('date_call_TB:', date_call_TB) # для отладки
 
         date_call = max(date_call_FinAM, date_call_TB).strftime("%Y%m%d")
