@@ -73,7 +73,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
     goS, xPath = forSelenium.tryerSleeper(attemptsMax, [2, 5], driver, pause, ['/html/body/div[', ']/div[3]/div/table/tbody/tr/td[1]'])
     if goS == False:
         print('Следует проверить xPath вручную')
-        return bondsFinAM, bondsFinAM_row, goS
+        return bondsFinAM, bondsFinAM_row, driver, goS
 
     trCounterOutS = bondsOfIdentifier.index[:-1] if 'Страница: ' in bondsOfIdentifier.index[-1] else bondsOfIdentifier.index
     for trCounterOut in trCounterOutS:
@@ -92,7 +92,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
         goS, xPathToNextPage = forSelenium.tryerSleeper(attemptsMax, None, driver, pause, [xPathBond, None])
         if goS == False:
             print('Следует проверить xPath вручную')
-            return bondsFinAM, bondsFinAM_row, goS
+            return bondsFinAM, bondsFinAM_row, driver, goS
 
         secName_finam = driver.find_element(By.XPATH, xPathBond).text
         bondsFinAM.loc[bondsFinAM_row, 'SecName FinAM'] = secName_finam
@@ -192,19 +192,19 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
                 if attempt == 2:
                     print('Число попыток истекло, а результат так и не достигнут')
                     goS = False
-                    forSelenium.driverCloser(driver)
-                    return bondsFinAM, bondsFinAM_row, goS
+                    return bondsFinAM, driver, bondsFinAM_row, goS
 
         pageSource = driver.page_source
         if 'Я согласен' in pageSource: driver.find_element(By.XPATH, "//button[text()='Я согласен']").click()
 
-    forSelenium.driverCloser(driver)
     return bondsFinAM, bondsFinAM_row, driver, goS
 
 def finamParser(attemptsMax,
                 bondsFinAM,
                 bondS_FinAM_RB, # для проверки, есть ли облигация с некоторым SecName FinAM уже в bondS_FinAM_RB
                 conumnName,
+                driver,
+                driver_TB,
                 momentCurrent,
                 pause,
                 source, # список ISIN или эмитентов
@@ -220,8 +220,6 @@ def finamParser(attemptsMax,
 
     bondsFinAM_row = 0 # далее bondsFinAM_row увеличивается на 1 при каждом исполнении функции bondsOfIdentifierProcessor
     bondsOfIdentifier_Excluded = pandas.DataFrame()
-    driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
-    driver_TB = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
 
     for counter in range(len(source)): # counter совпадает с длиной датафрейма bondsFinAM , если source -- список ISIN , не не совпадает, если source -- список эмитентов
         sourceRow = source.index[counter]
@@ -260,23 +258,22 @@ def finamParser(attemptsMax,
                     print('Exception 1 в finamParser :', excptn)
                     print(traceback.format_exc()) # показ точной строчки кода с ошибкой
 
-                    # # Закрыть или обнулить драйвер # DS считает, что ненужно. Что на первой итерации соединение нестабильно и если его каждый раз переустанавливать, то оно так и будет нестабильным
-                    # forSelenium.driverCloser(driver)
+                    # Закрыть или обнулить драйвер # DS считает, что ненужно. Что на первой итерации соединение нестабильно и если его каждый раз переустанавливать, то оно так и будет нестабильным
+                    forSelenium.driverCloser(driver)
 
-                    # # Воссоздать драйвер и подготовить для следующей итерации цикла for attempt in range(3) или обращения вне цика
-                    # driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
-                    # driver.set_page_load_timeout((1 + attempt) * 100 * pause)
+                    # Воссоздать драйвер и подготовить для следующей итерации цикла for attempt in range(3) или обращения вне цика
+                    driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
+                    driver.set_page_load_timeout((1 + attempt) * 100 * pause)
 
                     # Если число попыток истекло, а результат так и не достигнут
                     if attempt == 2:
                         print('Число попыток истекло, а результат так и не достигнут')
-                        forSelenium.driverCloser(driver)
                         print('return 1') # для отладки
                         return bondsFinAM.rename(columns={
                             columnS_target[0]: 'ISIN',
                             columnS_target[1]: 'REGNUMBER FinAM',
                             columnS_target[2]: 'Описание платежей'
-                            }), counter, driver_TB, goS
+                            }), counter, driver, driver_TB, goS
 
             # Предупреждение про Cookie закрыть
             # Архитектура: /html/body/div[3]/button
@@ -402,13 +399,12 @@ def finamParser(attemptsMax,
                                                                                              version_main)
 
                         if goS != True:
-                            forSelenium.driverCloser(driver)
                             print('return 2') # для отладки
                             return bondsFinAM.rename(columns={
                                 columnS_target[0]: 'ISIN',
                                 columnS_target[1]: 'REGNUMBER FinAM',
                                 columnS_target[2]: 'Описание платежей'
-                                }), counter, driver_TB, goS
+                                }), counter, driver, driver_TB, goS
 
                         display('bondsFinAM 1:', bondsFinAM.tail()) # для отладки
                         break # выход из цикла while True ; НЕ указывает на переход
@@ -432,13 +428,12 @@ def finamParser(attemptsMax,
                                                                                                      version_main)
 
                         if goS != True:
-                            forSelenium.driverCloser(driver)
                             print('return 3') # для отладки
                             return bondsFinAM.rename(columns={
                                 columnS_target[0]: 'ISIN',
                                 columnS_target[1]: 'REGNUMBER FinAM',
                                 columnS_target[2]: 'Описание платежей'
-                                }), counter, driver_TB, goS
+                                }), counter, driver, driver_TB, goS
 
                         display('bondsFinAM 2:', bondsFinAM.tail()) # для отладки
                         page += 1
@@ -462,13 +457,12 @@ def finamParser(attemptsMax,
                                                                                              version_main)
 
                         if goS != True:
-                            forSelenium.driverCloser(driver)
                             print('return 4') # для отладки
                             return bondsFinAM.rename(columns={
                                 columnS_target[0]: 'ISIN',
                                 columnS_target[1]: 'REGNUMBER FinAM',
                                 columnS_target[2]: 'Описание платежей'
-                                }), counter, driver_TB, goS
+                                }), counter, driver, driver_TB, goS
 
                         display('bondsFinAM 3:', bondsFinAM.tail()) # для отладки
                         break  # выход из цикла while True ; эта таблица точно последняя; тут перед break можно вставить функцию выгрузки данных с циклом for
@@ -506,13 +500,12 @@ def finamParser(attemptsMax,
         if conumnName == 'ISIN': time.sleep(pause) # для замедления перехода между эмитентами или ISIN; почему-то именно во втором случае сервер банит
 
     display('bondsOfIdentifier_Excluded:', bondsOfIdentifier_Excluded) # для отладки
-    forSelenium.driverCloser(driver)
     print('return 5') # для отладки
     return bondsFinAM.rename(columns={
         columnS_target[0]: 'ISIN',
         columnS_target[1]: 'REGNUMBER FinAM',
         columnS_target[2]: 'Описание платежей'
-        }), counter, driver_TB, goS
+        }), counter, driver, driver_TB, goS
 
 def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_target, driver, pause):
     bondsFinAM = bondsFinAM_in.copy()
