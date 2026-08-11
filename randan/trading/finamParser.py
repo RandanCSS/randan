@@ -44,7 +44,7 @@ f'''Пакет {module} НЕ прединсталлирован, но он тр�
 '''
               )
         check_call([sys.executable, "-m", "pip", "install", module])
-        if  attempt == 3:
+        if attempt == 3:
             print(
 f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
@@ -107,9 +107,11 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
         isin = bondsFinAM.loc[bondsFinAM_row, columnS_target[0]]
         table_FinAM = getTableByURL_FinAM(driver, isin, pause)
         try: table_TB = getTableByURL_TB(driver_TB, isin, pause)
-        except:
-            goS = False
+        except Exception as excptn:
             print('except после getTableByURL_TB в bondsOfIdentifierProcessor') # для отладки
+            print('excptn:', excptn) # для отладки
+            print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+            goS = False
             return bondsFinAM, bondsFinAM_row, driver, goS
 
         for table_TB_row in table_TB[table_TB['Ставка'].notna()].index:
@@ -708,58 +710,68 @@ def getTableByURL_TB(driver_TB, isin, pause):
         time.sleep(pause)
     except: pass
 
-    # Проскролить в самый низ страницы
+    for attempt in range(1, 4):
+    try:
+
+        # Проскролить в самый низ страницы
     
-    try: # подождать, пока страница прогрузится
-        WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
-            (By.XPATH, f"//span[@data-qa-file='SecurityHeader' and contains(text(), '{isin}')]")
-            )) # горизонтальный формат
+        try: # подождать, пока страница прогрузится
+            WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
+                (By.XPATH, f"//span[@data-qa-file='SecurityHeader' and contains(text(), '{isin}')]")
+                )) # горизонтальный формат
+
+        except:
+            WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
+                (By.XPATH, f"//p[@data-qa-file='MobilePageHeader' and contains(text(), '{isin}')]")
+                )) # вертикальный формат
+    
+        driver_TB.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(pause) # проскролить
+
+        # Клики на кнопке, чтобы развернуть выплаты
+        while True:
+            try:
+                WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
+                    (By.XPATH, '//span[@data-qa-file="BondCouponsTable" and contains(text(), "прошл")]')
+                    )).click()
+
+                time.sleep(pause)
+            except: break
+
+        table = WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
+            (By.XPATH, "//table[@data-qa-file='Table']")
+            ))
+
+        # Найти все строки с данными (исключаем заголовок)
+        rowS = table.find_elements(By.XPATH, ".//tr[@data-qa-file='TableRow']")
+
+        coupons_data = []
+        for row in rowS:
+            cellS = row.find_elements(By.XPATH, './/td')
+    
+            # Данные из каждой ячейки
+            date_text = cellS[0].text.strip()
+            coupon_text = cellS[1].text.strip()
+            rate_text = cellS[2].text.strip()
+    
+            # Очистка от лишних символов
+            date_text = date_text.replace('\nБлижайшая выплата', '').strip()
+            coupon_text = coupon_text.replace('₽', '').replace(' ', '').replace('\n', '').strip()
+            rate_text = rate_text.replace('%', '').strip()
+    
+            # Добавляем данные в список
+            coupons_data.append({
+                'Дата': date_text,
+                'Ставка': rate_text,
+                'Купон': coupon_text
+                })
+
+        break # выход из цикла for attempt in range(3)
 
     except:
-        WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
-            (By.XPATH, f"//p[@data-qa-file='MobilePageHeader' and contains(text(), '{isin}')]")
-            )) # вертикальный формат
-    
-    driver_TB.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    time.sleep(pause) # проскролить
-
-    # Клики на кнопке, чтобы развернуть выплаты
-    while True:
-        try:
-            WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
-                (By.XPATH, '//span[@data-qa-file="BondCouponsTable" and contains(text(), "прошл")]')
-                )).click()
-
-            time.sleep(pause)
-        except: break
-
-    table = WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
-        (By.XPATH, "//table[@data-qa-file='Table']")
-        ))
-
-    # Найти все строки с данными (исключаем заголовок)
-    rowS = table.find_elements(By.XPATH, ".//tr[@data-qa-file='TableRow']")
-
-    coupons_data = []
-    for row in rowS:
-        cellS = row.find_elements(By.XPATH, './/td')
-    
-        # Данные из каждой ячейки
-        date_text = cellS[0].text.strip()
-        coupon_text = cellS[1].text.strip()
-        rate_text = cellS[2].text.strip()
-    
-        # Очистка от лишних символов
-        date_text = date_text.replace('\nБлижайшая выплата', '').strip()
-        coupon_text = coupon_text.replace('₽', '').replace(' ', '').replace('\n', '').strip()
-        rate_text = rate_text.replace('%', '').strip()
-    
-        # Добавляем данные в список
-        coupons_data.append({
-            'Дата': date_text,
-            'Ставка': rate_text,
-            'Купон': coupon_text
-            })
+        if attempt == 3:
+            print('Три попытки getTableByURL_TB не увенчались успехом')
+            break # выход из цикла for attempt in range(3)
 
     # Преобразуем в DataFrame для удобного просмотра
     table_TB = pandas.DataFrame(coupons_data)
