@@ -531,7 +531,7 @@ def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_t
 
     return bondsFinAM
 
-def getTableByURL_FinAM(driver, folder, isin, pause, slash):
+def getTableByURL_FinAM(driver, isin, pause):
     # Подождать загрузку таблицы (любой элемент с классом "light")
     table_element = WebDriverWait(driver, pause).until(
         expected_conditions.presence_of_element_located((By.CLASS_NAME, "light"))
