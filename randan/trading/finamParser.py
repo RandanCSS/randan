@@ -31,7 +31,7 @@ for attempt in range(1, 4):
         from selenium.webdriver.support import expected_conditions
         from selenium.webdriver.support.ui import WebDriverWait
 
-        import os, pandas, re, selenium.common.exceptions, time, traceback
+        import numpy, os, pandas, re, selenium.common.exceptions, time, traceback
         break # выход из цикла for attempt in range(3)
 
     except ModuleNotFoundError:
