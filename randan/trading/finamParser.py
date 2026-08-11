@@ -113,7 +113,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
             goS = False
             return bondsFinAM, bondsFinAM_row, driver, goS
 
-        if (len(table_FinAM) > 0) & (if len(table_TB) > 0):
+        if (len(table_FinAM) > 0) & (len(table_TB) > 0):
         
             for table_TB_row in table_TB[table_TB['Ставка'].notna()].index:
                 table_TB_data = table_TB.loc[table_TB_row, 'Дата']
