@@ -596,6 +596,8 @@ def getTableByURL_FinAM(driver, isin, pause):
             # print('date_call:', date_call) # для отладки
 
         else: # заглушка, если не if len(table_FinAM) > 0
+            date_call = None
+            table_FinAM = pandas.DataFrame()
 
     else: # заглушка, если не if tableS_table_FinAM
         date_call = None
