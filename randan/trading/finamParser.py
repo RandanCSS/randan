@@ -129,13 +129,15 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
         # date_call = max(date_call_FinAM, date_call_TB).strftime("%Y%m%d")
 
         if len(table_FinAM) > 0:
+            if sum(table_FinAM[(   'Купоны',        'Ставка')].notna()) > 0:
+                date_call_FinAM = table_FinAM.loc[
+                    table_FinAM[table_FinAM[(   'Купоны',        'Ставка')].notna()].index[-1],
+                    (   'Купоны',          'Дата')
+                    ].date().strftime("%Y%m%d")
 
-            date_call_FinAM = table_FinAM.loc[
-                table_FinAM[table_FinAM[(   'Купоны',        'Ставка')].notna()].index[-1],
-                (   'Купоны',          'Дата')
-                ].date().strftime("%Y%m%d")
+                # print('date_call_FinAM:', date_call_FinAM) # для отладки
 
-            # print('date_call_FinAM:', date_call_FinAM) # для отладки
+            else: date_call_FinAM = 'No rate'
 
             if os.path.exists(folder + 'Таблицы FinAM') != True: os.makedirs(folder + 'Таблицы FinAM')
             table_FinAM.to_excel(folder + 'Таблицы FinAM' + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
@@ -655,6 +657,10 @@ def getTableByURL_FinAM(driver, isin, pause):
 
 def getTableByURL_TB(driver_TB, isin, pause):
     driver_TB.get(f'https://www.tbank.ru/invest/bonds/{isin}/coupons/')
+    time.sleep(pause)
+    table_TB = pandas.DataFrame() # заготовка
+
+    if 'Такой страницы нет' in driver_TB.page_source: return table_TB # заглушка
 
     # Клик на кнопке Войти
     try:
@@ -663,7 +669,7 @@ def getTableByURL_TB(driver_TB, isin, pause):
             )).click()
     except: pass
 
-    # Клик на окне ввода телефона и ввод
+    # Клик на окне ввода номера телефона и ввод
     try:
         WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
             (By.XPATH, "//input[@data-cobrowsing-secure='input']")
@@ -800,7 +806,7 @@ def getTableByURL_TB(driver_TB, isin, pause):
             if attempt == 3:
                 print('Три попытки getTableByURL_TB не увенчались успехом')
 
-            return pandas.DataFrame() # заглушка
+            return table_TB # заглушка
 
 # .. извлечения значения спреда из текста описания платежей
 def spreadExtract(textFetched):
