@@ -194,7 +194,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
                 if attempt == 2:
                     print('Число попыток истекло, а результат так и не достигнут')
                     goS = False
-                    return bondsFinAM, driver, bondsFinAM_row, goS
+                    return bondsFinAM, bondsFinAM_row, driver, goS
 
         pageSource = driver.page_source
         if 'Я согласен' in pageSource: driver.find_element(By.XPATH, "//button[text()='Я согласен']").click()
