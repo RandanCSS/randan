@@ -592,6 +592,8 @@ def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_t
     return bondsFinAM
 
 def getTableByURL_FinAM(driver, isin, pause):
+    table_FinAM = pandas.DataFrame() # заготовка
+
     # Подождать загрузку таблицы (любой элемент с классом "light")
     table_element = WebDriverWait(driver, pause).until(
         expected_conditions.presence_of_element_located((By.CLASS_NAME, "light"))
@@ -603,55 +605,64 @@ def getTableByURL_FinAM(driver, isin, pause):
     # Парсить посредством pandas с отключением преобразования чисел
     tableS_table_FinAM = pandas.read_html(StringIO(table_html), decimal=',', thousands=None)
 
-    if tableS_table_FinAM:
+    if len(tableS_table_FinAM) == 0: return table_FinAM # заглушка
 
-        table_FinAM = tableS_table_FinAM[0]
+    table_FinAM = tableS_table_FinAM[0]
 
-        if len(table_FinAM) > 0:
+    if len(table_FinAM) == 0: return table_FinAM # заглушка
+    # display('table_FinAM 1:', table_FinAM) # для отладки
 
-            # Удалить строки с описанием купонов
-            table_FinAM = table_FinAM[~table_FinAM.apply(lambda row: row.astype(str).str.contains('Описание купонов').any(), axis=1)]
+    # Удалить строки с описанием купонов
+    table_FinAM = table_FinAM[~table_FinAM.apply(lambda row: row.astype(str).str.contains('Описание купонов').any(), axis=1)]
 
-            table_FinAM.columns = pandas.MultiIndex.from_tuples(
-                [(col[0], col[1].replace('\xa0', ' ')) for col in table_FinAM.columns]
-                )
+    table_FinAM_columns = table_FinAM.columns
+    # print('table_FinAM_columns:', table_FinAM_columns) # для отладки
 
-            table_FinAM_columnS = table_FinAM.columns
+    for column in [(   'Купоны',             '№'),
+                   (   'Купоны',          'Дата'),
+                   (   'Купоны',        'Ставка'),
+                   (   'Купоны', '% от Номинала'),
+                   (   'Купоны',  'Размер (ден)'),
+                   ('Погашение', '% от Номинала'),
+                   ('Погашение',  'Размер (ден)')]:
+        if column not in table_FinAM_columns:
+            print('return 3 в getTableByURL_FinAM') # для отладки
+            return pandas.DataFrame() # заглушка
 
-            for table_FinAM_column in table_FinAM_columnS:
-                if table_FinAM[table_FinAM_column].dtype == 'object':  # Только строковые столбцы
-                    table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace('RUR', '', regex=False).str.strip()
-                    table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace(',', '.')
-                    table_FinAM[table_FinAM_column] = pandas.to_numeric(table_FinAM[table_FinAM_column], errors='ignore')
+    table_FinAM.columns = pandas.MultiIndex.from_tuples(
+        [(col[0], col[1].replace('\xa0', ' ')) for col in table_FinAM.columns]
+        )
 
-            # display('table_FinAM 1:', table_FinAM) # для отладки
+    table_FinAM_columnS = table_FinAM.columns
 
-            for counter in range(len(table_FinAM_columnS)):
-                # print(table_FinAM_columnS[counter]) # для отладки
-                if table_FinAM_columnS[counter] == (          'Погашение',        'Размер (ден)'):
-                    # print('Столбец найден') # для отладки
-                    break
+    for table_FinAM_column in table_FinAM_columnS:
+        if table_FinAM[table_FinAM_column].dtype == 'object':  # Только строковые столбцы
+            table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace('RUR', '', regex=False).str.strip()
+            table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace(',', '.')
+            table_FinAM[table_FinAM_column] = pandas.to_numeric(table_FinAM[table_FinAM_column], errors='ignore')
 
-            # print('counter:', counter) # для отладки
+    # display('table_FinAM 2:', table_FinAM) # для отладки
 
-            table_FinAM = table_FinAM[table_FinAM_columnS[:counter + 1]]
-            # display('table_FinAM 2:', table_FinAM) # для отладки
+    for counter in range(len(table_FinAM_columnS)):
+        # print(table_FinAM_columnS[counter]) # для отладки
+        if table_FinAM_columnS[counter] == (          'Погашение',        'Размер (ден)'):
+            # print('Столбец найден') # для отладки
+            break
 
-            table_FinAM = table_FinAM.iloc[:table_FinAM[table_FinAM.isna().all(axis=1)].index[0], :]
-            # display('table_FinAM 3:', table_FinAM) # для отладки
+    # print('counter:', counter) # для отладки
 
-            if sum(table_FinAM[(   'Купоны',        'Ставка')].notna()) > 0:
-                table_FinAM[(   'Купоны',        'Ставка')] = table_FinAM[(   'Купоны',        'Ставка')].str.replace('%', '').astype(float)
+    table_FinAM = table_FinAM[table_FinAM_columnS[:counter + 1]]
+    # display('table_FinAM 3:', table_FinAM) # для отладки
 
-            # Преобразовать столбец "Дата" в формат datetime
-            table_FinAM[(             'Купоны',                'Дата')] =\
-                pandas.to_datetime(table_FinAM[(             'Купоны',                'Дата')], format='%d.%m.%Y')
+    table_FinAM = table_FinAM.iloc[:table_FinAM[table_FinAM.isna().all(axis=1)].index[0], :]
+    # display('table_FinAM 4:', table_FinAM) # для отладки
 
-        else: # заглушка, если не if len(table_FinAM) > 0
-            table_FinAM = pandas.DataFrame()
+    if sum(table_FinAM[(   'Купоны',        'Ставка')].notna()) > 0:
+        table_FinAM[(   'Купоны',        'Ставка')] = table_FinAM[(   'Купоны',        'Ставка')].str.replace('%', '').astype(float)
 
-    else: # заглушка, если не if tableS_table_FinAM
-        table_FinAM = pandas.DataFrame()
+    # Преобразовать столбец "Дата" в формат datetime
+    table_FinAM[(             'Купоны',                'Дата')] =\
+        pandas.to_datetime(table_FinAM[(             'Купоны',                'Дата')], format='%d.%m.%Y')
 
     return table_FinAM
 
