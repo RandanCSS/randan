@@ -41,13 +41,11 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
 
 # 1. Авторская функция исполнения скрипта
 
-def bondsFeaturesProcessor(
-                           bondsIn,
+def bondsFeaturesProcessor(bondsIn,
                            issuerS,
                            pause,
                            folder=coLabFolder,
-                           returnDfs=False
-                           ):
+                           returnDfs=False):
     """
     Функция для выяснения, какие облигации есть в портфеле, на основе брокерских отчётов
 
@@ -78,7 +76,7 @@ def bondsFeaturesProcessor(
     bondS = bondS[[column for column in bondS.columns if not column.endswith('_drop')]]
     # print('bondS.columns:', bondS.columns) # для отладки
 
-# При отсутствии столбца Эмитент добавить его
+# При отсутствии столбца Эмитент добавить его посредством функции issuerNameProcessor
     if 'Эмитент' not in bondS.columns:
         bondS = issuerProcessor.issuerNameProcessor(bondS, issuerS)
             # теперь в bondS у каждой облигации указан эмитент с названием, соотнесённым со Словарём эмитентов
@@ -86,25 +84,24 @@ def bondsFeaturesProcessor(
 
 # 1.2 Импорт словарей (актуального и прошлого) эмитентов с рейтингом из Акуальные эмитенты.xlsx в issuerS_withActualRating
     # print('folder:', folder) # для отладки
-    if os.path.exists(folder + 'Замеры рейтингов'):
-        fileUptodateName_0 = files2df.getFileUptodateName('_Акуальные эмитенты', None, folder + 'Замеры рейтингов')
-        # print('fileUptodateName_0:', fileUptodateName_0) # для отладки
-
-        issuerS_withActualRating = pandas.read_excel(folder + 'Замеры рейтингов' + slash + fileUptodateName_0)
-        # display('issuerS_withActualRating:', issuerS_withActualRating) # для отладки
-
-        fileUptodateName_1 = files2df.getFileUptodateName('_Акуальные эмитенты', [fileUptodateName_0], folder + 'Замеры рейтингов')
-        # print('fileUptodateName_1:', fileUptodateName_1) # для отладки
-
-        issuerS_withActualRating_previous = pandas.read_excel(folder + 'Замеры рейтингов' + slash + fileUptodateName_1)
-        # display('issuerS_withActualRating_previous:', issuerS_withActualRating_previous) # для отладки
-
-        issuerS_withActualRating = issuerS_withActualRating.merge(issuerS_withActualRating_previous[['Эмитент', 'Issuer D Rating']], how='left', on='Эмитент', suffixes=("", " Previous"))
-        # display('issuerS_withActualRating:', issuerS_withActualRating) # для отладки
-
-    else:
-        print("Найдите и запустите скрипт bondsRatingS")
+    if os.path.exists(folder + 'Замеры рейтингов') != True:
+        print('Найдите и запустите скрипт bondsRatingS')
         issuerS_withActualRating = pandas.DataFrame()
+        
+    fileUptodateName_0 = files2df.getFileUptodateName('_Акуальные эмитенты', None, folder + 'Замеры рейтингов')
+    # print('fileUptodateName_0:', fileUptodateName_0) # для отладки
+
+    issuerS_withActualRating = pandas.read_excel(folder + 'Замеры рейтингов' + slash + fileUptodateName_0)
+    # display('issuerS_withActualRating:', issuerS_withActualRating) # для отладки
+
+    fileUptodateName_1 = files2df.getFileUptodateName('_Акуальные эмитенты', [fileUptodateName_0], folder + 'Замеры рейтингов')
+    # print('fileUptodateName_1:', fileUptodateName_1) # для отладки
+
+    issuerS_withActualRating_previous = pandas.read_excel(folder + 'Замеры рейтингов' + slash + fileUptodateName_1)
+    # display('issuerS_withActualRating_previous:', issuerS_withActualRating_previous) # для отладки
+
+    issuerS_withActualRating = issuerS_withActualRating.merge(issuerS_withActualRating_previous[['Эмитент', 'Issuer D Rating']], how='left', on='Эмитент', suffixes=("", " Previous"))
+    # display('issuerS_withActualRating:', issuerS_withActualRating) # для отладки
 
     issuerS_withActualRating = issuerS_withActualRating[issuerS_withActualRating['Эмитент'].isin(bondS['Эмитент'].unique())]
         # убрать эмитенты, не относящиеся к рассматриваемым облигациям
@@ -307,33 +304,39 @@ def bondsFeaturesProcessor(
 
     # display(bondS) # для отладки
 
-# 1.6 Расчёт доходности в день до возможности погасить 
-    # Если купить примерно на 1000 единиц валюты, то придётся заплатить
-    bondS['Полная цена покупки'] = 1000 + 1000 / bondS['FACEVALUE'] * bondS['ACCRUEDINT']
-    bondS['Полная цена покупки'] = bondS['Полная цена покупки'].astype(float).round(2)
-    
-    # На 1000 единиц валюты к погашению будет начислен купоный доход
-    if 'Купон RB' in bondS.columns:
-        bondS.loc[(bondS['COUPONPERCENT'].isna()) | (bondS['COUPONPERCENT'] == ''), 'Сводный купон'] =\
-            bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'Купон RB']
+# 1.6 Расчёт годовой доходности до возможности погасить
 
-    bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'Сводный купон'] =\
-        bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'COUPONPERCENT']
+
+
+
+
+
+    # # Если купить примерно на 1000 единиц валюты, то придётся заплатить
+    # bondS['Полная цена покупки'] = 1000 + 1000 / bondS['FACEVALUE'] * bondS['ACCRUEDINT']
+    # bondS['Полная цена покупки'] = bondS['Полная цена покупки'].astype(float).round(2)
     
-    bondS['Купоный доход к погашению'] = 1000 * bondS['Сводный купон'] / 36500 * bondS['До возможности погасить']
-    bondS['Купоный доход к погашению'] = bondS['Купоный доход к погашению'].astype(float).round(2)
+    # # На 1000 единиц валюты к погашению будет начислен купоный доход
+    # if 'Купон RB' in bondS.columns:
+    #     bondS.loc[(bondS['COUPONPERCENT'].isna()) | (bondS['COUPONPERCENT'] == ''), 'Сводный купон'] =\
+    #         bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'Купон RB']
+
+    # bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'Сводный купон'] =\
+    #     bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'COUPONPERCENT']
     
-    # Плюс 1000 единиц валюты изменятся к погашению в связи с приведением цены к номиналу
-    bondS['Бескупонная доходность к погашению'] = 1000 * (100 - bondS['PRICE']) / 100
-    bondS['Бескупонная доходность к погашению'] = bondS['Бескупонная доходность к погашению'].astype(float).round(2)
+    # bondS['Купоный доход к погашению'] = 1000 * bondS['Сводный купон'] / 36500 * bondS['До возможности погасить']
+    # bondS['Купоный доход к погашению'] = bondS['Купоный доход к погашению'].astype(float).round(2)
     
-    # Годовая доходность к погашению = суммарный доход к полной цене покупки
-    bondS['Доходность годовых к погашению'] =\
-        365 * (
-        100 * (1000 + bondS['Купоный доход к погашению'] + bondS['Бескупонная доходность к погашению'])\
-        / bondS['Полная цена покупки'] - 100\
-        ) / bondS['До возможности погасить']
-    bondS['Доходность годовых к погашению'] = bondS['Доходность годовых к погашению'].astype(float).round(4)
+    # # Плюс 1000 единиц валюты изменятся к погашению в связи с приведением цены к номиналу
+    # bondS['Бескупонная доходность к погашению'] = 1000 * (100 - bondS['PRICE']) / 100
+    # bondS['Бескупонная доходность к погашению'] = bondS['Бескупонная доходность к погашению'].astype(float).round(2)
+    
+    # # Годовая доходность к погашению = суммарный доход к полной цене покупки
+    # bondS['Доходность годовых к погашению'] =\
+    #     365 * (
+    #     100 * (1000 + bondS['Купоный доход к погашению'] + bondS['Бескупонная доходность к погашению'])\
+    #     / bondS['Полная цена покупки'] - 100\
+    #     ) / bondS['До возможности погасить']
+    # bondS['Доходность годовых к погашению'] = bondS['Доходность годовых к погашению'].astype(float).round(4)
 
     # !!! Стоимость!!!
     if 'Лотов' in bondS.columns: bondS['Стоимость'] = bondS['Лотов'] * bondS['PRICE'] * 10 * bondS['FACEVALUE'] / 1000
