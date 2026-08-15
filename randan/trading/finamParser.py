@@ -102,9 +102,9 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
         # display('bondsFinAM:', bondsFinAM) # для отладки
 
         bondsFinAM = getFeaturesByURL_FinAM(attemptsMax, bondsFinAM, bondsFinAM_row, columnS_target, driver, pause)
-    
+
         isin = bondsFinAM.loc[bondsFinAM_row, columnS_target[0]]
-        table_FinAM = getTableByURL_FinAM(driver, isin, pause)
+        table_FinAM = getTableByURL_FinAM(source['MATDATE'][sourceRow], driver, isin, pause)
         try: table_TB = getTableByURL_TB(driver_TB, isin, pause)
         except Exception as excptn:
             print('except после getTableByURL_TB в bondsOfIdentifierProcessor') # для отладки
@@ -115,7 +115,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
 
         tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB)
         # if (len(table_FinAM) > 0) & (len(table_TB) > 0):
-        
+
         #     for table_TB_row in table_TB[table_TB['Ставка'].notna()].index:
         #         table_TB_data = table_TB.loc[table_TB_row, 'Дата']
         #         table_TB_rate = table_TB.loc[table_TB_row, 'Ставка']
@@ -592,7 +592,7 @@ def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_t
 
     return bondsFinAM
 
-def getTableByURL_FinAM(driver, isin, pause):
+def getTableByURL_FinAM(date_maturity, driver, isin, pause):
     table_FinAM = pandas.DataFrame() # заготовка
 
     # Подождать загрузку таблицы (любой элемент с классом "light")
@@ -601,65 +601,76 @@ def getTableByURL_FinAM(driver, isin, pause):
         )
 
     # Получить HTML таблицы
+    columnS_target = [
+        (   'Купоны',             '№'),
+        (   'Купоны',          'Дата'),
+        (   'Купоны',        'Ставка'),
+        (   'Купоны', '% от Номинала'),
+        (   'Купоны',  'Размер (ден)'),
+        ('Погашение', '% от Номинала'),
+        ('Погашение',  'Размер (ден)')
+        ]
+
     table_html = table_element.get_attribute('outerHTML')
+    if 'Дисконтные бескупонные облигации' in table_html: # для дисконтной бескупонной облигации датафрейм рисутеся с нуля
+        table_FinAM = pandas.DataFrame(columns=pandas.MultiIndex.from_tuples(columnS_target),
+                                       data=[[1, date_maturity, 0, 0, 0, 100, None]])
 
-    # Парсить посредством pandas с отключением преобразования чисел
-    tableS_table_FinAM = pandas.read_html(StringIO(table_html), decimal=',', thousands=None)
+        # display('table_FinAM 1:', table_FinAM) # для отладки
 
-    if len(tableS_table_FinAM) == 0: return table_FinAM # заглушка
+    else:
+        # Парсить посредством pandas с отключением преобразования чисел
+        tableS_table_FinAM = pandas.read_html(StringIO(table_html), decimal=',', thousands=None)
 
-    table_FinAM = tableS_table_FinAM[0]
+        if len(tableS_table_FinAM) == 0: return table_FinAM # заглушка
 
-    if len(table_FinAM) == 0: return table_FinAM # заглушка
-    # display('table_FinAM 1:', table_FinAM) # для отладки
+        table_FinAM = tableS_table_FinAM[0]
 
-    # Удалить строки с описанием купонов
-    table_FinAM = table_FinAM[~table_FinAM.apply(lambda row: row.astype(str).str.contains('Описание купонов').any(), axis=1)]
+        if len(table_FinAM) == 0: return table_FinAM # заглушка
+        # display('table_FinAM 2:', table_FinAM) # для отладки
 
-    table_FinAM_columns = table_FinAM.columns
-    # print('table_FinAM_columns:', table_FinAM_columns) # для отладки
+        # Удалить строки с описанием купонов
+        table_FinAM = table_FinAM[~table_FinAM.apply(lambda row: row.astype(str).str.contains('Описание купонов').any(), axis=1)]
 
-    for column in [(   'Купоны',             '№'),
-                   (   'Купоны',          'Дата'),
-                   (   'Купоны',        'Ставка'),
-                   (   'Купоны', '% от Номинала'),
-                   (   'Купоны',  'Размер (ден)'),
-                   ('Погашение', '% от Номинала'),
-                   ('Погашение',  'Размер (ден)')]:
-        if column not in table_FinAM_columns:
-            print('return 3 в getTableByURL_FinAM') # для отладки
-            return pandas.DataFrame() # заглушка
+        table_FinAM.columns = pandas.MultiIndex.from_tuples(
+            [(col[0], col[1].replace('\xa0', ' ')) for col in table_FinAM.columns]
+            )
 
-    table_FinAM.columns = pandas.MultiIndex.from_tuples(
-        [(col[0], col[1].replace('\xa0', ' ')) for col in table_FinAM.columns]
-        )
+        table_FinAM_columnS = table_FinAM.columns
+        # print('table_FinAM_columns:', table_FinAM_columns) # для отладки
 
-    table_FinAM_columnS = table_FinAM.columns
+        for table_FinAM_column in columnS_target:
+            if table_FinAM_column not in table_FinAM_columns:
+                print('return 3 в getTableByURL_FinAM') # для отладки
+                return pandas.DataFrame() # заглушка
 
-    for table_FinAM_column in table_FinAM_columnS:
-        if table_FinAM[table_FinAM_column].dtype == 'object':  # Только строковые столбцы
-            table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace('RUR', '', regex=False).str.strip()
-            table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace(',', '.')
-            table_FinAM[table_FinAM_column] = pandas.to_numeric(table_FinAM[table_FinAM_column], errors='ignore')
+        for table_FinAM_column in table_FinAM_columnS:
+            if table_FinAM[table_FinAM_column].dtype == 'object': # только текстовые столбцы
+                table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace('RUR', '', regex=False).str.strip()
+                table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace(',', '.')
+                table_FinAM[table_FinAM_column] = pandas.to_numeric(table_FinAM[table_FinAM_column], errors='ignore')
 
-    # display('table_FinAM 2:', table_FinAM) # для отладки
+        # display('table_FinAM 3:', table_FinAM) # для отладки
 
-    for counter in range(len(table_FinAM_columnS)):
-        # print(table_FinAM_columnS[counter]) # для отладки
-        if table_FinAM_columnS[counter] == (          'Погашение',        'Размер (ден)'):
-            # print('Столбец найден') # для отладки
-            break
+    # <Обрезка лишних столбцов (которые могут быть правее (          'Погашение',        'Размер (ден)') и сток (которые состоят только из NaN>
+        for counter in range(len(table_FinAM_columnS)):
+            # print(table_FinAM_columnS[counter]) # для отладки
+            if table_FinAM_columnS[counter] == (          'Погашение',        'Размер (ден)'):
+                # print('Столбец найден') # для отладки
+                break
 
-    # print('counter:', counter) # для отладки
+        # print('counter:', counter) # для отладки
 
-    table_FinAM = table_FinAM[table_FinAM_columnS[:counter + 1]]
-    # display('table_FinAM 3:', table_FinAM) # для отладки
+        table_FinAM = table_FinAM[table_FinAM_columnS[:counter + 1]]
+        # display('table_FinAM 4:', table_FinAM) # для отладки
 
-    table_FinAM = table_FinAM.iloc[:table_FinAM[table_FinAM.isna().all(axis=1)].index[0], :]
-    # display('table_FinAM 4:', table_FinAM) # для отладки
+        table_FinAM = table_FinAM.iloc[:table_FinAM[table_FinAM.isna().all(axis=1)].index[0], :]
+        # display('table_FinAM 5:', table_FinAM) # для отладки
 
-    if sum(table_FinAM[(   'Купоны',        'Ставка')].notna()) > 0:
-        table_FinAM[(   'Купоны',        'Ставка')] = table_FinAM[(   'Купоны',        'Ставка')].str.replace('%', '').astype(float)
+    # </Обрезка лишних столбцов (которые могут быть правее (          'Погашение',        'Размер (ден)') и сток (которые состоят только из NaN>
+
+        if sum(table_FinAM[(   'Купоны',        'Ставка')].notna()) > 0: # если есть непустые ячейки в столбце 'Ставка'
+            table_FinAM[(   'Купоны',        'Ставка')] = table_FinAM[(   'Купоны',        'Ставка')].str.replace('%', '').astype(float)
 
     # Преобразовать столбец "Дата" в формат datetime
     table_FinAM[(             'Купоны',                'Дата')] =\
@@ -735,7 +746,7 @@ def getTableByURL_TB(driver_TB, isin, pause):
         try:
 
             # Проскролить в самый низ страницы
-    
+
             try: # подождать, пока страница прогрузится
                 WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
                     (By.XPATH, f"//span[@data-qa-file='SecurityHeader' and contains(text(), '{isin}')]")
@@ -745,7 +756,7 @@ def getTableByURL_TB(driver_TB, isin, pause):
                 WebDriverWait(driver_TB, pause).until(expected_conditions.presence_of_element_located(
                     (By.XPATH, f"//p[@data-qa-file='MobilePageHeader' and contains(text(), '{isin}')]")
                     )) # вертикальный формат
-    
+
             driver_TB.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(pause) # проскролить
 
@@ -825,47 +836,47 @@ def spreadExtract(textFetched):
 
     if not textFetched or not isinstance(textFetched, str):
         return 0
-    
+
     text = textFetched
-    
+
     # Исключить ложные срабатывания
     if re.search(r'ставка\s+[\d,]+\s*%', text, re.IGNORECASE) and not re.search(r'(спред|преми|надбавк|margin|б\.п\.|процентных\s+пункт)', text, re.IGNORECASE):
         return 0
-    
+
     patterns = [
         # 1. Базисные пункты: 100 б.п. = 1.00%
         (r'(\d+)\s+б\.п\.', 'bp'),
-        
+
         # 2. Процентные пункты: 1,30 п.п. = 1.30%
         (r'(\d+[,.]?\d*)\s+процентных\s+пункт[а-я]*', 'pp'),
-        
+
         # 3. Процентные пункты (сокращение)
         (r'(\d+[,.]?\d*)\s+п\.п\.', 'pp'),
-        
+
         # 4. RUONIA + X,XX%
         (r'RUONIA\s*\+\s*(\d+[,.]?\d*)\s*%', 'percent'),
-        
+
         # 5. RUONIA + X,XX (без %)
         (r'RUONIA\s*\+\s*(\d+[,.]?\d*)', 'percent'),
-        
+
         # 6. Ключевая ставка + X,XX%
         (r'ключев[а-я]+\s+ставк[а-я]+\s*\+\s*(\d+[,.]?\d*)\s*%', 'percent'),
-        
+
         # 7. Ключевая ставка + X,XX (без %)
         (r'ключев[а-я]+\s+ставк[а-я]+\s*\+\s*(\d+[,.]?\d*)', 'percent'),
-        
+
         # 8. Премия X,XX%
         (r'преми[яю]\s+(\d+[,.]?\d*)\s*%', 'percent'),
-        
+
         # 9. Исходный паттерн
         (r'(Преми.+|Спред.+|Надбавк.+|Margin.+)', 'fragment'),
     ]
-    
+
     for pattern, p_type in patterns:
         matches = re.findall(pattern, text, re.IGNORECASE)
         if matches:
             match = matches[0]
-            
+
             if isinstance(match, str):
                 numbers = re.findall(r'(\d+[,.]?\d*)', match)
                 if numbers:
@@ -874,15 +885,15 @@ def spreadExtract(textFetched):
                         value = float(value_str)
                         if 'месяц' in match.lower() and value == 3:
                             return 0
-                        
+
                         # Базисные пункты: 100 б.п. = 1.00%
                         if p_type == 'bp' or 'б.п.' in match.lower():
                             return value / 100
-                        
+
                         # Процентные пункты: 1,30 п.п. = 1.30% (НЕ ДЕЛИМ!)
                         if p_type == 'pp' or 'процентных пункт' in match.lower():
                             return value
-                        
+
                         return value
                     except ValueError:
                         continue
@@ -890,24 +901,24 @@ def spreadExtract(textFetched):
                 value_str = str(match).replace(',', '.')
                 try:
                     value = float(value_str)
-                    
+
                     # Базисные пункты: 100 б.п. = 1.00%
                     if p_type == 'bp':
                         return value / 100
-                    
+
                     # Процентные пункты: 1,30 п.п. = 1.30% (НЕ ДЕЛИМ!)
                     if p_type == 'pp':
                         return value
-                    
+
                     return value
                 except ValueError:
                     continue
-    
+
     return 0
 
 def tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB):
     if (len(table_FinAM) > 0) & (len(table_TB) > 0):
-    
+
         for table_TB_row in table_TB[table_TB['Ставка'].notna()].index:
             table_TB_data = table_TB.loc[table_TB_row, 'Дата']
             table_TB_rate = table_TB.loc[table_TB_row, 'Ставка']
