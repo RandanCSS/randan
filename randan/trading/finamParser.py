@@ -113,50 +113,51 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
             goS = False
             return bondsFinAM, bondsFinAM_row, driver, goS
 
-        if (len(table_FinAM) > 0) & (len(table_TB) > 0):
+        tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB)
+        # if (len(table_FinAM) > 0) & (len(table_TB) > 0):
         
-            for table_TB_row in table_TB[table_TB['Ставка'].notna()].index:
-                table_TB_data = table_TB.loc[table_TB_row, 'Дата']
-                table_TB_rate = table_TB.loc[table_TB_row, 'Ставка']
+        #     for table_TB_row in table_TB[table_TB['Ставка'].notna()].index:
+        #         table_TB_data = table_TB.loc[table_TB_row, 'Дата']
+        #         table_TB_rate = table_TB.loc[table_TB_row, 'Ставка']
 
-                table_FinAM_index = table_FinAM[table_FinAM[(   'Купоны',          'Дата')] == table_TB_data].index
-                if len(table_FinAM_index) > 0:
-                    if pandas.isna(table_FinAM.loc[table_FinAM_index[0], (   'Купоны',        'Ставка')]):
-                        table_FinAM.loc[table_FinAM_index[0], (   'Купоны',        'Ставка')] = table_TB_rate
+        #         table_FinAM_index = table_FinAM[table_FinAM[(   'Купоны',          'Дата')] == table_TB_data].index
+        #         if len(table_FinAM_index) > 0:
+        #             if pandas.isna(table_FinAM.loc[table_FinAM_index[0], (   'Купоны',        'Ставка')]):
+        #                 table_FinAM.loc[table_FinAM_index[0], (   'Купоны',        'Ставка')] = table_TB_rate
 
-            # display('table_FinAM:', table_FinAM) # для отладки
+        #     # display('table_FinAM:', table_FinAM) # для отладки
 
-        # date_call = max(date_call_FinAM, date_call_TB).strftime("%Y%m%d")
+        # # date_call = max(date_call_FinAM, date_call_TB).strftime("%Y%m%d")
 
-        if len(table_FinAM) > 0:
-            if sum(table_FinAM[(   'Купоны',        'Ставка')].notna()) > 0:
-                date_call_FinAM = table_FinAM.loc[
-                    table_FinAM[table_FinAM[(   'Купоны',        'Ставка')].notna()].index[-1],
-                    (   'Купоны',          'Дата')
-                    ].date().strftime("%Y%m%d")
+        # if len(table_FinAM) > 0:
+        #     if sum(table_FinAM[(   'Купоны',        'Ставка')].notna()) > 0:
+        #         date_call_FinAM = table_FinAM.loc[
+        #             table_FinAM[table_FinAM[(   'Купоны',        'Ставка')].notna()].index[-1],
+        #             (   'Купоны',          'Дата')
+        #             ].date().strftime("%Y%m%d")
 
-                # print('date_call_FinAM:', date_call_FinAM) # для отладки
+        #         # print('date_call_FinAM:', date_call_FinAM) # для отладки
 
-            else: date_call_FinAM = 'No rate'
+        #     else: date_call_FinAM = 'No rate'
 
-            if os.path.exists(folder + 'Таблицы FinAM') != True: os.makedirs(folder + 'Таблицы FinAM')
-            table_FinAM.to_excel(folder + 'Таблицы FinAM' + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
+        #     if os.path.exists(folder + 'Таблицы FinAM') != True: os.makedirs(folder + 'Таблицы FinAM')
+        #     table_FinAM.to_excel(folder + 'Таблицы FinAM' + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
 
-            # table_FinAM = pandas.read_excel(folder + 'Таблицы FinAM' + slash + '???.xlsx', header=[0, 1], index_col=0)
-                # заготовка
+        #     # table_FinAM = pandas.read_excel(folder + 'Таблицы FinAM' + slash + '???.xlsx', header=[0, 1], index_col=0)
+        #         # заготовка
 
-        if len(table_TB) > 0:
+        # if len(table_TB) > 0:
 
-            if sum(table_TB['Ставка'].isna()) > 0: # если есть даты с неизвестной ставкой, берётся первая из таких дат
-                date_call_TB = table_TB.loc[table_TB[table_TB['Ставка'].isna()].index[0], 'Дата'].date().strftime("%Y%m%d")
+        #     if sum(table_TB['Ставка'].isna()) > 0: # если есть даты с неизвестной ставкой, берётся первая из таких дат
+        #         date_call_TB = table_TB.loc[table_TB[table_TB['Ставка'].isna()].index[0], 'Дата'].date().strftime("%Y%m%d")
 
-            else: # если нет дат с неизвестной ставкой, берётся последняя из дат
-                date_call_TB = table_TB.loc[table_TB.index[-1], 'Дата'].date().strftime("%Y%m%d")
+        #     else: # если нет дат с неизвестной ставкой, берётся последняя из дат
+        #         date_call_TB = table_TB.loc[table_TB.index[-1], 'Дата'].date().strftime("%Y%m%d")
 
-            # print('date_call_TB:', date_call_TB) # для отладки
+        #     # print('date_call_TB:', date_call_TB) # для отладки
 
-            if os.path.exists(folder + 'Таблицы TB') != True: os.makedirs(folder + 'Таблицы TB')
-            table_TB.to_excel(folder + 'Таблицы TB' + slash + f'{date_call_TB + ' ' if date_call_TB else ''}{isin}.xlsx')
+        #     if os.path.exists(folder + 'Таблицы TB') != True: os.makedirs(folder + 'Таблицы TB')
+        #     table_TB.to_excel(folder + 'Таблицы TB' + slash + f'{date_call_TB + ' ' if date_call_TB else ''}{isin}.xlsx')
 
         bondsFinAM_row += 1 # у некоторых облигаций без ISIN не будут заполнены и поля из описания платежей;
             # такие облигации нужны в базе, чтобы повторно не обращаться к ним
@@ -903,3 +904,50 @@ def spreadExtract(textFetched):
                     continue
     
     return 0
+
+def tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB):
+    if (len(table_FinAM) > 0) & (len(table_TB) > 0):
+    
+        for table_TB_row in table_TB[table_TB['Ставка'].notna()].index:
+            table_TB_data = table_TB.loc[table_TB_row, 'Дата']
+            table_TB_rate = table_TB.loc[table_TB_row, 'Ставка']
+
+            table_FinAM_index = table_FinAM[table_FinAM[(   'Купоны',          'Дата')] == table_TB_data].index
+            if len(table_FinAM_index) > 0:
+                if pandas.isna(table_FinAM.loc[table_FinAM_index[0], (   'Купоны',        'Ставка')]):
+                    table_FinAM.loc[table_FinAM_index[0], (   'Купоны',        'Ставка')] = table_TB_rate
+
+        # display('table_FinAM:', table_FinAM) # для отладки
+
+    # date_call = max(date_call_FinAM, date_call_TB).strftime("%Y%m%d") # альтернатива
+
+    if len(table_FinAM) > 0:
+        if sum(table_FinAM[(   'Купоны',        'Ставка')].notna()) > 0:
+
+            date_call_FinAM = table_FinAM.loc[
+                table_FinAM[table_FinAM[(   'Купоны',        'Ставка')].notna()].index[-1],
+                (   'Купоны',          'Дата')
+                ].date().strftime("%Y%m%d")
+
+            # print('date_call_FinAM:', date_call_FinAM) # для отладки
+
+        else: date_call_FinAM = 'No rate'
+
+        if os.path.exists(folder + 'Таблицы FinAM') != True: os.makedirs(folder + 'Таблицы FinAM')
+        table_FinAM.to_excel(folder + 'Таблицы FinAM' + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
+
+        # table_FinAM = pandas.read_excel(folder + 'Таблицы FinAM' + slash + '???.xlsx', header=[0, 1], index_col=0)
+            # заготовка
+
+    if len(table_TB) > 0:
+
+        if sum(table_TB['Ставка'].isna()) > 0: # если есть даты с неизвестной ставкой, берётся первая из таких дат
+            date_call_TB = table_TB.loc[table_TB[table_TB['Ставка'].isna()].index[0], 'Дата'].date().strftime("%Y%m%d")
+
+        else: # если нет дат с неизвестной ставкой, берётся последняя из дат
+            date_call_TB = table_TB.loc[table_TB.index[-1], 'Дата'].date().strftime("%Y%m%d")
+
+        # print('date_call_TB:', date_call_TB) # для отладки
+
+        if os.path.exists(folder + 'Таблицы TB') != True: os.makedirs(folder + 'Таблицы TB')
+        table_TB.to_excel(folder + 'Таблицы TB' + slash + f'{date_call_TB + ' ' if date_call_TB else ''}{isin}.xlsx')
