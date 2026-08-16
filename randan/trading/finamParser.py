@@ -789,7 +789,7 @@ def getTableByURL_TB(driver_TB, isin, pause):
                 # Очистка от лишних символов
                 date_text = date_text.replace('\nБлижайшая выплата', '').strip()
                 coupon_text = coupon_text.replace('₽', '').replace(' ', '').replace('\n', '').strip()
-                rate_text = rate_text.replace('%', '').strip()
+                rate_text = rate_text.replace(',', '.').replace('%', '').strip()
 
                 # Добавляем данные в список
                 couponS_data.append({
