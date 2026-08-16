@@ -670,7 +670,8 @@ def getTableByURL_FinAM(date_maturity, driver, isin, pause):
     except TypeError:
         pattern_1 = r'Дисконтные\s*(бескупонные\s*)?облигации'
         pattern_2 = 'Выплата купонного и дополнительного доходов не предусмотрена'
-        if re.search(pattern_1, table_html, re.IGNORECASE) or re.search(pattern_2, table_html, re.IGNORECASE):
+        pattern_3 = 'Доходом по облигациям является дисконт'
+        if re.search(pattern_1, table_html, re.IGNORECASE) or re.search(pattern_2, table_html, re.IGNORECASE) or re.search(pattern_3, table_html, re.IGNORECASE):
             # для дисконтной бескупонной облигации датафрейм рисуется с нуля
 
         # if 'Дисконтные бескупонные облигации' in table_html: # для дисконтной бескупонной облигации датафрейм рисутеся с нуля
