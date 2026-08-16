@@ -637,10 +637,10 @@ def getTableByURL_FinAM(date_maturity, driver, isin, pause):
             )
 
         table_FinAM_columnS = table_FinAM.columns
-        # print('table_FinAM_columns:', table_FinAM_columns) # для отладки
+        # print('table_FinAM_columnS:', table_FinAM_columnS) # для отладки
 
         for table_FinAM_column in columnS_target:
-            if table_FinAM_column not in table_FinAM_columns:
+            if table_FinAM_column not in table_FinAM_columnS:
                 print('return 3 в getTableByURL_FinAM') # для отладки
                 return pandas.DataFrame() # заглушка
 
