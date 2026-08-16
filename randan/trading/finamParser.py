@@ -613,8 +613,11 @@ def getTableByURL_FinAM(date_maturity, driver, isin, pause):
         ]
 
     table_html = table_element.get_attribute('outerHTML')
-    pattern = r'Дисконтные\s*(бескупонные\s*)?облигации'
-    if re.search(pattern, table_html): # для дисконтной бескупонной облигации датафрейм рисутеся с нуля
+    pattern_1 = r'Дисконтные\s*(бескупонные\s*)?облигации'
+    pattern_2 = 'Выплата купонного и дополнительного доходов не предусмотрена'
+    if re.search(pattern_1, table_html, re.IGNORECASE) or re.search(pattern_2, table_html, re.IGNORECASE):
+        # для дисконтной бескупонной облигации датафрейм рисуется с нуля
+
     # if 'Дисконтные бескупонные облигации' in table_html: # для дисконтной бескупонной облигации датафрейм рисутеся с нуля
         table_FinAM = pandas.DataFrame(columns=pandas.MultiIndex.from_tuples(columnS_target),
                                        data=[[1, date_maturity, 0, 0, 0, 100, None]])
