@@ -945,10 +945,11 @@ def tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB):
 
         else: date_call_FinAM = 'No rate'
 
-        if os.path.exists(folder + 'Таблицы FinAM') != True: os.makedirs(folder + 'Таблицы FinAM')
-        table_FinAM.to_excel(folder + 'Таблицы FinAM' + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
+        path_1 = folder + 'Таблицы FinAM'
+        if os.path.exists(path_1) != True: os.makedirs(path_1)
+        table_FinAM.to_excel(path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
 
-        # table_FinAM = pandas.read_excel(folder + 'Таблицы FinAM' + slash + '???.xlsx', header=[0, 1], index_col=0)
+        # table_FinAM = pandas.read_excel(path_1 + slash + '???.xlsx', header=[0, 1], index_col=0)
             # заготовка
 
     if len(table_TB) > 0:
@@ -961,5 +962,6 @@ def tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB):
 
         # print('date_call_TB:', date_call_TB) # для отладки
 
-        if os.path.exists(folder + 'Таблицы TB') != True: os.makedirs(folder + 'Таблицы TB')
-        table_TB.to_excel(folder + 'Таблицы TB' + slash + f'{date_call_TB + ' ' if date_call_TB else ''}{isin}.xlsx')
+        path_2 = folder + 'Таблицы TB'
+        if os.path.exists(path_2) != True: os.makedirs(path_2)
+        table_TB.to_excel(path_2 + slash + f'{date_call_TB + ' ' if date_call_TB else ''}{isin}.xlsx')
