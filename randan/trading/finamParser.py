@@ -593,7 +593,6 @@ def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_t
     return bondsFinAM
 
 def getTableByURL_FinAM(date_maturity, driver, isin, pause):
-    date_maturity = datetime.strptime(date_maturity, '%Y-%m-%d').strftime('%d.%m.%Y')
     table_FinAM = pandas.DataFrame() # заготовка
 
     # Подождать загрузку таблицы (любой элемент с классом "light")
@@ -675,6 +674,7 @@ def getTableByURL_FinAM(date_maturity, driver, isin, pause):
             # для дисконтной бескупонной облигации датафрейм рисуется с нуля
 
         # if 'Дисконтные бескупонные облигации' in table_html: # для дисконтной бескупонной облигации датафрейм рисутеся с нуля
+            date_maturity = datetime.strptime(date_maturity, '%Y-%m-%d').strftime('%d.%m.%Y')
             table_FinAM = pandas.DataFrame(columns=pandas.MultiIndex.from_tuples(columnS_target),
                                            data=[[1, date_maturity, 0, 0, 0, 100, None]])
 
