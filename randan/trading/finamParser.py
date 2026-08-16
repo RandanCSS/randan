@@ -593,6 +593,7 @@ def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_t
     return bondsFinAM
 
 def getTableByURL_FinAM(date_maturity, driver, isin, pause):
+    date_maturity = datetime.strptime(date_maturity, '%Y-%m-%d').strftime('%Y-%m-%d')
     table_FinAM = pandas.DataFrame() # заготовка
 
     # Подождать загрузку таблицы (любой элемент с классом "light")
