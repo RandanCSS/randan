@@ -613,18 +613,7 @@ def getTableByURL_FinAM(date_maturity, driver, isin, pause):
         ]
 
     table_html = table_element.get_attribute('outerHTML')
-    pattern_1 = r'Дисконтные\s*(бескупонные\s*)?облигации'
-    pattern_2 = 'Выплата купонного и дополнительного доходов не предусмотрена'
-    if re.search(pattern_1, table_html, re.IGNORECASE) or re.search(pattern_2, table_html, re.IGNORECASE):
-        # для дисконтной бескупонной облигации датафрейм рисуется с нуля
-
-    # if 'Дисконтные бескупонные облигации' in table_html: # для дисконтной бескупонной облигации датафрейм рисутеся с нуля
-        table_FinAM = pandas.DataFrame(columns=pandas.MultiIndex.from_tuples(columnS_target),
-                                       data=[[1, date_maturity, 0, 0, 0, 100, None]])
-
-        # display('table_FinAM 1:', table_FinAM) # для отладки
-
-    else:
+    try:
         # Парсить посредством pandas с отключением преобразования чисел
         tableS_table_FinAM = pandas.read_html(StringIO(table_html), decimal=',', thousands=None)
 
@@ -670,13 +659,28 @@ def getTableByURL_FinAM(date_maturity, driver, isin, pause):
         table_FinAM = table_FinAM[table_FinAM_columnS[:counter + 1]]
         # display('table_FinAM 4:', table_FinAM) # для отладки
 
-        table_FinAM = table_FinAM.iloc[:table_FinAM[table_FinAM.isna().all(axis=1)].index[0], :]
-        # display('table_FinAM 5:', table_FinAM) # для отладки
+        if sum(table_FinAM.isna().all(axis=1)) > 0:
+            table_FinAM = table_FinAM.iloc[:table_FinAM[table_FinAM.isna().all(axis=1)].index[0], :]
+            # display('table_FinAM 5:', table_FinAM) # для отладки
 
     # </Обрезка лишних столбцов (которые могут быть правее (          'Погашение',        'Размер (ден)') и сток (которые состоят только из NaN>
 
         if sum(table_FinAM[(   'Купоны',        'Ставка')].notna()) > 0: # если есть непустые ячейки в столбце 'Ставка'
             table_FinAM[(   'Купоны',        'Ставка')] = table_FinAM[(   'Купоны',        'Ставка')].str.replace('%', '').astype(float)
+
+    except TypeError:
+        pattern_1 = r'Дисконтные\s*(бескупонные\s*)?облигации'
+        pattern_2 = 'Выплата купонного и дополнительного доходов не предусмотрена'
+        if re.search(pattern_1, table_html, re.IGNORECASE) or re.search(pattern_2, table_html, re.IGNORECASE):
+            # для дисконтной бескупонной облигации датафрейм рисуется с нуля
+
+        # if 'Дисконтные бескупонные облигации' in table_html: # для дисконтной бескупонной облигации датафрейм рисутеся с нуля
+            table_FinAM = pandas.DataFrame(columns=pandas.MultiIndex.from_tuples(columnS_target),
+                                           data=[[1, date_maturity, 0, 0, 0, 100, None]])
+
+            # display('table_FinAM 1:', table_FinAM) # для отладки
+
+        else: return pandas.DataFrame() # заглушка
 
     # Преобразовать столбец "Дата" в формат datetime
     table_FinAM[(             'Купоны',                'Дата')] =\
