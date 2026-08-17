@@ -23,6 +23,7 @@ for attempt in range(1, 4):
         from randan.trading import finamParser # авторский модуль для
                 # (а) упрощения выгрузки данных с сайта finam.ru и их парсинга
 
+        from selenium.webdriver.common.by import By # для поиска элементов HTML-кода
         from tqdm import tqdm
         import os, pandas, warnings
         break # выход из цикла for attempt in range(3)
