@@ -45,8 +45,9 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
-# 1. Вспомогательные авторские функции для..
+version_main = 151
 
+# 1. Вспомогательные авторские функции для..
 # .. расчёта доходностей облигации (бескупонной, без реинвестирования и с реинвестированием -- по формулам простого и сложного процентов)
 def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB):
     bond_df = bond_df_in.copy()
@@ -279,7 +280,7 @@ def currencyEffectProcessor(bondS_in):
     exchangesRaw = exchangesRaw[['SHORTNAME', 'LAST', 'SETTLEPRICE']]
     exchangesRaw.columns = ['Unnamed: 0', 'Цена послед.', 'Цена закр.']
     # display(exchangesRaw) # для отладки
-    
+
     currencieS = list(bondS['FACEUNIT'].unique()) # валюта номинала
     print('currencieS:', currencieS) # для отладки
 
@@ -348,8 +349,8 @@ def bondsFeaturesProcessor(bondsIn,
 
     returnDfs : bool -- в случае True функция возвращает итоговые датафрейм bondS
     """
-        
-# 1.0 Настройки
+
+# 2.0 Настройки
     bondS = bondsIn.copy()
     bondS = bondS.drop_duplicates('ISIN', keep='last', ignore_index=True)
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
@@ -359,7 +360,7 @@ def bondsFeaturesProcessor(bondsIn,
 
     warnings.filterwarnings("ignore")
 
-# 1.1 Добавить характеристики облигаций из БД МосБиржи
+# 2.1 Добавить характеристики облигаций из БД МосБиржи
     boardS, columnsDescriptionS, securitieS = getMoExData.getMoExData(market='bonds', returnDfs=True)
     bondS = bondS.merge(securitieS, how='left', on='ISIN', suffixes=('_drop', '')) # дропнуть старые столбцы, оставить новые
     bondS = bondS[[column for column in bondS.columns if not column.endswith('_drop')]]
@@ -371,12 +372,12 @@ def bondsFeaturesProcessor(bondsIn,
             # теперь в bondS у каждой облигации указан эмитент с названием, соотнесённым со Словарём эмитентов
                 # (все эти эмитенты представлены в issuerS)
 
-# 1.2 Импорт словарей (актуального и прошлого) эмитентов с рейтингом из Акуальные эмитенты.xlsx в issuerS_withActualRating
+# 2.2 Импорт словарей (актуального и прошлого) эмитентов с рейтингом из Акуальные эмитенты.xlsx в issuerS_withActualRating
     # print('folder:', folder) # для отладки
     if os.path.exists(folder + 'Замеры рейтингов') != True:
         print('Найдите и запустите скрипт bondsRatingS')
         issuerS_withActualRating = pandas.DataFrame()
-        
+
     fileUptodateName_0 = files2df.getFileUptodateName('_Акуальные эмитенты', None, folder + 'Замеры рейтингов')
     # print('fileUptodateName_0:', fileUptodateName_0) # для отладки
 
@@ -482,7 +483,7 @@ def bondsFeaturesProcessor(bondsIn,
 
 #     bondS = pandas.concat([bondS_unsubordinated, bondS_subordinated])
 
-# 1.4 Фильтры по датам
+# 2.2 Фильтры по датам
     for column in ['MATDATE', 'NEXTCOUPON']:
         bondS = bondS[bondS[column].notna()]
         bondS.loc[bondS[column] == '0000-00-00', column] =\
@@ -500,7 +501,7 @@ def bondsFeaturesProcessor(bondsIn,
     bondS['До купона'] = bondS['До купона'].str.split(' ').str[0]
     bondS['До купона'] = bondS['До купона'].astype(int)
     # display(bondS) # для отладки
-    
+
     # Сколько дней до возможности погасить?
     bondS_offer = bondS[bondS['BUYBACKDATE'] != '0000-00-00'] # облигации С офертой
     offerS = bondS_offer.index
@@ -522,7 +523,7 @@ def bondsFeaturesProcessor(bondsIn,
     # Облигации БЕЗ оферты
     bondS_other = bondS.drop(offerS)
     # display(bondS_other) # для отладки
-    
+
     # До погашения
     # Вычесть из даты погашения след.день
     bondS_other['До возможности погасить'] = (bondS_other['MATDATE'].astype(str) + '--' + bondS_other['SETTLEDATE'].astype(str)).apply(lambda text:\
@@ -535,11 +536,11 @@ def bondsFeaturesProcessor(bondsIn,
     bondS_other['До возможности погасить'] = bondS_other['До возможности погасить'].astype(int)
     bondS_other['Оферта'] = 'Нет'
     # display(bondS_other) # для отладки
-    
+
     bondS = pandas.concat([bondS_offer, bondS_other])
     # display(bondS) # для отладки
 
-# 1.5 Расчёт эффекта валютных курсов для иновалютных облигаций
+# 2.3 Расчёт эффекта валютных курсов для иновалютных облигаций
     bondS = currencyEffectProcessor(bondS)
 
     # for column in ['ACCRUEDINT', 'COUPONPERCENT', 'FACEVALUE', 'PRICE']:
@@ -550,16 +551,16 @@ def bondsFeaturesProcessor(bondsIn,
     # exchangesRaw = exchangesRaw[['SHORTNAME', 'LAST', 'SETTLEPRICE']]
     # exchangesRaw.columns = ['Unnamed: 0', 'Цена послед.', 'Цена закр.']
     # # display(exchangesRaw) # для отладки
-    
+
     # # Из QUIK
     # # exchangesRaw = pandas(r'C:\Users\Alexey\Dropbox\QUIK_УралСиб_Driver\Текущие_торги.xlsx', usecols='A, D, F')
     # # display(exchangesRaw) # для отладки
-    
+
     # currencieS = list(bondS['FACEUNIT'].unique()) # валюта номинала
     # print('currencieS:', currencieS) # для отладки
     # currencieS.remove('SUR')
     # exchangeS = pandas.DataFrame()
-    
+
     # for currency in currencieS:
     # # for currency in currencieS[0:1]: # для отладки
     #     exchangesAdditional = exchangesRaw[exchangesRaw['Unnamed: 0'].str.contains(currency, case=False)]
@@ -588,17 +589,17 @@ def bondsFeaturesProcessor(bondsIn,
 
     # for currency in currencieS:
     #     currencyExchangeValue = exchangeS.loc[exchangeS['Валюта'] == currency, 'Цена послед.'][exchangeS[exchangeS['Валюта'] == currency].index[0]]
-    #     # print('currencyExchangeValue:', currencyExchangeValue) # для отладки        
-    #     # print('type(currencyExchangeValue):', type(currencyExchangeValue)) # для отладки        
+    #     # print('currencyExchangeValue:', currencyExchangeValue) # для отладки
+    #     # print('type(currencyExchangeValue):', type(currencyExchangeValue)) # для отладки
     #     bondS.loc[bondS['FACEUNIT'] == currency, 'FACEVALUE'] *= currencyExchangeValue
     #     bondS.loc[bondS['CURRENCYID'] == currency, 'ACCRUEDINT'] *= currencyExchangeValue # валюта расчётов
 
-# 1.6 Расчёт годовой доходности до оферты | погашения
+# 2.4 Расчёт годовой доходности до оферты | погашения
     driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
-    
+
     driver_CB = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
     driver_CB.get('https://cbr.ru/hd_base/KeyRate')
-    
+
     driver_TB = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
 
     for isin in tqdm(bondS['ISIN']):
@@ -606,10 +607,10 @@ def bondsFeaturesProcessor(bondsIn,
         print('\nisin:', isin) # для отладки
         bond_df = bondS[bondS['ISIN'] == isin]
         # display('bond_df:', bond_df) # для отладки
-    
+
         bond_df_index = bond_df.index[0]
         # print('bond_df_index:', bond_df_index) # для отладки
-    
+
         # print('folder:', folder) # для отладки
         path_1 = folder + 'Таблицы FinAM'
         if os.path.exists(path_1) != True:
@@ -619,24 +620,24 @@ def bondsFeaturesProcessor(bondsIn,
                 )
             input()
             sys.exit()
-    
+
         fileUptodateName = files2df.getFileUptodateName(isin, None, path_1)
         # print('fileUptodateName:', fileUptodateName) # для отладки
-    
+
     # <Сравнение текущего момента и рекомендованной повторной даты выгрузки информации с FinAM; при необходимости, новая выгрузка>
         if fileUptodateName: 
             date_call = fileUptodateName.split(' ')[0]
             date_call = datetime.strptime(date_call, '%Y%m%d') if date_call != 'No' else momentCurrent
                 # else momentCurrent -- заглушка; нужна для работы условия momentCurrent > date_call
-        
+
             # print('date_call:', date_call) # для отладки
-    
+
         else: date_call = momentCurrent - timedelta(days=2) # заглушка; нужна для работы условия momentCurrent > date_call
-    
+
         if momentCurrent > date_call: # если текущий момент оставил позади рекомендованную повторную дату выгрузки информации с FinAM
-    
+
             print('Требуется новая выгрузка с FinAM')
-    
+
             bondsFinAM = pandas.DataFrame(columns=[
                 'Эмитент',
                 'ISIN', 
@@ -647,7 +648,7 @@ def bondsFeaturesProcessor(bondsIn,
                 'SecName FinAM',
                 'REGNUMBER FinAM'
                 ])
-            
+
             bondsFinAM, counter, driver, driver_TB, goS = finamParser.finamParser(attemptsMax,
                                                                                   bondsFinAM,
                                                                                   bond_df,
@@ -658,16 +659,16 @@ def bondsFeaturesProcessor(bondsIn,
                                                                                   pause,
                                                                                   bond_df, # список ISIN или эмитентов
                                                                                   # новым эмитентам и рейтингам на этом этапе появиться неоткуда
-    
+
                                                                                   version_main)
-    
+
             bondsFinAM.loc[:, 'Момент обращения к FinAM'] = momentCurrent.strftime('%Y%m%d_%H%M')
             display('bondsFinAM:', bondsFinAM) # для отладки
-    
+
             display('bondsFinAM:', bondsFinAM) # для отладки
             bondsFinAM.to_excel(folder + 'Замеры рейтингов' + slash + momentCurrent.strftime('%Y%m%d_%H%M') + '_bondsFinAM.xlsx', index=False)
                 # на случай ошибки
-    
+
             # Следует мёрджить по ISIN , причём требуется не обновление данных, а дополнение, поэтому cellsLeftMerger
             bond_df = cellsLeftMerger.cellsLeftMerger(bondsFinAM[
                                                         ['Эмитент',
@@ -682,35 +683,35 @@ def bondsFeaturesProcessor(bondsIn,
                                                         ],
                                                       bond_df,
                                                       'ISIN') # следует мёрджить по ISIN
-    
+
             fileUptodateName = files2df.getFileUptodateName(isin, None, path_1)
             # print('fileUptodateName:', fileUptodateName) # для отладки
     # <\Сравнение текущего момента и рекомендованной повторной даты выгрузки информации с FinAM; при необходимости, новая выгрузка>
-    
+
         table_FinAM = pandas.read_excel(path_1 + slash + fileUptodateName, header=[0, 1], index_col=0)
         # display('table_FinAM:', table_FinAM) # для отладки
-    
+
         for table_FinAM_column in table_FinAM.columns: # на всякий случай, воспроизведение предобработки из finamParser.getTableByURL_FinAM
             if table_FinAM[table_FinAM_column].dtype == 'object': # только текстовые столбцы
                 table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace('RUR', '', regex=False).str.strip()
                 table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace(',', '.')
                 table_FinAM[table_FinAM_column] = pandas.to_numeric(table_FinAM[table_FinAM_column], errors='ignore')
-        
+
         if bond_df.loc[bond_df_index, 'BUYBACKDATE'] != '0000-00-00': # есть оферта
-            # print("bond_df.loc[bond_df_index, 'BUYBACKDATE'] != '0000-00-00'") # для отладки       
+            # print("bond_df.loc[bond_df_index, 'BUYBACKDATE'] != '0000-00-00'") # для отладки   
             date_final = bond_df.loc[bond_df_index, 'BUYBACKDATE']
-    
+
         elif bond_df.loc[bond_df_index, 'MATDATE'] != '0000-00-00': # есть конечная дата обращения
-            # print("bond_df.loc[bond_df_index, 'MATDATE'] != '0000-00-00'") # для отладки       
+            # print("bond_df.loc[bond_df_index, 'MATDATE'] != '0000-00-00'") # для отладки   
             date_final = bond_df.loc[bond_df_index, 'MATDATE']
-    
+
         else: # нет оферты и нет конечной даты обращения
-            # print('Нет оферты и нет конечной даты обращения') # для отладки       
+            # print('Нет оферты и нет конечной даты обращения') # для отладки   
             date_final = table_FinAM.loc[table_FinAM.index[-1], (             'Купоны',                'Дата')].strftime('%Y-%m-%d')
-    
+
         date_final = datetime.strptime(date_final, '%Y-%m-%d').date()
         print('date_final:', date_final) # для отладки
-    
+
         df_current = table_FinAM[table_FinAM[(             'Купоны',                'Дата')].dt.date >= momentCurrent.date()] # фильтр дата >= сегодняшней
         df_current = df_current[df_current[(             'Купоны',                'Дата')].dt.date <= date_final] # фильтр дата <= date_final
         df_current = df_current.sort_values((             'Купоны',                'Дата'))
@@ -718,28 +719,28 @@ def bondsFeaturesProcessor(bondsIn,
         df_current.columns = df_current.columns.droplevel(0) # MultiIndex -> обычные заголовки
         df_current = df_current.reset_index(drop=True)
         # display('df_current:', df_current) # для отладки
-    
+
         if len(df_current) > 0:
             bond_df, df_current = bondYieldCalculator(bond_df, bond_df_index, df_current, driver_CB)
             if sum(df_current['Ставка'].notna()) > 0:
                 date_call = df_current.loc[df_current[df_current['Ставка'].notna()].index[-1], 'Дата'].date().strftime('%Y%m%d')
                 print('date_call:', date_call) # для отладки
-    
+
             else: date_call = 'No rate'
-    
+
             path_2 = folder + 'Таблицы текущего периода'
             if os.path.exists(path_2) != True: os.makedirs(path_2)
             df_current.to_excel(path_2 + slash + f'{date_call + ' ' if date_call else ''}{isin}.xlsx')
-    
+
         else:
             bond_df.loc[bond_df_index, 'Не в обращении'] = 1
             path_3 = folder + 'Таблицы FinAM' + slash + 'Таблицы FinAM Архив'
             if os.path.exists(path_3) != True: os.makedirs(path_3)
             os.rename(path_1 + slash + fileUptodateName, path_3 + slash + fileUptodateName)
-    
+
         # Следует мёрджить по ISIN , причём требуется не обновление данных, а дополнение, поэтому cellsLeftMerger
         bondS = cellsLeftMerger.cellsLeftMerger(bond_df, bondS, 'ISIN') # следует мёрджить по ISIN
-    
+
     bondS.to_excel(folder + 'Замеры рейтингов' + slash + momentCurrent.strftime('%Y%m%d_%H%M') + '_bondS.xlsx')
 
 
@@ -747,7 +748,7 @@ def bondsFeaturesProcessor(bondsIn,
     # # Если купить примерно на 1000 единиц валюты, то придётся заплатить
     # bondS['Полная цена покупки'] = 1000 + 1000 / bondS['FACEVALUE'] * bondS['ACCRUEDINT']
     # bondS['Полная цена покупки'] = bondS['Полная цена покупки'].astype(float).round(2)
-    
+
     # # На 1000 единиц валюты к погашению будет начислен купоный доход
     # if 'Купон RB' in bondS.columns:
     #     bondS.loc[(bondS['COUPONPERCENT'].isna()) | (bondS['COUPONPERCENT'] == ''), 'Сводный купон'] =\
@@ -755,14 +756,14 @@ def bondsFeaturesProcessor(bondsIn,
 
     # bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'Сводный купон'] =\
     #     bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'COUPONPERCENT']
-    
+
     # bondS['Купоный доход к погашению'] = 1000 * bondS['Сводный купон'] / 36500 * bondS['До возможности погасить']
     # bondS['Купоный доход к погашению'] = bondS['Купоный доход к погашению'].astype(float).round(2)
-    
+
     # # Плюс 1000 единиц валюты изменятся к погашению в связи с приведением цены к номиналу
     # bondS['Бескупонная доходность к погашению'] = 1000 * (100 - bondS['PRICE']) / 100
     # bondS['Бескупонная доходность к погашению'] = bondS['Бескупонная доходность к погашению'].astype(float).round(2)
-    
+
     # # Годовая доходность к погашению = суммарный доход к полной цене покупки
     # bondS['Доходность годовых к погашению'] =\
     #     365 * (
@@ -784,7 +785,7 @@ def bondsFeaturesProcessor(bondsIn,
     bondS.loc[(bondS['COUPONPERCENT'].isna()) | (bondS['COUPONPERCENT'] == ''), 'Купон определён'] = 0
     bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'Купон определён'] = 1
     # display("bondS['Купон определён']:", bondS['Купон определён'].value_counts()) # для отладки
-    
+
     bondS['Специфика'] = bondS['FACEUNIT'].str[:2]
 
     for column in ['Сектор рынка', 'Амортизация FinAm' if 'Амортизация FinAm' in bondS.columns else 'Амортизация T', 'Купон определён']:
