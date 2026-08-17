@@ -66,7 +66,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
 
     # # Архитектура
     # # /html/body/div[2]/div[3]/div/table/tbody/tr/td[1]/div/div[1]/table/tbody/tr[7]/td[1]/span
-    # elementAnchor = driver.find_element(By.XPATH, "/html/body/div[2]/div[3]/div/table/tbody/tr/td[1][contains(., 'Номинальный объем:')]").text
+    # elementAnchor = driver.find_element(By.X, "/html/body/div[2]/div[3]/div/table/tbody/tr/td[1][contains(., 'Номинальный объем:')]").text
 
     goS, xPath = forSelenium.tryerSleeper(attemptsMax, [2, 5], driver, pause, ['/html/body/div[', ']/div[3]/div/table/tbody/tr/td[1]'])
     if goS == False:
@@ -645,7 +645,7 @@ def tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB):
 
         else: date_call_FinAM = 'No rate'
 
-        path_1 = folder + 'Таблицы FinAM'
+        path_1 = (folder + slash if folder != '' else '') + 'Таблицы FinAM'
         if os.path.exists(path_1) != True: os.makedirs(path_1)
         table_FinAM.to_excel(path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
 
@@ -662,7 +662,7 @@ def tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB):
 
         # print('date_call_TB:', date_call_TB) # для отладки
 
-        path_2 = folder + 'Таблицы TB'
+        path_2 = (folder + slash if folder != '' else '') + 'Таблицы TB'
         if os.path.exists(path_2) != True: os.makedirs(path_2)
         table_TB.to_excel(path_2 + slash + f'{date_call_TB + ' ' if date_call_TB else ''}{isin}.xlsx')
 
