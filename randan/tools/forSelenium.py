@@ -2,8 +2,8 @@
 # coding: utf-8
 
 '''
-A proprietary module for facilitating the use of selenium
-Авторский модуль для упрощения некоторых оперций в selenium
+A module for facilitating the use of selenium
+Модуль для упрощения некоторых оперций в selenium
 '''
 # import sys
 # sys.path.append(r"C:\Users\Alexey\Dropbox\Мои\RAnDan\myModules")
