@@ -569,6 +569,11 @@ def spreadExtract(textFetched):
     return 0
 
 def tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB):
+    # Блок, поскольку folder многократно используется внутри функции в формулах
+    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+    if folder == None: folder = ''
+    else: folder += slash
+
     if (len(table_FinAM) > 0) & (len(table_TB) > 0):
 
         for table_TB_row in table_TB[table_TB['Ставка'].notna()].index:
