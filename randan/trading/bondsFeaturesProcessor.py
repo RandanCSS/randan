@@ -330,7 +330,8 @@ def currencyEffectProcessor(bondS_in):
     return bondS
 
 # 2. Основная функция
-def bondsFeaturesProcessor(bondsIn,
+def bondsFeaturesProcessor(attemptsMax,
+                           bondsIn,
                            issuerS,
                            momentCurrent,
                            pause,
