@@ -358,8 +358,8 @@ def bondsFeaturesProcessor(attemptsMax,
 # 2.0 Настройки
     bondS = bondsIn.copy()
     bondS = bondS.drop_duplicates('ISIN', keep='last', ignore_index=True)
-    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
 
+    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     if folder == None: folder = ''
     else: folder += slash
 
