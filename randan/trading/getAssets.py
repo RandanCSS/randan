@@ -61,12 +61,16 @@ def boundColibrator(bound, column, df, softCondition, text):
 
 # 1.0.1 организации обработки отчётов каждого брокера за интересующий период
 def brokerReportsProcessor(broker, fileNameS, folder, period):
+    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+    if folder == None: folder = ''
+    else: folder += slash
+
     # print('fileNameS:', fileNameS) # для отладки
     assetS = pandas.DataFrame()
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     for fileName in fileNameS:
         # print('fileName:', fileName) # для отладки
-        assetS_additional = pandas.read_excel((folder + slash if folder != '' else '') + broker + slash + 'Отчёты' + slash + fileName, header=None)
+        assetS_additional = pandas.read_excel(folder + broker + slash + 'Отчёты' + slash + fileName, header=None)
         fileNameSpecification = fileName.replace('.xlsx', '').replace(str(period), '')
         # print('fileNameSpecification:', fileNameSpecification) # для отладки
         print(f"Распарсиваю отчёт брокера{'' if fileNameSpecification == '' else ' (' + fileNameSpecification + ')'}", broker, 'за', str(period)) #, end='\r'
@@ -104,11 +108,13 @@ def columnNameFinder(df, text):
 # 1.0.4 поиска в директориях брокеров отчётов за интересующий период
 def reportSearch(broker, folder, period):
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+    if folder == None: folder = ''
+    else: folder += slash
     
     fileNameS = []
     goC = True
     while goC:
-        for fileName in os.listdir((folder + slash if folder != '' else '') + broker + slash + 'Отчёты'):
+        for fileName in os.listdir(folder + broker + slash + 'Отчёты'):
             if str(period) in fileName:
                 # print(f"Нашёл файл '{fileName}'") # для оталдки
                 fileNameS.append(fileName)
