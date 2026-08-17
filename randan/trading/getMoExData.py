@@ -60,7 +60,7 @@ def pseudojson2df(headerS, index, url):
     # display('df:', df)
     return df
 
-# 2. Авторская функция исполнения скрипта
+# 2. Основная функция
 def getMoExData(
                 market='bonds',
                 folder=coLabFolder,
@@ -77,6 +77,7 @@ def getMoExData(
 
     returnDfs : bool -- в случае True функция возвращает итоговые датафреймы boardS, columnsDescriptionS и securitieS строго в такой последовательности
     """
+    # Блок, поскольку folder многократно используется внутри функции в формулах
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     if folder == None: folder = ''
     else: folder += slash
