@@ -9,6 +9,7 @@ from subprocess import check_call
 for attempt in range(1, 4):
     try:
         from datetime import date
+        from IPython.display import display
         from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
         from randan.trading import bondsFeaturesProcessor # авторский модуль для гармонизации и обработки характеристик облигаций
         import os, pandas, re, warnings
