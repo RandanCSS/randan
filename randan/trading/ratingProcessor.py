@@ -314,14 +314,15 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, version_main, subordinated=
                     # На всякий случай, например, обрыва связи
                     try:
                         bondS_withoutRating_processed, bondS_withoutRating_rowS, driver = getRatingFromMoEx(bondS_withoutRating.drop(bondS_withoutRating_rowS_processed),
-                                                                                    # чтобы после ошибки избежать повторного захода в уже обработанные записи датафрейма bondS_withoutRating
+                                                                                                                # чтобы после ошибки избежать повторного захода в уже обработанные записи датафрейма bondS_withoutRating
 
-                                                                                textTargetDict[textTarget],
-                                                                                driver,
-                                                                                identifier,
-                                                                                isin,
-                                                                                pause,
-                                                                                textTarget)
+                                                                                                            textTargetDict[textTarget],
+                                                                                                            driver,
+                                                                                                            identifier,
+                                                                                                            isin,
+                                                                                                            pause,
+                                                                                                            textTarget,
+                                                                                                            version_main)
 
                         bondS_withoutRating_rowS_processed.extend(bondS_withoutRating_rowS)
                         goC = False
