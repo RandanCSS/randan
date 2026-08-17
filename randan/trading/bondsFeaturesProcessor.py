@@ -112,7 +112,9 @@ def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, moment
 
     price = (bond_df['FACEVALUE'] * (bond_df['PRICE'] / 100))[bond_df_index] # остаточный номинал * роночную цену (в %)
         # остаточный номинал = обращающееся тело долга
-    df_current.loc[-1, 'Цена покупки'] = price + bond_df['ACCRUEDINT'][bond_df_index] # + НКД
+
+    price_dirty = price + bond_df['ACCRUEDINT'][bond_df_index] # + НКД
+    df_current.loc[-1, 'Цена покупки'] = price_dirty
     df_current['Цена покупки'] = df_current['Цена покупки'].astype(float).round(2)
     # display('df_current 3:', df_current) # для отладки
 
@@ -228,7 +230,7 @@ def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, moment
     income_redemption = df_current['Погашение в купонный период'].sum()
     print('income_redemption:', income_redemption) # для отладки
 
-    bond_df.loc[bond_df_index, 'Доходность бескупонная, годовых'] = 365 * ((income_redemption - price) / price) / period_total
+    bond_df.loc[bond_df_index, 'Доходность бескупонная, годовых'] = 365 * ((income_redemption - price_dirty) / price_dirty) / period_total
 
     print("bond_df.loc[bond_df_index, 'Доходность бескупонная, годовых']:",
           bond_df.loc[bond_df_index, 'Доходность бескупонная, годовых']) # для отладки
@@ -238,7 +240,7 @@ def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, moment
     print('income_noReinvestment:', income_noReinvestment) # для отладки
 
     bond_df.loc[bond_df_index, 'Доходность без реинвестирования, годовых'] =\
-        365 * ((income_noReinvestment - price) / price) / period_total
+        365 * ((income_noReinvestment - price_dirty) / price_dirty) / period_total
 
     print("bond_df.loc[bond_df_index, 'Доходность без реинвестирования, годовых']:",
           bond_df.loc[bond_df_index, 'Доходность без реинвестирования, годовых']) # для отладки
@@ -248,10 +250,10 @@ def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, moment
     print('income_Reinvestment:', income_Reinvestment) # для отладки
 
     bond_df.loc[bond_df_index, 'Доходность с реинвестированием, годовых, простой процент'] =\
-        365 * ((income_Reinvestment - price) / price) / period_total
+        365 * ((income_Reinvestment - price_dirty) / price_dirty) / period_total
 
     bond_df.loc[bond_df_index, 'Доходность с реинвестированием, годовых, сложный процент'] =\
-        (income_Reinvestment / price) ** (365 / period_total) - 1
+        (income_Reinvestment / price_dirty) ** (365 / period_total) - 1
 
     print("bond_df.loc[bond_df_index, 'Доходность с реинвестированием, годовых, простой процент']:",
           bond_df.loc[bond_df_index, 'Доходность с реинвестированием, годовых, простой процент']) # для отладки
