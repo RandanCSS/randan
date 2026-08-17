@@ -9,6 +9,7 @@ from subprocess import check_call
 for attempt in range(1, 4):
     try:
         from bs4 import BeautifulSoup
+        from IPython.display import display
         from tqdm import tqdm
         from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
         import os, pandas, re, requests, warnings
@@ -30,7 +31,6 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
                   )
-            break # выход из цикла for attempt in range(3)
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
