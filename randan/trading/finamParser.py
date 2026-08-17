@@ -1,8 +1,8 @@
 # coding: utf-8
 
 '''
-A proprietary module designed to facilitate the scraping and parsing of data from the finam.ru website
-Авторский модуль для упрощения выгрузки данных с сайта finam.ru и их парсинга
+A module designed to facilitate the scraping and parsing of data from the finam.ru website
+Модуль для упрощения выгрузки данных с сайта finam.ru и их парсинга
 '''
 # import sys
 # sys.path.append(r"C:\Users\Alexey\Dropbox\Мои\RAnDan\myModules")
