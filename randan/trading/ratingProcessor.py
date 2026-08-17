@@ -79,7 +79,8 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
                       identifier: str,
                       isin: str, 
                       pause: int,
-                      textTarget: str) -> pandas.DataFrame:
+                      textTarget: str,
+                      version_main: int) -> pandas.DataFrame:
 
     bondS = bondS_in.copy()
     bondS_rowS = []
