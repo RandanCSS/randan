@@ -802,7 +802,7 @@ def bondsFeaturesProcessor(attemptsMax,
     print('Компоненты специфики: валюта, сектор рынка, амортизация, определён ли купон')
     display(bondS['Специфика'].value_counts().sort_index())
 
-    driverCloser(driver)
-    driverCloser(driver_CB)
-    driverCloser(driver_TB)
+    forSelenium.driverCloser(driver)
+    forSelenium.driverCloser(driver_CB)
+    forSelenium.driverCloser(driver_TB)
     if returnDfs: return bondS, issuerS_withActualRating, issuerS_withActualRating_change
