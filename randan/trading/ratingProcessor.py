@@ -365,7 +365,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, version_main, subordinated=
     return bondS
 
 def timeoutExceptionProcesser(driver, isin, pause, version_main):
-    driverCloser(driver)
+    forSelenium.driverCloser(driver)
     for attempt in range(3):
         print('attempt:', attempt) # для отладки
 
@@ -393,7 +393,7 @@ def timeoutExceptionProcesser(driver, isin, pause, version_main):
         except Exception as excptn:
             print('Exception 1:', excptn)
             print(traceback.format_exc()) # показ точной строчки кода с ошибкой
-            driverCloser(driver)
+            forSelenium.driverCloser(driver)
 
     return driver
 
