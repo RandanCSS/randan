@@ -335,7 +335,7 @@ def bondsFeaturesProcessor(attemptsMax,
                            bondsIn,
                            driver,
                            driver_CB,
-                           driver_TB
+                           driver_TB,
                            issuerS,
                            momentCurrent,
                            pause,
