@@ -30,7 +30,6 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
                   )
-            break # выход из цикла for attempt in range(3)
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
@@ -139,7 +138,7 @@ def reportSearch(broker, path, period, slash):
 # .. поиска в таблице фрагментов, содержащих ключевой текст
 def sectionFinder(df, softCondition, text, textClosing): # textClosing -- текст, следующий за искомым подразделом; должен располагаться в том же столбце
     column = columnFinder(df, text)
-    print('column:', column) # для оталдки
+    # print('column:', column) # для оталдки
 
     boundSmaller = df[df[column].notna() & df[column].str.contains(text)].index if softCondition else df[df[column] == text].index
     # print('boundSmaller:', boundSmaller) # для оталдки
