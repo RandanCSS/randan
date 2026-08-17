@@ -9,6 +9,7 @@ from subprocess import check_call
 for attempt in range(1, 4):
     try:
         from datetime import date, datetime, timedelta
+        from IPython.display import display
 
         from randan.trading import getMoExData, issuerProcessor, ratingProcessor # авторские модули для
             # (а) выгрузки характеристик торгуемых на МосБирже облигаций
