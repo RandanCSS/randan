@@ -48,11 +48,6 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
-folder = coLabFolder
-slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-if folder == None: folder = ''
-else: folder += slash
-
 # 1. Вспомогательные функции для..
 # .. расчёта доходностей облигации (бескупонной, без реинвестирования и с реинвестированием -- по формулам простого и сложного процентов)
 def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, momentCurrent):
@@ -273,13 +268,13 @@ def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, moment
 def currencyEffectProcessor(bondS_in):
     bondS = bondS_in.copy()
 
-# Предобрабока столбцов с финансовой информацией в bondS
+    # Предобрабока столбцов с финансовой информацией в bondS
     for column in ['ACCRUEDINT', 'COUPONPERCENT', 'FACEVALUE', 'PRICE']:
 
         bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column] =\
             bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column].astype(float)
 
-# Умножение FACEVALUE и ACCRUEDINT для иновалютных облигаций на цену соответствующей валюты в рублях
+# <Умножение FACEVALUE и ACCRUEDINT для иновалютных облигаций на цену соответствующей валюты в рублях>
 
     # Импорт курсов инвалют
     boardS, columnsDescriptionS, exchangesRaw = getMoExData.getMoExData(market='forts', returnDfs=True)
@@ -333,6 +328,7 @@ def currencyEffectProcessor(bondS_in):
         bondS.loc[bondS['CURRENCYID'] == currency, 'ACCRUEDINT'] *= currencyExchangeValue # 'CURRENCYID' -- валюта расчётов
 
     # display(bondS) # для отладки
+# <\Умножение FACEVALUE и ACCRUEDINT для иновалютных облигаций на цену соответствующей валюты в рублях>
 
     return bondS
 
