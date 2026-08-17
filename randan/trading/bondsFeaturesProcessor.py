@@ -265,7 +265,7 @@ def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, moment
     return bond_df, df_current
 
 # .. расчёта эффекта валютных курсов для иновалютных облигаций
-def currencyEffectProcessor(bondS_in):
+def currencyEffectProcessor(bondS_in, currencieS):
     bondS = bondS_in.copy()
 
 # <Умножение FACEVALUE и ACCRUEDINT для иновалютных облигаций на цену соответствующей валюты в рублях>
@@ -551,7 +551,7 @@ def bondsFeaturesProcessor(attemptsMax,
     print('currencieS:', currencieS) # для отладки
 
     currencieS.remove('SUR')
-    if len(currencieS) > 0: bondS = currencyEffectProcessor(bondS)
+    if len(currencieS) > 0: bondS = currencyEffectProcessor(bondS, currencieS)
 
     # for column in ['ACCRUEDINT', 'COUPONPERCENT', 'FACEVALUE', 'PRICE']:
     #     bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column] = bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column].astype(float)
