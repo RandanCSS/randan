@@ -394,18 +394,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, version_main, subordinated=
     return bondS
 
 def timeoutExceptionProcesser(driver, isin, pause, version_main):
-
-    # Закрыть или обнулить драйвер предварительно
-    if driver is not None:
-        try:
-            driver.quit()
-
-        except Exception as excptn: # не удалось закрыть драйвер
-            print('Exception 1:', excptn)
-            print(traceback.format_exc()) # показ точной строчки кода с ошибкой
-
-        driver = None # обнулить драйвер
-
+    driverCloser(driver)
     for attempt in range(3):
         print('attempt:', attempt) # для отладки
 
@@ -416,7 +405,7 @@ def timeoutExceptionProcesser(driver, isin, pause, version_main):
             options.add_argument("--pageLoadStrategy=none") # стратегия загрузки: 'none' -- не ждать загрузки вообще;
                 # это позволяет начать парсить сразу после получения HTML
 
-            driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main)
+            driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
             driver.set_page_load_timeout((1 + attempt) * 100 * pause)
 
             try: driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
@@ -433,15 +422,7 @@ def timeoutExceptionProcesser(driver, isin, pause, version_main):
         except Exception as excptn:
             print('Exception 1:', excptn)
             print(traceback.format_exc()) # показ точной строчки кода с ошибкой
-
-            # Закрыть или обнулить драйвер
-            if driver is not None:
-                try:
-                    driver.quit()
-                except Exception as excptn: # не удалось закрыть драйвер
-                    print('Exception 1:', excptn)
-                    print(traceback.format_exc()) # показ точной строчки кода с ошибкой
-                driver = None # обнулить драйвер
+            driverCloser(driver)
 
     return driver
 
