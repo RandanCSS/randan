@@ -11,18 +11,16 @@ for attempt in range(1, 4):
         from datetime import date, datetime, timedelta
         from IPython.display import display
 
-        from randan.trading import getMoExData, issuerProcessor, ratingProcessor # авторские модули для
-            # (а) выгрузки характеристик торгуемых на МосБирже облигаций
-            # (б) операций с эмитентами торгуемых на МосБирже облигаций
-            # (в) упрощения некоторых оперций в selenium
+        from randan.trading import finamParser, getMoExData, issuerProcessor, ratingProcessor # авторские модули для
+            # (а) упрощения выгрузки данных с сайта finam.ru и их парсинга
+            # (б) выгрузки характеристик торгуемых на МосБирже облигаций
+            # (в) операций с эмитентами торгуемых на МосБирже облигаций
+            # (г) упрощения некоторых оперций в selenium
 
-        from randan.tools import cellsLeftMerger, coLabAdaptor, files2df, forSelenium # авторские модули для
+        from randan.tools import cellsLeftMerger, coLabAdaptor, files2df # авторские модули для
             # (а) упрощения операции левостороннего присоединения датафрейма-донора к датафрейму-реципиенту по специальному столбцу
             # (б) адаптации текущего скрипта к файловой системе CoLab
             # (в) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
-
-        from randan.trading import finamParser # авторский модуль для
-                # (а) упрощения выгрузки данных с сайта finam.ru и их парсинга
 
         from selenium.webdriver.common.by import By # для поиска элементов HTML-кода
         from tqdm import tqdm
@@ -335,6 +333,9 @@ def currencyEffectProcessor(bondS_in):
 # 2. Основная функция
 def bondsFeaturesProcessor(attemptsMax,
                            bondsIn,
+                           driver,
+                           driver_CB,
+                           driver_TB
                            issuerS,
                            momentCurrent,
                            pause,
@@ -601,13 +602,6 @@ def bondsFeaturesProcessor(attemptsMax,
     #     bondS.loc[bondS['CURRENCYID'] == currency, 'ACCRUEDINT'] *= currencyExchangeValue # валюта расчётов
 
 # 2.4 Расчёт годовой доходности до оферты | погашения
-    driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
-
-    driver_CB = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
-    driver_CB.get('https://cbr.ru/hd_base/KeyRate')
-
-    driver_TB = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
-
     for isin in tqdm(bondS['ISIN']):
     # for isin in tqdm(bondS['ISIN'][674:]): # для отладки
         print('\nisin:', isin) # для отладки
@@ -802,7 +796,4 @@ def bondsFeaturesProcessor(attemptsMax,
     print('Компоненты специфики: валюта, сектор рынка, амортизация, определён ли купон')
     display(bondS['Специфика'].value_counts().sort_index())
 
-    forSelenium.driverCloser(driver)
-    forSelenium.driverCloser(driver_CB)
-    forSelenium.driverCloser(driver_TB)
-    if returnDfs: return bondS, issuerS_withActualRating, issuerS_withActualRating_change
+    if returnDfs: return bondS, driver, driver_CB, driver_TB, issuerS_withActualRating, issuerS_withActualRating_change
