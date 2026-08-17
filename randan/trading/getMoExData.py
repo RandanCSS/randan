@@ -118,7 +118,7 @@ def getMoExData(
 
 # 2.2 Формирование файла с доступными облигациями в интересующих режимах торгов
     decision = ''
-    if os..exists(folder + market + 'SecuritieS.xlsx'):
+    if os.path.exists(folder + market + 'SecuritieS.xlsx'):
         print(
 '''--- Если НЕ хотите обновить файл с доступными инструментами в интересующих режимах торгов, просто нажмите Enter
 --- Если хотите, то нажмите пробел и затем Enter'''
