@@ -34,7 +34,7 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
-# 1.0 Вспомогательные функции
+# 1.0 Вспомогательные функции..
 # # 1.0.0 поиска в брокерском отчёте строчек, ограничивающих интересующий раздел
 # def boundColibrator(assetS, bound, col, name):
 #     if len(bound) == 1:
@@ -158,7 +158,7 @@ def sectionFinder(df, softCondition, text, textClosing): # textClosing -- тек
     # print('boundLarger:', boundLarger) # для оталдки
     return boundLarger, boundSmaller
 
-# 1.1 Авторские функции-адаптеры по брокерам
+# 1.1 Функции-адаптеры по брокерам
 def ВТБ(assetS):
     # display('assetS:', assetS) # для отладки
     # Найти срез датафрейма, соответствующий искомому разделу (раздел предполагает свои наименования столбцов)
