@@ -10,10 +10,9 @@ for attempt in range(1, 4):
     try:
         from IPython.display import display
 
-        from randan.tools import coLabAdaptor, dictionariesHarmonizer, textPreprocessor # авторские модули для
-            # (а) адаптации текущего скрипта к файловой системе CoLab
-            # (б) редактирования столбца одного датафрейма на основе того же столбца другого датафрейма
-            # (в) предобработки нестандартизированнрого текста
+        from randan.tools import dictionariesHarmonizer, textPreprocessor # авторские модули для
+            # (а) редактирования столбца одного датафрейма на основе того же столбца другого датафрейма
+            # (б) предобработки нестандартизированнрого текста
 
         import os, pandas, re
         break # выход из цикла for attempt in range(3)
@@ -34,8 +33,6 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
                   )
-
-coLabFolder = coLabAdaptor.coLabAdaptor()
 
 # Авторские функции..
     # .. компановки информации об эмитентах торгуемых на МосБирже облигаций в датафрейм (словарь)
