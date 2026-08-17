@@ -740,6 +740,7 @@ def bondsFeaturesProcessor(attemptsMax,
 
         # Следует мёрджить по ISIN , причём требуется не обновление данных, а дополнение, поэтому cellsLeftMerger
         bondS = cellsLeftMerger.cellsLeftMerger(bond_df, bondS, 'ISIN') # следует мёрджить по ISIN
+        bondS.to_excel(folder + 'Замеры рейтингов' + slash + momentCurrent.strftime('%Y%m%d_%H%M') + '_bondS.xlsx')
 
     bondS.to_excel(folder + 'Замеры рейтингов' + slash + momentCurrent.strftime('%Y%m%d_%H%M') + '_bondS.xlsx')
 
