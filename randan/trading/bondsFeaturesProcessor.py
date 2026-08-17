@@ -48,6 +48,11 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
+folder = coLabFolder
+slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+if folder == None: folder = ''
+else: folder += slash
+
 # 1. Вспомогательные функции для..
 # .. расчёта доходностей облигации (бескупонной, без реинвестирования и с реинвестированием -- по формулам простого и сложного процентов)
 def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, momentCurrent):
@@ -616,7 +621,7 @@ def bondsFeaturesProcessor(attemptsMax,
         # print('bond_df_index:', bond_df_index) # для отладки
 
         # print('folder:', folder) # для отладки
-        path_1 = (folder + slash if folder != '' else '') + 'Таблицы FinAM'
+        path_1 = folder + 'Таблицы FinAM'
         if os.path.exists(path_1) != True:
             print(
     '''Найдите и запустите скрипт bondsRatingS, после чего снова запустите текущий скрипт
@@ -732,7 +737,7 @@ def bondsFeaturesProcessor(attemptsMax,
 
             else: date_call = 'No rate'
 
-            path_2 = (folder + slash if folder != '' else '') + 'Таблицы текущего периода'
+            path_2 = folder + 'Таблицы текущего периода'
             if os.path.exists(path_2) != True: os.makedirs(path_2)
             df_current.to_excel(path_2 + slash + f'{date_call + ' ' if date_call else ''}{isin}.xlsx')
 
