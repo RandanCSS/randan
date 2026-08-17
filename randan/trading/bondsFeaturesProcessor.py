@@ -46,9 +46,7 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
-version_main = 151
-
-# 1. Вспомогательные авторские функции для..
+# 1. Вспомогательные функции для..
 # .. расчёта доходностей облигации (бескупонной, без реинвестирования и с реинвестированием -- по формулам простого и сложного процентов)
 def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB):
     bond_df = bond_df_in.copy()
@@ -331,10 +329,11 @@ def currencyEffectProcessor(bondS_in):
 
     return bondS
 
-# 2. Авторская функция исполнения скрипта
+# 2. Основная функция
 def bondsFeaturesProcessor(bondsIn,
                            issuerS,
                            pause,
+                           version_main,
                            folder=coLabFolder,
                            returnDfs=False):
     """
