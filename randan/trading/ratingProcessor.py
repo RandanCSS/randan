@@ -1,8 +1,8 @@
 # coding: utf-8
 
 '''
-A proprietary module to import and process bond issuer ratings from the Moscow Exchange
-Авторский модуль для импорта рейтинга эмитентов торгуемых на МосБирже облигаций и его обработки
+A module to import and process bond issuer ratings from the Moscow Exchange
+Модуль для импорта рейтинга эмитентов торгуемых на МосБирже облигаций и его обработки
 '''
 # import sys
 # sys.path.append(r"C:\Users\Alexey\Dropbox\Мои\RAnDan\myModules")
@@ -15,6 +15,7 @@ from subprocess import check_call
 for attempt in range(1, 4):
     try:
         from IPython.display import display
+
         from randan.tools import cellsLeftMerger, coLabAdaptor, forSelenium # авторские модули для..
             # (а) упрощения операции левостороннего присоединения датафрейма-донора к датафрейму-реципиенту по специальному столбцу
             # (б) адаптации текущего скрипта к файловой системе CoLab
@@ -46,9 +47,8 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
                   )
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
-version_main = 151
 
-# Авторские функции..
+# Функции..
 # .. поиска эмитентов, у облигаций которых в столбце Bond D Rating (а) ни у одной нет рейтинга,
     # (б) у некоторых есть рейтинг и у некоторых его нет и (в) у всех есть рейтинг
 def bondS_ofIssuer_ratingChecker(bondS_in):
@@ -97,7 +97,7 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
 
     except (TimeoutError, TimeoutException, WebDriverException):
         print('Загрузка страницы длится слишком долго; перехожу к timeoutExceptionProcesser') # для отладки
-        driver = timeoutExceptionProcesser(driver, isin, pause)
+        driver = timeoutExceptionProcesser(driver, isin, pause, version_main)
         if driver == None: return bondS, bondS_rowS, driver # выход из функции
 
     # Ожидание, чтобы страница прогрузилась
@@ -257,7 +257,7 @@ def ratingDigitizer(letters, raitingSource):
     # print('len(letters) :', len(letters)) # для отладки
     return (3 * (len(letters) - subtracted) + y) + 9 * x
 
-def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
+def ratingMoExForBondsWithoutRating(bondS_in, pause, version_main, subordinated=False):
     bondS = bondS_in.copy()
 
     userChoice = ' '
@@ -393,15 +393,17 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, subordinated=False):
 
     return bondS
 
-def timeoutExceptionProcesser(driver, isin, pause):
+def timeoutExceptionProcesser(driver, isin, pause, version_main):
 
     # Закрыть или обнулить драйвер предварительно
     if driver is not None:
         try:
             driver.quit()
+
         except Exception as excptn: # не удалось закрыть драйвер
             print('Exception 1:', excptn)
             print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+
         driver = None # обнулить драйвер
 
     for attempt in range(3):
@@ -414,7 +416,7 @@ def timeoutExceptionProcesser(driver, isin, pause):
             options.add_argument("--pageLoadStrategy=none") # стратегия загрузки: 'none' -- не ждать загрузки вообще;
                 # это позволяет начать парсить сразу после получения HTML
 
-            driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main=version_main)
+            driver = undetected_chromedriver.Chrome(options=options, use_subprocess=True, version_main)
             driver.set_page_load_timeout((1 + attempt) * 100 * pause)
 
             try: driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
