@@ -616,7 +616,7 @@ def bondsFeaturesProcessor(attemptsMax,
         # print('bond_df_index:', bond_df_index) # для отладки
 
         # print('folder:', folder) # для отладки
-        path_1 = folder + 'Таблицы FinAM'
+        path_1 = (folder + slash if folder != '' else '') + 'Таблицы FinAM'
         if os.path.exists(path_1) != True:
             print(
     '''Найдите и запустите скрипт bondsRatingS, после чего снова запустите текущий скрипт
@@ -732,13 +732,13 @@ def bondsFeaturesProcessor(attemptsMax,
 
             else: date_call = 'No rate'
 
-            path_2 = folder + 'Таблицы текущего периода'
+            path_2 = (folder + slash if folder != '' else '') + 'Таблицы текущего периода'
             if os.path.exists(path_2) != True: os.makedirs(path_2)
             df_current.to_excel(path_2 + slash + f'{date_call + ' ' if date_call else ''}{isin}.xlsx')
 
         else:
             bond_df.loc[bond_df_index, 'Не в обращении'] = 1
-            path_3 = folder + 'Таблицы FinAM' + slash + 'Таблицы FinAM Архив'
+            path_3 = path_1 + slash + 'Таблицы FinAM Архив'
             if os.path.exists(path_3) != True: os.makedirs(path_3)
             os.rename(path_1 + slash + fileUptodateName, path_3 + slash + fileUptodateName)
 
