@@ -34,7 +34,7 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
-# 1.0 Авторские функции
+# 1.0 Вспомогательные функции
 # # 1.0.0 поиска в брокерском отчёте строчек, ограничивающих интересующий раздел
 # def boundColibrator(assetS, bound, col, name):
 #     if len(bound) == 1:
@@ -60,9 +60,10 @@ def boundColibrator(bound, column, df, softCondition, text):
     return bound
 
 # 1.0.1 организации обработки отчётов каждого брокера за интересующий период
-def brokerReportsProcessor(broker, fileNameS, folder, period, slash):
-    assetS = pandas.DataFrame()
+def brokerReportsProcessor(broker, fileNameS, folder, period):
     # print('fileNameS:', fileNameS) # для отладки
+    assetS = pandas.DataFrame()
+    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     for fileName in fileNameS:
         # print('fileName:', fileName) # для отладки
         assetS_additional = pandas.read_excel((folder + slash if folder != '' else '') + broker + slash + 'Отчёты' + slash + fileName, header=None)
@@ -101,7 +102,9 @@ def columnNameFinder(df, text):
     return column
 
 # 1.0.4 поиска в директориях брокеров отчётов за интересующий период
-def reportSearch(broker, folder, period, slash):
+def reportSearch(broker, folder, period):
+    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+    
     fileNameS = []
     goC = True
     while goC:
@@ -270,18 +273,14 @@ def getAssets(
     period = int(period) - 89 if period[-2:] == '01' else int(period) - 1 # на случай января
     # print('Целевой период:', period) # для отладки
     
-    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if folder == None: folder = ''
-    else: folder += slash
-
     warnings.filterwarnings("ignore")
 
 # 2.1 Выяснение, какие облигации есть в портфеле, на основе брокерских отчётов
     assetS = pandas.DataFrame()
     for broker in brokerS:
-        fileNameS, period = reportSearch(broker, folder, period, slash)
+        fileNameS, period = reportSearch(broker, folder, period)
         # print('broker:', broker) # для отладки        
-        assetS_additional = brokerReportsProcessor(broker, fileNameS, folder, period, slash)
+        assetS_additional = brokerReportsProcessor(broker, fileNameS, folder, period)
         # display(assetS_additional) # для отладки
         assetS = pandas.concat([assetS, assetS_additional], ignore_index=True)
     # display(assetS) # для отладки
