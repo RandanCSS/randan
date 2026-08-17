@@ -59,14 +59,13 @@ def boundColibrator(bound, column, df, softCondition, text):
 
     return bound
 
-
 # 1.0.1 организации обработки отчётов каждого брокера за интересующий период
-def brokerReportsProcessor(broker, fileNameS, path, period, slash):
+def brokerReportsProcessor(broker, fileNameS, folder, period, slash):
     assetS = pandas.DataFrame()
     # print('fileNameS:', fileNameS) # для отладки
     for fileName in fileNameS:
         # print('fileName:', fileName) # для отладки
-        assetS_additional = pandas.read_excel(path + broker + slash + 'Отчёты' + slash + fileName, header=None)
+        assetS_additional = pandas.read_excel((folder + slash if folder != '' else '') + broker + slash + 'Отчёты' + slash + fileName, header=None)
         fileNameSpecification = fileName.replace('.xlsx', '').replace(str(period), '')
         # print('fileNameSpecification:', fileNameSpecification) # для отладки
         print(f"Распарсиваю отчёт брокера{'' if fileNameSpecification == '' else ' (' + fileNameSpecification + ')'}", broker, 'за', str(period)) #, end='\r'
@@ -102,11 +101,11 @@ def columnNameFinder(df, text):
     return column
 
 # 1.0.4 поиска в директориях брокеров отчётов за интересующий период
-def reportSearch(broker, path, period, slash):
+def reportSearch(broker, folder, period, slash):
     fileNameS = []
     goC = True
     while goC:
-        for fileName in os.listdir(path + broker + slash + 'Отчёты'):
+        for fileName in os.listdir((folder + slash if folder != '' else '') + broker + slash + 'Отчёты'):
             if str(period) in fileName:
                 # print(f"Нашёл файл '{fileName}'") # для оталдки
                 fileNameS.append(fileName)
@@ -248,10 +247,10 @@ def УралСиб(assetS):
     # display(assetS) # для отладки
     return assetS
 
-# 2. Авторская функция исполнения скрипта
+# 2. Основная функция
 def getAssets(
               brokerS=['ВТБ', 'Тинькофф', 'УралСиб'],
-              path=coLabFolder,
+              folder=coLabFolder,
               returnDfs=False
               ):
     """
@@ -260,7 +259,7 @@ def getAssets(
     Parameters
     ----------
      brokersS : list -- список Ваших брокеров, например, такой: ['ВТБ', 'Тинькофф', 'УралСиб'] ; названия этих трёх брокеров следует писать именно так; для других брокеров функций-адаптеров пока нет.
-         path : str -- путь к директории, включая её имя, в которой будут искаться файлы и куда будут сохраняться; по умолчанию, не в CoLab поиск и сохранение происходят в директории, в которой вызывается текущая функция, а в CoLab в директории Colab Notebooks
+       folder : str -- путь к директории, включая её имя, в которой будут искаться файлы и куда будут сохраняться; по умолчанию, не в CoLab поиск и сохранение происходят в директории, в которой вызывается текущая функция, а в CoLab в директории Colab Notebooks
 
     returnDfs : bool -- в случае True функция возвращает итоговые датафрейм bondS
     """
@@ -272,17 +271,17 @@ def getAssets(
     # print('Целевой период:', period) # для отладки
     
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if path == None: path = ''
-    else: path += slash
+    if folder == None: folder = ''
+    else: folder += slash
 
     warnings.filterwarnings("ignore")
 
 # 2.1 Выяснение, какие облигации есть в портфеле, на основе брокерских отчётов
     assetS = pandas.DataFrame()
     for broker in brokerS:
-        fileNameS, period = reportSearch(broker, path, period, slash)
+        fileNameS, period = reportSearch(broker, folder, period, slash)
         # print('broker:', broker) # для отладки        
-        assetS_additional = brokerReportsProcessor(broker, fileNameS, path, period, slash)
+        assetS_additional = brokerReportsProcessor(broker, fileNameS, folder, period, slash)
         # display(assetS_additional) # для отладки
         assetS = pandas.concat([assetS, assetS_additional], ignore_index=True)
     # display(assetS) # для отладки
