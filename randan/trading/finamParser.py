@@ -58,9 +58,9 @@ slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависи
 if folder == None: folder = ''
 else: folder += slash
 
-version_main = 150
+version_main = 151
 
-# Авторские функции..
+# Вспомогательные авторские функции..
 # .. обработки облигаций, относящихся к одному Identifier
 def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bondsOfIdentifier, columnS_target, driver, driver_TB, folder, pause, slash, source, sourceRow, urlInitial, version_main):
     bondsFinAM = bondsFinAM_in.copy()
