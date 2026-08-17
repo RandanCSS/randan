@@ -645,7 +645,7 @@ def tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB):
 
         else: date_call_FinAM = 'No rate'
 
-        path_1 = (folder + slash if folder != '' else '') + 'Таблицы FinAM'
+        path_1 = folder + 'Таблицы FinAM'
         if os.path.exists(path_1) != True: os.makedirs(path_1)
         table_FinAM.to_excel(path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
 
@@ -662,7 +662,7 @@ def tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB):
 
         # print('date_call_TB:', date_call_TB) # для отладки
 
-        path_2 = (folder + slash if folder != '' else '') + 'Таблицы TB'
+        path_2 = folder + 'Таблицы TB'
         if os.path.exists(path_2) != True: os.makedirs(path_2)
         table_TB.to_excel(path_2 + slash + f'{date_call_TB + ' ' if date_call_TB else ''}{isin}.xlsx')
 
