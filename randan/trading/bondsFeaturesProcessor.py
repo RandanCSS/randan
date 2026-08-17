@@ -266,12 +266,6 @@ def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, moment
 def currencyEffectProcessor(bondS_in):
     bondS = bondS_in.copy()
 
-    # Предобрабока столбцов с финансовой информацией в bondS
-    for column in ['ACCRUEDINT', 'COUPONPERCENT', 'FACEVALUE', 'PRICE']:
-
-        bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column] =\
-            bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column].astype(float)
-
 # <Умножение FACEVALUE и ACCRUEDINT для иновалютных облигаций на цену соответствующей валюты в рублях>
 
     # Импорт курсов инвалют
@@ -280,11 +274,7 @@ def currencyEffectProcessor(bondS_in):
     exchangesRaw.columns = ['Unnamed: 0', 'Цена послед.', 'Цена закр.']
     # display(exchangesRaw) # для отладки
 
-    currencieS = list(bondS['FACEUNIT'].unique()) # валюта номинала
-    print('currencieS:', currencieS) # для отладки
-
     # Список валют иновалютных облигаций и запись их курсов в exchangeS
-    currencieS.remove('SUR')
     exchangeS = pandas.DataFrame()
     for currency in currencieS:
     # for currency in currencieS[0:1]: # для отладки
@@ -548,7 +538,18 @@ def bondsFeaturesProcessor(attemptsMax,
     # display(bondS) # для отладки
 
 # 2.3 Расчёт эффекта валютных курсов для иновалютных облигаций
-    bondS = currencyEffectProcessor(bondS)
+
+    # Предобрабока столбцов с финансовой информацией в bondS
+    for column in ['ACCRUEDINT', 'COUPONPERCENT', 'FACEVALUE', 'PRICE']:
+
+        bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column] =\
+            bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column].astype(float)
+
+    currencieS = list(bondS['FACEUNIT'].unique()) # валюта номинала
+    print('currencieS:', currencieS) # для отладки
+
+    currencieS.remove('SUR')
+    if len(currencieS) > 0: bondS = currencyEffectProcessor(bondS)
 
     # for column in ['ACCRUEDINT', 'COUPONPERCENT', 'FACEVALUE', 'PRICE']:
     #     bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column] = bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column].astype(float)
