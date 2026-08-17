@@ -48,7 +48,7 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
 
 # 1. Вспомогательные функции для..
 # .. расчёта доходностей облигации (бескупонной, без реинвестирования и с реинвестированием -- по формулам простого и сложного процентов)
-def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB):
+def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, momentCurrent):
     bond_df = bond_df_in.copy()
     # display('bond_df 1 в bondYieldCalculator :', bond_df) # для отладки
 
@@ -332,6 +332,7 @@ def currencyEffectProcessor(bondS_in):
 # 2. Основная функция
 def bondsFeaturesProcessor(bondsIn,
                            issuerS,
+                           momentCurrent,
                            pause,
                            version_main,
                            folder=coLabFolder,
@@ -721,7 +722,7 @@ def bondsFeaturesProcessor(bondsIn,
         # display('df_current:', df_current) # для отладки
 
         if len(df_current) > 0:
-            bond_df, df_current = bondYieldCalculator(bond_df, bond_df_index, df_current, driver_CB)
+            bond_df, df_current = bondYieldCalculator(bond_df, bond_df_index, df_current, driver_CB, momentCurrent)
             if sum(df_current['Ставка'].notna()) > 0:
                 date_call = df_current.loc[df_current[df_current['Ставка'].notna()].index[-1], 'Дата'].date().strftime('%Y%m%d')
                 print('date_call:', date_call) # для отладки
