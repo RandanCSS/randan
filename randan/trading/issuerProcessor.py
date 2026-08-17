@@ -8,10 +8,12 @@ from subprocess import check_call
 # --- остальные модули и пакеты
 for attempt in range(1, 4):
     try:
+        from IPython.display import display
+
         from randan.tools import coLabAdaptor, dictionariesHarmonizer, textPreprocessor # авторские модули для
-        # (а) адаптации текущего скрипта к файловой системе CoLab
-        # (б) редактирования столбца одного датафрейма на основе того же столбца другого датафрейма
-        # (в) предобработки нестандартизированнрого текста
+            # (а) адаптации текущего скрипта к файловой системе CoLab
+            # (б) редактирования столбца одного датафрейма на основе того же столбца другого датафрейма
+            # (в) предобработки нестандартизированнрого текста
 
         import os, pandas, re
         break # выход из цикла for attempt in range(3)
@@ -32,7 +34,6 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
                   )
-            break
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
