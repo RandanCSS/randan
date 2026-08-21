@@ -571,8 +571,10 @@ def spreadExtract(textFetched):
 def tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB):
     # Блок, поскольку folder многократно используется внутри функции в формулах
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+    if folder: print('folder до:', folder) # для отладки
     if (folder == None) | (folder == ''): folder = ''
     else: folder += slash
+    if folder: print('folder после:', folder) # для отладки
 
     if (len(table_FinAM) > 0) & (len(table_TB) > 0):
 
@@ -640,9 +642,10 @@ def finamParser(attemptsMax,
                 folder=coLabFolder):
 
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+    if folder: print('folder до:', folder) # для отладки
     if (folder == None) | (folder == ''): folder = ''
     else: folder += slash
-    print('folder:', folder) # для отладки
+    if folder: print('folder после:', folder) # для отладки
 
     columnS_target = ['ISIN код:', 'Рег. номер:', 'Описание купонов']
 
