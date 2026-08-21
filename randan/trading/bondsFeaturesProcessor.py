@@ -85,7 +85,9 @@ def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, moment
 
     # display('bond_df 2 в bondYieldCalculator :', bond_df) # для отладки
     price_coefficient = bond_df['PRICE'][bond_df_index]
-    if price_coefficient != True: price_coefficient = 100 # перед погашением цена облигации принмает значение NaN
+    if price_coefficient != True:
+        print('Перед погашением цена облигации принмает значение NaN; дата погашения:', bond_df['MATDATE'][bond_df_index])
+        price_coefficient = 100 # перед погашением цена облигации принмает значение NaN
 
     print('price_coefficient:', price_coefficient)
     print(
