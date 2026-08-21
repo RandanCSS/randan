@@ -85,6 +85,8 @@ def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, moment
 
     # display('bond_df 2 в bondYieldCalculator :', bond_df) # для отладки
     price_coefficient = bond_df['PRICE'][bond_df_index]
+    if price_coefficient != True: price_coefficient = 100 # перед погашением цена облигации принмает значение NaN
+
     print('price_coefficient:', price_coefficient)
     print(
 '''Если price_coefficient > 100, то рассчитываемая для следующих купонных периодов сумма для реинвестирования
