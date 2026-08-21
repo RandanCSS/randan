@@ -585,7 +585,7 @@ def tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB):
                 if pandas.isna(table_FinAM.loc[table_FinAM_index[0], (   'Купоны',        'Ставка')]):
                     table_FinAM.loc[table_FinAM_index[0], (   'Купоны',        'Ставка')] = table_TB_rate
 
-        # display('table_FinAM:', table_FinAM) # для отладки
+        display('table_FinAM:', table_FinAM) # для отладки
 
     # date_call = max(date_call_FinAM, date_call_TB).strftime("%Y%m%d") # альтернатива
 
@@ -603,6 +603,7 @@ def tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB):
 
         path_1 = folder + 'Таблицы FinAM'
         if os.path.exists(path_1) != True: os.makedirs(path_1)
+        print('Сохраняю table_FinAM в', path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx') # для отладки
         table_FinAM.to_excel(path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
 
         # table_FinAM = pandas.read_excel(path_1 + slash + '???.xlsx', header=[0, 1], index_col=0)
