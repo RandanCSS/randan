@@ -62,8 +62,10 @@ def boundColibrator(bound, column, df, softCondition, text):
 # 1.0.1 организации обработки отчётов каждого брокера за интересующий период
 def brokerReportsProcessor(broker, fileNameS, folder, period):
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if folder == None: folder = ''
+    # if folder: print('folder до:', folder) # для отладки
+    if (folder == None) | (folder == ''): folder = ''
     else: folder += slash
+    # if folder: print('folder после:', folder) # для отладки
 
     # print('fileNameS:', fileNameS) # для отладки
     assetS = pandas.DataFrame()
@@ -108,8 +110,10 @@ def columnNameFinder(df, text):
 # 1.0.4 поиска в директориях брокеров отчётов за интересующий период
 def reportSearch(broker, folder, period):
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if folder == None: folder = ''
+    # if folder: print('folder до:', folder) # для отладки
+    if (folder == None) | (folder == ''): folder = ''
     else: folder += slash
+    # if folder: print('folder после:', folder) # для отладки
     
     fileNameS = []
     goC = True
