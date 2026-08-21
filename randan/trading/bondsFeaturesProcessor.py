@@ -328,7 +328,7 @@ def currencyEffectProcessor(bondS_in, currencieS):
 
 # 2. Основная функция
 def bondsFeaturesProcessor(attemptsMax,
-                           bondsIn,
+                           bonds_in,
                            driver,
                            driver_CB,
                            driver_TB,
@@ -343,7 +343,7 @@ def bondsFeaturesProcessor(attemptsMax,
 
     Parameters
     ----------
-      bondsIn : DataFrame -- датафрейм с облигациями, характеристики которых требуется получить; должен содержать хотя бы столбец ISIN
+     bonds_in : DataFrame -- датафрейм с облигациями, характеристики которых требуется получить; должен содержать хотя бы столбец ISIN
       issuerS : DataFrame -- датафрейм со Словарём эмитентов
         pause : int -- период засыпания исполнения функций selenium
        folder : str -- путь к директории, включая её имя, в которой будут искаться файлы и куда будут сохраняться;
@@ -353,13 +353,15 @@ def bondsFeaturesProcessor(attemptsMax,
     """
 
 # 2.0 Настройки
-    bondS = bondsIn.copy()
+    bondS = bonds_in.copy()
     bondS = bondS.drop_duplicates('ISIN', keep='last', ignore_index=True)
 
     # Блок, поскольку folder многократно используется внутри функции в формулах
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if folder == None: folder = ''
+    # if folder: print('folder до:', folder) # для отладки
+    if (folder == None) | (folder == ''): folder = ''
     else: folder += slash
+    # if folder: print('folder после:', folder) # для отладки
 
     warnings.filterwarnings("ignore")
 
