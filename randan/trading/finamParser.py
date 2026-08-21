@@ -571,10 +571,10 @@ def spreadExtract(textFetched):
 def tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB):
     # Блок, поскольку folder многократно используется внутри функции в формулах
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if folder: print('folder до:', folder) # для отладки
+    # if folder: print('folder до:', folder) # для отладки
     if (folder == None) | (folder == ''): folder = ''
     else: folder += slash
-    if folder: print('folder после:', folder) # для отладки
+    # if folder: print('folder после:', folder) # для отладки
 
     if (len(table_FinAM) > 0) & (len(table_TB) > 0):
 
@@ -603,12 +603,12 @@ def tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB):
 
         else: date_call_FinAM = 'No rate'
 
-        print('folder:', folder) # для отладки
+        # print('folder:', folder) # для отладки
         path_1 = folder + 'Таблицы FinAM'
-        print('path_1:', path_1) # для отладки
+        # print('path_1:', path_1) # для отладки
 
         if os.path.exists(path_1) != True: os.makedirs(path_1)
-        print('Сохраняю table_FinAM в', path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx') # для отладки
+        # print('Сохраняю table_FinAM в', path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx') # для отладки
         table_FinAM.to_excel(path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
 
         # table_FinAM = pandas.read_excel(path_1 + slash + '???.xlsx', header=[0, 1], index_col=0)
@@ -642,10 +642,10 @@ def finamParser(attemptsMax,
                 folder=coLabFolder):
 
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if folder: print('folder до:', folder) # для отладки
+    # if folder: print('folder до:', folder) # для отладки
     if (folder == None) | (folder == ''): folder = ''
     else: folder += slash
-    if folder: print('folder после:', folder) # для отладки
+    # if folder: print('folder после:', folder) # для отладки
 
     columnS_target = ['ISIN код:', 'Рег. номер:', 'Описание купонов']
 
