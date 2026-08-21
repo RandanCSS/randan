@@ -79,8 +79,10 @@ def getMoExData(
     """
     # Блок, поскольку folder многократно используется внутри функции в формулах
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if folder == None: folder = ''
+    # if folder: print('folder до:', folder) # для отладки
+    if (folder == None) | (folder == ''): folder = ''
     else: folder += slash
+    # if folder: print('folder после:', folder) # для отладки
 
 # Формирование файла с режимами торгов
 # 1.0 Если нет файла с режимами торгов    
