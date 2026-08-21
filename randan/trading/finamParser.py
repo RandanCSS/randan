@@ -601,7 +601,10 @@ def tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB):
 
         else: date_call_FinAM = 'No rate'
 
+        print('folder:', folder) # для отладки
         path_1 = folder + 'Таблицы FinAM'
+        print('path_1:', path_1) # для отладки
+
         if os.path.exists(path_1) != True: os.makedirs(path_1)
         print('Сохраняю table_FinAM в', path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx') # для отладки
         table_FinAM.to_excel(path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
@@ -639,6 +642,7 @@ def finamParser(attemptsMax,
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     if folder == None: folder = ''
     else: folder += slash
+    print('folder:', folder) # для отладки
 
     columnS_target = ['ISIN код:', 'Рег. номер:', 'Описание купонов']
 
