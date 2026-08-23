@@ -13,10 +13,11 @@ import sys
 from subprocess import check_call
 
 # --- остальные модули и пакеты
-attempt = 0
-while True:
+for attempt in range(1, 4):
     try:
         from datetime import date, datetime
+        from IPython.display import display
+
         from randan.tools import calendarWithinYear, coLabAdaptor, df2file, files2df, scrapingTools, varPreprocessor # авторские модули для
             # (а) работы с календарём конкретного года
             # (б) адаптации текущего скрипта к файловой системе CoLab
@@ -24,29 +25,29 @@ while True:
             # (г) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
             # (д) упрощения скрапинга
             # (е) предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
+
         import numpy, os, pandas, re, shutil, time, requests, warnings
-        break
+        break # выход из цикла for attempt in range(3)
+
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
         if '.' in module: module = module.split('.')[0]
         print(
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка № {attempt} из 10
+Попытка № {attempt} из 3
 '''
               )
         check_call([sys.executable, "-m", "pip", "install", module])
-        attempt += 1
-        if  attempt == 10:
+        if  attempt == 3:
             print(
 f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
                   )
-            break
 
-# 1. Авторские функции
-# 1.0 для метода search из API ВК, помогающая работе с ключами
+# 1. Вспомогательные функции для..
+# .. метода search из API ВК, помогающая работе с ключами
 def bigSearch(
               API_keyS,
               count,
@@ -171,7 +172,7 @@ def bigSearch(
 
     return dfAdd, goS, iteration, keyOrder, pause, response
 
-# 1.1 для обработки выдачи любого из методов, помогающая работе с ключами
+# .. обработки выдачи любого из методов, помогающая работе с ключами
 def dfsProcessor(
                  complicatedNamePart,
                  coLabFolder,
@@ -250,7 +251,7 @@ f'Поскольку исполнение скрипта натолкнулос�
 
     return df
 
-# 1.2 для обработки выдачи аргумента fields
+# .. обработки выдачи аргумента fields
 def fieldsProcessor(dfIn, fieldsColumn, response):
     df = dfIn.copy()
     idColumnS = []
@@ -303,7 +304,7 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
         df[fieldsColumn] = df[fieldsColumn].replace('N/A', numpy.nan)
     return df
 
-# 2. Авторская функция исполнения скрипта
+# 2. Основная функция
 def newsFeedSearch(
                    access_token=None,
                    count=None,
