@@ -152,12 +152,13 @@ def bigSearch(
     if goS:
         # Для визуализации процесса
         print('    Итерация №', iteration, ', number of items', len(response['items']), '                    ', end='\r')
+
         iteration += 1
-    
-        # Сменить формат представления дат, класс данных столбцов с id, создать столбец с кликабельными ссылками на контент
-            # Здесь, а не в конце, поскольку нужна совместимость с itemS из Temporal и от пользователя
         if len(dfAdd) > 0:
             dfAdd['date'] = dfAdd['date'].apply(lambda content: datetime.fromtimestamp(content).strftime('%Y.%m.%d'))
+                # сменить формат представления дат, класс данных столбцов с id, создать столбец с кликабельными ссылками на контент;
+                    # здесь, а не в конце, поскольку нужна совместимость с itemS из Temporal и от пользователя
+
             dfAdd['URL'] = dfAdd['from_id'].astype(str)
             dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL'] = 'id' + dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL']
             dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'] = dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'].str.replace('-', 'public')
@@ -489,7 +490,7 @@ def newsFeedSearch(
                       # , '\n- было выявлено целевое число объектов (targetCount)', targetCount
                       , '\n- скрипт остановился на методе', method)
                 if year < int(momentCurrent.strftime("%Y")): print('- и на годе (при сегментировани по годам)', year)
-                print('- пользователь НЕ сформулировал запрос-фильтр' if q == None else  f'- пользователь сформулировал запрос-фильтр как "{q}"')
+                print('- пользователь НЕ сформулировал запрос-фильтр' if q == None else  f"- пользователь сформулировал запрос-фильтр как '{q}'")
                 print('- пользователь НЕ ограничил временнОй диапазон' if yearsRange == None else  f'- пользователь ограничил временнОй диапазон границами {yearsRange}')
                 print(
 '''--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
