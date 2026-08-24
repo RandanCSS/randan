@@ -745,6 +745,7 @@ def bondsFeaturesProcessor(attemptsMax,
             bond_df.loc[bond_df_index, 'Не в обращении'] = 1
             path_3 = path_1 + slash + 'Таблицы FinAM Архив'
             if os.path.exists(path_3) != True: os.makedirs(path_3)
+            if os.path.exists(path_3 + slash + fileUptodateName): os.remove(path_3 + slash + fileUptodateName) # на случай задвоения файлов (причина не ясна)
             os.rename(path_1 + slash + fileUptodateName, path_3 + slash + fileUptodateName)
 
         # Следует мёрджить по ISIN , причём требуется не обновление данных, а дополнение, поэтому cellsLeftMerger
