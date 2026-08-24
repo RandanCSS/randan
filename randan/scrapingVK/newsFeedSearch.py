@@ -617,6 +617,7 @@ def newsFeedSearch(
         method = 'newsfeed.search'
         iteration = 0 # номер итерации применения текущего метода
         pause = 0.25
+
         print(
 f'В скрипте используются следующие аргументы метода {method} API ВК: q, start_from, start_time, end_time, expand.',
 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
