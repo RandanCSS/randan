@@ -620,7 +620,7 @@ def newsFeedSearch(
         print(
 f'В скрипте используются следующие аргументы метода {method} API ВК: q, start_from, start_time, end_time, expand.',
 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
-f'Если хотите добавить другие аргументы метода {method} API ВК, доступные по ссылке https://dev.vk.com/ru/method/newsfeed.search ,',
+f'Если хотите добавить другие аргументы метода {method} API ВК, доступные по ссылке https://dev.vk.com/ru/method/{method} ,',
 f'-- можете подать их в скобки функции newsFeedSearch перед её запуском или скопировать код исполняемого сейчас скрипта и сделать это внутри кода внутри метода {method} в разделе 2'
               )
         # print('expiriencedMode:', expiriencedMode) # для отладки
