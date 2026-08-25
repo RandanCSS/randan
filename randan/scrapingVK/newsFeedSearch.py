@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-'''
+"""
 (EN) A module that simplifies and maximizes VK content extraction using the platform's official API method newsfeed.search
 (RU) Модуль для упрощения выгрузки контента ВК методом его API newsfeed.search и максимизации размера этой выгрузки
-'''
+"""
 
 # 0. Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
 # В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
@@ -15,8 +15,9 @@ from subprocess import check_call
 # --- остальные модули и пакеты
 for attempt in range(1, 4):
     try:
-        from datetime import date, datetime
+        from datetime import datetime
         from IPython.display import display
+        from randan.scrapingVK import scrapingTools # модуль для упрощения скрапинга VK
 
         from randan.tools import calendarWithinYear, coLabAdaptor, df2file, files2df, scrapingTools, varPreprocessor # авторские модули для
             # (а) работы с календарём конкретного года
@@ -31,19 +32,19 @@ for attempt in range(1, 4):
 
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
-        module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
-        if '.' in module: module = module.split('.')[0]
+        module = str(errorDescription[1]).replace("No module named '", "").replace("'", "") #.replace('_', '')
+        if "." in module: module = module.split(".")[0]
         print(
-f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
+f"""Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
 Попытка № {attempt} из 3
-'''
+"""
               )
         check_call([sys.executable, "-m", "pip", "install", module])
         if  attempt == 3:
             print(
-f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
+f"""Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
-'''
+"""
                   )
 
 # 1. Вспомогательные функции для..
@@ -64,110 +65,45 @@ def bigSearch(API_keyS,
     dfAdd = pandas.DataFrame()
     goS = True
     params = {
-              'access_token': API_keyS[keyOrder], # обязательный параметр
-              'count': count, # опциональный параметр
-              'end_time': end_time, # опциональный параметр
-              'extended': 1, # опциональный параметр
-              'fields': fields, # опциональный параметр
-              'latitude': latitude, # опциональный параметр
-              'longitude': longitude, # опциональный параметр
-              'q': q, # опциональный параметр
-              'start_from': start_from, # опциональный параметр
-              'start_time': start_time, # опциональный параметр
-              'v': '5.199' # обязательный параметр
+              "access_token": API_keyS[keyOrder], # обязательный параметр
+              "count": count, # опциональный параметр
+              "end_time": end_time, # опциональный параметр
+              "extended": 1, # опциональный параметр
+              "fields": fields, # опциональный параметр
+              "latitude": latitude, # опциональный параметр
+              "longitude": longitude, # опциональный параметр
+              "q": q, # опциональный параметр
+              "start_from": start_from, # опциональный параметр
+              "start_time": start_time, # опциональный параметр
+              "v": "5.199" # обязательный параметр
               }
     tryer = 0
     while True:
         try: # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
-            response = requests.get('https://api.vk.ru/method/newsfeed.search', params=params)
+            response = requests.get("https://api.vk.ru/method/newsfeed.search", params=params)
             response = response.json() # отобразить выдачу метода get в виде JSON
             # print('response', response) # для отладки
-            if 'response' in response.keys():
-                response = response['response']
+            if "response" in response.keys():
+                response = response["response"]
                 # print('    response.keys() внутри bigSearch', response.keys()) # для отладки
-                dfAdd = pandas.json_normalize(response['items'])
-                break
-            elif 'error' in response.keys():
-                if 'Application is blocked' in response['error']['error_msg']:
-                    # print('  keyOrder до замены', '                    ') # для отладки
-                    keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
-                    print(f'\nПохоже, ключ попал под ограничение вследствие блокировки приложения, к которому он относится; пробую перейти к следующему ключу (№ {keyOrder})')
-                    # print('  keyOrder после замены', keyOrder, '                    ') # для отладки
-                    tryer += 1
-                    if tryer >= len(API_keyS):
-                        print(
-'''
-Попробовал все располагаемые ключи; все они заблокированны или неактивны(
-Попробуйте обновить сервисный ключ в Вашем приложении API ВК, после чего замените старые ключи новым в файле credentialsVK.txt и перезапустите этот скрипт
-'''
-                              )
-                        # response = {'items': [], 'total_count': 0} # принудительная выдача для response
-                        goS = False # нет смысла продолжать исполнение скрипта
-                        break # и, следовательно, нет смысла в новых итерациях цикла
 
-                elif 'Too many requests per second' in response['error']['error_msg']:
-                    # print('  keyOrder до замены', '                    ') # для отладки
-                    keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
-                    print(f'\nПохоже, ключ попал под ограничение вследствие слишком высокой частоты обращения скрипта к API; пробую перейти к следующему ключу (№ {keyOrder}) и снизить частоту')
-                    # print('  keyOrder после замены', keyOrder, '                    ') # для отладки
-                    pause += 0.25
+                dfAdd = pandas.json_normalize(response["items"])
+                break # нет смысла в новых итерациях цикла while goC
 
-                elif 'Unknown application: could not get application' in response['error']['error_msg']:
-                    # print('  keyOrder до замены', '                    ') # для отладки
-                    keyOrder = keyOrder + 1 if keyOrder < (len(API_keyS) - 1) else 0 # смена ключа, если есть на что менять
-                    print('\nПохоже, Ваше ВК-приложение попало под ограничение; пробую перейти к следующему ключу (№ {keyOrder}) и снизить частоту')
-                    # print('  keyOrder после замены', keyOrder, '                    ') # для отладки
-                    pause += 0.25
-
-                elif 'Internal server error: Unknown error, try later' in response['error']['error_msg']:
-                    print('\nПохоже, ошибка на сервере ВК; подождите и запустите скрипт с начала')
-                    response = {'items': [], 'total_count': 0} # принудительная выдача для response
-                    goS = False # нет смысла продолжать исполнение скрипта
-                    break # и, следовательно, нет смысла в новых итерациях цикла
-
-                elif 'User authorization failed' in response['error']['error_msg']:
-                    print(
-'''
-Похоже, аккаунт попал под ограничение. Оно может быть снято с аккаунта сразу или спустя какое-то время. Подождите или подготовьте новый ключ в другом аккаунте. И запустите скрипт с начала'''
-                          )
-                    response = {'items': [], 'total_count': 0} # принудительная выдача для response
-                    goS = False # нет смысла продолжать исполнение скрипта
-                    break # и, следовательно, нет смысла в новых итерациях цикла
-
-                else:
-                    print('  Похоже, проблема НЕ в слишком высокой частоте обращения скрипта к API((')
-                    print('  ', response['error']['error_msg'])
-                    response = {'items': [], 'total_count': 0} # принудительная выдача для response
-                    goS = False # нет смысла продолжать исполнение скрипта
-                    break # и, следовательно, нет смысла в новых итерациях цикла
+            else: goC, goS, keyOrder, pause, response, tryer = scrapingTools.errorProcessor(API_keyS, keyOrder, pause, response, tryer)
 
         except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
-            response = {'items': [], 'total_count': 0} # принудительная выдача для response
+            response = {"items": [], "total_count": 0} # принудительная выдача для response
             goS = False # нет смысла продолжать исполнение скрипта
             # print('goS bigSearch:', goS) # для отладки
-            break # и, следовательно, нет смысла в новых итерациях цикла            
+            break # и, следовательно, нет смысла в новых итерациях цикла
 
     if goS:
         # Для визуализации процесса
-        print('    Итерация №', iteration, ', number of items', len(response['items']), '                    ', end='\r')
+        print("    Итерация №", iteration, ", number of items", len(response["items"]), "                                        ", end="\r")
 
         iteration += 1
-        if len(dfAdd) > 0:
-            dfAdd['date'] = dfAdd['date'].apply(lambda content: datetime.fromtimestamp(content).strftime('%Y.%m.%d'))
-                # сменить формат представления дат, класс данных столбцов с id, создать столбец с кликабельными ссылками на контент;
-                    # здесь, а не в конце, поскольку нужна совместимость с itemS из Temporal и от пользователя
-
-            dfAdd['URL'] = dfAdd['from_id'].astype(str)
-            dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL'] = 'id' + dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-') == False].index, 'URL']
-            dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'] = dfAdd.loc[dfAdd[dfAdd['URL'].str.contains('-')].index, 'URL'].str.replace('-', 'public')
-            dfAdd['URL'] = 'https://vk.com' + '/' + dfAdd['URL'] + '?w=' + dfAdd['inner_type'].str.split('_').str[0] + dfAdd['owner_id'].astype(str) + '_' + dfAdd['id'].astype(str)
-    
-            if fields != None:
-                for fieldsColumn in ['groups', 'profiles']:
-                    if fieldsColumn in response.keys():
-                        if response[fieldsColumn] != []: # например, когда в основной таблице dfAdd нет групповых или, наоборот, персональных аккаунтов, тогда fieldsColumn есть, но с пустым содержимым
-                            # print('fieldsColumn:', fieldsColumn) # для отладки
-                            dfAdd = fieldsProcessor(dfIn=dfAdd, fieldsColumn=fieldsColumn, response=response)
+        if len(dfAdd) > 0: dfAdd = scrapingTools.dfColumnsProcessor(dfAdd, fields, response)
 
     return dfAdd, goS, iteration, keyOrder, pause, response
 
@@ -191,58 +127,62 @@ def dfsProcessor(complicatedNamePart,
     columnsForCheck = []
     if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
         for column in df.columns:
-            if 'id' in column: columnsForCheck.append(column)
+            if "id" in column: columnsForCheck.append(column)
     # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck) # для отладки
-    df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True) # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
+    df = df.drop_duplicates(columnsForCheck, keep="last").reset_index(drop=True) # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
 
     if goS == False:
         print(
-f'Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"'
+f"""Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal""
               )
-        if not os.path.exists(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal'):
-            os.makedirs(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal')
-            print(f'Директория "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal" создана')
+        if not os.path.exists(f"{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"):
+            os.makedirs(f"{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal")
+            print(f"Директория "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal" создана")
         # else:
             # print(f'Директория "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal" существует')
 
 # Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}method.txt', 'w+') # открыть на запись
+        if not fields: fields = []
+        with open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}fields.txt', 'w', encoding='utf-8') as file:
+            json.dump(data_to_save, file, ensure_ascii=False, indent=4)
+
+        file = open(f"{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}method.txt", "w+") # открыть на запись
         file.write(method)
         file.close()
 
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}q.txt', 'w+') # открыть на запись
-        file.write(q if q != None else '')
+        file = open(f"{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}q.txt", "w+") # открыть на запись
+        file.write(q if q != None else "")
         file.close()
-    
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}stageTarget.txt', 'w+')
+
+        file = open(f"{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}stageTarget.txt", "w+")
         file.write(str(stage)) # stage и stageTarget принимает значения [0; 3]
         file.close()
-    
-        if targetCount:
-            file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}targetCount.txt', 'w+')
-            file.write(str(targetCount))
-            file.close()
-    
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}year.txt', 'w+')
+
+        if not targetCount: targetCount = 0
+        file = open(f"{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}targetCount.txt", "w+")
+        file.write(str(targetCount))
+        file.close()
+
+        file = open(f"{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}year.txt", "w+")
         file.write(str(year)) # год, на котором остановилось исполнение скрипта
         file.close()
 
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}yearsRange.txt', 'w+')
-        file.write(yearsRange if yearsRange != None else '') # пользовательский временнОй диапазон
+        file = open(f"{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}yearsRange.txt", "w+")
+        file.write(yearsRange if yearsRange != None else "") # пользовательский временнОй диапазон
         file.close()
-    
+
         df2file.df2fileShell(
-                             complicatedNamePart=f'{complicatedNamePart}_Temporal',
+                             complicatedNamePart=f"{complicatedNamePart}_Temporal",
                              dfIn=df,
                              fileFormatChoice=fileFormatChoice,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                             method=method.split(".")[0] + method.split(".")[1].capitalize() if "." in method else method, # чтобы избавиться от лишней точки в имени файла
                              coLabFolder=coLabFolder,
                              currentMoment=momentCurrent.strftime("%Y%m%d") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              )
         warnings.filterwarnings("ignore")
         print(
-'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
-'Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'
+"""Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть",
+"Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473""
               )
         sys.exit()
 
@@ -254,51 +194,51 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
     idColumnS = []
     for column in df.columns:
     # for column in df.columns[1:]: # для отладки
-        if 'id' in column:
+        if "id" in column:
             # print('column:', column) # для отладки
             idColumnS.append(column)
     columnsToJSON = varPreprocessor.jsonChecker(df)
     idColumnS.extend(columnsToJSON)
-    
+
     fieldsDf = pandas.json_normalize(response[fieldsColumn])
-    idS = pandas.json_normalize(response[fieldsColumn])['id'].to_list()
+    idS = pandas.json_normalize(response[fieldsColumn])["id"].to_list()
     if len(idS) > 0:
-        idsCopy = pandas.json_normalize(response[fieldsColumn])['id'].to_list()
-        idsCopyStr = '' # список в текстовый объект, чтобы ниже подать его внутрь столбца idColumnsConcatinated, созданного конкатенацией idColumnS
-        for idCopy in idsCopy: idsCopyStr += str(idCopy) + ', '
+        idsCopy = pandas.json_normalize(response[fieldsColumn])["id"].to_list()
+        idsCopyStr = "" # список в текстовый объект, чтобы ниже подать его внутрь столбца idColumnsConcatinated, созданного конкатенацией idColumnS
+        for idCopy in idsCopy: idsCopyStr += str(idCopy) + ", "
         idsCopyStr = idsCopyStr[:-2]
         # print('idsCopyStr':, idsCopyStr) # для отладки
-    
+
     def fieldsIdsChecker(cellContent): # функция, приминяемая ниже посредством apply , чтобы ускорить процесс (по сравнению с циклом по ячейкам)
         if pandas.isna(cellContent):
-            return ''
-        idsCopy = cellContent.split('idsCopy')[1].split(', ')
-        cellContent = cellContent.split('idsCopy')[0]
+            return ""
+        idsCopy = cellContent.split("idsCopy")[1].split(", ")
+        cellContent = cellContent.split("idsCopy")[0]
         idsToItemS = []
         for idCopy in idsCopy:
             if idCopy in cellContent:
                 idsToItemS.append(int(idCopy))
         if idsToItemS != []:
             # print('idsToItemS не пустой список:', idsToItemS) # для отладки
-            try: return fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')
+            try: return fieldsDf[fieldsDf["id"].isin(idsToItemS)].to_dict("records")
             except:
-                print('!!! Ошибка:', sys.exc_info()[1])
+                print("!!! Ошибка:", sys.exc_info()[1])
                 # print('dict:', fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')) # для отладки
-                return ''
+                return ""
         else:
             # print('idsToItemS пустой список:', idsToItemS) # для отладки
-            return ''
+            return ""
 
-    df['idColumnsConcatinated'] = ''
+    df["idColumnsConcatinated"] = ""
     for idColumn in idColumnS:
-        df['idColumnsConcatinated'] += ' ' + df[idColumn].astype(str)
+        df["idColumnsConcatinated"] += " " + df[idColumn].astype(str)
 
-    df['idColumnsConcatinated'] += 'idsCopy' + idsCopyStr
-    df[fieldsColumn] = df['idColumnsConcatinated'].apply(fieldsIdsChecker)
+    df["idColumnsConcatinated"] += "idsCopy" + idsCopyStr
+    df[fieldsColumn] = df["idColumnsConcatinated"].apply(fieldsIdsChecker)
     try:
-        df[fieldsColumn] = df[fieldsColumn].replace('N/A', numpy.NaN)
+        df[fieldsColumn] = df[fieldsColumn].replace("N/A", numpy.NaN)
     except:
-        df[fieldsColumn] = df[fieldsColumn].replace('N/A', numpy.nan)
+        df[fieldsColumn] = df[fieldsColumn].replace("N/A", numpy.nan)
     return df
 
 # 2. Основная функция
@@ -335,80 +275,80 @@ def newsFeedSearch(access_token=None,
         expiriencedMode = False
         count = 200
     else:
-        expiriencedMode = True        
+        expiriencedMode = True
         if params != None:
 
-            access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
+            access_token = scrapingTools.argument_key_comparison(access_token, "access_token", params)
             # print('access_token:', access_token) # для отладки
 
-            count = scrapingTools.argument_key_comparison(count, 'count', params)
+            count = scrapingTools.argument_key_comparison(count, "count", params)
             if count != None:
                 if type(count) == str: count = int(count)
             # print('count:', count) # для отладки
 
-            end_time = scrapingTools.argument_key_comparison(end_time, 'end_time', params)
+            end_time = scrapingTools.argument_key_comparison(end_time, "end_time", params)
             if end_time != None:
                 if type(end_time) == str: end_time = int(end_time)
             # print('end_time:', end_time) # для отладки
 
-            fields = scrapingTools.argument_key_comparison(fields, 'fields', params)
+            fields = scrapingTools.argument_key_comparison(fields, "fields", params)
             # print('fields:', fields) # для отладки
 
-            latitude = scrapingTools.argument_key_comparison(latitude, 'latitude', params)
+            latitude = scrapingTools.argument_key_comparison(latitude, "latitude", params)
             if latitude != None:
                 if type(latitude) == str: latitude = int(latitude)
             # print('latitude:', latitude) # для отладки
 
-            longitude = scrapingTools.argument_key_comparison(longitude, 'longitude', params)
+            longitude = scrapingTools.argument_key_comparison(longitude, "longitude", params)
             if longitude != None:
                 if type(longitude) == str: longitude = int(longitude)
             # print('longitude:', longitude) # для отладки
 
-            q = scrapingTools.argument_key_comparison(q, 'q', params)
+            q = scrapingTools.argument_key_comparison(q, "q", params)
             if q != None:
                 if type(q) != str: q = str(q)
             # print('q:', q) # для отладки
 
-            start_time = scrapingTools.argument_key_comparison(start_time, 'start_time', params)
+            start_time = scrapingTools.argument_key_comparison(start_time, "start_time", params)
             if start_time != None:
                 if type(start_time) == str: start_time = int(start_time)
             # print('start_time:', start_time) # для отладки
 
     if expiriencedMode == False:
         print(
-'''    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию: https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ). Для получения API key следует создать приложение и из него скопировать сервисный ключ. Приложение -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому ВК. Авторизация сервисным ключом позволяет использовать некоторые методы API -- в документации API ВК ( https://dev.vk.com/ru/method ) они помечены серым кружком (одним или в сочетании с кружками другого цвета). Его достаточно, если выполнять действия, которые были бы доступны Вам как обычному пользователю ВК: посмотреть открытые персональные и групповые страницы, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления поста из чужого аккаунта, то Вам потребуется дополнительная авторизация.
-    ВК может ограничить действие Вашего ключа или вовсе заблокировать его, если сочтёт, что Вы злоупотребляете автоматизированным доступом.'''
+"""    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию: https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ). Для получения API key следует создать приложение и из него скопировать сервисный ключ. Приложение -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому ВК. Авторизация сервисным ключом позволяет использовать некоторые методы API -- в документации API ВК ( https://dev.vk.com/ru/method ) они помечены серым кружком (одним или в сочетании с кружками другого цвета). Его достаточно, если выполнять действия, которые были бы доступны Вам как обычному пользователю ВК: посмотреть открытые персональные и групповые страницы, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления поста из чужого аккаунта, то Вам потребуется дополнительная авторизация.
+    ВК может ограничить действие Вашего ключа или вовсе заблокировать его, если сочтёт, что Вы злоупотребляете автоматизированным доступом."""
               )
     print(
-'''    Скрипт нацелен на выгрузку характеристик контента ВК методом его API newsfeed.search . Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам. При этом следует учесть, что текущая версия API ВК, на которой и основан скрипт, "не умеет" обращаться к контенту, опубликованному ранее 2020 года.
+"""    Скрипт нацелен на выгрузку характеристик контента ВК методом его API newsfeed.search . Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам. При этом следует учесть, что текущая версия API ВК, на которой и основан скрипт, "не умеет" обращаться к контенту, опубликованному ранее 2020 года.
     Для корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.
-    Преимущества скрипта перед выгрузкой контента из ВК вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API ВК: гораздо быстрее, гораздо большее количество контента, не требуется тщательно изучать обширную и при этом неполную документацию методов API ВК'''
+    Преимущества скрипта перед выгрузкой контента из ВК вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API ВК: гораздо быстрее, гораздо большее количество контента, не требуется тщательно изучать обширную и при этом неполную документацию методов API ВК"""
           )
-    if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+    if expiriencedMode == False: input("--- После прочтения этой инструкции нажмите Enter")
 
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API ВК
     # Блок, поскольку folder многократно используется внутри функции в формулах
     coLabFolder = coLabAdaptor.coLabAdaptor()
     folder = coLabFolder
-    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if (folder == None) | (folder == ''): folder = ''
+    slash = "\\" if os.name == "nt" else "/" # выбор слэша в зависимости от ОС
+    if (folder == None) | (folder == ""): folder = ""
     else: folder += slash
 
-    fileFormatChoice = '.xlsx' # базовый формат сохраняемых файлов; формат .json добавляется опционально через наличие columnsToJSON
+    fileFormatChoice = ".xlsx" # базовый формат сохраняемых файлов; формат .json добавляется опционально через наличие columnsToJSON
     folderFile = None
     goS = True
     itemS = pandas.DataFrame()
     itemsAdditional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
     itemsMonthlyAdditional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
-    itemsYearlyAdditional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных               
+    itemsYearlyAdditional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных   
     keyOrder = 0
     stageTarget = 0 # stageTarget принимает значения [0; 3] и относится к стадиям скрипта
     temporalName = None
     yearsRange = None
 
     momentCurrent = datetime.now() # запрос текущего момента
-    print('\nТекущий момент:', momentCurrent.strftime("%Y%m%d_%H%M"), '-- он будет использована для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
+    print("\nТекущий момент:", momentCurrent.strftime("%Y%m%d_%H%M"), "-- он будет использована для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n")
     year = int(momentCurrent.strftime("%Y")) # в случае отсутствия пользовательского временнОго диапазона
         # с этого года возможно сегментирование по годам вглубь веков (пока выдача не пустая)
 
@@ -419,26 +359,26 @@ def newsFeedSearch(access_token=None,
     rootNameS = os.listdir()
     # Поиск ключей
     if access_token == None:
-        print('Проверяю наличие файла credentialsVK.txt с ключ[ом ами], гипотетически сохранённым[и] при первом запуске скрипта')
-        if 'credentialsVK.txt' in rootNameS:
-            file = open('credentialsVK.txt')
+        print("Проверяю наличие файла credentialsVK.txt с ключ[ом ами], гипотетически сохранённым[и] при первом запуске скрипта")
+        if "credentialsVK.txt" in rootNameS:
+            file = open("credentialsVK.txt")
             API_keyS = file.read()
-            print('Нашёл файл credentialsVK.txt; далее буду использовать ключ[и] из него:', API_keyS)
+            print("Нашёл файл credentialsVK.txt; далее буду использовать ключ[и] из него:", API_keyS)
 
         else:
             print(
-'''--- НЕ нашёл файл credentialsVK.txt . Введите в окно Ваш API key для авторизации в API ВК 
+"""--- НЕ нашёл файл credentialsVK.txt . Введите в окно Ваш API key для авторизации в API ВК 
 (примерная инструкция, как создать API key, доступна по ссылке https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8 ). Для подстраховки от ограничения действия API key желательно создать несколько ключей (три -- отлично) и ввести их без кавычек через запятую с пробелом
---- После ввода нажмите Enter'''
+--- После ввода нажмите Enter"""
                   )
             while True:
                 API_keyS = input()
                 if len(API_keyS) != 0:
-                    print('-- далее буд[е у]т использован[ы] эт[от и] ключ[и]')
+                    print("-- далее буд[е у]т использован[ы] эт[от и] ключ[и]")
 
                     from randan.tools.textPreprocessor import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
                     API_keyS = multispaceCleaner(API_keyS)
-                    while API_keyS[-1] == ',': API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста
+                    while API_keyS[-1] == ",": API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста
 
                     file = open("credentialsVK.txt", "w+") # открыть на запись
                     file.write(API_keyS)
@@ -446,88 +386,91 @@ def newsFeedSearch(access_token=None,
                     break
 
                 else:
-                    print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
-        API_keyS = API_keyS.replace(' ', '') # контроль пробелов
-        API_keyS = API_keyS.replace(',', ', ') # контроль пробелов
-        API_keyS = API_keyS.split(', ')
+                    print("--- Вы ничего НЕ ввели. Попробуйте ещё раз..")
+        API_keyS = API_keyS.replace(" ", "") # контроль пробелов
+        API_keyS = API_keyS.replace(",", ", ") # контроль пробелов
+        API_keyS = API_keyS.split(", ")
     else: API_keyS = [access_token]
-    print('Количество ключей:', len(API_keyS), '\n')
+    print("Количество ключей:", len(API_keyS), "\n")
 
 # 2.0.2 Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
-    print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
+    print("Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
     for rootName in rootNameS:
-        if 'Temporal' in rootName:
+        if "Temporal" in rootName:
             if len(os.listdir(rootName)) == 7:
-                file = open(f'{rootName}{slash}targetCount.txt')
-                targetCount = file.read()
-                file.close()
-                targetCount = int(targetCount)
+                with open(f'{rootName}{slash}fields.json', 'r', encoding='utf-8') as file:
+                    fields = json.load(file)
 
-                file = open(f'{rootName}{slash}method.txt')
+                file = open(f"{rootName}{slash}method.txt")
                 method = file.read()
                 file.close()
 
-                file = open(f'{rootName}{slash}year.txt')
-                year = file.read()
-                file.close()
-                year = int(year)
-
-                file = open(f'{rootName}{slash}q.txt', encoding='utf-8') # 
+                file = open(f"{rootName}{slash}q.txt", encoding="utf-8") # 
                 q = file.read()
                 file.close()
-                if q == '': q = None # для единообразия
+                if q == "": q = None # для единообразия
 
-                file = open(f'{rootName}{slash}yearsRange.txt')
-                yearsRange = file.read()
-                file.close()
-
-                file = open(f'{rootName}{slash}stageTarget.txt')
+                file = open(f"{rootName}{slash}stageTarget.txt")
                 stageTarget = file.read()
                 file.close()
                 stageTarget = int(stageTarget)
 
-                print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:'
+                file = open(f"{rootName}{slash}targetCount.txt")
+                targetCount = file.read()
+                file.close()
+                targetCount = int(targetCount)
+
+                file = open(f"{rootName}{slash}year.txt")
+                year = file.read()
+                file.close()
+                year = int(year)
+
+                file = open(f"{rootName}{slash}yearsRange.txt")
+                yearsRange = file.read()
+                file.close()
+
+                print(f"Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
                       # , '\n- было выявлено целевое число объектов (targetCount)', targetCount
-                      , '\n- скрипт остановился на методе', method)
-                if year < int(momentCurrent.strftime("%Y")): print('- и на годе (при сегментировани по годам)', year)
-                print('- пользователь НЕ сформулировал запрос-фильтр' if q == None else  f"- пользователь сформулировал запрос-фильтр как '{q}'")
-                print('- пользователь НЕ ограничил временнОй диапазон' if yearsRange == None else  f'- пользователь ограничил временнОй диапазон границами {yearsRange}')
+                      , "\n- скрипт остановился на методе", method)
+                if year < int(momentCurrent.strftime("%Y")): print("- и на годе (при сегментировани по годам)", year)
+                print("- пользователь НЕ сформулировал запрос-фильтр" if q == None else  f"- пользователь сформулировал запрос-фильтр как "{q}"")
+                print("- пользователь НЕ ограничил временнОй диапазон" if yearsRange == None else  f"- пользователь ограничил временнОй диапазон границами {yearsRange}")
                 print(
-'''--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
+"""--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
 --- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите "R" и нажмите Enter
---- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter'''
+--- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter"""
                       )
                 decision = input()
                 if len(decision) == 0:
                     temporalNameS = os.listdir(rootName)
                     for temporalName in temporalNameS:
-                        if '.xlsx' in temporalName: break
-                    itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
+                        if ".xlsx" in temporalName: break
+                    itemS = pandas.read_excel(f"{rootName}{slash}{temporalName}", index_col=0)
 
                     for temporalName in temporalNameS:
-                        if '.json' in temporalName:
-                            itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
+                        if ".json" in temporalName:
+                            itemS = itemS.merge(pandas.read_json(f"{rootName}{slash}{temporalName}"), on="id", how="outer")
                             break
 
                     if yearsRange != None:
-                        yearsRange = yearsRange.split('-')
+                        yearsRange = yearsRange.split("-")
                         yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
 # Данные, сохранённые при прошлом запуске скрипта, загружены; их метаданные (q, yearsRange, stageTarget) будут использоваться при исполнении скрипта
                     break
-                elif decision == 'R': shutil.rmtree(rootName, ignore_errors=True)
+                elif decision == "R": shutil.rmtree(rootName, ignore_errors=True)
             else: shutil.rmtree(rootName, ignore_errors=True) # в директории Temporal не 7 файлов => либо она повреждена, либо создалась при безрезультатном запуске
 
 # 2.0.3 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
     if temporalName == None: # если itemsTemporal, в т.ч. пустой, не существует
             # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
-        rootName = 'No folder'
-        print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку')
+        rootName = "No folder"
+        print("Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку")
         print(
-'''
+"""
 Возможно, Вы располагаете файлом, в котором есть ранее выгруженные из ВК методом newsfeed.search данные, и который хотели бы дополнить? Или планируете первичный сбор контента?
 --- Если планируете первичный сбор, нажмите Enter
---- Если располагаете файлом формата XLSX, укажите полный путь, включая название файла, и нажмите Enter. Затем при необходимости сможете добавить к нему другие располагаемые файлы'''
+--- Если располагаете файлом формата XLSX, укажите полный путь, включая название файла, и нажмите Enter. Затем при необходимости сможете добавить к нему другие располагаемые файлы"""
               )
         while True:
             folderFile = input()
@@ -537,8 +480,8 @@ def newsFeedSearch(access_token=None,
             else:
                 itemS, error, folder = files2df.files2df(folderFile)
                 if error != None:
-                    if 'No such file or directory' in error:
-                        print('Путь:', folderFile, '-- не существует; попробуйте, пожалуйста, ещё раз..')
+                    if "No such file or directory" in error:
+                        print("Путь:", folderFile, "-- не существует; попробуйте, пожалуйста, ещё раз..")
                 else: break
             # display(itemS)
 # Теперь определены объекты: folder и folderFile (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
@@ -546,49 +489,49 @@ def newsFeedSearch(access_token=None,
 # 2.0.4 Пользовательские настройки запроса к API ВК
         if q == None: # если пользователь не подал этот аргумент в рамках experiencedMode
             print(
-'''Скрипт умеет искать контент в постах открытых аккаунтов по ТЕКСТОВОМУ ЗАПРОСУ-ФИЛЬТРУ
---- Введите текст запроса-фильтра, который ожидаете найти в постах, после чего нажмите Enter'''
+"""Скрипт умеет искать контент в постах открытых аккаунтов по ТЕКСТОВОМУ ЗАПРОСУ-ФИЛЬТРУ
+--- Введите текст запроса-фильтра, который ожидаете найти в постах, после чего нажмите Enter"""
                   )
             if folderFile != None:
                 print(
-'ВАЖНО! В результате исполнения текущего скрипта данные из указанного Вами файла', folderFile, 'будут дополнены актуальными данными из выдачи скрипта',
-'(возможно появление новых объектов и новых столбцов, а также актуализация содержимого столбцов),',
-'поэтому, вероятно, следует ввести тот же запрос-фильтр, что и при формировании указанного Вами файла'
+"ВАЖНО! В результате исполнения текущего скрипта данные из указанного Вами файла", folderFile, "будут дополнены актуальными данными из выдачи скрипта",
+"(возможно появление новых объектов и новых столбцов, а также актуализация содержимого столбцов),",
+"поэтому, вероятно, следует ввести тот же запрос-фильтр, что и при формировании указанного Вами файла"
                       )
             q = input()
-            if q == '': q = None # для единообразия
-            else: print('')
+            if q == "": q = None # для единообразия
+            else: print("")
 
         # Ограничения временнОго диапазона
         if (start_time == None) & (end_time == None) & (yearsRange == None): # если пользователь не подал эти аргументы в рамках experiencedMode
             print(
-'''Если требуется конкретный временнОй диапазон, то можно использовать его не на текущем этапе выгрузки данных, а на следующем этапе -- предобработки датафрейма с выгруженными данными. Проблема в том, что без назначения временнОго диапазона метод newsfeed.search выдаёт ограниченное количество объектов, причём наиболее приближенных к текущему моменту
+"""Если требуется конкретный временнОй диапазон, то можно использовать его не на текущем этапе выгрузки данных, а на следующем этапе -- предобработки датафрейма с выгруженными данными. Проблема в том, что без назначения временнОго диапазона метод newsfeed.search выдаёт ограниченное количество объектов, причём наиболее приближенных к текущему моменту
 --- Поэтому если всё же требуется назначить временнОй диапазон на этапе выгрузки данных, назначьте его годами (а не более мелкими единицами времени). Для назначения диапазона введите без кавычек минимальный год диапазона, тире, максимальный год диапазона (минимум и максимум могут совпадать в такой записи: "год-тот же год") и нажмите Enter !!! Cледует учесть, что текущая версия API ВК "не умеет" обращаться к контенту, опубликованному ранее 2020 года
---- Если НЕ требуется назначить временнОй диапазон на этапе выгрузки данных, нажмите Enter'''
+--- Если НЕ требуется назначить временнОй диапазон на этапе выгрузки данных, нажмите Enter"""
                   )
             while True:
                 yearsRange = input()
                 if len(yearsRange) != 0:
-                    yearsRange = re.sub(r' *', '', yearsRange)
-                    if '-' in yearsRange:
-                        yearsRange = yearsRange.split('-')
+                    yearsRange = re.sub(r" *", "", yearsRange)
+                    if "-" in yearsRange:
+                        yearsRange = yearsRange.split("-")
                         if len(yearsRange) == 2:
                             if (len(yearsRange[0]) == 4) & (len(yearsRange[1]) == 4):
                                 yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
                                 year = yearMaxByUser
                                 break
-                            else: print('--- Вы ввели год[ы] НЕ из четырёх цифр. Попробуйте ещё раз..')
-                        else: print('--- Вы ввели тире, но при этом ввели НЕ два года. Попробуйте ещё раз..')
-                    else: print('--- Вы НЕ ввели тире. Попробуйте ещё раз..')
+                            else: print("--- Вы ввели год[ы] НЕ из четырёх цифр. Попробуйте ещё раз..")
+                        else: print("--- Вы ввели тире, но при этом ввели НЕ два года. Попробуйте ещё раз..")
+                    else: print("--- Вы НЕ ввели тире. Попробуйте ещё раз..")
                 else:
                     yearsRange = None # для унификации
                     break
         if start_time != None:
-            yearMinByUser = int(datetime.fromtimestamp(start_time).strftime('%Y')) # из experiencedMode
+            yearMinByUser = int(datetime.fromtimestamp(start_time).strftime("%Y")) # из experiencedMode
             # print('elif start_time != None:', yearMinByUser) # для отладки
 
         if end_time != None:
-            yearMaxByUser = int(datetime.fromtimestamp(end_time).strftime('%Y')) # из experiencedMode
+            yearMaxByUser = int(datetime.fromtimestamp(end_time).strftime("%Y")) # из experiencedMode
             # print('elif end_time != None:', yearMaxByUser) # для отладки
             year = yearMaxByUser
 
@@ -601,36 +544,36 @@ def newsFeedSearch(access_token=None,
         if (start_time == None) & (yearMinByUser != None): start_time = int(datetime(yearMinByUser, 1, 1).timestamp()) # int(time.mktime(datetime(yearMinByUser, 1, 1).timetuple()))
         if (end_time == None) & (yearMaxByUser != None): end_time = int(datetime(yearMaxByUser, 12, 31).timestamp())
 
-        if yearsRange != None: print('') # чтобы был отступ, если пользователь подал этот аргумент
+        if yearsRange != None: print("") # чтобы был отступ, если пользователь подал этот аргумент
 
         if count == None: count = 200 # если ни пользователь не подал, ни в данных, сохранённых при прошлом запуске скрипта, нет
 
 # Сложная часть имени будущих директорий и файлов
-    complicatedNamePart = '_VK'
+    complicatedNamePart = "_VK"
     if q != None: complicatedNamePart += "_" + q if len(q) < 50 else "_" + q[:50]
-    complicatedNamePart += "" if ((yearMinByUser == None) & (yearMaxByUser == None)) else "_" + str(yearMinByUser) + '-' + str(yearMaxByUser)
+    complicatedNamePart += "" if ((yearMinByUser == None) & (yearMaxByUser == None)) else "_" + str(yearMinByUser) + "-" + str(yearMaxByUser)
     # print('complicatedNamePart', complicatedNamePart)
 
 # 2.1 Первичный сбор контента методом search
 # 2.1.0 Первое обращение к API БЕЗ аргументов start_time, end_time (этап stage = 0)
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         stage = 0
-        method = 'newsfeed.search'
+        method = "newsfeed.search"
         iteration = 0 # номер итерации применения текущего метода
         pause = 0.25
 
         print(
-f'В скрипте используются следующие аргументы метода {method} API ВК: q, start_from, start_time, end_time, expand.',
-'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
-f'Если хотите добавить другие аргументы метода {method} API ВК, доступные по ссылке https://dev.vk.com/ru/method/{method} ,',
-f'-- можете подать их в скобки функции newsFeedSearch перед её запуском или скопировать код исполняемого сейчас скрипта и сделать это внутри кода внутри метода {method} в разделе 2'
+f"""В скрипте используются следующие аргументы метода {method} API ВК: q, start_from, start_time, end_time, expand.",
+"Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.",
+f"Если хотите добавить другие аргументы метода {method} API ВК, доступные по ссылке https://dev.vk.com/ru/method/{method} ,",
+f"-- можете подать их в скобки функции newsFeedSearch перед её запуском или скопировать код исполняемого сейчас скрипта и сделать это внутри кода внутри метода {method} в разделе 2"""
               )
         # print('expiriencedMode:', expiriencedMode) # для отладки
-        if expiriencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-        print('') # для отступа
+        if expiriencedMode == False: input("--- После прочтения этой инструкции нажмите Enter")
+        print("") # для отступа
 
         if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
-            print('Первое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов')
+            print("Первое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов")
             # print('    start_from', start_from) # для отладки
 
             itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS=API_keyS,
@@ -647,15 +590,15 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                                                                    start_time=start_time)
             # print('goS 645:', goS) # для отладки
             if goS: # проверка, что функция bigSearch завершилась успехом; обработка вилки с targetCount == 0
-                targetCount = response['total_count']
+                targetCount = response["total_count"]
                 if targetCount == 0:
                     print(
-'  Искомых объектов на серверах ВК по Вашему запросу, ноль, поэтому нет смысла в продолжении исполнения скрипта. Что делать? Поменяйте настройки запроса и запустите скрипт с начала'
+"""  Искомых объектов на серверах ВК по Вашему запросу, ноль, поэтому нет смысла в продолжении исполнения скрипта. Что делать? Поменяйте настройки запроса и запустите скрипт с начала"""
                           )
                     warnings.filterwarnings("ignore")
                     print(
-'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
-'Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'
+"""Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть",
+"Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473""
                           )
                     sys.exit()
             else: targetCount = None # проверка, что функция bigSearch завершилась успехом
@@ -676,9 +619,9 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                  year=year,
                                  yearsRange=yearsRange)
 
-            print('  Проход по всем следующим страницам с выдачей          ')
-            while ('next_from' in response.keys()) & goS:
-                start_from = response['next_from']
+            print("  Проход по всем следующим страницам с выдачей          ")
+            while ("next_from" in response.keys()) & goS:
+                start_from = response["next_from"]
                 # print('    start_from', start_from) # для отладки
                 # print('goS 700:', goS) # для отладки
 
@@ -713,7 +656,7 @@ f'-- можете подать их в скобки функции newsFeedSearc
                                      year=year,
                                      yearsRange=yearsRange)
 
-            print('  Искомых объектов', targetCount, ', а найденных БЕЗ сегментирования по годам и месяцам:', len(itemS))
+            print("  Искомых объектов", targetCount, ", а найденных БЕЗ сегментирования по годам и месяцам:", len(itemS))
 
 # 2.1.1 Этап сегментирования по годам и месяцам (stage = 1) # !!! можно сделать динамическое определение периода, который наиболее приближает размер допустимой выдачи (1000) к бенчмарку
         stage = 1
@@ -721,9 +664,9 @@ f'-- можете подать их в скобки функции newsFeedSearc
             if len(itemS) < targetCount:
             # -- для остановки алгоритма, если все искомые объекты найдены БЕЗ сегментирования по годам и месяцам
                 print(
-'''Метод newsfeed.search выдаёт ограниченное количество объектов, причём наиболее приближенных к текущему моменту. Скрипт умеет внутри каждого года помесячно выгружать контент, двигаясь вглубь веков, пока не достигнет заданной пользователем левой границы временнОго диапазона или года с пустой выдачей
+"""Метод newsfeed.search выдаёт ограниченное количество объектов, причём наиболее приближенных к текущему моменту. Скрипт умеет внутри каждого года помесячно выгружать контент, двигаясь вглубь веков, пока не достигнет заданной пользователем левой границы временнОго диапазона или года с пустой выдачей
 --- Если хотите для поиска дополнительных объектов попробовать сегментирование по годам и месяцам, просто нажмите Enter. Поиск может занять минуты и даже часы, но Вы СМОЖЕТЕ ПРЕРВАТЬ ИСПОЛНЕНИЕ СКРИПТА КНОПКОЙ и ВЫГРУЖЕННЫЕ ДАННЫЕ СОХРАНЯТСЯ
---- Если НЕ хотите, нажмите пробел и затем Enter'''
+--- Если НЕ хотите, нажмите пробел и затем Enter"""
                       )
                 if len(input()) == 0:
                     while goS:
@@ -734,8 +677,8 @@ f'-- можете подать их в скобки функции newsFeedSearc
                         if year == int(momentCurrent.strftime("%Y")): calendarColumnS = calendarColumnS[:int(momentCurrent.strftime("%m"))]
                                 # чтобы исключить проход по будущим месяцам текущего года
                         for month in calendarColumnS:
-                            print('Ищу текст запроса-фильтра в контенте за',  month, 'месяц', year, 'года', '               ') # , end='\r'
-                            print('  Заход на первую страницу выдачи', '               ', end='\r')
+                            print("Ищу текст запроса-фильтра в контенте за",  month, "месяц", year, "года", "               ") # , end='\r'
+                            print("  Заход на первую страницу выдачи", "               ", end="\r")
 
                             itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS=API_keyS,
                                                                                                           count=count,
@@ -771,10 +714,10 @@ f'-- можете подать их в скобки функции newsFeedSearc
 
                             # print('len(itemsYearlyAdditional):', len(itemsYearlyAdditional)) # для отладки
 
-                            print('  Проход по всем следующим страницам с выдачей', '               ', end='\r')
+                            print("  Проход по всем следующим страницам с выдачей", "               ", end="\r")
 
-                            while ('next_from' in response.keys()) & goS:
-                                start_from = response['next_from']
+                            while ("next_from" in response.keys()) & goS:
+                                start_from = response["next_from"]
                                 # print('    start_from', start_from) # для отладки
 
                                 itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS=API_keyS,
@@ -835,58 +778,58 @@ f'-- можете подать их в скобки функции newsFeedSearc
                         # print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0]) # для отладки
 
                         if len(itemsYearlyAdditional) == 0:
-                            print(f'\nВыдача для года {year} -- пуста'
-                                  , '\n--- Если НЕ хотите для поиска дополнительных объектов попробовать двигаться к следующему месяцу вглубь веков, просто нажмите Enter'
-                                  , '\n--- Если хотите, нажмите пробел и затем Enter')
+                            print(f"\nВыдача для года {year} -- пуста"
+                                  , "\n--- Если НЕ хотите для поиска дополнительных объектов попробовать двигаться к следующему месяцу вглубь веков, просто нажмите Enter"
+                                  , "\n--- Если хотите, нажмите пробел и затем Enter")
                             if len(input()) == 0:
                                 # print(f'\nЗавершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser}')
                                 break
 
                         elif yearMinByUser != None: # если пользователь ограничил временнОй диапазон
                             if year <= yearMinByUser:
-                                print(f'Завершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser}')
+                                print(f"Завершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser}")
                                 break
 
-                        print('  Искомых объектов', targetCount, ', а найденных после добавления контента', year, 'года:', len(itemS), '                    ')
+                        print("  Искомых объектов", targetCount, ", а найденных после добавления контента", year, "года:", len(itemS), "                    ")
                         year -= 1
-                    print('Искомых объектов', targetCount, ', а найденных:', len(itemS), '          ')
+                    print("Искомых объектов", targetCount, ", а найденных:", len(itemS), "          ")
 
             # pandas.set_option('display.max_columns', None)
             display(itemS.head())
-            print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
+            print("Число столбцов:", itemS.shape[1], ", число строк", itemS.shape[0])
 
         elif stage < stageTarget:
-            print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"')
+            print(f"\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"")
 
 # 2.1.2 Экспорт выгрузки метода search и финальное завершение скрипта
         df2file.df2fileShell(complicatedNamePart=complicatedNamePart,
                              dfIn=itemS,
                              fileFormatChoice=fileFormatChoice,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                             method=method.split(".")[0] + method.split(".")[1].capitalize() if "." in method else method, # чтобы избавиться от лишней точки в имени файла
                              coLabFolder=coLabFolder,
                              currentMoment=momentCurrent.strftime("%Y%m%d_%H%M")) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
 
-        print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+        print("Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473")
         if os.path.exists(rootName):
-            print('rootName:', rootName)
+            print("rootName:", rootName)
             print(
-    'Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'
+    """Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта"""
                   )
             shutil.rmtree(rootName, ignore_errors=True)
         if fields != None: print(
-f'''
+f"""
 Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
 import pandas
-column = 'Имя_столбца'
+column = "Имя_столбца"
 JSONS = []
 for cellContent in Исходный_датафрейм[column].dropna():
     JSONS.extend(cellContent)
-Новый_датафрейм = pandas.json_normalize(JSONS).drop_duplicates('id').reset_index(drop=True)
+Новый_датафрейм = pandas.json_normalize(JSONS).drop_duplicates("id").reset_index(drop=True)
 
 Чтобы сохранить результат распаковки в ту же директорию, в которую уже сохранены основные данные, используйте такой код:
 from randan.tools.df2file import df2fileShell
-df2fileShell('{complicatedNamePart}', Новый_датафрейм, '{fileFormatChoice}', column, {'{coLabFolder}' if coLabFolder else None}, '{momentCurrent.strftime("%Y%m%d_%H%M")}')
-'''
+df2fileShell("{complicatedNamePart}", Новый_датафрейм, "{fileFormatChoice}", column, {"{coLabFolder}" if coLabFolder else None}, "{momentCurrent.strftime("%Y%m%d_%H%M")}")
+"""
                                  )
         if returnDfs: return itemS
 
@@ -897,12 +840,12 @@ df2fileShell('{complicatedNamePart}', Новый_датафрейм, '{fileForma
                 dfAdd = itemsYearlyAdditional
                 dfFinal = itemS
                 dfIn = itemS
-    
+
             elif itemsMonthlyAdditional:
                 dfAdd = itemsMonthlyAdditional
                 dfFinal = itemS
                 dfIn = itemsYearlyAdditional
-    
+
             elif itemsAdditional:
                 dfAdd = itemsAdditional
                 dfFinal = itemS
