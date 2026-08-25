@@ -38,7 +38,7 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 
 # 1. Функции для..
 # .. обработки столбцов выдачи
-def dfColumnsProcessor(df_in, response):
+def dfColumnsProcessor(df_in, fields, response):
     df = df_in.copy()
     df['date'] = df['date'].apply(lambda content: datetime.fromtimestamp(content).strftime('%Y.%m.%d'))
         # сменить формат представления дат, класс данных столбцов с id, создать столбец с кликабельными ссылками на контент;
