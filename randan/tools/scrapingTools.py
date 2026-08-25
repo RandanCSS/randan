@@ -2,8 +2,8 @@
 # coding: utf-8
 
 '''
-(EN) A proprietary module that simplifies and manages the web scraping workflow
-(RU) Авторский модуль для упрощения скрапинга
+(EN) A module that simplifies and manages the web scraping workflow
+(RU) Модуль для упрощения скрапинга
 '''
 
 def argument_key_comparison(argument, key, params):
