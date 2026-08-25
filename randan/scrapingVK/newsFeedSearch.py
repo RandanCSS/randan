@@ -869,6 +869,5 @@ df2fileShell("{complicatedNamePart}", Новый_датафрейм, "{fileForma
 
             if returnDfs: return itemS
 
-# Добавить в dfsProcessor и импорт fields
 # Введённый аргумент end_time приравнять к текущему моменту, чтобы не было прохода по лишним месяцам
 # Сделать выбор временнОго диапазона динамическим
