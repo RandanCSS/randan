@@ -15,20 +15,18 @@ from subprocess import check_call
 # --- остальные модули и пакеты
 for attempt in range(1, 4):
     try:
-        from datetime import date, datetime
+        from datetime import datetime
         from IPython.display import display
+        from randan.scrapingVK import scrapingTools # модуль для упрощения скрапинга VK
 
-        from randan.tools import calendarWithinYear, coLabAdaptor, df2file, files2df, scrapingTools, varPreprocessor # авторские модули для
+        from randan.tools import calendarWithinYear, coLabAdaptor, df2file, files2df, scrapingTools # модули для
             # (а) работы с календарём конкретного года
             # (б) адаптации текущего скрипта к файловой системе CoLab
             # (в) сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
             # (г) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
             # (д) упрощения скрапинга
-            # (е) предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
 
-        from randan.scrapingVK import scrapingTools
-
-        import json, numpy, os, pandas, re, shutil, time, requests, warnings
+        import json, os, pandas, shutil, requests, warnings
         break # выход из цикла for attempt in range(3)
 
     except ModuleNotFoundError:
