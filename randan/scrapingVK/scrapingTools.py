@@ -1,3 +1,42 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+'''
+(EN) A module that simplifies and manages the web scraping workflow of VK
+(RU) Модуль для упрощения скрапинга VK
+'''
+
+# 0. Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
+# В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
+# sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+import sys
+from subprocess import check_call
+
+# --- остальные модули и пакеты
+for attempt in range(1, 4):
+    try:
+        from datetime import datetime
+        import pandas
+        break # выход из цикла for attempt in range(3)
+
+    except ModuleNotFoundError:
+        errorDescription = sys.exc_info()
+        module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
+        if '.' in module: module = module.split('.')[0]
+        print(
+f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
+Попытка № {attempt} из 3
+'''
+              )
+        check_call([sys.executable, "-m", "pip", "install", module])
+        if  attempt == 3:
+            print(
+f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
+поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
+'''
+                  )
+
+# 1. Функции для..
 # .. обработки столбцов выдачи
 def dfColumnsProcessor(df_in, response):
     df = df_in.copy()
