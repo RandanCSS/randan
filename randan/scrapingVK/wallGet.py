@@ -26,6 +26,8 @@ for attempt in range(1, 4):
             # (д) упрощения скрапинга
             # (е) предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
 
+        from randan.scrapingVK import scrapingTools
+
         import json, numpy, os, pandas, re, shutil, time, requests, warnings
         break # выход из цикла for attempt in range(3)
 
@@ -85,7 +87,7 @@ def wallGetCore(API_keyS,
                 dfAdd = pandas.json_normalize(response['items'])
                 break # нет смысла в новых итерациях цикла while goC
 
-            else: goC, goS, keyOrder, pause, response, tryer = errorProcessor(API_keyS, keyOrder, pause, response, tryer)
+            else: goC, goS, keyOrder, pause, response, tryer = scrapingTools.errorProcessor(API_keyS, keyOrder, pause, response, tryer)
 
         except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
             response = {'items': [], 'total_count': 0} # принудительная выдача для response
@@ -96,10 +98,10 @@ def wallGetCore(API_keyS,
 
     if goS:
         # Для визуализации процесса
-        print('    Итерация №', iteration, ', number of items', len(response['items']), '                    ', end='\r')
+        print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
 
         iteration += 1
-        if len(dfAdd) > 0: dfAdd = dfColumnsProcessor(dfAdd, response)
+        if len(dfAdd) > 0: dfAdd = scrapingTools.dfColumnsProcessor(dfAdd, fields, response)
 
     return dfAdd, goS, iteration, keyOrder, pause, response
 
@@ -192,7 +194,7 @@ def wallGet(access_token=None,
             params=None,
             returnDfs=False):
     """
-    Функция для выгрузки характеристик контента ВК методом его API wall.get. Причём количество объектов выгрузки максимизируется посредством offset
+    Функция для выгрузки характеристик контента ВК методом его API wall.get . Причём количество объектов выгрузки максимизируется посредством offset
 
     Parameters
     ----------
@@ -207,6 +209,7 @@ def wallGet(access_token=None,
           offset : int
           params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.get ,
           чтобы не подавать эти аргументы по отдельности
+
                q : str
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
     """
@@ -247,7 +250,7 @@ def wallGet(access_token=None,
     ВК может ограничить действие Вашего ключа или вовсе заблокировать его, если сочтёт, что Вы злоупотребляете автоматизированным доступом."""
               )
     print(
-"""    Скрипт нацелен на выгрузку характеристик контента ВК методом его API wall.get. Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам. При этом следует учесть, что текущая версия API ВК, на которой и основан скрипт, "не умеет" обращаться к контенту, опубликованному ранее 2020 года
+"""    Скрипт нацелен на выгрузку характеристик контента ВК методом его API wall.get . Причём количество объектов выгрузки максимизируется посредством offset .
     Для корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.
     Преимущества скрипта перед выгрузкой контента из ВК вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API ВК: гораздо быстрее, гораздо большее количество контента, не требуется тщательно изучать обширную и при этом неполную документацию методов API ВК"""
           )
@@ -322,9 +325,8 @@ def wallGet(access_token=None,
                 domain = file.read()
                 file.close()
 
-                file = open(f'{rootName}{slash}fields.txt')
-                fields = file.read()
-                file.close()
+                with open(f'{rootName}{slash}fields.json', 'r', encoding='utf-8') as file:
+                    fields = json.load(file)
 
                 file = open(f'{rootName}{slash}filter.txt')
                 filter = file.read()
@@ -451,9 +453,9 @@ f'-- можете подать их в скобки функции wallGet пе�
             else:
                 itemS = dfsProcessor(complicatedNamePart,
                                      coLabFolder,
-                                     dfAdd,
-                                     dfFinal, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода get
-                                     dfIn,
+                                     itemsAdditional,
+                                     itemS, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода get
+                                     itemS,
                                      domain,
                                      fields,
                                      fileFormatChoice,
@@ -504,25 +506,20 @@ df2fileShell('{complicatedNamePart}', Новый_датафрейм, '{fileForma
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         # display(itemS)
-        if len(itemS) > 0:
-            if itemsAdditional:
-                dfAdd = itemsAdditional
-                dfFinal = itemS
-                dfIn = itemS
+        if not itemS: itemS = pandas.DataFrame()
+        dfsProcessor(complicatedNamePart,
+                     coLabFolder,
+                     dfAdd,
+                     itemS, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода get
+                     itemS,
+                     domain,
+                     fields,
+                     fileFormatChoice,
+                     filter,
+                     goS, # единственная из функций, принимающая этот аргумент
+                     method,
+                     momentCurrent,
+                     offset,
+                     slash)
 
-            dfsProcessor(complicatedNamePart,
-                         coLabFolder,
-                         dfAdd,
-                         dfFinal, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода get
-                         dfIn,
-                         domain,
-                         fields,
-                         fileFormatChoice,
-                         filter,
-                         goS, # единственная из функций, принимающая этот аргумент
-                         method,
-                         momentCurrent,
-                         offset,
-                         slash)
-
-            if returnDfs: return itemS
+        if returnDfs: return itemS
