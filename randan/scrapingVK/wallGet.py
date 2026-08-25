@@ -26,7 +26,7 @@ for attempt in range(1, 4):
             # (г) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
             # (д) упрощения скрапинга
 
-        import json, os, pandas, shutil, requests, warnings
+        import json, os, pandas, shutil, requests, time, warnings
         break # выход из цикла for attempt in range(3)
 
     except ModuleNotFoundError:
@@ -465,6 +465,7 @@ f'-- можете подать их в скобки функции wallGet пе�
                                      slash)
 
                 offset += count
+                time.sleep(pause)
 
 # 2.1.2 Экспорт выгрузки метода get и финальное завершение скрипта
         df2file.df2fileShell(
