@@ -144,13 +144,11 @@ f'Поскольку исполнение скрипта натолкнулос�
         file.write(domain if domain else '')
         file.close()
 
+        if not fields: fields = []
         with open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}fields.txt', 'w', encoding='utf-8') as file:
             json.dump(data_to_save, file, ensure_ascii=False, indent=4)
 
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}fields.txt', 'w+') # открыть на запись
-        file.write(fields if fields else '')
-        file.close()
-
+        if not filter: filter = ''
         file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}filter.txt', 'w+') # открыть на запись
         file.write(filter if filter else '')
         file.close()
