@@ -289,7 +289,7 @@ def wallGet(access_token=None,
             while True:
                 API_keyS = input()
                 if len(API_keyS) != 0:
-                    print('-- далее буд[е у]т использован[ы] эт[от и] ключ[и]')
+                    print(f"-- далее буд{'у' if len(API_keyS) > 1 else 'е'}т использован{'ы' if len(API_keyS) > 1 else ''} эт{'и' if len(API_keyS) > 1 else 'и'} ключ{'и' if len(API_keyS) > 1 else ''}")
 
                     from randan.tools.textPreprocessor import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
                     API_keyS = multispaceCleaner(API_keyS)
