@@ -138,6 +138,7 @@ f'Поскольку исполнение скрипта натолкнулос�
             # print(f'Директория "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal" существует')
 
 # Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
+        if not domain: domain = ''
         file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}domain.txt', 'w+') # открыть на запись
         file.write(domain if domain else '')
         file.close()
