@@ -241,10 +241,12 @@ def wallGetComments(access_token=None,
             # print('offset:', offset) # для отладки
 
             owner_id = scrapingTools.argument_key_comparison(owner_id, 'owner_id', params)
+            if owner_id:
                 if type(owner_id) != str: owner_id = str(owner_id)
             # print('owner_id:', owner_id) # для отладки
 
             post_id = scrapingTools.argument_key_comparison(post_id, 'post_id', params)
+            if post_id:
                 if type(post_id) != str: post_id = str(post_id)
             # print('post_id:', post_id) # для отладки
 
