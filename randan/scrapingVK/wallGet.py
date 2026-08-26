@@ -145,7 +145,7 @@ def wallGetCore(API_keyS,
               'fields': fields, # опциональный параметр
               'filter': filter, # опциональный параметр
               'offset': offset, # опциональный параметр
-              'v': '5.199' # обязательный параметр}
+              'v': '5.199'} # обязательный параметр
 
     goC = True
     tryer = 0
