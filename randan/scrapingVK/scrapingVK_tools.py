@@ -44,11 +44,12 @@ def dfColumnsProcessor(df_in, fields, response):
         # сменить формат представления дат, класс данных столбцов с id, создать столбец с кликабельными ссылками на контент;
             # здесь, а не в конце, поскольку нужна совместимость с itemS из Temporal и от пользователя
 
-    df['URL'] = df['from_id'].astype(str)
-    df.loc[df[df['URL'].str.contains('-') == False].index, 'URL'] = 'id' + df.loc[df[df['URL'].str.contains('-') == False].index, 'URL']
-    df.loc[df[df['URL'].str.contains('-')].index, 'URL'] = df.loc[df[df['URL'].str.contains('-')].index, 'URL'].str.replace('-', 'public')
-    df['URL'] =\
-        'https://vk.com' + '/' + df['URL'] + '?w=' + df['inner_type'].str.split('_').str[0] + df['owner_id'].astype(str) + '_' + df['id'].astype(str)
+    if 'inner_type' in df.columns: # скажем, у комментариев к постам нет своего URL и в их датафрейме нет inner_type
+        df['URL'] = df['from_id'].astype(str)
+        df.loc[df[df['URL'].str.contains('-') == False].index, 'URL'] = 'id' + df.loc[df[df['URL'].str.contains('-') == False].index, 'URL']
+        df.loc[df[df['URL'].str.contains('-')].index, 'URL'] = df.loc[df[df['URL'].str.contains('-')].index, 'URL'].str.replace('-', 'public')
+        df['URL'] =\
+            'https://vk.com' + '/' + df['URL'] + '?w=' + df['inner_type'].str.split('_').str[0] + df['owner_id'].astype(str) + '_' + df['id'].astype(str)
 
     if fields != None:
         for fieldsColumn in ['groups', 'profiles']:
