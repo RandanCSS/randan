@@ -205,7 +205,6 @@ def wallGet(access_token=None,
           params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.get ,
           чтобы не подавать эти аргументы по отдельности
 
-               q : str
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
     """
     if not params and not access_token and not count and not domain and not fields and not filter and not offset and not returnDfs:
