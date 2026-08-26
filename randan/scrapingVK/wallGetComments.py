@@ -17,7 +17,7 @@ for attempt in range(1, 4):
     try:
         from datetime import datetime
         from IPython.display import display
-        from randan.scrapingVK import scrapingTools # модуль для упрощения скрапинга VK
+        from randan.scrapingVK import scrapingVK_tools # модуль для упрощения скрапинга VK
 
         from randan.tools import calendarWithinYear, coLabAdaptor, df2file, files2df, scrapingTools # модули для
             # (а) работы с календарём конкретного года
@@ -167,7 +167,7 @@ def wallGetCommentsCore(API_keyS,
                 dfAdd = pandas.json_normalize(response['items'])
                 break # нет смысла в новых итерациях цикла while goC
 
-            else: goC, goS, keyOrder, pause, response, tryer = scrapingTools.errorProcessor(API_keyS, keyOrder, pause, response, tryer)
+            else: goC, goS, keyOrder, pause, response, tryer = scrapingVK_tools.errorProcessor(API_keyS, keyOrder, pause, response, tryer)
 
         except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
             response = {'items': [], 'total_count': 0} # принудительная выдача для response
@@ -181,7 +181,7 @@ def wallGetCommentsCore(API_keyS,
         print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
 
         iteration += 1
-        if len(dfAdd) > 0: dfAdd = scrapingTools.dfColumnsProcessor(dfAdd, fields, response)
+        if len(dfAdd) > 0: dfAdd = scrapingVK_tools.dfColumnsProcessor(dfAdd, fields, response)
 
     return dfAdd, goS, iteration, keyOrder, pause, response
 
