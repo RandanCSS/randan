@@ -194,7 +194,7 @@ def wallGetComments(access_token=None,
                     params=None,
                     post_id=None,
                     returnDfs=False):
-    method = 'wall.get'
+    method = 'wall.getComments'
 
     f"""
     Функция для выгрузки характеристик контента ВК методом его API {method} . Причём количество объектов выгрузки максимизируется посредством offset
@@ -229,7 +229,7 @@ def wallGetComments(access_token=None,
 
             count = scrapingTools.argument_key_comparison(count, 'count', params)
             if count:
-                if type(count) == str: count = int(count)
+                if type(count) != int: count = int(count)
             # print('count:', count) # для отладки
 
             fields = scrapingTools.argument_key_comparison(fields, 'fields', params)
@@ -241,9 +241,11 @@ def wallGetComments(access_token=None,
             # print('offset:', offset) # для отладки
 
             owner_id = scrapingTools.argument_key_comparison(owner_id, 'owner_id', params)
+                if type(owner_id) != str: owner_id = str(owner_id)
             # print('owner_id:', owner_id) # для отладки
 
             post_id = scrapingTools.argument_key_comparison(post_id, 'post_id', params)
+                if type(post_id) != str: post_id = str(post_id)
             # print('post_id:', post_id) # для отладки
 
     if expiriencedMode == False:
