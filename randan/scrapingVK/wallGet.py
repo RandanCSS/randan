@@ -188,12 +188,14 @@ def wallGet(access_token=None,
             offset=None,
             params=None,
             returnDfs=False):
-    """
-    Функция для выгрузки характеристик контента ВК методом его API wall.get . Причём количество объектов выгрузки максимизируется посредством offset
+    method = 'wall.get'
+
+    f"""
+    Функция для выгрузки характеристик контента ВК методом его API {method} . Причём количество объектов выгрузки максимизируется посредством offset
 
     Parameters
     ----------
-    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/wall.get , за исключением аргументов params и returnDfs
+    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/{method} , за исключением аргументов params и returnDfs
     Причём они могут быть поданы и в качестве самостоятельных аргументов функции, и в качестве словаря params ,
     который обычно подаётся в метод get пакета requests
     access_token : str
@@ -202,7 +204,7 @@ def wallGet(access_token=None,
           fields : list
           filter : str
           offset : int
-          params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.get ,
+          params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/{method} ,
           чтобы не подавать эти аргументы по отдельности
 
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
@@ -221,7 +223,7 @@ def wallGet(access_token=None,
 
             count = scrapingTools.argument_key_comparison(count, 'count', params)
             if count:
-                if type(count) == str: count = int(count)
+                if type(count) != int: count = int(count)
             # print('count:', count) # для отладки
 
             domain = scrapingTools.argument_key_comparison(domain, 'domain', params)
@@ -235,7 +237,7 @@ def wallGet(access_token=None,
 
             offset = scrapingTools.argument_key_comparison(offset, 'offset', params)
             if offset:
-                if type(offset) == str: offset = int(offset)
+                if type(offset) != int: offset = int(offset)
             # print('offset:', offset) # для отладки
 
     if expiriencedMode == False:
@@ -244,7 +246,7 @@ def wallGet(access_token=None,
     ВК может ограничить действие Вашего ключа или вовсе заблокировать его, если сочтёт, что Вы злоупотребляете автоматизированным доступом."""
               )
     print(
-"""    Скрипт нацелен на выгрузку характеристик контента ВК методом его API wall.get . Причём количество объектов выгрузки максимизируется посредством offset .
+f"""    Скрипт нацелен на выгрузку характеристик контента ВК методом его API {method} . Причём количество объектов выгрузки максимизируется посредством offset .
     Для корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.
     Преимущества скрипта перед выгрузкой контента из ВК вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API ВК: гораздо быстрее, гораздо большее количество контента, не требуется тщательно изучать обширную и при этом неполную документацию методов API ВК"""
           )
