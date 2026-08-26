@@ -60,16 +60,14 @@ def wallGetCore(API_keyS,
     dfAdd = pandas.DataFrame()
     goS = True
 
-    params = {
-              'access_token': API_keyS[keyOrder], # обязательный параметр
+    params = {'access_token': API_keyS[keyOrder], # обязательный параметр
               'count': count, # опциональный параметр
-              'domain': domain, # обязательный параметр
+              'domain': domain, # обязательный параметр, но без него не будет результата
               'extended': 1, # опциональный параметр
               'fields': fields, # опциональный параметр
               'filter': filter, # опциональный параметр
               'offset': offset, # опциональный параметр
-              'v': '5.199' # обязательный параметр
-              }
+              'v': '5.199' # обязательный параметр}
 
     goC = True
     tryer = 0
