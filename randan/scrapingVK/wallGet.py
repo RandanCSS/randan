@@ -349,13 +349,10 @@ def wallGet(access_token=None,
                     for temporalName in temporalNameS:
                         if '.json' in temporalName:
                             itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
-                            break
+                            break # выход из for temporalName in temporalNameS
 
-                    if yearsRange != None:
-                        yearsRange = yearsRange.split('-')
-                        yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
-# Данные, сохранённые при прошлом запуске скрипта, загружены; их метаданные (q, yearsRange, stageTarget) будут использоваться при исполнении скрипта
-                    break
+# Данные, сохранённые при прошлом запуске скрипта, загружены
+                    break # выход из for rootName in rootNameS
                 elif decision == 'R': shutil.rmtree(rootName, ignore_errors=True)
             else: shutil.rmtree(rootName, ignore_errors=True) # в директории Temporal не 7 файлов => либо она повреждена, либо создалась при безрезультатном запуске
 
