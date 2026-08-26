@@ -48,59 +48,6 @@ f"""Пакет {module} НЕ прединсталлирован; он требу
 
 # 1. Вспомогательные функции для..
 # .. метода get из API ВК, помогающая работе с ключами
-def wallGetCore(API_keyS,
-                count,
-                domain,
-                fields,
-                filter,
-                iteration,
-                keyOrder,
-                offset,
-                pause):
-    dfAdd = pandas.DataFrame()
-    goS = True
-
-    params = {'access_token': API_keyS[keyOrder], # обязательный параметр
-              'count': count, # опциональный параметр
-              'domain': domain, # обязательный параметр, но без него не будет результата
-              'extended': 1, # опциональный параметр
-              'fields': fields, # опциональный параметр
-              'filter': filter, # опциональный параметр
-              'offset': offset, # опциональный параметр
-              'v': '5.199' # обязательный параметр}
-
-    goC = True
-    tryer = 0
-    while goC:
-        try: # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
-            response = requests.get('https://api.vk.ru/method/wall.get', params=params)
-            response = response.json() # отобразить выдачу метода get в виде JSON
-            # print('response', response) # для отладки
-            if 'response' in response.keys():
-                response = response['response']
-                # print('    response.keys() внутри wallGetCore', response.keys()) # для отладки
-
-                dfAdd = pandas.json_normalize(response['items'])
-                break # нет смысла в новых итерациях цикла while goC
-
-            else: goC, goS, keyOrder, pause, response, tryer = scrapingTools.errorProcessor(API_keyS, keyOrder, pause, response, tryer)
-
-        except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
-            response = {'items': [], 'total_count': 0} # принудительная выдача для response
-            goS = False # нет смысла продолжать исполнение скрипта
-            # print('goS wallGetCore:', goS) # для отладки
-
-            break # и, следовательно, нет смысла в новых итерациях цикла while goC
-
-    if goS:
-        # Для визуализации процесса
-        print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
-
-        iteration += 1
-        if len(dfAdd) > 0: dfAdd = scrapingTools.dfColumnsProcessor(dfAdd, fields, response)
-
-    return dfAdd, goS, iteration, keyOrder, pause, response
-
 # .. обработки выдачи, помогающая работе с ключами
 def dfsProcessor(complicatedNamePart,
                  coLabFolder,
@@ -178,6 +125,59 @@ f'Поскольку исполнение скрипта натолкнулос�
         sys.exit()
 
     return df
+
+def wallGetCore(API_keyS,
+                count,
+                domain,
+                fields,
+                filter,
+                iteration,
+                keyOrder,
+                offset,
+                pause):
+    dfAdd = pandas.DataFrame()
+    goS = True
+
+    params = {'access_token': API_keyS[keyOrder], # обязательный параметр
+              'count': count, # опциональный параметр
+              'domain': domain, # обязательный параметр, но без него не будет результата
+              'extended': 1, # опциональный параметр
+              'fields': fields, # опциональный параметр
+              'filter': filter, # опциональный параметр
+              'offset': offset, # опциональный параметр
+              'v': '5.199' # обязательный параметр}
+
+    goC = True
+    tryer = 0
+    while goC:
+        try: # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
+            response = requests.get('https://api.vk.ru/method/wall.get', params=params)
+            response = response.json() # отобразить выдачу метода get в виде JSON
+            # print('response', response) # для отладки
+            if 'response' in response.keys():
+                response = response['response']
+                # print('    response.keys() внутри wallGetCore', response.keys()) # для отладки
+
+                dfAdd = pandas.json_normalize(response['items'])
+                break # нет смысла в новых итерациях цикла while goC
+
+            else: goC, goS, keyOrder, pause, response, tryer = scrapingTools.errorProcessor(API_keyS, keyOrder, pause, response, tryer)
+
+        except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
+            response = {'items': [], 'total_count': 0} # принудительная выдача для response
+            goS = False # нет смысла продолжать исполнение скрипта
+            # print('goS wallGetCore:', goS) # для отладки
+
+            break # и, следовательно, нет смысла в новых итерациях цикла while goC
+
+    if goS:
+        # Для визуализации процесса
+        print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
+
+        iteration += 1
+        if len(dfAdd) > 0: dfAdd = scrapingTools.dfColumnsProcessor(dfAdd, fields, response)
+
+    return dfAdd, goS, iteration, keyOrder, pause, response
 
 # 2. Основная функция
 def wallGet(access_token=None,
