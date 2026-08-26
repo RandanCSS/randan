@@ -220,6 +220,7 @@ def wallGetComments(access_token=None,
         expiriencedMode = False
         
     else:
+        print('Пользователь подал аргументы') # для отладки
         expiriencedMode = True
         if params:
             access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
