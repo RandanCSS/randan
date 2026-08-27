@@ -37,7 +37,7 @@ f'''Пакет {module} НЕ прединсталлирован, но он тр�
 Попытка № {attempt} из 10
 '''
               )
-        check_call([sys.executable, "-m", "pip", "install", module])
+        check_call([sys.executable, '-m', 'pip', 'install', module])
         attempt += 1
         if  attempt == 10:
             print(
@@ -91,7 +91,7 @@ def bigSearch(
                 } # принудительная выдача для response на случай неуспеха request.execute()
     while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
         try:
-            youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
+            youtube = api.build('youtube', 'v3', developerKey = API_keyS[keyOrder])
             # print('contentType:', contentType) # для отладки
             request = youtube.search().list(
                                             channelId=channelIdForSearch,
@@ -102,7 +102,7 @@ def bigSearch(
                                             maxResults=50,
                                             order=order,
                                             pageToken=pageToken,
-                                            part="snippet",
+                                            part='snippet',
                                             publishedAfter=publishedAfter,
                                             publishedBefore=publishedBefore,
                                             q=q,
@@ -127,7 +127,7 @@ def bigSearch(
 
             # Для визуализации процесса
             print(
-'      Итерация №', iteration, ', number of items', len(response['items']), '' if year == None else f', year {year}', '' if order == None else f', order {order}', '          ', end='\r'
+'      Итерация №', iteration, ', number of items', len(response['items']), '' if not year else f', year {year}', '' if not order else f', order {order}', '          ', end='\r'
                   )
             iteration += 1
             goC = False
@@ -154,11 +154,13 @@ def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNameP
     # print(channelIdS)
 
     method = 'channels'
+
     print(
-'В скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "brandingSettings", "contentDetails", "id", "localizations", "statistics", "status", "topicDetails"], id, maxResults .',
-'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
-'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/channels')
-    if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+f'''В скрипте используются следующие аргументы метода {method} API YouTube: part=['snippet', 'brandingSettings', 'contentDetails', 'id', 'localizations', 'statistics', 'status', 'topicDetails'], id, maxResults .
+Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.
+Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/channels'''
+          )
+    if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
     print('') # для отступа
 
 # ********** Дополнение списка id каналов из dfFinal списком id каналов из playlistS
@@ -219,7 +221,7 @@ def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNameP
                                  fileFormatChoice=fileFormatChoice,
                                  method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
                                  coLabFolder=coLabFolder,
-                                 currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                 currentMoment=momentCurrent.strftime('%Y%m%d_%H%M') # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                  )
     return channelS
 
@@ -258,46 +260,46 @@ def dfsProcessor(
         df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True) # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
 
 # Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
-    if goS == False:
+    if not goS:
         print(
-f'Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"'
+f'''Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"'''
               )
-        if not os.path.exists(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal'):
-                os.makedirs(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal')
-                print(f'Директория "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal" создана')
+        if not os.path.exists(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"):
+                os.makedirs(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal")
+                print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" создана''')
         # else:
-            # print(f'Директория "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal" существует') # для отладки
+            # print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" существует''') # для отладки
 
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}channelIdForSearch.txt', 'w+') # открыть на запись
-        file.write(channelIdForSearch if channelIdForSearch != None else '')
+        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}channelIdForSearch.txt", 'w+') # открыть на запись
+        file.write(channelIdForSearch if channelIdForSearch else '')
         file.close()
 
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}contentType.txt', 'w+') # открыть на запись
-        file.write(contentType if contentType != None else '')
+        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}contentType.txt", 'w+') # открыть на запись
+        file.write(contentType if contentType else '')
         file.close()
 
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}method.txt', 'w+') # открыть на запись
+        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}method.txt", 'w+') # открыть на запись
         file.write(method)
         file.close()
 
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}q.txt', 'w+') # открыть на запись
-        file.write(q if q != None else '')
+        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}q.txt", 'w+') # открыть на запись
+        file.write(q if q else '')
         file.close()
 
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}stageTarget.txt', 'w+')
+        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}stageTarget.txt", 'w+')
         file.write(str(stageTarget)) # stageTarget принимает значения [0; 3]
         file.close()
 
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}targetCount.txt', 'w+')
+        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}targetCount.txt", 'w+')
         file.write(str(targetCount))
         file.close()
 
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}year.txt', 'w+')
+        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}year.txt", 'w+')
         file.write(str(year)) # год, на котором остановилось исполнение скрипта
         file.close()
 
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}yearsRange.txt', 'w+')
-        file.write(yearsRange if yearsRange != None else '') # пользовательский временнОй диапазон
+        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}yearsRange.txt", 'w+')
+        file.write(yearsRange if yearsRange else '') # пользовательский временнОй диапазон
         file.close()
 
         df2file.df2fileShell(
@@ -306,11 +308,11 @@ f'Поскольку исполнение скрипта натолкнулос�
                              fileFormatChoice=fileFormatChoice,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
                              coLabFolder=coLabFolder,
-                             currentMoment=momentCurrent.strftime("%Y%m%d") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                             currentMoment=momentCurrent.strftime('%Y%m%d') # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              )
-        warnings.filterwarnings("ignore")
+        warnings.filterwarnings('ignore')
         print(
-'''Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть
+'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
 Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
               )
         sys.exit()
@@ -327,7 +329,7 @@ def downloadComments(
     commentS = pandas.DataFrame()
     pageToken = None
     problemItemId = None
-    youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
+    youtube = api.build('youtube', 'v3', developerKey = API_keyS[keyOrder])
     while True: # прерывается командой break при отсутствии nextPageToken
         goC = True
         while goC: # цикл позволяет возвращяться со следующим keyOrder к прежнему id при истечении квоты текущего ключа
@@ -405,23 +407,26 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
 
 # 1.5 для визуализации процесса через итерации
 def iterationVisualization(idS, iteration, portion, response):
-    if idS != None: iterationUpperBound = int(str(len(idS) / portion).split('.')[0]) + 1 # дробная часть после деления числа idS должна увеличить iterationUpperBound на единицу
+    if idS: iterationUpperBound = int(str(len(idS) / portion).split('.')[0]) + 1 # дробная часть после деления числа idS должна увеличить iterationUpperBound на единицу
     if 'items' not in response.keys():
         print("!!! Похоже, подан id не канала, а плейлиста, поэтому подаю пустой список в качестве значения словарного ключа 'items'")
         response['items'] = []
     
     print(
-f'''  Порция № {iteration + 1}{f' из {iterationUpperBound}' if idS != None else ''}.{f" Сколько в порции наблюдений? {len(response['items'])}" if portion > 1 else ''}          ''', end='\r'
+f'''  Порция № {iteration + 1}{f' из {iterationUpperBound}' if idS  else ''}.{f" Сколько в порции наблюдений? {len(response['items'])}" if portion > 1 else ''}          ''', end='\r'
           )
 
 # 1.6 для обработки выдачи методов playlists и playlistItems, помогающая работе с ключами
 def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNamePart, contentType, dfFinal, experiencedMode, fileFormatChoice, goS, keyOrder, momentCurrent, playlistIdS, q, rootName, slash, stage, targetCount, year, yearsRange):
     method = 'playlists'
-    print('В скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "contentDetails", "localizations", "status"], id, maxResults .',
-          'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
-          'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:',
-          'https://developers.google.com/youtube/v3/docs/playlists')
-    if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+
+    print(
+f'''В скрипте используются следующие аргументы метода {method} API YouTube: part=['snippet', 'contentDetails', 'localizations', 'status'], id, maxResults .
+Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.
+Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/playlists'''
+          )
+
+    if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
     print('') # для отступа
     
     if len(playlistIdS) > 0:
@@ -454,11 +459,15 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                                       )
 
         method = 'playlistItems'
-        print('\nВ скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet"], playlistId, maxResults .',
-              'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
-              'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке:',
-              'https://developers.google.com/youtube/v3/docs/playlistitems')
-        if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+
+        print(
+f'''
+В скрипте используются следующие аргументы метода {method} API YouTube: part=['snippet'], playlistId, maxResults .
+Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.
+Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/playlistitems'''
+              )
+
+        if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
         print('') # для отступа
     
         iteration = 0 # номер итерации применения текущего метода
@@ -471,7 +480,7 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                 goC = True
                 while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
                     try:
-                        youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
+                        youtube = api.build('youtube', 'v3', developerKey = API_keyS[keyOrder])
                         response = youtube.playlistItems().list(part='snippet', maxResults=50, pageToken=pageToken, playlistId=playlistId).execute()
                         addPlaylistVideoChannelS = pandas.json_normalize(response['items'])
                         playlistVideoChannelS = dfsProcessor(
@@ -523,7 +532,7 @@ def playListProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
                                  fileFormatChoice=fileFormatChoice,
                                  method='playlists',
                                  coLabFolder=coLabFolder,
-                                 currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                 currentMoment=momentCurrent.strftime('%Y%m%d_%H%M') # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                  )
     return playlistS, playlistVideoChannelS
 
@@ -540,7 +549,7 @@ def portionsProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedName
         goC = True
         while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
             try:
-                youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
+                youtube = api.build('youtube', 'v3', developerKey = API_keyS[keyOrder])
                 if method == 'channels':
                     response = youtube.channels().list(
                                                        part='snippet, brandingSettings, contentDetails, id, localizations, statistics, status, topicDetails',
@@ -643,7 +652,7 @@ def searchByText(
                  videoSyndicated=None,
                  videoType=None
                  ):
-    """
+    '''
     Функция для выгрузки характеристик контента YouTube методами его API: search, playlists & playlistItems, videos, commentThreads & comments, channels -- ключевым из которых выступает search
     Причём количество объектов выгрузки максимизируется путём её пересортировки аргументом order и сегментирования по годам
 
@@ -675,26 +684,27 @@ def searchByText(
 videoPaidProductPlacement : str
           videoSyndicated : str
                 videoType : str
-    """
-    if (access_token == None) & (channelIdForSearch == None) & (contentType == None) & (publishedAfter == None) & (publishedBefore == None) & (q == None)\
-        & (channelType == None) & (eventType == None) & (location == None) & (locationRadius == None) & (regionCode == None) & (relevanceLanguage == None) & (safeSearch == None) & (topicId == None)\
-        & (videoCaption == None) & (videoCategoryId == None) & (videoDefinition == None) & (videoDimension == None) & (videoDuration == None) & (videoEmbeddable == None) & (videoLicense == None)\
-        & (videoPaidProductPlacement == None) & (videoSyndicated == None) & (videoType == None) & (returnDfs == False):
+    '''
+    if not access_token and not channelIdForSearch and not contentType and not publishedAfter and not publishedBefore and not q and not channelType and not eventType\
+        and not location and not locationRadius and not regionCode and not relevanceLanguage and not safeSearch and not topicId and not videoCaption and not videoCategoryId\
+        and not videoDefinition and not videoDimension and not videoDuration and not videoEmbeddable and not videoLicense and not videoPaidProductPlacement and not videoSyndicated and not videoType and not returnDfs:
         # print('Пользователь не подал аргументы')
+
         experiencedMode = False
     else: experiencedMode = True
 
-    if experiencedMode == False:
+    if not experiencedMode:
+
         print(
 '''    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API YouTube по ключу (см. примерную видео-инструкцию: https://www.youtube.com/watch?v=EXysYgWeapI&t=490s ). Для получения API key следует создать проект, авторизовать его, подключить к нему API нужного сервиса Google. Проект -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому сервисов Google и применения на этой основе API разных сервисов Google в рамках установленных Гуглом ограничений (the units of quota). Разные уровни авторизации -- это авторизация ключом (представляющим собой код) и полная авторизация (ключ + протокол Google OAuth 2.0, реализующийся в формате файла JSON). Авторизация ключом нужна, чтобы использовать любой метод любого API. Её достаточно, если выполнять действия, которые были бы доступны Вам как пользователю сервисов Google без Вашего входа в аккаунт: посмотреть видео, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления видео, то Вам придётся пройти полную авторизацию. Далее разные API как бы подключаются к проектам (кнопка Enable APIs and servises), используются, затем отключаются (кнопка Disable APIs).
-    Квоты одного ключа может не хватить (quota is exceeded) для выгрузки всего предоставляемого ЮТьюбом по запросу пользователя контента. К счастью, использованный ключ ежесуточно восстанавливается ЮТьюбом. скрипт позволяет сохранить промежуточную выгрузку и после восстановления ключа автоматически продолжит её дополнять с момента остановки. В момент остановки появится надпись: "Поскольку ключи закончились, исполнение скрипта завершаю. Подождите сутки для восстановления ключей или подготовьте новый ключ -- и запустите скрипт с начала", а исполнение скрипта прервётся. Не пугайтесь, нажмите OK и следуйте этой инструкции.'''
+    Квоты одного ключа может не хватить (quota is exceeded) для выгрузки всего предоставляемого ЮТьюбом по запросу пользователя контента. К счастью, использованный ключ ежесуточно восстанавливается ЮТьюбом. скрипт позволяет сохранить промежуточную выгрузку и после восстановления ключа автоматически продолжит её дополнять с момента остановки. В момент остановки появится надпись: 'Поскольку ключи закончились, исполнение скрипта завершаю. Подождите сутки для восстановления ключей или подготовьте новый ключ -- и запустите скрипт с начала', а исполнение скрипта прервётся. Не пугайтесь, нажмите OK и следуйте этой инструкции.'''
               )
     print(
 '''    Скрипт нацелен на выгрузку характеристик контента YouTube семью методами его API: search, videos, commentThreads и comments, channels, playlists и playlistItems. Причём количество объектов выгрузки максимизируется путём её пересортировки и сегментирования по годам.
     Для корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.
     Преимущества скрипта перед выгрузкой контента из YouTube вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API YouTube: гораздо быстрее, гораздо большее количество контента с одним и тем же ключом, не требуется тщательно изучать обширную документацию семи методов API YouTube (search, videos, commentThreads и comments, channels, playlists и playlistItems), выстроена логика обрашения к этим методам'''
           )
-    if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+    if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
 
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API YouTube
@@ -718,20 +728,20 @@ videoPaidProductPlacement : str
     yearsRange = None
 
     momentCurrent = datetime.now() # запрос текущего момента
-    print('\nТекущий момент:', momentCurrent.strftime("%Y%m%d_%H%M"), '-- он будет использована для формирования имён создаваемых директорий и файлов')
-    year = int(momentCurrent.strftime("%Y")) # в случае отсутствия пользовательского временнОго диапазона
+    print('\nТекущий момент:', momentCurrent.strftime('%Y%m%d_%H%M'), '-- он будет использована для формирования имён создаваемых директорий и файлов')
+    year = int(momentCurrent.strftime('%Y')) # в случае отсутствия пользовательского временнОго диапазона
         # с этого года возможно сегментирование по годам вглубь веков (пока выдача не пустая)
     yearMinByUser = None # в случае отсутствия пользовательского временнОго диапазона
     yearMaxByUser = None # в случае отсутствия пользовательского временнОго диапазона
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
-    rootNameS = os.listdir() if coLabFolder == None else os.listdir(coLabFolder)
+    rootNameS = os.listdir() if not coLabFolder else os.listdir(coLabFolder)
     # print('rootNameS:', rootNameS) # для отладки
     # Поиск ключей
-    if access_token == None:
+    if not access_token:
         print('Проверяю наличие файла credentialsYouTube.txt с ключ[ом ами], гипотетически сохранённым[и] при первом запуске скрипта')
         if 'credentialsYouTube.txt' in rootNameS:
-            file = open('credentialsYouTube.txt' if coLabFolder == None else coLabFolder + slash + "credentialsYouTube.txt")
+            file = open('credentialsYouTube.txt' if not coLabFolder else coLabFolder + slash + 'credentialsYouTube.txt')
             API_keyS = file.read()
             print('Нашёл файл credentialsYouTube.txt; далее буду использовать ключ[и] из него:', API_keyS)
         else:
@@ -748,7 +758,7 @@ videoPaidProductPlacement : str
                     API_keyS = multispaceCleaner(API_keyS)
                     while API_keyS[-1] == ',': API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста
 
-                    file = open("credentialsYouTube.txt" if coLabFolder == None else coLabFolder + slash + "credentialsYouTube.txt", "w+") # открыть на запись
+                    file = open('credentialsYouTube.txt' if not coLabFolder else coLabFolder + slash + 'credentialsYouTube.txt', 'w+') # открыть на запись
                     file.write(API_keyS)
                     file.close()
                     break
@@ -768,64 +778,45 @@ videoPaidProductPlacement : str
     for rootName in rootNameS:
         if 'Temporal' in rootName:
             # print('rootName:', rootName) # для отладки
-            if len(os.listdir(rootName if coLabFolder == None else coLabFolder + slash + rootName)) == 9:
-                file = open(f'{rootName}{slash}targetCount.txt')
-                targetCountTemporal = file.read()
-                file.close()
-                targetCountTemporal = int(targetCountTemporal)
-    
-                file = open(f'{rootName}{slash}method.txt')
-                methodTemporal = file.read()
-                file.close()
-    
-                file = open(f'{rootName}{slash}year.txt')
-                yearTemporal = file.read()
-                file.close()
-                yearTemporal = int(yearTemporal)
-    
-                file = open(f'{rootName}{slash}contentType.txt')
-                contentTypeTemporal = file.read()
-                file.close()
+            if len(os.listdir(rootName if not coLabFolder else coLabFolder + slash + rootName)) == 9:
+                targetCountTemporal = scrapingTools.containerImport('targetCount', int)
+                methodTemporal = scrapingTools.containerImport('method', str)
+                yearTemporal = scrapingTools.containerImport('year', int)
+
+                contentTypeTemporal = scrapingTools.containerImport('contentType', str)
                 if contentTypeTemporal == '': contentTypeTemporal = None # для единообразия
     
-                file = open(f'{rootName}{slash}channelIdForSearch.txt')
-                channelIdForSearchTemporal = file.read()
-                file.close()
+                channelIdForSearchTemporal = scrapingTools.containerImport('channelIdForSearch', str)
                 if channelIdForSearchTemporal == '': channelIdForSearchTemporal = None # для единообразия
     
                 try:
-                    file = open(f'{rootName}{slash}q.txt', encoding='utf-8')
-                    qTemporal = file.read()
+                    qTemporal = scrapingTools.containerImport('q', str)
+
                 except:               
                     errorDescription = sys.exc_info()
                     # print(errorDescription) # для отладки
-                    file = open(f'{rootName}{slash}q.txt')
-                    qTemporal = file.read()                
-                file.close()
+                    qTemporal = scrapingTools.containerImport('q', str)
+
                 if qTemporal == '': qTemporal = None # для единообразия
     
-                file = open(f'{rootName}{slash}yearsRange.txt')
-                yearsRangeTemporal = file.read()
-                file.close()
+                yearsRangeTemporal = scrapingTools.containerImport('yearsRange', str)
                 if yearsRangeTemporal == '': yearsRangeTemporal = None # для единообразия
     
-                file = open(f'{rootName}{slash}stageTarget.txt')
-                stageTargetTemporal = file.read()
-                file.close()
+                stageTargetTemporal = scrapingTools.containerImport('stageTarget', int)
                 stageTargetTemporal = int(stageTargetTemporal)
     
-                print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:',
+                print(f'Нашёл директорию '{rootName}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:',
                       '\n- было выявлено целевое число записей (totalResults)', targetCountTemporal,
                       '\n- скрипт остановился на методе', methodTemporal)
-                if yearTemporal != None: print('- и на годе (при сегментировани по годам)', yearTemporal)
-                print('- пользователь НЕ определил тип контента' if contentTypeTemporal == None else  f'- пользователь определил тип контента как "{contentTypeTemporal}"')
+                if yearTemporal: print('- и на годе (при сегментировани по годам)', yearTemporal)
+                print('- пользователь НЕ определил тип контента' if not contentTypeTemporal else  f"- пользователь определил тип контента как '{contentTypeTemporal}'")
                 if contentTypeTemporal == 'video':
-                    print('- пользователь НЕ выбрал конкретный канал для выгрузки видео' if channelIdForSearchTemporal == None else  f'- пользователь выбрал канал с id "{channelIdForSearchTemporal}" для выгрузки видео')
-                print('- пользователь НЕ сформулировал запрос-фильтр' if qTemporal == None else  f'- пользователь сформулировал запрос-фильтр как "{qTemporal}"')
+                    print('- пользователь НЕ выбрал конкретный канал для выгрузки видео' if not channelIdForSearchTemporal else  f"- пользователь выбрал канал с id '{channelIdForSearchTemporal}' для выгрузки видео")
+                print('- пользователь НЕ сформулировал запрос-фильтр' if not qTemporal else  f"- пользователь сформулировал запрос-фильтр как '{qTemporal}'")
                 print('- пользователь НЕ ограничил временнОй диапазон' if yearsRangeTemporal == '' else  f'- пользователь ограничил временнОй диапазон границами {yearsRangeTemporal}')
                 print(
 '''--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
---- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите "R" и нажмите Enter
+--- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите 'R' и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter'''
                   )
                 decision = input()
@@ -849,7 +840,7 @@ videoPaidProductPlacement : str
                             itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
                             break
     
-                    if yearsRange != None:
+                    if yearsRange:
                         yearsRange = yearsRange.split('-')
                         yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
 # Данные, сохранённые при прошлом запуске скрипта, загружены; их метаданные (q, contentType, yearsRange, stageTarget) будут использоваться при исполнении скрипта
@@ -859,7 +850,7 @@ videoPaidProductPlacement : str
                     print('')
 
 # 2.0.3 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
-    if temporalName == None: # если itemsTemporal, в т.ч. пустой, не существует
+    if not temporalName: # если itemsTemporal, в т.ч. пустой, не существует
             # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
         rootName = 'No folder'
         print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
@@ -877,7 +868,7 @@ videoPaidProductPlacement : str
                 break
             else:
                 itemS, error, fileName, folder, slash = files2df.excel2df(folderFile)
-                if error != None:
+                if error:
                     if 'No such file or directory' in error:
                         print('Файл:', folder + slash + fileName, '-- не существует; попробуйте, пожалуйста, ещё раз..')
                 else: break
@@ -886,7 +877,7 @@ videoPaidProductPlacement : str
 
 # 2.0.4 Пользовательские настройки запроса к API YouTube
     # Контент: канал или видео? Или вообще плейлист?
-        if contentType == None: # если пользователь не подал этот аргумент в рамках experiencedMode
+        if not contentType: # если пользователь не подал этот аргумент в рамках experiencedMode
             while True:
                 print('--- Если НЕ требуется определить тип искомого контента, нажмите Enter'
                       , ' \n--- Если требуется определить, введите символ: c -- channel, p -- playlist, v -- video -- и нажмите Enter')
@@ -909,7 +900,7 @@ videoPaidProductPlacement : str
                 else:
                     print('--- Вы ввели что-то не то; попробуйте, пожалуйста, ещё раз..')
 
-        if (channelIdForSearch == None) & (contentType == 'video'): # если пользователь не подал аргумент channelIdForSearch в рамках experiencedMode
+        if not channelIdForSearch & (contentType == 'video'): # если пользователь не подал аргумент channelIdForSearch в рамках experiencedMode
             print(
 '''--- Вы выбрали тип контента video
 --- Если НЕ предполагается поиск видео в пределах конкретного канала или плейлиста, нажмите Enter
@@ -923,7 +914,7 @@ videoPaidProductPlacement : str
 # --- Если развивать опцию подачи списка каналов
             # elif '.xlsx' in channelIdsForSearch:
             #     channelIdsForSearch, error, fileName, folder, slash = excel2df(channelIdsForSearch)
-            #     if error != None:
+            #     if error:
             #         if 'No such file or directory' in error:
             #             print('Файл:', folder + slash + fileName, '-- не существует; попробуйте, пожалуйста, ещё раз..')
             #     else:
@@ -949,14 +940,14 @@ videoPaidProductPlacement : str
                     # print('channelIdForSearch', channelIdForSearch) # для отладки
                     print('')
                     break
-        if q == None: # если пользователь не подал этот аргумент в рамках experiencedMode
+        if not q: # если пользователь не подал этот аргумент в рамках experiencedMode
             print(
 '''Скрипт умеет искать контент по ТЕКСТОВОМУ ЗАПРОСУ-ФИЛЬТРУ. При этом если требуется контент конкретного канала, то лучше использовать запрос-фильтр НЕ на текущем этапе выгрузки данных, а на следующем этапе -- предобработки датафрейма с выгруженными данными
 --- Если НЕ требуется поиск контента по текстовому запросу-фильтру, нажмите Enter
 --- Если требуется такой поиск, введите текст запроса-фильтра, который ожидаете в атрибутах и характеристиках
 (описание, название, теги, категории и т.п.) релевантного YouTube-контента, после чего нажмите Enter'''
             )
-            if folderFile != None: print(
+            if folderFile: print(
 'ВАЖНО! В результате исполнения текущего скрипта данные из указанного Вами файла', folderFile,
 'будут дополнены актуальными данными из выдачи скрипта (возможно появление новых записей и новых столбцов, а также актуализация содержимого столбцов),',
 'поэтому, вероятно, следует ввести тот же запрос-фильтр, что и при формировании указанного Вами файла'
@@ -966,11 +957,11 @@ videoPaidProductPlacement : str
             else: print('')
 
     # Ограничения временнОго диапазона
-        if (publishedAfter == None) & (publishedBefore == None) & (yearsRange == None): # если пользователь не подал эти аргументы в рамках experiencedMode
+        if not publishedAfter and not publishedBefore and not yearsRange: # если пользователь не подал эти аргументы в рамках experiencedMode
             print(
 '''Алгоритм API Youtube для ограничения временнОго диапазона выдаваемого контента работает со странностями. Поэтому если требуется конкретный временнОй диапазон, то лучше использовать его НЕ на текущем этапе выгрузки данных, а на следующем этапе -- предобработки датафрейма с выгруженными данными
 --- Если НЕ требуется задать временнОй диапазон на этапе выгрузки данных, нажмите Enter
---- Если всё же требуется задать временнОй диапазон, настоятельная рекомендация задать его годами, а не более мелкими единицами времени. Для задания диапазона введите без кавычек минимальный год диапазона, тире, максимальный год диапазона (минимум и максимум могут совпадать в такой записи: "год-тот же год") и нажмите Enter'''
+--- Если всё же требуется задать временнОй диапазон, настоятельная рекомендация задать его годами, а не более мелкими единицами времени. Для задания диапазона введите без кавычек минимальный год диапазона, тире, максимальный год диапазона (минимум и максимум могут совпадать в такой записи: 'год-тот же год') и нажмите Enter'''
                   )
             while True:
                 yearsRange = input()
@@ -989,49 +980,51 @@ videoPaidProductPlacement : str
                 else:
                     yearsRange = None # для унификации
                     break
-        if publishedAfter != None:
-            yearMinByUser = int(datetime.strptime(publishedAfter,"%Y-%m-%dT%H:%M:%SZ").strftime('%Y')) # из experiencedMode
-            # print('elif start_time != None:', yearMinByUser) # для отладки
+        if publishedAfter:
+            yearMinByUser = int(datetime.strptime(publishedAfter,'%Y-%m-%dT%H:%M:%SZ').strftime('%Y')) # из experiencedMode
+            # print('elif start_time:', yearMinByUser) # для отладки
 
-        if publishedBefore != None:
-            yearMaxByUser = int(datetime.strptime(publishedBefore,"%Y-%m-%dT%H:%M:%SZ").strftime('%Y')) # из experiencedMode
-            # print('elif end_time != None:', yearMaxByUser) # для отладки
+        if publishedBefore:
+            yearMaxByUser = int(datetime.strptime(publishedBefore,'%Y-%m-%dT%H:%M:%SZ').strftime('%Y')) # из experiencedMode
+            # print('elif end_time:', yearMaxByUser) # для отладки
             year = yearMaxByUser
 
-        if (yearMinByUser != None) & (yearMaxByUser == None): yearMaxByUser = int(momentCurrent.strftime("%Y")) # в случае отсутствия пользовательской верхней временнОй границы при наличии нижней
-        elif (yearMinByUser == None) & (yearMaxByUser != None): yearMaxByUser = 1970 # в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
+        if yearMinByUser and not yearMaxByUser: yearMaxByUser = int(momentCurrent.strftime('%Y')) # в случае отсутствия пользовательской верхней временнОй границы при наличии нижней
+        elif not yearMinByUser and yearMaxByUser: yearMaxByUser = 1970 # в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
 
         # print('yearMinByUser', yearMinByUser) # для отладки
         # print('yearMaxByUser', yearMaxByUser) # для отладки
 
-        if (publishedAfter == None) & (yearMinByUser != None): publishedAfter = datetime(yearMinByUser, 1, 1).isoformat() + 'Z'
-        if (publishedBefore == None) & (yearMaxByUser != None): publishedBefore = datetime(yearMaxByUser, 12, 31).isoformat() + 'Z'
+        if not publishedAfter and yearMinByUser: publishedAfter = datetime(yearMinByUser, 1, 1).isoformat() + 'Z'
+        if not publishedBeforeand yearMaxByUser: publishedBefore = datetime(yearMaxByUser, 12, 31).isoformat() + 'Z'
 
-        if yearsRange != None: print('') # чтобы был отступ, если пользователь подал этот аргумент
+        if yearsRange: print('') # чтобы был отступ, если пользователь подал этот аргумент
 
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_YT'
-    complicatedNamePart += "" if contentType == None else "_" + contentType
-    complicatedNamePart += "" if channelIdForSearch == None else "_channelId_" + channelIdForSearch
-    if q != None: complicatedNamePart += "_" + q if len(q) < 50 else "_" + q[:50]
-    complicatedNamePart += "" if ((yearMinByUser == None) & (yearMaxByUser == None)) else "_" + str(yearMinByUser) + '-' + str(yearMaxByUser)
+    complicatedNamePart += '' if not contentType else '_' + contentType
+    complicatedNamePart += '' if not channelIdForSearch else '_channelId_' + channelIdForSearch
+    if q: complicatedNamePart += '_' + q if len(q) < 50 else '_' + q[:50]
+    complicatedNamePart += '' if not yearMinByUser and not yearMaxByUser else '_' + str(yearMinByUser) + '-' + str(yearMaxByUser)
 # print('complicatedNamePart', complicatedNamePart)
 
 # 2.1 Первичный сбор контента методом search
 # 2.1.0 Первый заход БЕЗ аргумента order (этап stage = 0)
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         stage = 0
-        if (channelIdForSearch == None) | (yearsRange != None) | ((channelIdForSearch != None) & (q != None)): # в противном случае используется не search , а channels + playlists
-                # Если поданы вместе channelIdForSearch и q , то search, но если внутри channelIdForSearch подан id плейлиста, то search выдаст ошибку "Request contains an invalid argument" и следует перейти к playListProcessor в else, причём q будет проигнорирован
-                # yearsRange != None предполагает search , поскольку прочие методы не предполагают сегментирование по временнЫм периодам 
+        if not channelIdForSearch or yearsRange or (channelIdForSearch and q): # в противном случае используется не search , а channels + playlists
+                # Если поданы вместе channelIdForSearch и q , то search, но если внутри channelIdForSearch подан id плейлиста, то search выдаст ошибку 'Request contains an invalid argument' и следует перейти к playListProcessor в else, причём q будет проигнорирован
+                # yearsRange предполагает search , поскольку прочие методы не предполагают сегментирование по временнЫм периодам 
             iteration = 0 # номер итерации применения текущего метода
             method = 'search'
+
             print(
-f'В скрипте используются следующие аргументы метода {method} API YouTube: channelId, maxResults, order, pageToken, part, publishedAfter, publishedBefore, q, type.',
-'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
-f'Если хотите добавить другие аргументы метода {method} API YouTube, доступные по ссылке https://developers.google.com/youtube/v3/docs/search , -- можете сделать это внутри метода {method} в разделе 2 исполняемого сейчас скрипта'
+f'''В скрипте используются следующие аргументы метода {method} API YouTube: channelId, maxResults, order, pageToken, part, publishedAfter, publishedBefore, q, type .
+Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.
+Если хотите добавить другие аргументы метода {method} API YouTube, доступные по ссылке https://developers.google.com/youtube/v3/docs/search , -- можете сделать это внутри метода {method} в разделе 2 исполняемого сейчас скрипта'''
                   )
-            if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+
+            if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
             print('') # для отступа
 
             if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
@@ -1074,10 +1067,10 @@ f'Если хотите добавить другие аргументы мет�
                         print(
 '''Искомых объектов на серверах YouTube по Вашему запросу, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта. Что делать? Поменяйте настройки запроса и запустите скрипт с начала'''
                               )
-                        warnings.filterwarnings("ignore")
+                        warnings.filterwarnings('ignore')
                         print(
-'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
-'Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'
+'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
+Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
                               )
                         sys.exit()
 
@@ -1160,7 +1153,10 @@ f'Если хотите добавить другие аргументы мет�
                     print('  Искомых объектов', targetCount
                           , ', а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
             elif stage < stageTarget:
-                print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{rootName}"')
+                print(
+f'''
+Этап {stage} пропускаю согласно настройкам из файла stage.txt в директории '{rootName}''''
+                      )
 
 # 2.1.1 Цикл для прохода по значениям аргумента order, внутри которых проход по всем страницам выдачи (этап stage = 1)
             stage = 1
@@ -1201,7 +1197,7 @@ f'Если хотите добавить другие аргументы мет�
                                                                                                videoSyndicated=videoSyndicated,
                                                                                                year=None
                                                                                                )
-                        if goS == False: break # на случай сигнала прерывания
+                        if not goS: break # на случай сигнала прерывания
                         itemS = dfsProcessor(
                                              channelIdForSearch=channelIdForSearch,
                                              coLabFolder=coLabFolder,
@@ -1224,7 +1220,7 @@ f'Если хотите добавить другие аргументы мет�
                                              )
     
                         print('  Проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order, '          ')
-                        while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0) & goS:
+                        while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response['items']) > 0) & goS:
                         # -- второе условие -- для остановки алгоритма, если все искомые объекты найдены
                             # БЕЗ какой-то из следующих страниц (в т.ч. вообще БЕЗ них)
                             # третье условие -- для остановки алгоритма, если предыдущая страница выдачи содержит 0 объектов
@@ -1286,7 +1282,10 @@ f'Если хотите добавить другие аргументы мет�
                 else:
                     print('Все искомые объекты найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
             elif stage < stageTarget:
-                print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{rootName}"')
+                print(
+f'''
+Этап {stage} пропускаю согласно настройкам из файла stage.txt в директории '{rootName}''''
+                      )
     
 # 2.1.2 Этап сегментирования по годам (stage = 2)
             stage = 2
@@ -1455,7 +1454,7 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                                                                                                            videoSyndicated=videoSyndicated,
                                                                                                            year=year
                                                                                                            )
-                                    if goS == False: break # на случай сигнала прерывания
+                                    if not goS: break # на случай сигнала прерывания
                                     itemS = dfsProcessor(
                                                          channelIdForSearch=channelIdForSearch,
                                                          coLabFolder=coLabFolder,
@@ -1479,7 +1478,7 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                                     print(
 f'    Для года {year} проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order
                                           )
-                                    while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response["items"]) > 0) & goS:
+                                    while ('nextPageToken' in response.keys()) & (len(itemS) < targetCount) & (len(response['items']) > 0) & goS:
                                         pageToken = response['nextPageToken']
                                         addItemS, goS, goToPlayList, iteration, keyOrder, response = bigSearch(
                                                                                                                API_keyS=API_keyS,
@@ -1539,7 +1538,7 @@ f'''    Искомых объектов {targetCount}, а найденных с 
                             else:
                                 print('  Все искомые объекты в году', year, 'найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
                             year -= 1
-                            if yearMinByUser != None: # если пользователь ограничил временнОй диапазон
+                            if yearMinByUser: # если пользователь ограничил временнОй диапазон
                                 if (year) <= yearMinByUser:
                                     goC = False
                                     print(f'Завершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser} (с точностью до года)\n')
@@ -1551,10 +1550,13 @@ f'''    Искомых объектов {targetCount}, а найденных с 
                                      fileFormatChoice=fileFormatChoice,
                                      method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
                                      coLabFolder=coLabFolder,
-                                     currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                     currentMoment=momentCurrent.strftime('%Y%m%d_%H%M') # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                      )
             elif stage < stageTarget:
-                print(f'\nЭтап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"')
+                print(
+f'''
+Этап {stage} пропускаю согласно настройкам из файла stage.txt в директории "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"'''
+                      )
 
 
 
@@ -1573,10 +1575,10 @@ f'''    Искомых объектов {targetCount}, а найденных с 
 'Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'
                               )
                         shutil.rmtree(rootName, ignore_errors=True)
-                    warnings.filterwarnings("ignore")
+                    warnings.filterwarnings('ignore')
                     print(
-'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
-'Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'
+'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
+Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
                           )
                     if returnDfs: return itemS, playlistS, videoS, commentReplieS, channelS
                     sys.exit()
@@ -1585,7 +1587,7 @@ f'''    Искомых объектов {targetCount}, а найденных с 
 # 2.2.0 Этап stage = 3
             stage = 3
 
-# 2.2.1 Выгрузка характеристик плейлистов как дополнительных к search, а ниже тот самый "в противном случае", когда используется не search, а channels + playlists
+# 2.2.1 Выгрузка характеристик плейлистов как дополнительных к search, а ниже тот самый 'в противном случае', когда используется не search, а channels + playlists
             snippetContentType = 'playlist'
             if len(itemS) > 0: # если использовался search..
                 if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # .. и в его выдаче есть плейлисты
@@ -1700,12 +1702,14 @@ f'''    Искомых объектов {targetCount}, а найденных с 
         videoIdS = []
         if len(itemS) > 0: # если использовался search..
             if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # .. и в его выдаче есть видео
+
                 print(
-'В скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "contentDetails", "localizations", "statistics", "status", "topicDetails"], id, maxResults .',
-'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
-'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/videos'
+f'''В скрипте используются следующие аргументы метода {method} API YouTube: part=['snippet', 'contentDetails', 'localizations', 'statistics', 'status', 'topicDetails'], id, maxResults .
+Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.
+Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/videos'''
                       )
-                if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+
+                if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
                 print('') # для отступа
 
                 iteration = 0 # номер итерации применения текущего метода
@@ -1767,7 +1771,7 @@ f'''    Искомых объектов {targetCount}, а найденных с 
             uniqueCategorieS = videoS['snippet.categoryId'].drop_duplicates().to_list()
             # print('\nУникальные коды категорий в базе:', uniqueCategorieS, '\nЧисло уникальных категорий в базе:', len(uniqueCategorieS))
             try:
-                youtube = api.build("youtube", "v3", developerKey = API_keyS[keyOrder])
+                youtube = api.build('youtube', 'v3', developerKey = API_keyS[keyOrder])
                 response = youtube.videoCategories().list(part='snippet', id=uniqueCategorieS).execute()
 
             except: goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(
@@ -1791,14 +1795,14 @@ f'''    Искомых объектов {targetCount}, а найденных с 
                                  fileFormatChoice=fileFormatChoice,
                                  method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
                                  coLabFolder=coLabFolder,
-                                 currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                 currentMoment=momentCurrent.strftime('%Y%m%d_%H%M') # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                  )
             commentS = pandas.DataFrame() # не в следующем ченке, чтобы иметь возможность перезапускать его, не затирая промежуточный результат выгрузки
 
 # 2.2.3 Выгрузка комментариев к видео
             print(
 '\n--- Если хотите выгрузить (в отдельный файл) комментарии к видео,',
-f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart} {method}.xlsx" директории "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}",',
+f'содержащимся в файле "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart} {method}.xlsx" директории "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}",',
 'просто нажмите Enter, но учтите, что выгрузка может занять минуты и даже часы',
 '\n--- Если НЕ хотите выгрузить комментарии, нажмите пробел и затем Enter'
                   )
@@ -1811,12 +1815,14 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                 method = 'commentThreads'
                 part = 'id, replies, snippet'
                 problemVideoIdS = []
+
                 print(
-'В скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "id", "replies"], maxResults, videoId .',
-'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
-'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/commentThreads'
+f'''В скрипте используются следующие аргументы метода {method} API YouTube: part=['snippet', 'id', 'replies'], maxResults, videoId .
+Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.
+Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/commentThreads'''
                       )
-                if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+
+                if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
                 print('') # для отступа
 
                 # Переназначить объект videoIdS для целей текущего чанка
@@ -1839,8 +1845,8 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                                                                                          keyOrder=keyOrder,
                                                                                          method=method
                                                                                          )
-                    if goS == False: break # на случай сигнала прерывания
-                    if problemVideoId != None: problemVideoIdS.append(problemVideoId)
+                    if not goS: break # на случай сигнала прерывания
+                    if problemVideoId: problemVideoIdS.append(problemVideoId)
                     commentS = dfsProcessor(
                                             channelIdForSearch=channelIdForSearch,
                                             coLabFolder=coLabFolder,
@@ -1869,7 +1875,7 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                                      fileFormatChoice=fileFormatChoice,
                                      method='commentS',
                                      coLabFolder=coLabFolder,
-                                     currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                     currentMoment=momentCurrent.strftime('%Y%m%d_%H%M') # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                      )
 
 # ********** replieS
@@ -1897,7 +1903,7 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                                          fileFormatChoice=fileFormatChoice,
                                          method='replieS',
                                          coLabFolder=coLabFolder,
-                                         currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                         currentMoment=momentCurrent.strftime('%Y%m%d_%H%M') # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                          )
                     commentReplieS = commentS.copy() # копия датафрейма c родительскими (topLevel) комментариями -- основа будущего общего датафрейма
                     # Найти столбцы, совпадающие для датафреймов c родительскими (topLevel) комментариями и с комментариями-ответами
@@ -1935,17 +1941,20 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                     textFormat = 'plainText' # = 'html' по умолчанию
                     problemCommentIdS = []
                     replieS = pandas.DataFrame() # зачем? См. этап 4.2 ниже
+
                     print(
-'\nВ скрипте используются следующие аргументы метода', method, 'API YouTube: part=["snippet", "id"], maxResults, parentId, textFormat .',
-'Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
-'Если хотите добавить другие аргументы метода', method, 'API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/commentThreads'
+f'''
+В скрипте используются следующие аргументы метода {method} API YouTube: part=['snippet', 'id'], maxResults, parentId, textFormat .
+Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.
+Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/commentThreads'''
                           )
-                    if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+
+                    if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
                     print('') # для отступа
 
                     commentIdS = commentReplieS['id'][commentReplieS['Недостача_ответов'] > 0]
                     # print('commentIdS:', commentIdS) # для отладки
-                    if len(commentIdS) > 0: # блок "если нет недостачи"
+                    if len(commentIdS) > 0: # блок 'если нет недостачи'
                         print('Проход по id всех родительских (topLevel) комментариев с недостачей ответов для выгрузки этих ответов')
                         for commentId in tqdm(commentIdS):
                             page = 0 # номер страницы выдачи
@@ -1955,8 +1964,8 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                                                                                                   keyOrder=keyOrder,
                                                                                                   method=method
                                                                                                   )
-                            if goS == False: break # на случай сигнала прерывания
-                            if problemCommentId != None: problemCommentIdS.append(problemCommentId)
+                            if not goS: break # на случай сигнала прерывания
+                            if problemCommentId: problemCommentIdS.append(problemCommentId)
                             replieS = dfsProcessor(
                                                    channelIdForSearch=channelIdForSearch,
                                                    coLabFolder=coLabFolder,
@@ -2016,10 +2025,10 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
                                              fileFormatChoice=fileFormatChoice,
                                              method='commentReplieS',
                                              coLabFolder=coLabFolder,
-                                             currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                             currentMoment=momentCurrent.strftime('%Y%m%d_%H%M') # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                              )
-                        # блок "если нет недостачи" завершён
-                        # print('''блок "если нет недостачи" завершён''') # для отладки
+                        # блок 'если нет недостачи' завершён
+                        # print('''блок 'если нет недостачи' завершён''') # для отладки
                 else: print('Нет ни одного откомментированного родительского (topLevel) комментария')
 
 # 2.2.4 Выгрузка дополнительных характеристик каналов
@@ -2085,8 +2094,8 @@ f'содержащимся в файле "{momentCurrent.strftime("%Y%m%d")}{com
 
             if returnDfs: return itemS, playlistS, videoS, commentReplieS, channelS, playlistS
 
-# warnings.filterwarnings("ignore")
-# print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть')
+# warnings.filterwarnings('ignore')
+# print('Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть')
 # input()
 # sys.exit()
 
