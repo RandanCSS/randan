@@ -240,7 +240,7 @@ def wallGet(access_token=None,
         # print('domain:', domain) # для отладки
 
         if offset:
-            if type(offset) == str: offset = int(offset)
+            if type(offset) != int: offset = int(offset)
         # print('offset:', offset) # для отладки
             
     if not experiencedMode:
@@ -274,7 +274,7 @@ f"""    Скрипт нацелен на выгрузку характерист
     temporalName = None
 
     momentCurrent = datetime.now() # запрос текущего момента
-    print('\nТекущий момент:', momentCurrent.strftime("%Y%m%d_%H%M"), '-- он будет использована для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
+    print('\nТекущий момент:', momentCurrent.strftime("%Y%m%d_%H%M"), '-- он будет использован для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     rootNameS = os.listdir()
