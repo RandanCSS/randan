@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-"""
+'''
 (EN) A module that simplifies and maximizes VK content extraction using the platform's official API method wall.get
 (RU) Модуль для упрощения выгрузки контента ВК методом его API wall.get и максимизации размера этой выгрузки
-"""
+'''
 
 # 0. Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
 # 0.0 В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
@@ -31,19 +31,19 @@ for attempt in range(1, 4):
 
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
-        module = str(errorDescription[1]).replace("No module named '", "").replace("'", "") #.replace('_', '')
+        module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
         if '.' in module: module = module.split('.')[0]
         print(
-f"""Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
+f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
 Попытка № {attempt} из 3
-"""
+'''
               )
-        check_call([sys.executable, "-m", "pip", "install", module])
+        check_call([sys.executable, '-m', 'pip', 'install', module])
         if  attempt == 3:
             print(
-f"""Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
+f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
-"""
+'''
                   )
 
 # 1. Вспомогательные функции для..
@@ -76,27 +76,27 @@ def dfsProcessor(complicatedNamePart,
 
     if not goS:
         print(
-f'Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"'
+f'''Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"'''
               )
-        if not os.path.exists(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal'):
-            os.makedirs(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal')
-            print(f'Директория "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal" создана')
+        if not os.path.exists(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"):
+            os.makedirs(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal")
+            print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" создана''')
         # else:
-            # print(f'Директория "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal" существует')
+            # print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" существует''')
 
 # Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
         if not domain: domain = ''
-        scrapingTools.containerExport(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}domain.txt', domain)
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}domain.txt", domain)
 
         if not fields: fields = []
-        with open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}fields.txt', 'w', encoding='utf-8') as file:
+        with open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}fields.txt", 'w', encoding='utf-8') as file:
             json.dump(data_to_save, file, ensure_ascii=False, indent=4)
 
         if not filter: filter = ''
-        scrapingTools.containerExport(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}filter.txt', filter)
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}filter.txt", filter)
 
-        scrapingTools.containerExport(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}method.txt', method)
-        scrapingTools.containerExport(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}offset.txt', offset)
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}method.txt", method)
+        scrapingTools.containerExport(f'{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}offset.txt', offset)
 
         df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
                              dfIn=df,
@@ -105,13 +105,13 @@ f'Поскольку исполнение скрипта натолкнулос�
                                  # чтобы избавиться от лишней точки в имени файла
 
                              coLabFolder=coLabFolder,
-                             currentMoment=momentCurrent.strftime("%Y%m%d"))
+                             currentMoment=momentCurrent.strftime('%Y%m%d'))
                                  # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
 
-        warnings.filterwarnings("ignore")
+        warnings.filterwarnings('ignore')
         print(
-'Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть',
-'Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'
+'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
+Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
               )
         sys.exit()
 
@@ -181,7 +181,7 @@ def wallGet(access_token=None,
             returnDfs=False):
     method = 'wall.get'
 
-    f"""
+    f'''
     Функция для выгрузки характеристик контента ВК методом его API {method} . Причём количество объектов выгрузки максимизируется посредством offset
 
     Parameters
@@ -199,7 +199,7 @@ def wallGet(access_token=None,
           чтобы не подавать эти аргументы по отдельности
 
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
-    """
+    '''
     if not params and not access_token and not count and not domain and not fields and not filter and not offset and not returnDfs:
         print('Пользователь не подал аргументы') # для отладки
         experiencedMode = False
@@ -245,13 +245,13 @@ def wallGet(access_token=None,
             
     if not experiencedMode:
         print(
-"""    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию: https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ). Для получения API key следует создать приложение и из него скопировать сервисный ключ. Приложение -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому ВК. Авторизация сервисным ключом позволяет использовать некоторые методы API -- в документации API ВК ( https://dev.vk.com/ru/method ) они помечены серым кружком (одним или в сочетании с кружками другого цвета). Его достаточно, если выполнять действия, которые были бы доступны Вам как обычному пользователю ВК: посмотреть открытые персональные и групповые страницы, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления поста из чужого аккаунта, то Вам потребуется дополнительная авторизация.
-    ВК может ограничить действие Вашего ключа или вовсе заблокировать его, если сочтёт, что Вы злоупотребляете автоматизированным доступом."""
+'''    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию: https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ). Для получения API key следует создать приложение и из него скопировать сервисный ключ. Приложение -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому ВК. Авторизация сервисным ключом позволяет использовать некоторые методы API -- в документации API ВК ( https://dev.vk.com/ru/method ) они помечены серым кружком (одним или в сочетании с кружками другого цвета). Его достаточно, если выполнять действия, которые были бы доступны Вам как обычному пользователю ВК: посмотреть открытые персональные и групповые страницы, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления поста из чужого аккаунта, то Вам потребуется дополнительная авторизация.
+    ВК может ограничить действие Вашего ключа или вовсе заблокировать его, если сочтёт, что Вы злоупотребляете автоматизированным доступом.'''
               )
     print(
-f"""    Скрипт нацелен на выгрузку характеристик контента ВК методом его API {method} . Причём количество объектов выгрузки максимизируется посредством offset .
+f'''    Скрипт нацелен на выгрузку характеристик контента ВК методом его API {method} . Причём количество объектов выгрузки максимизируется посредством offset .
     Для корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.
-    Преимущества скрипта перед выгрузкой контента из ВК вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API ВК: гораздо быстрее, гораздо большее количество контента, не требуется тщательно изучать обширную и при этом неполную документацию методов API ВК"""
+    Преимущества скрипта перед выгрузкой контента из ВК вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API ВК: гораздо быстрее, гораздо большее количество контента, не требуется тщательно изучать обширную и при этом неполную документацию методов API ВК'''
           )
     if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
 
@@ -274,7 +274,7 @@ f"""    Скрипт нацелен на выгрузку характерист
     temporalName = None
 
     momentCurrent = datetime.now() # запрос текущего момента
-    print('\nТекущий момент:', momentCurrent.strftime("%Y%m%d_%H%M"), '-- он будет использован для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
+    print('\nТекущий момент:', momentCurrent.strftime('%Y%m%d_%H%M'), '-- он будет использован для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     rootNameS = os.listdir()
@@ -288,13 +288,13 @@ f"""    Скрипт нацелен на выгрузку характерист
 
         else:
             print(
-"""--- НЕ нашёл файл credentialsVK.txt . Введите в окно Ваш API key для авторизации в API ВК 
+'''--- НЕ нашёл файл credentialsVK.txt . Введите в окно Ваш API key для авторизации в API ВК 
 (примерная инструкция, как создать API key, доступна по ссылке https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8 ). Для подстраховки от ограничения действия API key желательно создать несколько ключей (три -- отлично) и ввести их без кавычек через запятую с пробелом
---- После ввода нажмите Enter"""
+--- После ввода нажмите Enter'''
                   )
             while True:
                 API_keyS = input()
-                if len(API_keyS) != 0:
+                if len(API_keyS) > 0:
                     print(f"-- далее буд{'у' if len(API_keyS) > 1 else 'е'}т использован{'ы' if len(API_keyS) > 1 else ''} эт{'и' if len(API_keyS) > 1 else 'и'} ключ{'и' if len(API_keyS) > 1 else ''}")
 
                     from randan.tools.textPreprocessor import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
@@ -326,15 +326,15 @@ f"""    Скрипт нацелен на выгрузку характерист
                 filter = scrapingTools.containerImport('filter', str)
                 offset = scrapingTools.containerImport('offset', int)
 
-                print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:'
+                print(f"Нашёл директорию '{rootName}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
                       , '\n- скрипт остановился на offset', offset)
                 print('- пользователь НЕ определил страницу' if not domain else f"- пользователь определил страницу: '{domain}'")
                 print('- пользователь НЕ определил поля' if not fields else f"- пользователь определил поля: '{fields}'")
                 print('- пользователь НЕ определил фильтр' if not filter else f"- пользователь определил фильтр: '{filter}'")
                 print(
-"""--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
---- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите "R" и нажмите Enter
---- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter"""
+'''--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
+--- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите 'R' и нажмите Enter
+--- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter'''
                       )
 
                 decision = input()
@@ -362,12 +362,12 @@ f"""    Скрипт нацелен на выгрузку характерист
         rootName = 'No folder'
         print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку')
         print(
-"""
+'''
 Возможно, Вы располагаете файлом, в котором есть ранее выгруженные из ВК методом wall.get данные, и который хотели бы дополнить?
 Или планируете первичный сбор контента?
 --- Если планируете первичный сбор, нажмите Enter
 --- Если располагаете файлом формата XLSX, укажите полный путь, включая название файла, и нажмите Enter.
-Затем при необходимости сможете добавить к нему другие располагаемые файлы"""
+Затем при необходимости сможете добавить к нему другие располагаемые файлы'''
               )
         while True:
             folderFile = input()
@@ -388,8 +388,8 @@ f"""    Скрипт нацелен на выгрузку характерист
 # 2.0.4 Пользовательские настройки запроса к API ВК
         if not domain: # если пользователь не подал этот аргумент в рамках experiencedMode
             print(
-"""Скрипт умеет искать посты открытых страниц
---- Введите название интересующей страницы (персональной и группы), после чего нажмите Enter"""
+'''Скрипт умеет искать посты открытых страниц
+--- Введите название интересующей страницы (персональной и группы), после чего нажмите Enter'''
                   )
 
             if folderFile:
@@ -405,7 +405,7 @@ f"""    Скрипт нацелен на выгрузку характерист
 
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_VK'
-    if domain: complicatedNamePart += "_" + domain if len(domain) < 50 else "_" + domain[:50]
+    if domain: complicatedNamePart += '_' + domain if len(domain) < 50 else '_' + domain[:50]
 
 # 2.1 Первичный сбор контента методом get
 # 2.1.0 Первое обращение к API
@@ -471,7 +471,7 @@ f'-- можете подать их в скобки функции wallGet пе�
                                 # чтобы избавиться от лишней точки в имени файла
 
                              coLabFolder=coLabFolder,
-                             currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                             currentMoment=momentCurrent.strftime('%Y%m%d_%H%M') # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              )
 
         print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
@@ -482,7 +482,7 @@ f'-- можете подать их в скобки функции wallGet пе�
                   )
             shutil.rmtree(rootName, ignore_errors=True)
         if fields: print(
-f"""
+f'''
 Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
 import pandas
 column = 'Имя_столбца'
@@ -493,8 +493,8 @@ for cellContent in Исходный_датафрейм[column].dropna():
 
 Чтобы сохранить результат распаковки в ту же директорию, в которую уже сохранены основные данные, используйте такой код:
 from randan.tools.df2file import df2fileShell
-df2fileShell('{complicatedNamePart}', Новый_датафрейм, '{fileFormatChoice}', column, {'{coLabFolder}' if coLabFolder else None}, '{momentCurrent.strftime("%Y%m%d_%H%M")}')
-"""
+df2fileShell('{complicatedNamePart}', Новый_датафрейм, '{fileFormatChoice}', column, {'{coLabFolder}' if coLabFolder else None}, '{momentCurrent.strftime('%Y%m%d_%H%M')}')
+'''
                                  )
         if returnDfs: return itemS
 
