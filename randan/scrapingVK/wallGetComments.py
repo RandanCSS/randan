@@ -427,10 +427,11 @@ f"""
                           )
 
 # Сложная часть имени будущих директорий и файлов
-    complicatedNamePart = '_VK'
+        complicatedNamePart = '_VK'
+        if owner_id: complicatedNamePart += "_" + owner_id if len(owner_id) < 50 else "_" + owner_id[:50]
+        if post_id: complicatedNamePart += "_" + post_id if len(post_id) < 50 else "_" + post_id[:50]
+    
     # if not silentMode завершилось
-    if owner_id: complicatedNamePart += "_" + owner_id if len(owner_id) < 50 else "_" + owner_id[:50]
-    if post_id: complicatedNamePart += "_" + post_id if len(post_id) < 50 else "_" + post_id[:50]
 
 # 2.1 Первичный сбор контента методом get
 # 2.1.0 Первое обращение к API
@@ -487,16 +488,16 @@ f'-- можете подать их в скобки функции wallGet пе�
                 time.sleep(pause)
 
 # 2.1.2 Экспорт выгрузки метода get и финальное завершение скрипта
-        df2file.df2fileShell(complicatedNamePart=complicatedNamePart,
-                             dfIn=itemS,
-                             fileFormatChoice=fileFormatChoice,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method,
-                                # чтобы избавиться от лишней точки в имени файла
-
-                             coLabFolder=coLabFolder,
-                             currentMoment=momentCurrent.strftime("%Y%m%d_%H%M")) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-
         if not silentMode:
+            df2file.df2fileShell(complicatedNamePart=complicatedNamePart,
+                                 dfIn=itemS,
+                                 fileFormatChoice=fileFormatChoice,
+                                 method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method,
+                                    # чтобы избавиться от лишней точки в имени файла
+
+                                 coLabFolder=coLabFolder,
+                                 currentMoment=momentCurrent.strftime("%Y%m%d_%H%M")) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+
             print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
             if os.path.exists(rootName):
                 print('rootName:', rootName)
