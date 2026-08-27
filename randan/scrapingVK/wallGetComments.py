@@ -89,27 +89,16 @@ f'Поскольку исполнение скрипта натолкнулос�
             json.dump(data_to_save, file, ensure_ascii=False, indent=4)
 
         if not filter: filter = ''
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}filter.txt', 'w+') # открыть на запись
-        file.write(filter if filter else '')
-        file.close()
+        scrapingTools.containerExport(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}filter.txt', filter)
 
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}method.txt', 'w+') # открыть на запись
-        file.write(method)
-        file.close()
-
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}offset.txt', 'w+')
-        file.write(str(offset)) # год, на котором остановилось исполнение скрипта
-        file.close()
+        scrapingTools.containerExport(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}method.txt', method)
+        scrapingTools.containerExport(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}offset.txt', offset)
 
         if not owner_id: owner_id = ''
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}owner_id.txt', 'w+') # открыть на запись
-        file.write(domain if domain else '')
-        file.close()
+        scrapingTools.containerExport(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}owner_id.txt', owner_id)
 
         if not post_id: post_id = ''
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}post_id.txt', 'w+') # открыть на запись
-        file.write(domain if domain else '')
-        file.close()
+        scrapingTools.containerExport(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}post_id.txt', owner_id)
 
         df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
                              dfIn=df,
@@ -222,36 +211,51 @@ def wallGetComments(access_token=None,
         experiencedMode = False
         
     else:
-        print('Пользователь подал аргументы') # для отладки
+        # print('Пользователь подал аргументы') # для отладки
         experiencedMode = True
         if params:
             access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
             # print('access_token:', access_token) # для отладки
 
             count = scrapingTools.argument_key_comparison(count, 'count', params)
-            if count:
-                if type(count) != int: count = int(count)
             # print('count:', count) # для отладки
 
             fields = scrapingTools.argument_key_comparison(fields, 'fields', params)
             # print('fields:', fields) # для отладки
 
             offset = scrapingTools.argument_key_comparison(offset, 'offset', params)
-            if offset:
-                if type(offset) == str: offset = int(offset)
             # print('offset:', offset) # для отладки
 
             owner_id = scrapingTools.argument_key_comparison(owner_id, 'owner_id', params)
-            if owner_id:
-                if type(owner_id) != str: owner_id = str(owner_id)
             # print('owner_id:', owner_id) # для отладки
 
             post_id = scrapingTools.argument_key_comparison(post_id, 'post_id', params)
-            if post_id:
-                if type(post_id) != str: post_id = str(post_id)
             # print('post_id:', post_id) # для отладки
 
-    if not count: count = 100
+        if count:
+            if type(count) != int: count = int(count)
+
+        else: count = 100
+
+        # print('count:', count) # для отладки
+
+        if offset:
+            if type(offset) == str: offset = int(offset)
+        # print('offset:', offset) # для отладки
+            
+        if owner_id:
+            if type(owner_id) != str: owner_id = str(owner_id)
+
+        else: owner_id = '80054288' # моя страница
+
+        # print('owner_id:', owner_id) # для отладки
+
+        if post_id:
+            if type(post_id) != str: post_id = str(post_id)
+
+        else: post_id = '1' # первый пост на моей странице
+
+        # print('post_id:', post_id) # для отладки
 
     if not silentMode:
         if not experiencedMode: print(
@@ -284,23 +288,24 @@ f"""    Скрипт нацелен на выгрузку характерист
     temporalName = None
 
     momentCurrent = datetime.now() # запрос текущего момента
-    print('\nТекущий момент:', momentCurrent.strftime("%Y%m%d_%H%M"), '-- он будет использована для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
+    if not silentMode:
+        print('\nТекущий момент:', momentCurrent.strftime("%Y%m%d_%H%M"), '-- он будет использована для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     rootNameS = os.listdir()
     # Поиск ключей
     if access_token == None:
-        print('Проверяю наличие файла credentialsVK.txt с ключ[ом ами], гипотетически сохранённым[и] при первом запуске скрипта')
+        if not silentMode: print('Проверяю наличие файла credentialsVK.txt с ключ[ом ами], гипотетически сохранённым[и] при первом запуске скрипта')
         if 'credentialsVK.txt' in rootNameS:
             file = open('credentialsVK.txt')
             API_keyS = file.read()
-            print('Нашёл файл credentialsVK.txt; далее буду использовать ключ[и] из него:', API_keyS)
+            if not silentMode: print('Нашёл файл credentialsVK.txt; далее буду использовать ключ[и] из него:', API_keyS)
         else:
-            print(
+            if not silentMode: print(
 """--- НЕ нашёл файл credentialsVK.txt . Введите в окно Ваш API key для авторизации в API ВК 
 (примерная инструкция, как создать API key, доступна по ссылке https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8 ). Для подстраховки от ограничения действия API key желательно создать несколько ключей (три -- отлично) и ввести их без кавычек через запятую с пробелом
 --- После ввода нажмите Enter"""
-                  )
+                                     )
             while True:
                 API_keyS = input()
                 if len(API_keyS) != 0:
@@ -309,22 +314,22 @@ f"""    Скрипт нацелен на выгрузку характерист
                     from randan.tools.textPreprocessor import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
                     API_keyS = multispaceCleaner(API_keyS)
                     while API_keyS[-1] == ',': API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста
-
-                    file = open("credentialsVK.txt", "w+") # открыть на запись
-                    file.write(API_keyS)
-                    file.close()
+                    scrapingTools.containerExport('credentialsVK.txt', API_keyS)
                     break
+
                 else:
                     print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
+
         API_keyS = API_keyS.replace(' ', '') # контроль пробелов
         API_keyS = API_keyS.replace(',', ', ') # контроль пробелов
         API_keyS = API_keyS.split(', ')
+
     else: API_keyS = [access_token]
     print('Количество ключей:', len(API_keyS), '\n')
 
 # 2.0.2 Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
-    if not silentMode:
+    if not silentMode: # если основная функция этого модуля явлется частью другой функции, поиск не данных требуется - они будут переданы
         print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
         for rootName in rootNameS:
             if 'Temporal' in rootName:
@@ -332,18 +337,9 @@ f"""    Скрипт нацелен на выгрузку характерист
                     with open(f'{rootName}{slash}fields.json', 'r', encoding='utf-8') as file:
                         fields = json.load(file)
 
-                    file = open(f'{rootName}{slash}offset.txt')
-                    offset = file.read()
-                    file.close()
-                    offset = int(offset)
-
-                    file = open(f'{rootName}{slash}owner_id.txt')
-                    owner_id = file.read()
-                    file.close()
-
-                    file = open(f'{rootName}{slash}post_id.txt')
-                    post_id = file.read()
-                    file.close()
+                    offset = scrapingTools.containerImport('offset', int)
+                    owner_id = scrapingTools.containerImport('owner_id', str)
+                    post_id = scrapingTools.containerImport('post_id', str)
 
                     print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:'
                           , '\n- скрипт остановился на offset', offset)
