@@ -390,6 +390,7 @@ f'''    Скрипт нацелен на выгрузку характерист
 
                 else:
                     print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
+
         API_keyS = API_keyS.replace(' ', '').replace(',', ', ').split(', ')
 
     else: API_keyS = [access_token]
