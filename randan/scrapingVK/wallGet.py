@@ -280,12 +280,11 @@ f"""    Скрипт нацелен на выгрузку характерист
     rootNameS = os.listdir()
     # Поиск ключей
     if not access_token:
-        print('Проверяю наличие файла credentialsVK.txt с ключ[ом ами], гипотетически сохранённым[и] при первом запуске скрипта')
         if 'credentialsVK.txt' in rootNameS:
             file = open('credentialsVK.txt')
             API_keyS = file.read()
-            file.close()
-            print('Нашёл файл credentialsVK.txt; далее буду использовать ключ[и] из него:', API_keyS)
+            print("Проверяю наличие файла credentialsVK.txt с ключ{'ами' if len(API_keyS) > 1 else 'ом'}, гипотетически сохранённым{'и' if len(API_keyS) > 1 else ''} при первом запуске скрипта")
+            print("Нашёл файл credentialsVK.txt; далее буду использовать ключ{'и' if len(API_keyS) > 1 else ''} из него:", API_keyS)
 
         else:
             print(
