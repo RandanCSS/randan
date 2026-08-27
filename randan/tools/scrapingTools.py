@@ -15,3 +15,13 @@ def argument_key_comparison(argument, key, params):
     elif (key not in params.keys()) & (argument != None): pass # отдельный аргумент определён, поэтому запрос к пользователю не поступит
     else: pass # НИ ключ params , НИ отдельный аргумент НЕ определены, поэтому запрос к пользователю поступит
     return argument
+
+def containerImport(containerName, containerType):
+    file = open(f'{rootName}{slash}{containerName}.txt')
+    # file = open(f'{containerName}.txt') # для отладки
+    container = file.read()
+    file.close()
+    if container:
+        if type(container) != containerType: containerType(owner_id) # мало ли какой тип окажется при импорте
+
+    return container
