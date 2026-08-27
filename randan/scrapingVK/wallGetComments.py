@@ -189,6 +189,7 @@ def wallGetCommentsCore(API_keyS,
 def wallGetComments(access_token=None,
                     count=None,
                     fields=None,
+                    limitedMode=False,
                     offset=None,
                     owner_id=None,
                     params=None,
@@ -208,6 +209,7 @@ def wallGetComments(access_token=None,
            count : int
           fields : list
           offset : int
+     silenceMode : bool -- в случае True в функции отключаются CLI-диалоги и экспорт результата исполнения функции для долговременного хранения 
         owner_id : str
           params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/{method} ,
           чтобы не подавать эти аргументы по отдельности
@@ -251,17 +253,17 @@ def wallGetComments(access_token=None,
 
     if not count: count = 100
 
-    if not experiencedMode:
-        print(
+    if not silenceMode:
+        if not experiencedMode: print(
 """    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию: https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ). Для получения API key следует создать приложение и из него скопировать сервисный ключ. Приложение -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому ВК. Авторизация сервисным ключом позволяет использовать некоторые методы API -- в документации API ВК ( https://dev.vk.com/ru/method ) они помечены серым кружком (одним или в сочетании с кружками другого цвета). Его достаточно, если выполнять действия, которые были бы доступны Вам как обычному пользователю ВК: посмотреть открытые персональные и групповые страницы, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления поста из чужого аккаунта, то Вам потребуется дополнительная авторизация.
     ВК может ограничить действие Вашего ключа или вовсе заблокировать его, если сочтёт, что Вы злоупотребляете автоматизированным доступом."""
-              )
-    print(
+                                      )
+        print(
 f"""    Скрипт нацелен на выгрузку характеристик контента ВК методом его API {method} . Причём количество объектов выгрузки максимизируется посредством offset .
     Для корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.
     Преимущества скрипта перед выгрузкой контента из ВК вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API ВК: гораздо быстрее, гораздо большее количество контента, не требуется тщательно изучать обширную и при этом неполную документацию методов API ВК"""
           )
-    if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
+        if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
 
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API ВК
@@ -322,111 +324,115 @@ f"""    Скрипт нацелен на выгрузку характерист
 
 # 2.0.2 Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
-    print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
-    for rootName in rootNameS:
-        if 'Temporal' in rootName:
-            if len(os.listdir(rootName)) == 4:
-                with open(f'{rootName}{slash}fields.json', 'r', encoding='utf-8') as file:
-                    fields = json.load(file)
+    if not silenceMode:
+        print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
+        for rootName in rootNameS:
+            if 'Temporal' in rootName:
+                if len(os.listdir(rootName)) == 4:
+                    with open(f'{rootName}{slash}fields.json', 'r', encoding='utf-8') as file:
+                        fields = json.load(file)
 
-                file = open(f'{rootName}{slash}offset.txt')
-                offset = file.read()
-                file.close()
-                offset = int(offset)
+                    file = open(f'{rootName}{slash}offset.txt')
+                    offset = file.read()
+                    file.close()
+                    offset = int(offset)
 
-                file = open(f'{rootName}{slash}owner_id.txt')
-                owner_id = file.read()
-                file.close()
+                    file = open(f'{rootName}{slash}owner_id.txt')
+                    owner_id = file.read()
+                    file.close()
 
-                file = open(f'{rootName}{slash}post_id.txt')
-                post_id = file.read()
-                file.close()
+                    file = open(f'{rootName}{slash}post_id.txt')
+                    post_id = file.read()
+                    file.close()
 
-                print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:'
-                      , '\n- скрипт остановился на offset', offset)
-                print('- пользователь НЕ определил поля' if not fields else f"- пользователь определил поля: '{fields}'")
-                print('- пользователь НЕ определил ID страницы' if not owner_id else f"- пользователь определил ID страницы: '{owner_id}'")
-                print('- пользователь НЕ определил ID поста' if not post_id else f"- пользователь определил ID поста: '{post_id}'")
-                print(
+                    print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:'
+                          , '\n- скрипт остановился на offset', offset)
+                    print('- пользователь НЕ определил поля' if not fields else f"- пользователь определил поля: '{fields}'")
+                    print('- пользователь НЕ определил ID страницы' if not owner_id else f"- пользователь определил ID страницы: '{owner_id}'")
+                    print('- пользователь НЕ определил ID поста' if not post_id else f"- пользователь определил ID поста: '{post_id}'")
+                    print(
 """--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
 --- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите "R" и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter"""
-                      )
-                decision = input()
-                if len(decision) == 0:
-                    temporalNameS = os.listdir(rootName)
-                    for temporalName in temporalNameS:
-                        if '.xlsx' in temporalName: break
-                    itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
+                          )
+                    decision = input()
+                    if len(decision) == 0:
+                        temporalNameS = os.listdir(rootName)
+                        for temporalName in temporalNameS:
+                            if '.xlsx' in temporalName: break
+                        itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
 
-                    for temporalName in temporalNameS:
-                        if '.json' in temporalName:
-                            itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
-                            break # выход из for temporalName in temporalNameS
+                        for temporalName in temporalNameS:
+                            if '.json' in temporalName:
+                                itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
+                                break # выход из for temporalName in temporalNameS
 
 # Данные, сохранённые при прошлом запуске скрипта, загружены
-                    break # выход из for rootName in rootNameS
-                elif decision == 'R': shutil.rmtree(rootName, ignore_errors=True)
-            else: shutil.rmtree(rootName, ignore_errors=True) # в директории Temporal не 7 файлов => либо она повреждена, либо создалась при безрезультатном запуске
+                        break # выход из for rootName in rootNameS
+                    elif decision == 'R': shutil.rmtree(rootName, ignore_errors=True)
+                else: shutil.rmtree(rootName, ignore_errors=True) # в директории Temporal не 7 файлов => либо она повреждена, либо создалась при безрезультатном запуске
 
 # 2.0.3 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
-    if temporalName == None: # если itemsTemporal, в т.ч. пустой, не существует
-            # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
-        rootName = 'No folder'
-        print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку')
-        print(
+    # if not silenceMode продолжается
+        if not temporalName: # если itemsTemporal, в т.ч. пустой, не существует
+                # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
+            rootName = 'No folder'
+            print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку')
+            print(
 f"""
 Возможно, Вы располагаете файлом, в котором есть ранее выгруженные из ВК методом {method} данные, и который хотели бы дополнить?
 Или планируете первичный сбор контента?
 --- Если планируете первичный сбор, нажмите Enter
 --- Если располагаете файлом формата XLSX, укажите полный путь, включая название файла, и нажмите Enter.
 Затем при необходимости сможете добавить к нему другие располагаемые файлы"""
-              )
-        while True:
-            folderFile = input()
-            if len(folderFile) == 0:
-                folderFile = None # для унификации
-                break
-            else:
-                itemS, error, folder = files2df.files2df(folderFile)
-                if error != None:
-                    if 'No such file or directory' in error:
-                        print('Путь:', folderFile, '-- не существует; попробуйте, пожалуйста, ещё раз..')
-                else: break
-            # display(itemS)
+                  )
+            while True:
+                folderFile = input()
+                if len(folderFile) == 0:
+                    folderFile = None # для унификации
+                    break
+                else:
+                    itemS, error, folder = files2df.files2df(folderFile)
+                    if error != None:
+                        if 'No such file or directory' in error:
+                            print('Путь:', folderFile, '-- не существует; попробуйте, пожалуйста, ещё раз..')
+                    else: break
+                # display(itemS)
 # Теперь определены объекты: folder и folderFile (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
 
 # 2.0.4 Пользовательские настройки запроса к API ВК
+    # if not silenceMode продолжается
         if not owner_id or not post_id: # если пользователь не подал эти аргументы в рамках experiencedMode
             if not owner_id:
-              print(
+                print(
 """Скрипт умеет искать комментарии к постам открытых страниц
 --- Введите ID интересующей страницы (персональной и группы), после чего нажмите Enter"""
-                    )
+                      )
 
-              owner_id = input()
-              if owner_id == '': owner_id = None # для единообразия
-              else: print('')
+                owner_id = input()
+                if owner_id == '': owner_id = None # для единообразия
+                else: print('')
 
             if not post_id:
-              print(
+                print(
 """Скрипт умеет искать комментарии к постам открытых страниц
 --- Введите ID интересующего поста, после чего нажмите Enter"""
-                    )
+                      )
 
-              post_id = input()
-              if post_id == '': post_id = None # для единообразия
-              else: print('')
+                post_id = input()
+                if post_id == '': post_id = None # для единообразия
+                else: print('')
 
-            if folderFile:
-                print(
+                if folderFile:
+                    print(
 'ВАЖНО! В результате исполнения текущего скрипта данные из указанного Вами файла', folderFile, 'будут дополнены актуальными данными из выдачи скрипта',
 '(возможно появление новых объектов и новых столбцов, а также актуализация содержимого столбцов),',
 'поэтому, вероятно, следует ввести те же ID, что и при формировании указанного Вами файла'
-                      )
+                          )
 
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_VK'
+    # if not silenceMode завершилось
     if owner_id: complicatedNamePart += "_" + owner_id if len(owner_id) < 50 else "_" + owner_id[:50]
     if post_id: complicatedNamePart += "_" + post_id if len(post_id) < 50 else "_" + post_id[:50]
 
@@ -436,16 +442,17 @@ f"""
         iteration = 0 # номер итерации применения текущего метода
         pause = 0.25
 
-        print(
+        if not silenceMode:
+            print(
 f'В скрипте используются следующие аргументы метода {method} API ВК: count, fields, offset, owner_id, post_id .',
 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
 f'Если хотите добавить другие аргументы метода {method} API ВК, доступные по ссылке https://dev.vk.com/ru/method/{method} ,',
 f'-- можете подать их в скобки функции wallGet перед её запуском или скопировать код исполняемого сейчас скрипта и сделать это внутри кода внутри метода {method} в разделе 2'
-              )
+                  )
 
-        # print('experiencedMode:', experiencedMode) # для отладки
-        if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
-        print('') # для отступа
+            # print('experiencedMode:', experiencedMode) # для отладки
+            if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+            print('') # для отступа
 
         iteration = 1
         if not offset: offset = 0 # если offset ни подан пользователем, ни сохранён при прошлом запуске
@@ -462,7 +469,7 @@ f'-- можете подать их в скобки функции wallGet пе�
 
             # print('goS:', goS) # для отладки
             if goS & (len(itemsAdditional) == 0):
-                print('Все комментарии к посту страницы выгружены')
+                if not silenceMode: print('Все комментарии к посту страницы выгружены')
                 break
 
             else:
@@ -484,25 +491,25 @@ f'-- можете подать их в скобки функции wallGet пе�
                 time.sleep(pause)
 
 # 2.1.2 Экспорт выгрузки метода get и финальное завершение скрипта
-        df2file.df2fileShell(
-                             complicatedNamePart=complicatedNamePart,
+        df2file.df2fileShell(complicatedNamePart=complicatedNamePart,
                              dfIn=itemS,
                              fileFormatChoice=fileFormatChoice,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method,
                                 # чтобы избавиться от лишней точки в имени файла
 
                              coLabFolder=coLabFolder,
-                             currentMoment=momentCurrent.strftime("%Y%m%d_%H%M") # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                             )
+                             currentMoment=momentCurrent.strftime("%Y%m%d_%H%M")) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
 
-        print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
-        if os.path.exists(rootName):
-            print('rootName:', rootName)
-            print(
+        if not silenceMode:
+            print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+            if os.path.exists(rootName):
+                print('rootName:', rootName)
+                print(
     'Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'
-                  )
-            shutil.rmtree(rootName, ignore_errors=True)
-        if fields != None: print(
+                      )
+
+                shutil.rmtree(rootName, ignore_errors=True)
+            if fields != None: print(
 f"""
 Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
 import pandas
@@ -516,7 +523,9 @@ for cellContent in Исходный_датафрейм[column].dropna():
 from randan.tools.df2file import df2fileShell
 df2fileShell('{complicatedNamePart}', Новый_датафрейм, '{fileFormatChoice}', column, {'{coLabFolder}' if coLabFolder else None}, '{momentCurrent.strftime("%Y%m%d_%H%M")}')
 """
-                                 )
+                                     )
+
+        # if not silenceMode завершилось
         if returnDfs: return itemS
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
