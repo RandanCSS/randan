@@ -148,30 +148,12 @@ f'''Поскольку исполнение скрипта натолкнуло�
         with open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}fields.txt", 'w', encoding='utf-8') as file:
             json.dump(data_to_save, file, ensure_ascii=False, indent=4)
 
-        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}method.txt", 'w+') # открыть на запись
-        file.write(method)
-        file.close()
-
-        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}q.txt", 'w+') # открыть на запись
-        file.write(q if q else '')
-        file.close()
-
-        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}stageTarget.txt", 'w+')
-        file.write(str(stage)) # stage и stageTarget принимает значения [0; 3]
-        file.close()
-
-        if not targetCount: targetCount = 0
-        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}targetCount.txt", 'w+')
-        file.write(str(targetCount))
-        file.close()
-
-        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}year.txt", 'w+')
-        file.write(str(year)) # год, на котором остановилось исполнение скрипта
-        file.close()
-
-        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}yearsRange.txt", 'w+')
-        file.write(yearsRange if yearsRange else '') # пользовательский временнОй диапазон
-        file.close()
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}method.txt", method)
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}q.txt", q if q else '')
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}stageTarget.txt", stage) # stage и stageTarget принимает значения [0; 3]
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}targetCount.txt", targetCount if targetCount else '0')
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}year.txt", str(year)) # год, на котором остановилось исполнение скрипта
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}yearsRange.txt", yearsRange if yearsRange else '')
 
         df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
                              dfIn=df,
