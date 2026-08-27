@@ -302,9 +302,7 @@ f'''    Скрипт нацелен на выгрузку характерист
 
                 else:
                     print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
-        API_keyS = API_keyS.replace(' ', '') # контроль пробелов
-        API_keyS = API_keyS.replace(',', ', ') # контроль пробелов
-        API_keyS = API_keyS.split(', ')
+        API_keyS = API_keyS.replace(' ', '').replace(',', ', ').split(', ')
 
     else: API_keyS = [access_token]
     print('Количество ключей:', len(API_keyS), '\n')
@@ -328,6 +326,7 @@ f'''    Скрипт нацелен на выгрузку характерист
                 print('- пользователь НЕ определил страницу' if not domain else f"- пользователь определил страницу: '{domain}'")
                 print('- пользователь НЕ определил поля' if not fields else f"- пользователь определил поля: '{fields}'")
                 print('- пользователь НЕ определил фильтр' if not filter else f"- пользователь определил фильтр: '{filter}'")
+
                 print(
 '''--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
 --- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите 'R' и нажмите Enter
@@ -460,16 +459,14 @@ f'-- можете подать их в скобки функции wallGet пе�
                 time.sleep(pause)
 
 # 2.1.2 Экспорт выгрузки метода get и финальное завершение скрипта
-        df2file.df2fileShell(
-                             complicatedNamePart=complicatedNamePart,
+        df2file.df2fileShell(complicatedNamePart=complicatedNamePart,
                              dfIn=itemS,
                              fileFormatChoice=fileFormatChoice,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method,
                                 # чтобы избавиться от лишней точки в имени файла
 
                              coLabFolder=coLabFolder,
-                             currentMoment=momentCurrent.strftime('%Y%m%d_%H%M') # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                             )
+                             currentMoment=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
 
         print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
         if os.path.exists(rootName):
