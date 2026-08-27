@@ -295,7 +295,7 @@ f"""    Скрипт нацелен на выгрузку характерист
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     rootNameS = os.listdir()
     # Поиск ключей
-    if access_token == None:
+    if access_token:
         if not silentMode: print('Проверяю наличие файла credentialsVK.txt с ключ[ом ами], гипотетически сохранённым[и] при первом запуске скрипта')
         if 'credentialsVK.txt' in rootNameS:
             file = open('credentialsVK.txt')
@@ -396,7 +396,7 @@ f"""
 
                 else:
                     itemS, error, folder = files2df.files2df(folderFile)
-                    if error != None:
+                    if error:
                         if 'No such file or directory' in error:
                         print('Путь:', folderFile, '-- не существует; попробуйте, пожалуйста, ещё раз..')
 
@@ -456,7 +456,7 @@ f'-- можете подать их в скобки функции wallGet пе�
                   )
 
             # print('experiencedMode:', experiencedMode) # для отладки
-            if experiencedMode == False: input('--- После прочтения этой инструкции нажмите Enter')
+            if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
             print('') # для отступа
 
         iteration = 1
@@ -514,7 +514,7 @@ f'-- можете подать их в скобки функции wallGet пе�
                       )
 
                 shutil.rmtree(rootName, ignore_errors=True)
-            if fields != None: print(
+            if fields: print(
 f"""
 Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
 import pandas
