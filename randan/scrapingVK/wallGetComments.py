@@ -51,7 +51,7 @@ f"""Пакет {module} НЕ прединсталлирован; он требу
 def dfsProcessor(complicatedNamePart,
                  coLabFolder,
                  dfAdd,
-                 dfFinal, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода get
+                 dfFinal, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода getComments
                  dfIn,
                  fields,
                  fileFormatChoice,
@@ -147,7 +147,7 @@ def wallGetCommentsCore(API_keyS,
     while goC:
         try: # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
             response = requests.get('https://api.vk.ru/method/wall.getComments', params=params)
-            response = response.json() # отобразить выдачу метода get в виде JSON
+            response = response.json() # отобразить выдачу метода getComments в виде JSON
             # print('response', response) # для отладки
             if 'response' in response.keys():
                 response = response['response']
@@ -191,7 +191,7 @@ def wallGetComments(access_token=None,
 
     Parameters
     ----------
-    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/wall.get , за исключением аргументов params и returnDfs
+    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/{method) , за исключением аргументов params и returnDfs
     Причём они могут быть поданы и в качестве самостоятельных аргументов функции, и в качестве словаря params ,
     который обычно подаётся в метод get пакета requests
     access_token : str
@@ -300,7 +300,9 @@ f"""    Скрипт нацелен на выгрузку характерист
         if 'credentialsVK.txt' in rootNameS:
             file = open('credentialsVK.txt')
             API_keyS = file.read()
+            file.close()
             if not silentMode: print('Нашёл файл credentialsVK.txt; далее буду использовать ключ[и] из него:', API_keyS)
+
         else:
             if not silentMode: print(
 """--- НЕ нашёл файл credentialsVK.txt . Введите в окно Ваш API key для авторизации в API ВК 
@@ -352,11 +354,13 @@ f"""    Скрипт нацелен на выгрузку характерист
 --- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите "R" и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter"""
                           )
+
                     decision = input()
                     if len(decision) == 0:
                         temporalNameS = os.listdir(rootName)
                         for temporalName in temporalNameS:
                             if '.xlsx' in temporalName: break
+
                         itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
 
                         for temporalName in temporalNameS:
@@ -373,6 +377,7 @@ f"""    Скрипт нацелен на выгрузку характерист
     # if not silentMode продолжается
         if not temporalName: # если itemsTemporal, в т.ч. пустой, не существует
                 # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
+
             rootName = 'No folder'
             print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку')
             print(
@@ -388,13 +393,15 @@ f"""
                 if len(folderFile) == 0:
                     folderFile = None # для унификации
                     break
+
                 else:
                     itemS, error, folder = files2df.files2df(folderFile)
                     if error != None:
                         if 'No such file or directory' in error:
-                            print('Путь:', folderFile, '-- не существует; попробуйте, пожалуйста, ещё раз..')
+                        print('Путь:', folderFile, '-- не существует; попробуйте, пожалуйста, ещё раз..')
+
                     else: break
-                # display(itemS)
+                # display('itemS:', itemS)
 # Теперь определены объекты: folder и folderFile (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
 
 # 2.0.4 Пользовательские настройки запроса к API ВК
@@ -474,7 +481,7 @@ f'-- можете подать их в скобки функции wallGet пе�
                 itemS = dfsProcessor(complicatedNamePart,
                                      coLabFolder,
                                      itemsAdditional,
-                                     itemS, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода get
+                                     itemS, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода getComments
                                      itemS,
                                      fields,
                                      fileFormatChoice,
@@ -488,7 +495,7 @@ f'-- можете подать их в скобки функции wallGet пе�
                 offset += count
                 time.sleep(pause)
 
-# 2.1.2 Экспорт выгрузки метода get и финальное завершение скрипта
+# 2.1.2 Экспорт выгрузки метода getComments и финальное завершение скрипта
         if not silentMode:
             df2file.df2fileShell(complicatedNamePart=complicatedNamePart,
                                  dfIn=itemS,
@@ -532,7 +539,7 @@ df2fileShell('{complicatedNamePart}', Новый_датафрейм, '{fileForma
         dfsProcessor(complicatedNamePart,
                      coLabFolder,
                      dfAdd,
-                     itemS, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода get
+                     itemS, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода getComments
                      itemS,
                      fields,
                      fileFormatChoice,
