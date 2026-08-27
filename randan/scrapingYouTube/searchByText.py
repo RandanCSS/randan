@@ -13,20 +13,23 @@ import sys
 from subprocess import check_call
 
 # --- остальные модули и пакеты
-attempt = 0
-while True:
+for attempt in range(1, 4):
     try:
-        from datetime import date, datetime
-        from randan.tools import calendarWithinYear, coLabAdaptor, df2file, files2df, varPreprocessor # авторские модули для
+        from datetime import datetime
+        from IPython.display import display
+
+        from randan.tools import calendarWithinYear, coLabAdaptor, df2file, files2df, scrapingTools # авторские модули для
             # (а) работы с календарём конкретного года
             # (б) адаптации текущего скрипта к файловой системе CoLab
             # (в) сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
             # (г) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
-            # (д) предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
+            # (д) упрощения скрапинга
+
         from tqdm import tqdm
         import os, pandas, re, shutil, time, warnings
         import googleapiclient.discovery as api
-        break
+        break # выход из цикла for attempt in range(3)
+
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
@@ -34,23 +37,21 @@ while True:
         if module == 'googleapiclient': module = 'google-api-python-client'
         print(
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка № {attempt} из 10
+Попытка № {attempt} из 3
 '''
               )
         check_call([sys.executable, '-m', 'pip', 'install', module])
         attempt += 1
-        if  attempt == 10:
+        if  attempt == 3:
             print(
 f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
                   )
-            break
 
 # 1 Авторские функции
 # 1.0 для метода search из API YouTube, помогающая работе с ключами
-def bigSearch(
-              API_keyS,
+def bigSearch(API_keyS,
               channelIdForSearch, # согласно документации API YouTube, подать можно лишь один channelId
               channelType,
               contentType,
@@ -78,23 +79,22 @@ def bigSearch(
               videoPaidProductPlacement,
               videoType,
               videoSyndicated,
-              year
-              ):
+              year):
     addItemS = pandas.DataFrame() # принудительная выдача для response на случай неуспеха request.execute()
     goC = True
     goS = True
     goToPlayList = False
-    response = {
-                'kind': 'youtube#searchListResponse',
+
+    response = {'kind': 'youtube#searchListResponse',
                 'pageInfo': {'totalResults': 0, 'resultsPerPage': 0},
-                'items': []
-                } # принудительная выдача для response на случай неуспеха request.execute()
+                'items': []} # принудительная выдача для response на случай неуспеха request.execute()
+
     while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
         try:
             youtube = api.build('youtube', 'v3', developerKey = API_keyS[keyOrder])
             # print('contentType:', contentType) # для отладки
-            request = youtube.search().list(
-                                            channelId=channelIdForSearch,
+
+            request = youtube.search().list(channelId=channelIdForSearch,
                                             channelType=channelType,
                                             eventType=eventType,
                                             location=location,
@@ -120,8 +120,8 @@ def bigSearch(
                                             videoLicense=videoLicense,
                                             videoPaidProductPlacement=videoPaidProductPlacement,
                                             videoType=videoType,
-                                            videoSyndicated=videoSyndicated
-                                            )
+                                            videoSyndicated=videoSyndicated)
+
             response = request.execute()
             addItemS = pandas.json_normalize(response['items'])
 
@@ -129,17 +129,18 @@ def bigSearch(
             print(
 '      Итерация №', iteration, ', number of items', len(response['items']), '' if not year else f', year {year}', '' if not order else f', order {order}', '          ', end='\r'
                   )
+
             iteration += 1
             goC = False
 
         except:
             print('\nОшибка внутри авторской функции bigSearch') # для отладки
             # print(sys.exc_info()) # для отладки
-            goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(
-                                                                             errorDescription=sys.exc_info(),
+
+            goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(errorDescription=sys.exc_info(),
                                                                              keyOrder=keyOrder,
-                                                                             sourceId=channelIdForSearch
-                                                                             )
+                                                                             sourceId=channelIdForSearch)
+
     return addItemS, goS, goToPlayList, iteration, keyOrder, response # от response отказаться нельзя, т.к. в нём много важных ключей, даже если их значения нули
 
 # 1.1 для обработки выдачи метода channels, помогающая работе с ключами
@@ -149,6 +150,7 @@ def channelProcessor(API_keyS, channelIdForSearch, coLabFolder, complicatedNameP
         if len(channelIdS) > 0:
             channelIdS =\
                 channelIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in channelIdS.columns else channelIdS['id'].to_list()
+
     else: channelIdS = [channelIdForSearch] # в другом случае id канала подаётся пользователем
     # channelIdS = channelIdS[:5] # для отладки
     # print(channelIdS)
@@ -160,25 +162,27 @@ f'''В скрипте используются следующие аргумен
 Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.
 Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/channels'''
           )
+
     if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
     print('') # для отступа
 
 # ********** Дополнение списка id каналов из dfFinal списком id каналов из playlistS
     if (len(playlistS) > 0) | (len(videoS) > 0):
+
         print(
 '''--- Если стоит задача сформировать релевантную запросу базу каналов и хотите пополнить список каналов теми, к которым относятся выгруженные плейлисты и видео,
 просто нажмите Enter (это увеличит совокупность выгруженных каналов, но нет гарантии, что если плейлисты и видео релевантны, то и каналы, к которым они относятся, тоже релевантны)
 --- Если НЕ хотите пополнить список, нажмите пробел и затем Enter'''
               )
+
         if len(input()) == 0:
             if len(playlistS) > 0:
 
-                # Список списков, каждый из которых соответствует одному плейлисту
                 playlistChannelId_list = playlistS['snippet.videoOwnerChannelId'].str.split(', ').to_list()
-    
+                    # список списков, каждый из которых соответствует одному плейлисту
+
                 playlistChannelIdS = []
-                for snippet in playlistChannelId_list:
-                    playlistChannelIdS.extend(snippet)
+                for snippet in playlistChannelId_list: playlistChannelIdS.extend(snippet)
                 channelIdS.extend(playlistChannelIdS)
                 channelIdS = list(dict.fromkeys(channelIdS))
 
@@ -194,8 +198,7 @@ f'''В скрипте используются следующие аргумен
             if 'search' in dfFinal['kind'].drop_duplicates().iloc[0]: # другими словами, если search использовался, потому что мог не search , а channels сформировать dfFinal
                 print('-- дополнительных к выруженным методом search')
 
-        channelS = portionsProcessor(
-                                     API_keyS=API_keyS,
+        channelS = portionsProcessor(API_keyS=API_keyS,
                                      channelIdForSearch=channelIdForSearch,
                                      coLabFolder=coLabFolder,
                                      complicatedNamePart=complicatedNamePart,
@@ -212,109 +215,88 @@ f'''В скрипте используются следующие аргумен
                                      stage=stage,
                                      targetCount=targetCount,
                                      year=year,
-                                     yearsRange=yearsRange
-                                     )
+                                     yearsRange=yearsRange)
+
         if len(channelS) > 0:
-            df2file.df2fileShell(
-                                 complicatedNamePart=complicatedNamePart,
+            df2file.df2fileShell(complicatedNamePart=complicatedNamePart,
                                  dfIn=channelS,
                                  fileFormatChoice=fileFormatChoice,
                                  method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
                                  coLabFolder=coLabFolder,
-                                 currentMoment=momentCurrent.strftime('%Y%m%d_%H%M') # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                                 )
+                                 currentMoment=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+
     return channelS
 
 # 1.2 для обработки выдачи любого из методов, помогающая работе с ключами
-def dfsProcessor(
-                  channelIdForSearch,
-                  coLabFolder,
-                  complicatedNamePart,
-                  contentType,
-                  fileFormatChoice,
-                  dfAdd,
-                  dfFinal, # на обработке какой бы ни было выгрузки не возникла бы непреодолима ошибка, сохранить следует выгрузку метода search
-                  dfIn,
-                  goS, # единственная из функций, принимающая этот аргумент
-                  method,
-                  q,
-                  rootName,
-                  slash,
-                  stageTarget,
-                  targetCount,
-                  momentCurrent,
-                  year,
-                  yearsRange
-                  ):
-    if (len(dfAdd) != 0) | (len(dfIn) != 0): # оба df пусты -- в случае применения функции dfsProcessor при завершении исполнения скрипта пользователем
+def dfsProcessor(channelIdForSearch,
+                 coLabFolder,
+                 complicatedNamePart,
+                 contentType,
+                 fileFormatChoice,
+                 dfAdd,
+                 dfFinal, # на обработке какой бы ни было выгрузки не возникла бы непреодолима ошибка, сохранить следует выгрузку метода search
+                 dfIn,
+                 goS, # единственная из функций, принимающая этот аргумент
+                 method,
+                 q,
+                 rootName,
+                 slash,
+                 stageTarget,
+                 targetCount,
+                 momentCurrent,
+                 year,
+                 yearsRange):
+    if (len(dfAdd) > 0) | (len(dfIn) > 0): # оба df пусты -- в случае применения функции dfsProcessor при завершении исполнения скрипта пользователем
         df = pandas.concat([dfIn, dfAdd])
         columnsForCheck = []
         for column in df.columns: # выдача многих методов содержит столбец id, он оптимален для проверки дублирующихся строк
-            if 'id' == column:
-                columnsForCheck.append(column)
+            if 'id' == column: columnsForCheck.append(column)
+
         if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся строк возможна по столбцам, содержащим в имени id
             for column in df.columns:
-                if 'id.' in column:
-                    columnsForCheck.append(column)
+                if 'id.' in column: columnsForCheck.append(column)
+
         # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck) # для отладки
+
         df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True) # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
 
 # Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
     if not goS:
+
         print(
 f'''Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"'''
               )
+
         if not os.path.exists(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"):
                 os.makedirs(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal")
                 print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" создана''')
+
         # else:
             # print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" существует''') # для отладки
 
-        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}channelIdForSearch.txt", 'w+') # открыть на запись
-        file.write(channelIdForSearch if channelIdForSearch else '')
-        file.close()
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}channelIdForSearch.txt", channelIdForSearch if channelIdForSearch else '')
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}contentType.txt", contentType if contentType else '')
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}method.txt", method)
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}q.txt", q if q else '')
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}stageTarget.txt", stage) # stage и stageTarget принимает значения [0; 3]
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}targetCount.txt", targetCount if targetCount else '0')
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}year.txt", str(year)) # год, на котором остановилось исполнение скрипта
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}yearsRange.txt", yearsRange if yearsRange else '')
 
-        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}contentType.txt", 'w+') # открыть на запись
-        file.write(contentType if contentType else '')
-        file.close()
-
-        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}method.txt", 'w+') # открыть на запись
-        file.write(method)
-        file.close()
-
-        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}q.txt", 'w+') # открыть на запись
-        file.write(q if q else '')
-        file.close()
-
-        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}stageTarget.txt", 'w+')
-        file.write(str(stageTarget)) # stageTarget принимает значения [0; 3]
-        file.close()
-
-        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}targetCount.txt", 'w+')
-        file.write(str(targetCount))
-        file.close()
-
-        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}year.txt", 'w+')
-        file.write(str(year)) # год, на котором остановилось исполнение скрипта
-        file.close()
-
-        file = open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}yearsRange.txt", 'w+')
-        file.write(yearsRange if yearsRange else '') # пользовательский временнОй диапазон
-        file.close()
-
-        df2file.df2fileShell(
-                             complicatedNamePart=f'{complicatedNamePart}_Temporal',
+        df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
                              dfIn=dfFinal,
                              fileFormatChoice=fileFormatChoice,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
                              coLabFolder=coLabFolder,
-                             currentMoment=momentCurrent.strftime('%Y%m%d') # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                             )
+                             currentMoment=momentCurrent.strftime('%Y%m%d')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+
         warnings.filterwarnings('ignore')
+
         print(
 '''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
 Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
               )
+
         sys.exit()
     return df
 
