@@ -241,7 +241,7 @@ def wallGetComments(access_token=None,
         # print('count:', count) # для отладки
 
         if offset:
-            if type(offset) == str: offset = int(offset)
+            if type(offset) != int: offset = int(offset)
         # print('offset:', offset) # для отладки
             
         if owner_id:
