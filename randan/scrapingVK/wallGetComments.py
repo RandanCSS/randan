@@ -189,12 +189,12 @@ def wallGetCommentsCore(API_keyS,
 def wallGetComments(access_token=None,
                     count=None,
                     fields=None,
-                    limitedMode=False,
                     offset=None,
                     owner_id=None,
                     params=None,
                     post_id=None,
-                    returnDfs=False):
+                    returnDfs=False,
+                    silentMode=False):
     method = 'wall.getComments'
 
     f"""
@@ -209,13 +209,13 @@ def wallGetComments(access_token=None,
            count : int
           fields : list
           offset : int
-     silenceMode : bool -- в случае True в функции отключаются CLI-диалоги и экспорт результата исполнения функции для долговременного хранения 
         owner_id : str
           params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/{method} ,
           чтобы не подавать эти аргументы по отдельности
 
          post_id : str
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
+      silentMode : bool -- в случае True в функции отключаются CLI-диалоги и экспорт результата исполнения функции для долговременного хранения 
     """
     if not params and not access_token and not count and not fields and not offset and not owner_id and not post_id and not returnDfs:
         print('Пользователь не подал аргументы') # для отладки
@@ -253,7 +253,7 @@ def wallGetComments(access_token=None,
 
     if not count: count = 100
 
-    if not silenceMode:
+    if not silentMode:
         if not experiencedMode: print(
 """    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию: https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ). Для получения API key следует создать приложение и из него скопировать сервисный ключ. Приложение -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому ВК. Авторизация сервисным ключом позволяет использовать некоторые методы API -- в документации API ВК ( https://dev.vk.com/ru/method ) они помечены серым кружком (одним или в сочетании с кружками другого цвета). Его достаточно, если выполнять действия, которые были бы доступны Вам как обычному пользователю ВК: посмотреть открытые персональные и групповые страницы, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления поста из чужого аккаунта, то Вам потребуется дополнительная авторизация.
     ВК может ограничить действие Вашего ключа или вовсе заблокировать его, если сочтёт, что Вы злоупотребляете автоматизированным доступом."""
@@ -324,7 +324,7 @@ f"""    Скрипт нацелен на выгрузку характерист
 
 # 2.0.2 Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
-    if not silenceMode:
+    if not silentMode:
         print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
         for rootName in rootNameS:
             if 'Temporal' in rootName:
@@ -373,7 +373,7 @@ f"""    Скрипт нацелен на выгрузку характерист
                 else: shutil.rmtree(rootName, ignore_errors=True) # в директории Temporal не 7 файлов => либо она повреждена, либо создалась при безрезультатном запуске
 
 # 2.0.3 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
-    # if not silenceMode продолжается
+    # if not silentMode продолжается
         if not temporalName: # если itemsTemporal, в т.ч. пустой, не существует
                 # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
             rootName = 'No folder'
@@ -401,7 +401,7 @@ f"""
 # Теперь определены объекты: folder и folderFile (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
 
 # 2.0.4 Пользовательские настройки запроса к API ВК
-    # if not silenceMode продолжается
+    # if not silentMode продолжается
         if not owner_id or not post_id: # если пользователь не подал эти аргументы в рамках experiencedMode
             if not owner_id:
                 print(
@@ -432,7 +432,7 @@ f"""
 
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_VK'
-    # if not silenceMode завершилось
+    # if not silentMode завершилось
     if owner_id: complicatedNamePart += "_" + owner_id if len(owner_id) < 50 else "_" + owner_id[:50]
     if post_id: complicatedNamePart += "_" + post_id if len(post_id) < 50 else "_" + post_id[:50]
 
@@ -442,7 +442,7 @@ f"""
         iteration = 0 # номер итерации применения текущего метода
         pause = 0.25
 
-        if not silenceMode:
+        if not silentMode:
             print(
 f'В скрипте используются следующие аргументы метода {method} API ВК: count, fields, offset, owner_id, post_id .',
 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
@@ -469,7 +469,7 @@ f'-- можете подать их в скобки функции wallGet пе�
 
             # print('goS:', goS) # для отладки
             if goS & (len(itemsAdditional) == 0):
-                if not silenceMode: print('Все комментарии к посту страницы выгружены')
+                if not silentMode: print('Все комментарии к посту страницы выгружены')
                 break
 
             else:
@@ -500,7 +500,7 @@ f'-- можете подать их в скобки функции wallGet пе�
                              coLabFolder=coLabFolder,
                              currentMoment=momentCurrent.strftime("%Y%m%d_%H%M")) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
 
-        if not silenceMode:
+        if not silentMode:
             print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
             if os.path.exists(rootName):
                 print('rootName:', rootName)
@@ -525,7 +525,7 @@ df2fileShell('{complicatedNamePart}', Новый_датафрейм, '{fileForma
 """
                                      )
 
-        # if not silenceMode завершилось
+        # if not silentMode завершилось
         if returnDfs: return itemS
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
