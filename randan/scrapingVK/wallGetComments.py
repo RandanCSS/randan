@@ -73,7 +73,7 @@ def dfsProcessor(complicatedNamePart,
     df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
         # при дублировании записей из itemS из Temporal и от пользователя и новых записей, оставить новые
 
-    if goS == False:
+    if not goS and complicatedNamePart:
         print(
 f'Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"'
               )
@@ -206,6 +206,7 @@ def wallGetComments(access_token=None,
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
       silentMode : bool -- в случае True в функции отключаются CLI-диалоги и экспорт результата исполнения функции для долговременного хранения 
     """
+    complicatedNamePart = None # для silentMode
     if not params and not access_token and not count and not fields and not offset and not owner_id and not post_id and not returnDfs:
         print('Пользователь не подал аргументы') # для отладки
         experiencedMode = False
