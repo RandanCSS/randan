@@ -88,17 +88,11 @@ f'''Поскольку исполнение скрипта натолкнуло�
         with open(f'{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}fields.txt', 'w', encoding='utf-8') as file:
             json.dump(data_to_save, file, ensure_ascii=False, indent=4)
 
-        if not filter: filter = ''
-        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}filter.txt", filter)
-
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}filter.txt", filter if filter else '')
         scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}method.txt", method)
         scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}offset.txt", offset)
-
-        if not owner_id: owner_id = ''
-        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}owner_id.txt", owner_id)
-
-        if not post_id: post_id = ''
-        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}post_id.txt", owner_id)
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}owner_id.txt", owner_id if owner_id else '')
+        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}post_id.txt", post_id if post_id else '')
 
         df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
                              dfIn=df,
