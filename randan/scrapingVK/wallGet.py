@@ -74,7 +74,7 @@ def dfsProcessor(complicatedNamePart,
     df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
         # при дублировании записей из itemS из Temporal и от пользователя и новых записей, оставить новые
 
-    if goS == False:
+    if not goS:
         print(
 f'Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal"'
               )
@@ -279,7 +279,7 @@ f"""    Скрипт нацелен на выгрузку характерист
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     rootNameS = os.listdir()
     # Поиск ключей
-    if access_token == None:
+    if not access_token:
         print('Проверяю наличие файла credentialsVK.txt с ключ[ом ами], гипотетически сохранённым[и] при первом запуске скрипта')
         if 'credentialsVK.txt' in rootNameS:
             file = open('credentialsVK.txt')
@@ -357,7 +357,7 @@ f"""    Скрипт нацелен на выгрузку характерист
             else: shutil.rmtree(rootName, ignore_errors=True) # в директории Temporal не 7 файлов => либо она повреждена, либо создалась при безрезультатном запуске
 
 # 2.0.3 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
-    if temporalName == None: # если itemsTemporal, в т.ч. пустой, не существует
+    if not temporalName: # если itemsTemporal, в т.ч. пустой, не существует
             # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
 
         rootName = 'No folder'
@@ -378,7 +378,7 @@ f"""    Скрипт нацелен на выгрузку характерист
 
             else:
                 itemS, error, folder = files2df.files2df(folderFile)
-                if error != None:
+                if error:
                     if 'No such file or directory' in error:
                         print('Путь:', folderFile, '-- не существует; попробуйте, пожалуйста, ещё раз..')
 
@@ -482,7 +482,7 @@ f'-- можете подать их в скобки функции wallGet пе�
     'Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'
                   )
             shutil.rmtree(rootName, ignore_errors=True)
-        if fields != None: print(
+        if fields: print(
 f"""
 Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
 import pandas
