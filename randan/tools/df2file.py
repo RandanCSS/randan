@@ -154,7 +154,7 @@ def df2fileShell(complicatedNamePart, dfIn, fileFormatChoice, method, coLabFolde
     # Проверка всех столбцов на наличие в их ячейках JSON-формата
     columnsToJSON = varPreprocessor.jsonChecker(dfIn)
 
-    # print('folder', folder) # для отладки
+    print('folder', folder) # для отладки
     if len(columnsToJSON) > 0:
         print('В выгрузке метода', method, 'есть столбцы, содержащие внутри своих ячеек JSON-объекты; Excel не поддерживает JSON-формат;'
               , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
@@ -163,6 +163,7 @@ def df2fileShell(complicatedNamePart, dfIn, fileFormatChoice, method, coLabFolde
         if 'from_id' in dfIn.columns: columnsToJSON.append('from_id')
         if 'owner_id' in dfIn.columns: columnsToJSON.append('owner_id')
 
+        print('columnsToJSON:', columnsToJSON) # для отладки
         df2file(dfIn[columnsToJSON], f'{folder}_{method}_JSON_varS.json', folder if coLabFolder == None else coLabFolder + slash + folder)
         columnsToJSON.remove('id')
         if 'from_id' in columnsToJSON: columnsToJSON.remove('from_id')
