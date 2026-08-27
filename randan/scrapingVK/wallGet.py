@@ -86,26 +86,17 @@ f'Поскольку исполнение скрипта натолкнулос�
 
 # Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
         if not domain: domain = ''
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}domain.txt', 'w+') # открыть на запись
-        file.write(domain if domain else '')
-        file.close()
+        scrapingTools.containerExport(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}domain.txt', domain)
 
         if not fields: fields = []
         with open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}fields.txt', 'w', encoding='utf-8') as file:
             json.dump(data_to_save, file, ensure_ascii=False, indent=4)
 
         if not filter: filter = ''
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}filter.txt', 'w+') # открыть на запись
-        file.write(filter if filter else '')
-        file.close()
+        scrapingTools.containerExport(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}filter.txt', filter)
 
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}method.txt', 'w+') # открыть на запись
-        file.write(method)
-        file.close()
-
-        file = open(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}offset.txt', 'w+')
-        file.write(str(offset)) # год, на котором остановилось исполнение скрипта
-        file.close()
+        scrapingTools.containerExport(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}method.txt', method)
+        scrapingTools.containerExport(f'{momentCurrent.strftime("%Y%m%d")}{complicatedNamePart}_Temporal{slash}offset.txt', offset)
 
         df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
                              dfIn=df,
@@ -220,8 +211,6 @@ def wallGet(access_token=None,
             # print('access_token:', access_token) # для отладки
 
             count = scrapingTools.argument_key_comparison(count, 'count', params)
-            if count:
-                if type(count) != int: count = int(count)
             # print('count:', count) # для отладки
 
             domain = scrapingTools.argument_key_comparison(domain, 'domain', params)
@@ -234,12 +223,26 @@ def wallGet(access_token=None,
             # print('filter:', filter) # для отладки
 
             offset = scrapingTools.argument_key_comparison(offset, 'offset', params)
-            if offset:
-                if type(offset) != int: offset = int(offset)
             # print('offset:', offset) # для отладки
 
-    if not count: count = 100
+        if count:
+            if type(count) != int: count = int(count)
 
+        else: count = 100
+
+        # print('count:', count) # для отладки
+
+        if domain:
+            if type(domain) != str: domain = str(domain)
+
+        else: domain = '80054288' # моя страница
+
+        # print('domain:', domain) # для отладки
+
+        if offset:
+            if type(offset) == str: offset = int(offset)
+        # print('offset:', offset) # для отладки
+            
     if not expiriencedMode:
         print(
 """    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию: https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ). Для получения API key следует создать приложение и из него скопировать сервисный ключ. Приложение -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому ВК. Авторизация сервисным ключом позволяет использовать некоторые методы API -- в документации API ВК ( https://dev.vk.com/ru/method ) они помечены серым кружком (одним или в сочетании с кружками другого цвета). Его достаточно, если выполнять действия, которые были бы доступны Вам как обычному пользователю ВК: посмотреть открытые персональные и групповые страницы, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления поста из чужого аккаунта, то Вам потребуется дополнительная авторизация.
@@ -281,7 +284,9 @@ f"""    Скрипт нацелен на выгрузку характерист
         if 'credentialsVK.txt' in rootNameS:
             file = open('credentialsVK.txt')
             API_keyS = file.read()
+            file.close()
             print('Нашёл файл credentialsVK.txt; далее буду использовать ключ[и] из него:', API_keyS)
+
         else:
             print(
 """--- НЕ нашёл файл credentialsVK.txt . Введите в окно Ваш API key для авторизации в API ВК 
@@ -296,16 +301,15 @@ f"""    Скрипт нацелен на выгрузку характерист
                     from randan.tools.textPreprocessor import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
                     API_keyS = multispaceCleaner(API_keyS)
                     while API_keyS[-1] == ',': API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста
-
-                    file = open("credentialsVK.txt", "w+") # открыть на запись
-                    file.write(API_keyS)
-                    file.close()
+                    scrapingTools.containerExport('credentialsVK.txt', API_keyS)
                     break
+
                 else:
                     print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
         API_keyS = API_keyS.replace(' ', '') # контроль пробелов
         API_keyS = API_keyS.replace(',', ', ') # контроль пробелов
         API_keyS = API_keyS.split(', ')
+
     else: API_keyS = [access_token]
     print('Количество ключей:', len(API_keyS), '\n')
 
@@ -315,21 +319,13 @@ f"""    Скрипт нацелен на выгрузку характерист
     for rootName in rootNameS:
         if 'Temporal' in rootName:
             if len(os.listdir(rootName)) == 4:
-                file = open(f'{rootName}{slash}domain.txt')
-                domain = file.read()
-                file.close()
+                domain = scrapingTools.containerImport('domain', str)
 
                 with open(f'{rootName}{slash}fields.json', 'r', encoding='utf-8') as file:
                     fields = json.load(file)
 
-                file = open(f'{rootName}{slash}filter.txt')
-                filter = file.read()
-                file.close()
-
-                file = open(f'{rootName}{slash}offset.txt')
-                offset = file.read()
-                file.close()
-                offset = int(offset)
+                filter = scrapingTools.containerImport('filter', str)
+                offset = scrapingTools.containerImport('offset', int)
 
                 print(f'Нашёл директорию "{rootName}". В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:'
                       , '\n- скрипт остановился на offset', offset)
@@ -341,11 +337,13 @@ f"""    Скрипт нацелен на выгрузку характерист
 --- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите "R" и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter"""
                       )
+
                 decision = input()
                 if len(decision) == 0:
                     temporalNameS = os.listdir(rootName)
                     for temporalName in temporalNameS:
                         if '.xlsx' in temporalName: break
+
                     itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
 
                     for temporalName in temporalNameS:
@@ -361,6 +359,7 @@ f"""    Скрипт нацелен на выгрузку характерист
 # 2.0.3 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
     if temporalName == None: # если itemsTemporal, в т.ч. пустой, не существует
             # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
+
         rootName = 'No folder'
         print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку')
         print(
@@ -376,13 +375,15 @@ f"""    Скрипт нацелен на выгрузку характерист
             if len(folderFile) == 0:
                 folderFile = None # для унификации
                 break
+
             else:
                 itemS, error, folder = files2df.files2df(folderFile)
                 if error != None:
                     if 'No such file or directory' in error:
                         print('Путь:', folderFile, '-- не существует; попробуйте, пожалуйста, ещё раз..')
+
                 else: break
-            # display(itemS)
+            # display('itemS:', itemS)
 # Теперь определены объекты: folder и folderFile (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
 
 # 2.0.4 Пользовательские настройки запроса к API ВК
@@ -398,6 +399,7 @@ f"""    Скрипт нацелен на выгрузку характерист
 '(возможно появление новых объектов и новых столбцов, а также актуализация содержимого столбцов),',
 'поэтому, вероятно, следует ввести название той же страницы, что и при формировании указанного Вами файла'
                       )
+
             domain = input()
             if domain == '': domain = None # для единообразия
             else: print('')
