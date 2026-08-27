@@ -16,6 +16,11 @@ def argument_key_comparison(argument, key, params):
     else: pass # НИ ключ params , НИ отдельный аргумент НЕ определены, поэтому запрос к пользователю поступит
     return argument
 
+def containerExport(folderFile, container):
+    file = open(folderFile, 'w+') # открыть на запись
+    file.write(container)
+    file.close()
+
 def containerImport(containerName, containerType):
     file = open(f'{rootName}{slash}{containerName}.txt')
     # file = open(f'{containerName}.txt') # для отладки
