@@ -28,7 +28,7 @@ for attempt in range(1, 4):
         if '.' in module: module = module.split('.')[0]
         print(
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка № {attempt} из 3
+Попытка {attempt} из 3
 '''
               )
         check_call([sys.executable, "-m", "pip", "install", module])
