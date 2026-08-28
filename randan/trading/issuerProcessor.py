@@ -1,4 +1,9 @@
-# Модуль для операций с эмитентами торгуемых на МосБирже облигаций
+#!/usr/bin/env python
+# coding: utf-8
+
+'''
+(EN) A module for operations with issuers of bonds traded on the Moscow Exchange
+(RU) Модуль для операций с эмитентами торгуемых на МосБирже облигаций
 
 # 0. Активировать требуемые для работы скрипта модули и пакеты 
 # sys & subprocess -- эти пакеты должны быть предустанавлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
@@ -35,7 +40,7 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
                   )
 
 # Функции..
-    # .. компановки информации об эмитентах торгуемых на МосБирже облигаций в датафрейм (словарь)
+# .. компановки информации об эмитентах торгуемых на МосБирже облигаций в датафрейм (словарь)
 def issuersComposer(bondS):
     issuerS = bondS[['Эмитент']].sort_values('Эмитент').drop_duplicates().reset_index(drop=True) # заготовка для датафрейма с актуальными эмитентами
     for row_issuerS in issuerS.index:
@@ -66,7 +71,7 @@ def issuersComposer(bondS):
     # display('issuerS:', issuerS) # для отладки
     return issuerS
 
-    # .. извлечения из SECNAME торгуемых на МосБирже облигаций названий их эмитентов
+# .. извлечения из SECNAME торгуемых на МосБирже облигаций названий их эмитентов
 def issuerExtractor(dfIn):
     df = dfIn.copy()
     df['Эмитент'] = df['SECNAME'].str.replace('_', ' ').str.replace('-', ' ')
@@ -151,3 +156,30 @@ def issuerNameProcessor(bondS_in, issuerS):
     # display('bondS:', bondS) # для отладки
 
     return bondS
+
+# .. расчёта предела стоимости эмитента в портфеле превышает (рассчитанную для его рейтинга)
+def issuerValueLimit(bondS):
+    if 'Стоимость' not in bondS.columns: bondS['Стоимость'] = 0
+    issuerS_list = list(bondS['Эмитент'].unique())
+    issuerS_list.sort()
+    print('Эмитенты облигаций портфеля:', issuerS_list)
+
+    issuerS_df = pandas.DataFrame()
+    for boughtIssuer in tqdm(issuerS_list):
+    # for boughtIssuer in tqdm(issuerS_list[:2]): # для отладки
+
+        print('boughtIssuer:', boughtIssuer)
+
+        bondS_index = bondS[bondS['Эмитент'] == boughtIssuer].index
+        issuerS_df.loc[boughtIssuer, 'Issuer D Rating'] = bondS.loc[bondS_index[0], 'Issuer D Rating']
+
+        issuerS_df.loc[boughtIssuer, 'Стоимость'] = bondS.loc[bondS['Эмитент'] == boughtIssuer, 'Стоимость'].sum()
+
+    display('issuerS_df:', issuerS_df)
+
+    issuerS_df['Предел стоимости в портфеле'] = 1.4 ** issuerS_df['Issuer D Rating'] * 5000
+    issuerS_df['Предел стоимости в портфеле'] = issuerS_df['Предел стоимости в портфеле'].astype(int)
+    issuerS_df['Превышение предела стоимости'] = issuerS_df['Стоимость'] - issuerS_df['Предел стоимости в портфеле']
+    issuerS_df['Превышение предела стоимости'] = issuerS_df['Превышение предела стоимости'].astype(int)
+    issuerS_df = issuerS_df.reset_index().rename(columns={'index': 'Эмитент'}) # сохранить индекс как новый столбец indexOriginal
+    return issuerS_df
