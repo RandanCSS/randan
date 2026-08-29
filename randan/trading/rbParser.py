@@ -14,24 +14,24 @@ from subprocess import check_call
 # --- остальные модули и пакеты
 for attempt in range(1, 4):
     try:
-        from IPython.display import display
+        from randan.tools import forSelenium # авторский модуль для
+            # (а) упрощения некоторых оперций в selenium
 
-        from randan.tools import dictionariesHarmonizer, textPreprocessor # авторские модули для
-            # (а) редактирования столбца одного датафрейма на основе того же столбца другого датафрейма
-            # (б) предобработки нестандартизированнрого текста
-
-        import os, pandas, re
+        from selenium.webdriver.common.by import By
+        import os, pandas, re, selenium.common.exceptions, time, traceback
         break # выход из цикла for attempt in range(3)
 
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
         if '.' in module: module = module.split('.')[0]
+
         print(
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
 Попытка № {attempt} из 3
 '''
               )
+
         check_call([sys.executable, '-m', 'pip', 'install', module])
         if  attempt == 3:
             print(
@@ -42,7 +42,7 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 
 # Функции для..
 # .. выгрузки с RB характеристик облигаций с ISIN или с SecName или REGNUMBER
-def isin_restoration(bondS_FinAM_RB, bondsRB, column_target_FinAM, columnS_target_RB, driver, errorS, folder, momentCurrent):
+def isin_restoration(bondS_FinAM_RB, bondsRB, column_target_FinAM, columnS_target_RB, driver, errorS, folder, momentCurrent, pause):
 
     if 'ISIN код' not in bondsRB.columns: bondsRB = bondsRB.rename(columns={'ISIN': 'ISIN код'})
 
@@ -162,6 +162,58 @@ def isin_restoration(bondS_FinAM_RB, bondsRB, column_target_FinAM, columnS_targe
 
     return bondS_FinAM_RB, bondsRB, driver
 
+# .. унификации написания идентификаторов эмитентов
+def issuerIdentifierNormalizer(issuerIdentidier):
+    issuerIdentidier = issuerIdentidier.replace('P', 'Р') # для автодора; латиница на кириллицу
+
+    if 'автодор' in issuerIdentidier.lower():
+        issuerIdentidier = re.sub(r'\s+ГК\b', '', issuerIdentidier) # для автодора
+
+    if 'секьюритиз' in issuerIdentidier.lower():
+        issuerIdentidier = issuerIdentidier.replace('Секьюритиз', 'Секьюритизация ').replace('-об', '')
+            # для СФО СБ Секьюритизация
+
+    return issuerIdentidier
+
+# .. для авторизации на сайте rusnonds.ru
+def loginerRB(attemptsMax, boundarieS, driver, pause, xPathS):
+    # Вызов окна ввода логина и пароля
+    # print('xPathS[0]:', xPathS[0]) # для отладки
+    goS, xPath_loginPrompt = forSelenium.tryerSleeper(attemptsMax, boundarieS[0], driver, pause, xPathS[0])
+    print('xPath_loginPrompt:', xPath_loginPrompt) # для отладки
+    if goS == False:
+        print('Следует проверить xPath вручную')
+        warnings.filterwarnings("ignore")
+        input()
+        sys.exit()
+    driver.find_element(By.XPATH, xPath_loginPrompt).click()
+
+    # Ввод логина и пароля
+    # print('xPathS[1]:', xPathS[1]) # для отладки
+    if xPathS[1] == None: xPath_credentialsEntry = xPath_loginPrompt
+    else:
+        goS, xPath_credentialsEntry = forSelenium.tryerSleeper(attemptsMax, boundarieS[1], driver, pause, xPathS[1])
+        print('xPath_credentialsEntry:', xPath_credentialsEntry) # для отладки
+        if goS == False:
+            print('Следует проверить xPath вручную')
+            warnings.filterwarnings("ignore")
+            input()
+            sys.exit()
+        # return xPath_credentialsEntry, xPath_credentialsEntry
+    driver.find_element(By.XPATH, xPath_credentialsEntry + '/div[2]/div/div/div[1]/input').send_keys('alexey.n.rotmistrov@gmail.com')
+    driver.find_element(By.XPATH, xPath_credentialsEntry + '/div[3]/div/div/div[1]').click()
+    driver.find_element(By.XPATH, xPath_credentialsEntry + '/div[3]/div/div/div[1]/input').send_keys('05T05t2022')
+    driver.find_element(By.XPATH, xPath_credentialsEntry + '/div[5]/button[2]/span').click()
+
+    print(
+'''--- Сейчас в браузере появится Captcha; обработайте её вручную
+--- Расположите два окна: с этим скриптом и управляемое им окно браузера -- так, чтобы они оба были видны; нажмите Enter'''
+          )
+    
+    input()
+    return xPath_loginPrompt, xPath_credentialsEntry
+
+# .. для обработки блоков resultS_container
 def resultS_container_processor(bondS_FinAM_RB,
                                 bondsRB,
                                 column_target_FinAM,
@@ -186,7 +238,7 @@ def resultS_container_processor(bondS_FinAM_RB,
                 # чтобы не спутать облигации, имеющие похожие SecName
 
             result_container_notEmpty_text = result_container_notEmpty.text.strip()
-            result_container_notEmpty_text = issuerIdentidierTransformer(result_container_notEmpty_text)
+            result_container_notEmpty_text = issuerIdentifierNormalizer(result_container_notEmpty_text)
             print('result_container_notEmpty_text:', result_container_notEmpty_text) # для отладки
 
             if (secName_finam_pattern.search(result_container_notEmpty_text) is not None and column_target_FinAM != 'ISIN') or \
@@ -200,7 +252,7 @@ def resultS_container_processor(bondS_FinAM_RB,
                 for result in resultS:
 
                     result_text = result.text.strip()
-                    result_text = issuerIdentidierTransformer(result_text)
+                    result_text = issuerIdentifierNormalizer(result_text)
                     print('result_text:', result_text) # для отладки
 
                     if (secName_finam_pattern.search(result_text) is not None and column_target_FinAM != 'ISIN') or \
