@@ -377,7 +377,7 @@ f'''    Скрипт нацелен на выгрузку характерист
             while True:
                 API_keyS = input()
                 if len(API_keyS) > 0:
-                    print(f"-- далее буд{'ут' if len(API_keyS) > 1 else 'е'}т использован{'ы' if len(API_keyS) > 1 else ''} эт{'и' if len(API_keyS) > 1 else 'от'} ключ{'и' if len(API_keyS) > 1 else ''}")
+                    print(f"-- далее буд{'у' if len(API_keyS) > 1 else 'е'}т использован{'ы' if len(API_keyS) > 1 else ''} эт{'и' if len(API_keyS) > 1 else 'от'} ключ{'и' if len(API_keyS) > 1 else ''}")
 
                     from randan.tools.textPreprocessor import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
                     API_keyS = multispaceCleaner(API_keyS)
