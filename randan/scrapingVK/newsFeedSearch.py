@@ -405,33 +405,15 @@ f'''    Скрипт нацелен на выгрузку характерист
                 with open(f'{rootName}{slash}fields.json', 'r', encoding='utf-8') as file:
                     fields = json.load(file)
 
-                file = open(f'{rootName}{slash}method.txt')
-                method = file.read()
-                file.close()
+                method = scrapingTools.containerImport('method', str)
 
-                file = open(f'{rootName}{slash}q.txt', encoding='utf-8') # 
-                q = file.read()
-                file.close()
+                q = scrapingTools.containerImport('q', str)
                 if q == '': q = None # для единообразия
 
-                file = open(f'{rootName}{slash}stageTarget.txt')
-                stageTarget = file.read()
-                file.close()
-                stageTarget = int(stageTarget)
-
-                file = open(f'{rootName}{slash}targetCount.txt')
-                targetCount = file.read()
-                file.close()
-                targetCount = int(targetCount)
-
-                file = open(f'{rootName}{slash}year.txt')
-                year = file.read()
-                file.close()
-                year = int(year)
-
-                file = open(f'{rootName}{slash}yearsRange.txt')
-                yearsRange = file.read()
-                file.close()
+                stageTarget = scrapingTools.containerImport('stageTarget', int)
+                targetCount = scrapingTools.containerImport('targetCount', int)
+                year = scrapingTools.containerImport('year', int)
+                yearsRange = scrapingTools.containerImportyearsRangeq', str)
 
                 print(f"Нашёл директорию '{rootName}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
                       # , '\n- было выявлено целевое число объектов (targetCount)', targetCount
@@ -445,6 +427,7 @@ f'''    Скрипт нацелен на выгрузку характерист
 --- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите 'R' и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter'''
                       )
+
                 decision = input()
                 if len(decision) == 0:
                     temporalNameS = os.listdir(rootName)
