@@ -4,6 +4,7 @@
 '''
 (EN) A module for operations with issuers of bonds traded on the Moscow Exchange
 (RU) Модуль для операций с эмитентами торгуемых на МосБирже облигаций
+'''
 
 # 0. Активировать требуемые для работы скрипта модули и пакеты 
 # sys & subprocess -- эти пакеты должны быть предустанавлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
@@ -28,10 +29,10 @@ for attempt in range(1, 4):
         if '.' in module: module = module.split('.')[0]
         print(
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка {attempt} из 3
+Попытка № {attempt} из 3
 '''
               )
-        check_call([sys.executable, "-m", "pip", "install", module])
+        check_call([sys.executable, '-m', 'pip', 'install', module])
         if  attempt == 3:
             print(
 f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
