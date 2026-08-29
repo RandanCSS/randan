@@ -185,7 +185,7 @@ def wallGetComments(access_token=None,
 
     Parameters
     ----------
-    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/{method) , за исключением аргументов params и returnDfs
+    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/{method} , за исключением аргументов params и returnDfs
     Причём они могут быть поданы и в качестве самостоятельных аргументов функции, и в качестве словаря params ,
     который обычно подаётся в метод get пакета requests
     access_token : str
