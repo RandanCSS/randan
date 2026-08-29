@@ -17,7 +17,7 @@ for attempt in range(1, 4):
     try:
         from datetime import datetime
         from IPython.display import display
-        from randan.scrapingVK import scrapingTools # модуль для упрощения скрапинга VK
+        from randan.scrapingVK import scrapingVK_tools # модуль для упрощения скрапинга VK
 
         from randan.tools import calendarWithinYear, coLabAdaptor, df2file, files2df, scrapingTools, varPreprocessor # авторские модули для
             # (а) работы с календарём конкретного года
