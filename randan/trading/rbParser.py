@@ -176,7 +176,7 @@ def issuerIdentifierNormalizer(issuerIdentidier):
     return issuerIdentidier
 
 # .. для авторизации на сайте rusnonds.ru
-def loginerRB(attemptsMax, boundarieS, driver, pause, xPathS):
+def loginerRB(attemptsMax, boundarieS, driver, login_password, pause,  xPathS):
     # Вызов окна ввода логина и пароля
     # print('xPathS[0]:', xPathS[0]) # для отладки
     goS, xPath_loginPrompt = forSelenium.tryerSleeper(attemptsMax, boundarieS[0], driver, pause, xPathS[0])
@@ -200,9 +200,52 @@ def loginerRB(attemptsMax, boundarieS, driver, pause, xPathS):
             input()
             sys.exit()
         # return xPath_credentialsEntry, xPath_credentialsEntry
-    driver.find_element(By.XPATH, xPath_credentialsEntry + '/div[2]/div/div/div[1]/input').send_keys('alexey.n.rotmistrov@gmail.com')
+
+        rootNameS = os.listdir()
+
+# <Поиск логина и пароля>
+    if not login_password:
+        if 'credentialsRB.json' in rootNameS:
+            with open('credentialsRB.json', 'r', encoding='utf-8') as file:
+                login_password = json.load(file)
+
+            print('Проверяю наличие файла credentialsRB.json с логином и паролем, гипотетически сохранёнными при первом запуске скрипта')
+            print('Нашёл файл credentialsRB.json; далее буду использовать логин {login_password.keys()[0]} и пароль {login_password[login_password.keys()[0]]}из него:')
+
+        else:
+            print(
+'''--- НЕ нашёл файл credentialsRB.json . Введите в окно Ваши логин и пароль для на сайте rusnonds.ru . После ввода нажмите Enter'''
+                  )
+
+            while True:
+                login = input('Введите в окно Ваш логин и нажмите Enter')
+                if len(login) > 0:
+                    print('-- далее будет использован этот логин')
+                    break
+
+                else:
+                    print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
+
+            while True:
+                password = input('Введите в окно Ваш пароль и нажмите Enter')
+                if len(password) > 0:
+                    print('-- далее будет использован этот пароль')
+                    break
+
+                else:
+                    print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
+
+            login_password = {login: password}
+            with open("credentialsRB.json", 'w', encoding='utf-8') as file:
+                json.dump(login_password, file, ensure_ascii=False, indent=4)
+
+    else:
+        login = str(login_password.keys()[0])
+        password = str(login_password[login])
+
+    driver.find_element(By.XPATH, xPath_credentialsEntry + '/div[2]/div/div/div[1]/input').send_keys(login)
     driver.find_element(By.XPATH, xPath_credentialsEntry + '/div[3]/div/div/div[1]').click()
-    driver.find_element(By.XPATH, xPath_credentialsEntry + '/div[3]/div/div/div[1]/input').send_keys('05T05t2022')
+    driver.find_element(By.XPATH, xPath_credentialsEntry + '/div[3]/div/div/div[1]/input').send_keys(password)
     driver.find_element(By.XPATH, xPath_credentialsEntry + '/div[5]/button[2]/span').click()
 
     print(
