@@ -86,7 +86,7 @@ f'''Поскольку исполнение скрипта натолкнуло�
 # Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
         if not fields: fields = []
         with open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}fields.json", 'w', encoding='utf-8') as file:
-            json.dump(data_to_save, file, ensure_ascii=False, indent=4)
+            json.dump(fields, file, ensure_ascii=False, indent=4)
 
         scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}filter.txt", filter if filter else '')
         scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}method.txt", method)
