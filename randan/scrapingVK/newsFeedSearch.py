@@ -77,7 +77,7 @@ def bigSearch(API_keyS,
               'q': q, # опциональный параметр
               'start_from': start_from, # опциональный параметр
               'start_time': start_time, # опциональный параметр
-              'v': '5.199' # обязательный параметр}
+              'v': '5.199'} # обязательный параметр
 
     tryer = 0
     while True:
