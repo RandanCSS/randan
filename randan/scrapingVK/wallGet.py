@@ -88,7 +88,7 @@ f'''Поскольку исполнение скрипта натолкнуло�
         scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}domain.txt", domain if domain else '')
 
         if not fields: fields = []
-        with open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}fields.txt", 'w', encoding='utf-8') as file:
+        with open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}fields.json", 'w', encoding='utf-8') as file:
             json.dump(data_to_save, file, ensure_ascii=False, indent=4)
 
         scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}filter.txt", filter if filter else '')
