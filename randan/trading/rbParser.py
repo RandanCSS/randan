@@ -18,7 +18,7 @@ for attempt in range(1, 4):
             # (а) упрощения некоторых оперций в selenium
 
         from selenium.webdriver.common.by import By
-        import os, pandas, re, selenium.common.exceptions, time, traceback
+        import json, os, pandas, re, selenium.common.exceptions, time, traceback
         break # выход из цикла for attempt in range(3)
 
     except ModuleNotFoundError:
