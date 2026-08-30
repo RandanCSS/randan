@@ -176,7 +176,7 @@ def issuerIdentifierNormalizer(issuerIdentidier):
     return issuerIdentidier
 
 # .. для авторизации на сайте rusnonds.ru
-def loginerRB(attemptsMax, boundarieS, driver, login_password, pause,  xPathS):
+def loginerRB(attemptsMax, boundarieS, driver, pause,  xPathS, login_password=None):
     # Вызов окна ввода логина и пароля
     # print('xPathS[0]:', xPathS[0]) # для отладки
     goS, xPath_loginPrompt = forSelenium.tryerSleeper(attemptsMax, boundarieS[0], driver, pause, xPathS[0])
