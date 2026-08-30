@@ -249,7 +249,7 @@ def loginerRB(attemptsMax, boundarieS, driver, pause,  xPathS, login_password=No
     driver.find_element(By.XPATH, xPath_credentialsEntry + '/div[5]/button[2]/span').click()
 
     print(
-'''--- Сейчас в браузере появится Captcha; обработайте её вручную
+'''--- Сейчас в браузере может появиться Captcha; обработайте её вручную
 --- Расположите два окна: с этим скриптом и управляемое им окно браузера -- так, чтобы они оба были видны; нажмите Enter'''
           )
     
