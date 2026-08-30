@@ -342,9 +342,9 @@ def resultS_container_processor(bondS_FinAM_RB,
                         else:
                             print('Облигация вышла из обращения') # для отладки
 
-                            bondsRB.loc[errorS_row, 'Не в обращении'] = 1
+                            bondsRB.loc[errorS_row, 'Статус'] = 1
 
-                            if column_target_FinAM != 'ISIN': bondS_FinAM_RB.loc[errorS_row, 'Не в обращении'] = 1
+                            if column_target_FinAM != 'ISIN': bondS_FinAM_RB.loc[errorS_row, 'Статус'] = 1
                                 # если column_target_FinAM == 'ISIN' , то bondS_FinAM_RB НЕ редактируется
 
                         print('break 2') # для отладки
