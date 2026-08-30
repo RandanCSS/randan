@@ -210,7 +210,7 @@ def loginerRB(attemptsMax, boundarieS, driver, pause,  xPathS, login_password=No
                 login_password = json.load(file)
 
             print('Проверяю наличие файла credentialsRB.json с логином и паролем, гипотетически сохранёнными при первом запуске скрипта')
-            print('Нашёл файл credentialsRB.json; далее буду использовать логин {login_password.keys()[0]} и пароль {login_password[login_password.keys()[0]]}из него:')
+            print('Нашёл файл credentialsRB.json; далее буду использовать логин {login_password.keys()[0]} и пароль {login_password[login_password.keys()[0]]} из него:')
 
         else:
             print(
@@ -239,10 +239,8 @@ def loginerRB(attemptsMax, boundarieS, driver, pause,  xPathS, login_password=No
             with open("credentialsRB.json", 'w', encoding='utf-8') as file:
                 json.dump(login_password, file, ensure_ascii=False, indent=4)
 
-    else:
-        login = str(login_password.keys()[0])
-        password = str(login_password[login])
-
+    login = str(login_password.keys()[0])
+    password = str(login_password[login])
     driver.find_element(By.XPATH, xPath_credentialsEntry + '/div[2]/div/div/div[1]/input').send_keys(login)
     driver.find_element(By.XPATH, xPath_credentialsEntry + '/div[3]/div/div/div[1]').click()
     driver.find_element(By.XPATH, xPath_credentialsEntry + '/div[3]/div/div/div[1]/input').send_keys(password)
