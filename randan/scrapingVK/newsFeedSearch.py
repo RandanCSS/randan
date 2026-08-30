@@ -27,7 +27,7 @@ for attempt in range(1, 4):
             # (д) упрощения скрапинга
             # (е) предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
 
-        import numpy, os, pandas, re, shutil, time, requests, warnings
+        import json, numpy, os, pandas, re, shutil, time, requests, warnings
         break # выход из цикла for attempt in range(3)
 
     except ModuleNotFoundError:
