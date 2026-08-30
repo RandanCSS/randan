@@ -742,7 +742,7 @@ def bondsFeaturesProcessor(attemptsMax,
             df_current.to_excel(path_2 + slash + f'{date_call + ' ' if date_call else ''}{isin}.xlsx')
 
         else:
-            bond_df.loc[bond_df_index, 'Не в обращении'] = 1
+            bond_df.loc[bond_df_index, 'Статус'] = 1
             path_3 = path_1 + slash + 'Таблицы FinAM Архив'
             if os.path.exists(path_3) != True: os.makedirs(path_3)
             if os.path.exists(path_3 + slash + fileUptodateName): os.remove(path_3 + slash + fileUptodateName) # на случай задвоения файлов (причина не ясна)
