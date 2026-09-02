@@ -137,7 +137,7 @@ plusNotTraded : bool -- в случае True функция возвращает
     # display('boardS:', boardS) # для отладки
 
     # display('boardS 1:', boardS) # для отладки
-    if market == 'bonds': boardS = boardS[boardS['title'].str.contains('облигации ', case=False)] # если облигации: нужны именно облигации
+    # if market == 'bonds': boardS = boardS[boardS['title'].str.contains('облигации ', case=False)] # если облигации: нужны именно облигации
     # display('boardS 2:', boardS) # для отладки
     if not plusNotTraded: boardS = boardS[boardS['is_traded'].astype(int) == 1]
     # display('boardS 3:', boardS) # для отладки
