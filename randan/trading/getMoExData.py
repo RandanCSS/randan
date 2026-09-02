@@ -70,14 +70,14 @@ def json2df(columnS_forComparisom, headers, sectionOfJson, url):
             if (len(df_additional) == 0) | ((df_additional[columnS_forComparisom] != df_additional_previous).sum().sum() == 0):
                     # во второй части условия проверяется наличие различия между датафреймами хотя бы в одной ячейке
 
-                print('Похоже, df_additional == df_additional_previous; завершаю цикл')
+                # print('Похоже, df_additional == df_additional_previous; завершаю цикл') # для отладки
                 break
 
         except Exception as excptn:
-            print('Exception') # для отладки
-            print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
-            print(traceback.format_exc()) # показ точной строчки кода с ошибкой
-            print('Похоже, df_additional != df_additional_previous; продолжаю итерировать')
+            # print('Exception') # для отладки
+            # print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
+            # print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+            # print('Похоже, df_additional != df_additional_previous; продолжаю итерировать') # для отладки
 
         df = pandas.concat([df, df_additional])
         df_additional_previous = df_additional[columnS_forComparisom]
