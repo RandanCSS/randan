@@ -78,6 +78,7 @@ def json2df(columnS_forComparisom, headers, sectionOfJson, url):
             # print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
             # print(traceback.format_exc()) # показ точной строчки кода с ошибкой
             # print('Похоже, df_additional != df_additional_previous; продолжаю итерировать') # для отладки
+            pass
 
         df = pandas.concat([df, df_additional])
         df_additional_previous = df_additional[columnS_forComparisom]
