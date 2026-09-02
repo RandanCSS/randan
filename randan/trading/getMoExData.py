@@ -215,7 +215,7 @@ f'''--- Файл с доступными securities и финансовой ин
     securities_marketdata_df = securities_marketdata_df[columnsDescriptionS]
     securities_marketdata_df.to_excel(path_1, index=False)
     # display(securities_marketdata_df) # для отладки
-    if returnDfs: return boardS, columnsDescriptionS, securitieS
+    if returnDfs: return boardS, columnsDescriptionS, securities_marketdata_df
     warnings.filterwarnings('ignore')
     print("Скрипт исполнен. Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть")
     input()
