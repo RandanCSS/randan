@@ -18,7 +18,7 @@ for attempt in range(1, 4):
         from IPython.display import display
         # from tqdm import tqdm
         from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
-        import os, pandas, requests, warnings # , re
+        import os, pandas, requests, traceback, warnings # , re
         break # выход из цикла for attempt in range(3)
 
     except ModuleNotFoundError:
@@ -64,6 +64,7 @@ def json2df(columnS_forComparisom, headers, sectionOfJson, url):
         data_json = requests.get(url, headers=headers, params=params).json()
         df_additional = pandas.DataFrame(columns=data_json[sectionOfJson]['columns'], data=data_json[sectionOfJson]['data'])
         # df_additional = df_additional.fillna('Нет данных')
+        # display('df_additional:', df_additional) # для отладки
 
         try:
             if (len(df_additional) == 0) | ((df_additional[columnS_forComparisom] != df_additional_previous).sum().sum() == 0):
@@ -104,6 +105,7 @@ def json2df(columnS_forComparisom, headers, sectionOfJson, url):
 # 2. Основная функция
 def getMoExData(folder=coLabFolder,
                 market='bonds',
+                plusNotTraded=False,
                 returnDfs=False):
     '''
     Функция умеет выгружать характеристики торгуемых на МосБирже облигаций, причём не дефолтные (далее -- Д) и не повышенного инвестиционного риска (далее -- ПИР). Дополнительно выгружается словарь полей БД МосБиржи. Также она умеет выгружать фьючерсы
@@ -113,7 +115,8 @@ def getMoExData(folder=coLabFolder,
        folder : str -- путь к директории, включая её имя, в которой будут искаться файлы и куда будут сохраняться; по умолчанию не в CoLab поиск и сохранение происходят в директории, в которой вызывается текущая функция, а в CoLab в директории Colab Notebooks
 
        market : str -- если интересуют облигации, подходит значение по умолчанию 'bonds' , если фьючерсы, впишите 'forts' , если акции, впишите 'shares'
-    returnDfs : bool -- в случае True функция возвращает итоговые датафреймы boardS, columnsDescriptionS и securitieS строго в такой последовательности
+plusNotTraded : bool -- в случае True функция возвращает и неторгуемые securities
+    returnDfs : bool -- в случае True функция возвращает итоговые датафреймы boardS, columnsDescriptionS и securities_marketdata_df строго в такой последовательности
     '''
     headers = {'User-Agent': 'Mozilla/5.0'}
 
@@ -133,15 +136,14 @@ def getMoExData(folder=coLabFolder,
     # boardS = pseudojson2df(headers, 0, url)
     # display('boardS:', boardS) # для отладки
 
-    # Если облигации: нужны именно облигации, причём торгуемые # и не Д , и не ПИР
-    if market == 'bonds':
-        boardS['is_traded'] = boardS['is_traded'].astype(int)
-        boardS = boardS[(boardS['is_traded'] == 1) & (boardS['title'].str.contains('облигации ', case=False))]
+    if market == 'bonds': boardS = boardS[boardS['title'].str.contains('облигации ', case=False)] # если облигации: нужны именно облигации
+    if plusNotTraded: boardS = boardS[boardS['is_traded'].astype(int) == 1]
     # display('boardS:', boardS) # для отладки
 
 # 2.1 Формирование файла с доступными securities
     decision = ''
     goC = True
+    securities_marketdata_df = pandas.DataFrame()
     path_1 = folder + market + ' Securities and Marketdata.xlsx'
     if os.path.exists(path_1):
         print(
@@ -151,10 +153,7 @@ f'''--- Файл с доступными securities и финансовой ин
 
         decision = input()
 
-        if decision:
-            print('Создаю новый файл', path_1)
-            securities_marketdata_df = pandas.DataFrame()
-
+        if decision: print('Создаю новый файл', path_1)
         else:
             print('Использую существующий файл', path_1)
             securities_marketdata_df = pandas.read_excel(path_1)
@@ -164,14 +163,15 @@ f'''--- Файл с доступными securities и финансовой ин
     print('Создаю файл со словарём полей БД МосБиржи')
     columnsDescriptionS = pandas.DataFrame()
     sectionOfJson_list = ['securities']
-    if market == 'bonds': sectionOfJson_list.append(marketdata_yields)
-    if (market == 'forts') | (market == 'shares'): sectionOfJson_list.append(marketdata)
+    if market == 'bonds': sectionOfJson_list.append('marketdata_yields')
+    if (market == 'forts') | (market == 'shares'): sectionOfJson_list.append('marketdata')
     # if market == 'bonds': indeceS = [2, 8]
     # if market == 'forts': indeceS = [2, 3]
     # for index in indeceS:
     for sectionOfJson in sectionOfJson_list:
+        # print('sectionOfJson:', sectionOfJson) # для отладки
         # <Формирование словаря полей БД МосБиржи>
-        columnsDescriptionS_additional = json2df(['SECID', 'BOARDID'], headers, sectionOfJson, url + '.json')
+        columnsDescriptionS_additional = json2df(['id'], headers, sectionOfJson, url + '.json')
         # columnsDescriptionS_additional = pseudojson2df(headerS, index, url)
         columnsDescriptionS_additional.loc[:, 'data id'] = sectionOfJson
         # columnsDescriptionS_additional.loc[:, 'data id'] = index
@@ -188,7 +188,7 @@ f'''--- Файл с доступными securities и финансовой ин
 
             if len(securities_marketdata_df) > 0:
                 securities_marketdata_df = securities_marketdata_df.merge(securities_marketdata_df_additional_1, how='left', on='SECID', suffixes=('', '_drop'))
-                securities_marketdata_df = securities_marketdata_df[[column for column in securitieS.columns if not column.endswith('_drop')]]
+                securities_marketdata_df = securities_marketdata_df[[column for column in securities_marketdata_df.columns if not column.endswith('_drop')]]
                 # print('securities_marketdata_df.columns:', securities_marketdata_df.columns) # для отладки
 
             else: securities_marketdata_df = securities_marketdata_df_additional_1.copy()
@@ -208,9 +208,9 @@ f'''--- Файл с доступными securities и финансовой ин
     columnsDescriptionS = columnsDescriptionS[columnsDescriptionS['name'].notna()]
     columnsDescriptionS = columnsDescriptionS['name'].drop_duplicates().tolist()
     if market == 'bonds': columnsDescriptionS.append('URL MoEx')
-    # securitieS = securitieS.groupby('SECID', as_index=False).first()
-    # print('securitieS.columns:', securitieS.columns) # для отладки
-    if market == 'bonds': securities_marketdata_df['URL MoEx'] = 'https://www.moex.com/ru/issue.aspx?code=' + securitieS['ISIN']
+    # securities_marketdata_df = securities_marketdata_df.groupby('SECID', as_index=False).first()
+    # print('securities_marketdata_df.columns:', securities_marketdata_df.columns) # для отладки
+    if market == 'bonds': securities_marketdata_df['URL MoEx'] = 'https://www.moex.com/ru/issue.aspx?code=' + securities_marketdata_df['ISIN']
     # print('securities_marketdata_df.columns:', securities_marketdata_df.columns) # для отладки
     securities_marketdata_df = securities_marketdata_df[columnsDescriptionS]
     securities_marketdata_df.to_excel(path_1, index=False)
