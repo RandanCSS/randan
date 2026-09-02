@@ -85,7 +85,7 @@ def json2df(columnS_forComparisom, headers, sectionOfJson, url):
 
     # break # для отладки
     df = pandas.DataFrame(columns=data_json[sectionOfJson]['columns'], data=data_json[sectionOfJson]['data'])
-    display('df:', df) # для отладки
+    # display('df:', df) # для отладки
     return df
 # def pseudojson2df(headerS, index, url):
 #     df = pandas.DataFrame()
