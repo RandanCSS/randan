@@ -136,9 +136,11 @@ plusNotTraded : bool -- в случае True функция возвращает
     # boardS = pseudojson2df(headers, 0, url)
     # display('boardS:', boardS) # для отладки
 
+    # display('boardS 1:', boardS) # для отладки
     if market == 'bonds': boardS = boardS[boardS['title'].str.contains('облигации ', case=False)] # если облигации: нужны именно облигации
-    if plusNotTraded: boardS = boardS[boardS['is_traded'].astype(int) == 1]
-    # display('boardS:', boardS) # для отладки
+    # display('boardS 2:', boardS) # для отладки
+    if not plusNotTraded: boardS = boardS[boardS['is_traded'].astype(int) == 1]
+    # display('boardS 3:', boardS) # для отладки
 
 # 2.1 Формирование файла с доступными securities
     decision = ''
