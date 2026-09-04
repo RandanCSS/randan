@@ -58,7 +58,7 @@ def json2df(columnS_forComparisom, headers, sectionOfJson, url):
     df_additional_previous = pandas.DataFrame()
     start = 0
     while True:
-        print('start:', start, '                    ', end='\r')
+        # print('start:', start, '                    ', end='\r') # для отладки
         params = {'start': start} # 'limit': 100,
 
         data_json = requests.get(url, headers=headers, params=params).json()
@@ -218,6 +218,11 @@ f'''--- Файл с доступными securities и финансовой ин
     securities_marketdata_df = securities_marketdata_df[columnsDescriptionS]
     securities_marketdata_df.to_excel(path_1, index=False)
     # display(securities_marketdata_df) # для отладки
+
+    securities_marketdata_df =\
+        securities_marketdata_df.drop_duplicates(['ISIN', 'REGNUMBER', 'SECID', 'SECNAME', 'SHORTNAME'], ignore_index=True)
+            # костыль
+
     if returnDfs: return boardS, columnsDescriptionS, securities_marketdata_df
     warnings.filterwarnings('ignore')
     print("Скрипт исполнен. Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть")
