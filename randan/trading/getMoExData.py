@@ -187,6 +187,7 @@ f'''--- Файл с доступными securities и финансовой ин
             for board in boardS['boardid']:
                 print('board:', board)
                 securities_marketdata_df_additional_2 = json2df(['SECID', 'BOARDID'], headers, sectionOfJson, url + f'/boards/{board}/securities.json')
+                securities_marketdata_df_additional_2['board'] = board
                 securities_marketdata_df_additional_1 = pandas.concat([securities_marketdata_df_additional_1, securities_marketdata_df_additional_2], ignore_index=True)
 
             if len(securities_marketdata_df) > 0:
