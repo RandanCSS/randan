@@ -220,9 +220,9 @@ f'''--- Файл с доступными securities и финансовой ин
     securities_marketdata_df.to_excel(path_1, index=False)
     # display(securities_marketdata_df) # для отладки
 
-    # securities_marketdata_df =\
-    #     securities_marketdata_df.drop_duplicates(['ISIN', 'REGNUMBER', 'SECID', 'SECNAME', 'SHORTNAME'], ignore_index=True)
-    #         # костыль
+    securities_marketdata_df =\
+        securities_marketdata_df.drop_duplicates(['ISIN', 'REGNUMBER', 'SECID', 'SECNAME', 'SHORTNAME'], ignore_index=True)
+            # костыль
 
     if returnDfs: return boardS, columnsDescriptionS, securities_marketdata_df
     warnings.filterwarnings('ignore')
