@@ -199,7 +199,7 @@ f'''--- Файл с доступными securities и финансовой ин
         # </Формирование файла с доступными securities в интересующих режимах торгов>
 
     columnsDescriptionS = columnsDescriptionS.drop_duplicates(['id', 'name'], ignore_index=True)
-    # display('columnsDescriptionS:', columnsDescriptionS) # для отладки
+    display('columnsDescriptionS:', columnsDescriptionS) # для отладки
 
     path_2 = market + ' Columns descriptions.xlsx'
     columnsDescriptionS.to_excel(path_2, index=False)
