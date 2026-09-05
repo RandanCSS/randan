@@ -641,11 +641,12 @@ def finamParser(attemptsMax,
                 version_main,
                 folder=coLabFolder):
 
+    # Блок, поскольку folder многократно используется внутри функции в формулах
+    coLabFolder = coLabAdaptor.coLabAdaptor()
+    folder = coLabFolder
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    # if folder: print('folder до:', folder) # для отладки
-    if (folder == None) | (folder == ''): folder = ''
+    if not folder: folder = ''
     else: folder += slash
-    # if folder: print('folder после:', folder) # для отладки
 
     columnS_target = ['ISIN код:', 'Рег. номер:', 'Описание купонов']
 
@@ -657,6 +658,7 @@ def finamParser(attemptsMax,
 
     bondsFinAM_row = 0 # далее bondsFinAM_row увеличивается на 1 при каждом исполнении функции bondsOfIdentifierProcessor
     bondsOfIdentifier_Excluded = pandas.DataFrame()
+    goS = True
 
     for counter in range(len(source)): # counter совпадает с длиной датафрейма bondsFinAM , если source -- список ISIN , не не совпадает, если source -- список эмитентов
         sourceRow = source.index[counter]
