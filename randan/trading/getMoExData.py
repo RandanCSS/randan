@@ -90,7 +90,8 @@ def json2df(columnS_forComparisom, headers, pause, sectionOfJson, url):
 # .. работы с дубликатами в рамках одного и того же ISIN
 def securities_marketdata_df_duplicated_withinIsin_processor(securities_marketdata_df_duplicated_withinIsin):
     conditionS = [
-        ((securities_marketdata_df_duplicated_withinIsin['BOARDNAME'].str.contains('облигации', case=False)) &\
+        (((securities_marketdata_df_duplicated_withinIsin['BOARDNAME'].str.contains('Акции и ДР', case=False)) |\
+          (securities_marketdata_df_duplicated_withinIsin['BOARDNAME'].str.contains('облигации', case=False))) &\
          (securities_marketdata_df_duplicated_withinIsin['BOARDNAME'].str.contains('- безадрес.', case=False))),
         (securities_marketdata_df_duplicated_withinIsin['CURRENCYID'] == 'SUR'),
         (securities_marketdata_df_duplicated_withinIsin['CURRENCYID'] == 'CNY')
@@ -110,9 +111,12 @@ def securities_marketdata_df_duplicated_withinIsin_processor(securities_marketda
 # .. работы со срезом securities_marketdata_df , содержащим дублирующиеся по ISIN строки
 def securities_marketdata_df_duplicates_processor(securities_marketdata_df):
     securities_marketdata_df_duplicated =\
-        securities_marketdata_df[securities_marketdata_df.duplicated(['ISIN', 'REGNUMBER', 'SECID', 'SECNAME', 'SHORTNAME'], keep=False)]
+        securities_marketdata_df[securities_marketdata_df.duplicated(
+            ['ISIN', 'REGNUMBER', 'SECID', 'SECNAME', 'SHORTNAME'] if 'ISIN' in securities_marketdata_df and 'REGNUMBER' in securities_marketdata_df else ['SECID', 'SECNAME', 'SHORTNAME'],
+            keep=False)
+            ]
     
-    # display('securities_marketdata_df_duplicated:', securities_marketdata_df_duplicated) # для отладки
+    display('securities_marketdata_df_duplicated:', securities_marketdata_df_duplicated) # для отладки
     
     securities_marketdata_df_notDuplicated =\
         securities_marketdata_df[~securities_marketdata_df['ISIN'].isin(securities_marketdata_df_duplicated['ISIN'])]
@@ -134,19 +138,19 @@ def securities_marketdata_df_duplicates_processor(securities_marketdata_df):
         securities_marketdata_df_duplicated_withinIsin =\
             securities_marketdata_df_duplicated_withinIsin_processor(securities_marketdata_df_duplicated_withinIsin)
     
-        columnsWithDuplicates = securities_marketdata_df_duplicated_withinIsin.columns[
+        columnsWithDifferences = securities_marketdata_df_duplicated_withinIsin.columns[
             securities_marketdata_df_duplicated_withinIsin.nunique() > 1
             ].tolist()
     
-        if 'TRADEMOMENT' in columnsWithDuplicates:# либо выбрать наиболее свежую запись
+        if 'SYSTIME' in columnsWithDifferences:# либо выбрать наиболее свежую запись
             securities_marketdata_df_duplicated_withinIsin =\
-                securities_marketdata_df_duplicated_withinIsin.sort_values('TRADEMOMENT').iloc[[-1], :]
+                securities_marketdata_df_duplicated_withinIsin.sort_values('SYSTIME').iloc[[-1], :]
     
-        else:# либо усреднить значения по столбцам columnsWithDuplicates ,..
-            meanS = securities_marketdata_df_duplicated_withinIsin[columnsWithDuplicates].mean()
+        else:# либо усреднить значения по столбцам columnsWithDifferences ,..
+            meanS = securities_marketdata_df_duplicated_withinIsin[columnsWithDifferences].mean()
             # display('meanS:', meanS) # для отладки
     
-            for column in columnsWithDuplicates: # .. импутировать их в securities_marketdata_df_duplicated_withinIsin и..
+            for column in columnsWithDifferences: # .. импутировать их в securities_marketdata_df_duplicated_withinIsin и..
                 securities_marketdata_df_duplicated_withinIsin[column] = meanS[column]
     
             securities_marketdata_df_duplicated_withinIsin = securities_marketdata_df_duplicated_withinIsin.drop_duplicates()
@@ -154,7 +158,7 @@ def securities_marketdata_df_duplicates_processor(securities_marketdata_df):
     
         if len(securities_marketdata_df_duplicated_withinIsin) != 1:
             print('isin облигаций, имеющих после обработки дубликатов 0 записей или более 1 записи:', isin) # для отладки
-            display(securities_marketdata_df_duplicated_withinIsin[columnsWithDuplicates] if columnsWithDuplicates else securities_marketdata_df_duplicated_withinIsin)
+            display(securities_marketdata_df_duplicated_withinIsin[columnsWithDifferences] if columnsWithDifferences else securities_marketdata_df_duplicated_withinIsin)
     
         securities_marketdata_df_notDuplicated = pandas.concat([securities_marketdata_df_notDuplicated, securities_marketdata_df_duplicated_withinIsin])
     
@@ -244,7 +248,12 @@ f'''--- Комплект файлов:
         # columnsDescriptionS_additional = pseudojson2df(headerS, index, url)
         columnsDescriptionS_additional.loc[:, 'data id'] = sectionOfJson
         # columnsDescriptionS_additional.loc[:, 'data id'] = index
-        columnsDescriptionS = pandas.concat([columnsDescriptionS, columnsDescriptionS_additional], ignore_index=True)
+
+        if columnsDescriptionS.empty:
+            print("columnsDescriptionS пуст")
+            columnsDescriptionS = columnsDescriptionS_additional.copy()
+
+        else: columnsDescriptionS = pandas.concat([columnsDescriptionS, columnsDescriptionS_additional], ignore_index=True)
         # </Формирование словаря полей БД МосБиржи>
 
         # <Формирование файла с доступными securities в интересующих режимах торгов>
@@ -253,15 +262,16 @@ f'''--- Комплект файлов:
         securities_marketdata_df_additional_1 = pandas.concat([securities_marketdata_df_additional_1, securities_marketdata_df_additional_2],
                                                               ignore_index=True)
 
-        if len(securities_marketdata_df) > 0:
+        if securities_marketdata_df.empty:
+            print("securities_marketdata_df пуст")
+            securities_marketdata_df = securities_marketdata_df_additional_1.copy()
 
+        else:
             securities_marketdata_df =\
                 securities_marketdata_df.merge(securities_marketdata_df_additional_1, how='left', on='SECID', suffixes=('', '_drop'))
 
             securities_marketdata_df =\
                 securities_marketdata_df[[column for column in securities_marketdata_df.columns if not column.endswith('_drop')]]
-
-        else: securities_marketdata_df = securities_marketdata_df_additional_1.copy()
 
         # display('securities_marketdata_df 1:', securities_marketdata_df) # для отладки
 
@@ -274,12 +284,15 @@ f'''--- Комплект файлов:
     securities_marketdata_df = securities_marketdata_df[securities_marketdata_df['BOARDID'].isin(boardS['boardid'])]
         # учёт желаемых режимов торгов (аргумент plusNotTraded )
 
-    if market == 'bonds': securities_marketdata_df['URL MoEx'] = 'https://www.moex.com/ru/issue.aspx?code=' + securities_marketdata_df['ISIN']
-    securities_marketdata_df['TRADEMOMENT'] = pandas.to_datetime(securities_marketdata_df['TRADEMOMENT'])
-    # display('securities_marketdata_df 2:', securities_marketdata_df) # для отладки
+    if market == 'bonds':
+        securities_marketdata_df['URL MoEx'] = 'https://www.moex.com/ru/issue.aspx?code=' + securities_marketdata_df['ISIN']
+        securities_marketdata_df['SYSTIME'] = pandas.to_datetime(securities_marketdata_df['SYSTIME'])
 
-    print('Работаю со срезом securities_marketdata_df , содержащим дублирующиеся по ISIN строки')
-    securities_marketdata_df = securities_marketdata_df_duplicates_processor(securities_marketdata_df)
+    display('securities_marketdata_df 2:', securities_marketdata_df) # для отладки
+
+    if (market == 'bonds') | (market == 'shares'):
+        print('Работаю со срезом securities_marketdata_df , содержащим дублирующиеся по ISIN строки')
+        securities_marketdata_df = securities_marketdata_df_duplicates_processor(securities_marketdata_df)
 
     columnsDescriptionS.to_excel(path_columnsDescriptions, index=False)
     securities_marketdata_df.to_excel(path_securities_marketdata, index=False)
