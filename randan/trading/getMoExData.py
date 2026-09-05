@@ -18,6 +18,7 @@ for attempt in range(1, 4):
         from IPython.display import display
         # from tqdm import tqdm
         from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
+        from tqdm import tqdm
         import os, pandas, requests, traceback, warnings # , re
         break # выход из цикла for attempt in range(3)
 
@@ -42,17 +43,8 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
-# 1. Авторские функции..
-    # .. выгрузки имён полей БД МосБиржи
-# def getColumnNameS(text):
-#     columnS = BeautifulSoup(text, features='xml').find_all('column')
-#     # print('columnS:', columnS) # для отладки
-#     columnNameS = []
-#     for column in columnS:
-#         columnNameS.append(column.get('name'))
-#     return columnNameS
-
-    # .. выгрузки таблиц -- фрагментов данных формата JSON из БД МосБиржи
+# 1. Вспомогательные функции..
+# .. выгрузки таблиц -- фрагментов данных формата JSON из БД МосБиржи
 def json2df(columnS_forComparisom, headers, pause, sectionOfJson, url):
     df = pandas.DataFrame()
     df_additional_previous = pandas.DataFrame()
@@ -94,24 +86,85 @@ def json2df(columnS_forComparisom, headers, pause, sectionOfJson, url):
     df = pandas.DataFrame(columns=data_json[sectionOfJson]['columns'], data=data_json[sectionOfJson]['data'])
     # display('df:', df) # для отладки
     return df
-# def pseudojson2df(headerS, index, url):
-#     df = pandas.DataFrame()
-#     text = re.findall(r'<data.+?/data>', requests.get(url, headers=headerS).text, re.DOTALL)[index]
-#     # print('text:', text) # для отладки
-#     columnNameS = getColumnNameS(text)
-#     rowS = BeautifulSoup(text, features='xml').find_all('row')
-#     # print('rowS:', rowS) # для отладки
-#     i = 0
-#     for row in tqdm(rowS):
-#         i += 1
-#         for column in columnNameS:
-#             df.loc[i, column] = row.get(column)
-#     # display('df:', df)
-#     return df
+
+# .. работы с дубликатами в рамках одного и того же ISIN
+def securities_marketdata_df_duplicated_withinIsin_processor(securities_marketdata_df_duplicated_withinIsin):
+    conditionS = [
+        ((securities_marketdata_df_duplicated_withinIsin['BOARDNAME'].str.contains('облигации', case=False)) &\
+         (securities_marketdata_df_duplicated_withinIsin['BOARDNAME'].str.contains('- безадрес.', case=False))),
+        (securities_marketdata_df_duplicated_withinIsin['CURRENCYID'] == 'SUR'),
+        (securities_marketdata_df_duplicated_withinIsin['CURRENCYID'] == 'CNY')
+        ]
+    
+    # for condition in conditionS[:2]: # для отладки
+    for condition in conditionS:
+        # print('condition:', condition) # для отладки
+        if (sum(condition) > 0) & (sum(condition) < len(securities_marketdata_df_duplicated_withinIsin)):
+            # тут и ниже первая часть условия проверыет применимость всего условия; вторая часть условия: если в рассматриваемом столбце
+                # не только проверяемые тексты, то строки securities_marketdata_df_duplicated_withinIsin с остальными значениями не нужны
+    
+            securities_marketdata_df_duplicated_withinIsin = securities_marketdata_df_duplicated_withinIsin[condition]
+
+    return securities_marketdata_df_duplicated_withinIsin
+
+# .. работы со срезом securities_marketdata_df , содержащим дублирующиеся по ISIN строки
+def securities_marketdata_df_duplicates_processor(securities_marketdata_df):
+    securities_marketdata_df_duplicated =\
+        securities_marketdata_df[securities_marketdata_df.duplicated(['ISIN', 'REGNUMBER', 'SECID', 'SECNAME', 'SHORTNAME'], keep=False)]
+    
+    # display('securities_marketdata_df_duplicated:', securities_marketdata_df_duplicated) # для отладки
+    
+    securities_marketdata_df_notDuplicated =\
+        securities_marketdata_df[~securities_marketdata_df['ISIN'].isin(securities_marketdata_df_duplicated['ISIN'])]
+    
+    # display('securities_marketdata_df_notDuplicated:', securities_marketdata_df_notDuplicated) # для отладки
+    
+    # print(len(securities_marketdata_df_duplicated) + len(securities_marketdata_df_notDuplicated) == len(securities_marketdata_df))
+    
+    securities_marketdata_df_duplicated_isinS = list(securities_marketdata_df_duplicated['ISIN'].unique())
+    securities_marketdata_df_duplicated_isinS.sort()
+    # print(securities_marketdata_df_duplicated_isinS) # для отладки
+    
+    for isin in tqdm(securities_marketdata_df_duplicated_isinS):
+        # print('isin:', isin) # для отладки
+    
+        securities_marketdata_df_duplicated_withinIsin =\
+            securities_marketdata_df_duplicated[securities_marketdata_df_duplicated['ISIN'] == isin]
+    
+        securities_marketdata_df_duplicated_withinIsin =\
+            securities_marketdata_df_duplicated_withinIsin_processor(securities_marketdata_df_duplicated_withinIsin)
+    
+        columnsWithDuplicates = securities_marketdata_df_duplicated_withinIsin.columns[
+            securities_marketdata_df_duplicated_withinIsin.nunique() > 1
+            ].tolist()
+    
+        if 'TRADEMOMENT' in columnsWithDuplicates:# либо выбрать наиболее свежую запись
+            securities_marketdata_df_duplicated_withinIsin =\
+                securities_marketdata_df_duplicated_withinIsin.sort_values('TRADEMOMENT').iloc[[-1], :]
+    
+        else:# либо усреднить значения по столбцам columnsWithDuplicates ,..
+            meanS = securities_marketdata_df_duplicated_withinIsin[columnsWithDuplicates].mean()
+            # display('meanS:', meanS) # для отладки
+    
+            for column in columnsWithDuplicates: # .. импутировать их в securities_marketdata_df_duplicated_withinIsin и..
+                securities_marketdata_df_duplicated_withinIsin[column] = meanS[column]
+    
+            securities_marketdata_df_duplicated_withinIsin = securities_marketdata_df_duplicated_withinIsin.drop_duplicates()
+                # .. удалить дубликаты
+    
+        if len(securities_marketdata_df_duplicated_withinIsin) != 1:
+            print('isin облигаций, имеющих после обработки дубликатов 0 записей или более 1 записи:', isin) # для отладки
+            display(securities_marketdata_df_duplicated_withinIsin[columnsWithDuplicates] if columnsWithDuplicates else securities_marketdata_df_duplicated_withinIsin)
+    
+        securities_marketdata_df_notDuplicated = pandas.concat([securities_marketdata_df_notDuplicated, securities_marketdata_df_duplicated_withinIsin])
+    
+    # display('securities_marketdata_df_notDuplicated:', securities_marketdata_df_notDuplicated) # для отладки
+    return securities_marketdata_df_notDuplicated
 
 # 2. Основная функция
 def getMoExData(folder=coLabFolder,
                 market='bonds',
+                pause=0.1,
                 plusNotTraded=False,
                 returnDfs=False):
     '''
@@ -122,6 +175,7 @@ def getMoExData(folder=coLabFolder,
        folder : str -- путь к директории, включая её имя, в которой будут искаться файлы и куда будут сохраняться; по умолчанию не в CoLab поиск и сохранение происходят в директории, в которой вызывается текущая функция, а в CoLab в директории Colab Notebooks
 
        market : str -- если интересуют облигации, подходит значение по умолчанию 'bonds' , если фьючерсы, впишите 'forts' , если акции, впишите 'shares'
+        pause : float -- длительность приостановки исполнения скрипта в секундах
 plusNotTraded : bool -- в случае True функция возвращает и неторгуемые securities
     returnDfs : bool -- в случае True функция возвращает итоговые датафреймы boardS, columnsDescriptionS и securities_marketdata_df строго в такой последовательности
     '''
@@ -134,51 +188,57 @@ plusNotTraded : bool -- в случае True функция возвращает
     else: folder += slash
     # if folder: print('folder после:', folder) # для отладки
 
-# Формирование файла с режимами торгов
-# 2.0 Если нет файла с режимами торгов
+# 2.0 Проверка наличия комплекта файлов и вопрос про необходимость его обновления
+    path_boards = folder + market + ' Boards.xlsx'
+    path_columnsDescriptions = folder + market + ' Columns descriptions.xlsx'
+    path_securities_marketdata = folder + market + ' Securities and Marketdata.xlsx'
+    if os.path.exists(path_boards) & os.path.exists(path_columnsDescriptions) & os.path.exists(path_securities_marketdata):
+
+        print(
+f'''--- Комплект файлов:
+'{path_boards}' -- режимы торгов
+'{path_columnsDescriptions}' -- словарь полей БД МосБиржи
+'{path_securities_marketdata}' -- доступные инструменты (securities) и их финансовые данные (marketdata или marketdata_yields)
+существует; если хотите обновить этот комплект, просто нажмите Enter (это недолго)
+--- Если хотите НЕ обновить, то нажмите пробел и затем Enter'''
+              )
+
+        decision = input()
+        if decision:
+            print('Использую существующий комплект')
+            boardS = pandas.read_excel(path_boards)
+            columnsDescriptionS = pandas.read_excel(path_columnsDescriptions)
+            securities_marketdata_df = pandas.read_excel(path_securities_marketdata)
+            if returnDfs: return boardS, columnsDescriptionS, securities_marketdata_df
+
+# 2.1 Если нет комплекта
+# 2.1.0 Формирование файла с режимами торгов boardS
     print('Создаю файл с режимами торгов')
     if (market == 'bonds') | (market == 'shares'): url = f'https://iss.moex.com/iss/engines/stock/markets/{market}'
     if market == 'forts': url = f'https://iss.moex.com/iss/engines/futures/markets/{market}'
     boardS = json2df(['id'], headers, pause, 'boards', url + '.json')
-    # boardS = pseudojson2df(headers, 0, url)
-    # display('boardS:', boardS) # для отладки
-
+    boardS.to_excel(path_boards, index=False)
     # display('boardS 1:', boardS) # для отладки
-    # if market == 'bonds': boardS = boardS[boardS['title'].str.contains('облигации ', case=False)] # если облигации: нужны именно облигации
-    # display('boardS 2:', boardS) # для отладки
+
     if not plusNotTraded: boardS = boardS[boardS['is_traded'].astype(int) == 1]
-    # display('boardS 3:', boardS) # для отладки
+    # display('boardS 2:', boardS) # для отладки
 
-# 2.1 Формирование файла с доступными securities
-    decision = ''
-    goC = True
-    securities_marketdata_df = pandas.DataFrame()
-    path_1 = folder + market + ' Securities and Marketdata.xlsx'
-    if os.path.exists(path_1):
-        print(
-f'''--- Файл с доступными securities и финансовой информацией '{path_1}' существует; если НЕ хотите обновить этот файл, просто нажмите Enter
---- Если хотите, то нажмите пробел и затем Enter'''
-              )
+# 2.1.1 Формирование словаря полей БД МосБиржи и файла с доступными инструментами (securities)
+        # и их финансовыми данными (marketdata или marketdata_yields)
+    print(
+'Создаю словарь полей БД МосБиржи и файл с доступными инструментами (securities) и их финансовыми данными (marketdata или marketdata_yields)'
+        )
 
-        decision = input()
-
-        if decision: print('Создаю новый файл', path_1)
-        else:
-            print('Использую существующий файл', path_1)
-            securities_marketdata_df = pandas.read_excel(path_1)
-            goC = False
-
-# 2.1.0 Формирование словаря полей БД МосБиржи и файла с доступными securities в интересующих режимах торгов
-    print('Создаю файл со словарём полей БД МосБиржи')
     columnsDescriptionS = pandas.DataFrame()
+
     sectionOfJson_list = ['securities']
     if market == 'bonds': sectionOfJson_list.append('marketdata_yields')
     if (market == 'forts') | (market == 'shares'): sectionOfJson_list.append('marketdata')
-    # if market == 'bonds': indeceS = [2, 8]
-    # if market == 'forts': indeceS = [2, 3]
-    # for index in indeceS:
-    for sectionOfJson in sectionOfJson_list:
+    
+    securities_marketdata_df = pandas.DataFrame()
+    for sectionOfJson in tqdm(sectionOfJson_list):
         # print('sectionOfJson:', sectionOfJson) # для отладки
+
         # <Формирование словаря полей БД МосБиржи>
         columnsDescriptionS_additional = json2df(['id'], headers, pause, sectionOfJson, url + '.json')
         # columnsDescriptionS_additional = pseudojson2df(headerS, index, url)
@@ -188,53 +248,43 @@ f'''--- Файл с доступными securities и финансовой ин
         # </Формирование словаря полей БД МосБиржи>
 
         # <Формирование файла с доступными securities в интересующих режимах торгов>
-        if goC:
-            securities_marketdata_df_additional_1 = pandas.DataFrame()
-            for board in boardS['boardid']:
-                print('board:', board)
-                securities_marketdata_df_additional_2 = json2df(['SECID', 'BOARDID'], headers, pause, sectionOfJson, url + f'/boards/{board}/securities.json')
-                securities_marketdata_df_additional_2['board'] = board
-                securities_marketdata_df_additional_1 = pandas.concat([securities_marketdata_df_additional_1, securities_marketdata_df_additional_2], ignore_index=True)
+        securities_marketdata_df_additional_1 = pandas.DataFrame()
+        securities_marketdata_df_additional_2 = json2df(['SECID', 'BOARDID'], headers, pause, sectionOfJson, url + f'/securities.json')
+        securities_marketdata_df_additional_1 = pandas.concat([securities_marketdata_df_additional_1, securities_marketdata_df_additional_2],
+                                                              ignore_index=True)
 
-            if len(securities_marketdata_df) > 0:
-                securities_marketdata_df = securities_marketdata_df.merge(securities_marketdata_df_additional_1, how='left', on='SECID', suffixes=('', '_drop'))
-                securities_marketdata_df = securities_marketdata_df[[column for column in securities_marketdata_df.columns if not column.endswith('_drop')]]
-                # print('securities_marketdata_df.columns:', securities_marketdata_df.columns) # для отладки
+        if len(securities_marketdata_df) > 0:
 
-            else: securities_marketdata_df = securities_marketdata_df_additional_1.copy()
-        # </Формирование файла с доступными securities в интересующих режимах торгов>
+            securities_marketdata_df =\
+                securities_marketdata_df.merge(securities_marketdata_df_additional_1, how='left', on='SECID', suffixes=('', '_drop'))
+
+            securities_marketdata_df =\
+                securities_marketdata_df[[column for column in securities_marketdata_df.columns if not column.endswith('_drop')]]
+
+        else: securities_marketdata_df = securities_marketdata_df_additional_1.copy()
+
+        # display('securities_marketdata_df 1:', securities_marketdata_df) # для отладки
+
+    # </Формирование файла с доступными securities в интересующих режимах торгов>
 
     columnsDescriptionS = columnsDescriptionS.drop_duplicates(['id', 'name'], ignore_index=True)
-    display('columnsDescriptionS:', columnsDescriptionS) # для отладки
-
-    path_2 = market + ' Columns descriptions.xlsx'
-    columnsDescriptionS.to_excel(path_2, index=False)
-
-    if os.path.exists(path_2.replace('.xlsx', ' selected.xlsx')):
-        columnsDescriptionS = pandas.read_excel(path_2.replace('.xlsx', ' selected.xlsx'))
-
     # display('columnsDescriptionS:', columnsDescriptionS) # для отладки
-    columnsDescriptionS = columnsDescriptionS[columnsDescriptionS['name'] !='BOARDID']
-    columnsDescriptionS = columnsDescriptionS[columnsDescriptionS['name'].notna()]
-    columnsDescriptionS = columnsDescriptionS['name'].drop_duplicates().tolist()
-    if market == 'bonds': columnsDescriptionS.append('URL MoEx')
-    # securities_marketdata_df = securities_marketdata_df.groupby('SECID', as_index=False).first()
-    # print('securities_marketdata_df.columns:', securities_marketdata_df.columns) # для отладки
+
+    print("boardS['boardid']:", boardS['boardid'])
+    securities_marketdata_df = securities_marketdata_df[securities_marketdata_df['BOARDID'].isin(boardS['boardid'])]
+        # учёт желаемых режимов торгов (аргумент plusNotTraded )
+
     if market == 'bonds': securities_marketdata_df['URL MoEx'] = 'https://www.moex.com/ru/issue.aspx?code=' + securities_marketdata_df['ISIN']
-    # print('securities_marketdata_df.columns:', securities_marketdata_df.columns) # для отладки
-    securities_marketdata_df = securities_marketdata_df[columnsDescriptionS]
-    securities_marketdata_df.to_excel(path_1, index=False)
-    # display(securities_marketdata_df) # для отладки
+    securities_marketdata_df['TRADEMOMENT'] = pandas.to_datetime(securities_marketdata_df['TRADEMOMENT'])
+    # display('securities_marketdata_df 2:', securities_marketdata_df) # для отладки
 
-    # securities_marketdata_df =\
-    #     securities_marketdata_df.drop_duplicates(['ISIN', 'REGNUMBER', 'SECID', 'SECNAME', 'SHORTNAME'], ignore_index=True)
-    #         # костыль
+    print('Работаю со срезом securities_marketdata_df , содержащим дублирующиеся по ISIN строки')
+    securities_marketdata_df = securities_marketdata_df_duplicates_processor(securities_marketdata_df)
 
+    columnsDescriptionS.to_excel(path_columnsDescriptions, index=False)
+    securities_marketdata_df.to_excel(path_securities_marketdata, index=False)
     if returnDfs: return boardS, columnsDescriptionS, securities_marketdata_df
-    warnings.filterwarnings('ignore')
-    print("Скрипт исполнен. Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть")
-    input()
-    sys.exit()
+
 # Схема API MoEx
 
 # в market == 'bonds' | market == 'shares' : url = 'https://iss.moex.com/iss/engines/stock/markets/' + market
