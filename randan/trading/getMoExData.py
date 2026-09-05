@@ -133,7 +133,9 @@ def securities_marketdata_df_duplicates_processor(securities_marketdata_df, secu
         columnsWithDifferences = securities_marketdata_df_duplicated_withinIsin.columns[
             securities_marketdata_df_duplicated_withinIsin.nunique() > 1
             ].tolist()
-    
+
+        # print('columnsWithDifferences:', columnsWithDifferences) # для отладки
+
         if 'SYSTIME' in columnsWithDifferences:# либо выбрать наиболее свежую запись
             securities_marketdata_df_duplicated_withinIsin =\
                 securities_marketdata_df_duplicated_withinIsin.sort_values('SYSTIME').iloc[[-1], :]
@@ -276,9 +278,11 @@ f'''--- Комплект файлов:
     securities_marketdata_df = securities_marketdata_df[securities_marketdata_df['BOARDID'].isin(boardS['boardid'])]
         # учёт желаемых режимов торгов (аргумент plusNotTraded )
 
+    securities_marketdata_df['SYSTIME'] = pandas.to_datetime(securities_marketdata_df['SYSTIME'])
+
     if market == 'bonds':
         securities_marketdata_df['URL MoEx'] = 'https://www.moex.com/ru/issue.aspx?code=' + securities_marketdata_df['ISIN']
-        securities_marketdata_df['SYSTIME'] = pandas.to_datetime(securities_marketdata_df['SYSTIME'])
+        securities_marketdata_df['TRADEMOMENT'] = pandas.to_datetime(securities_marketdata_df['TRADEMOMENT'])
 
     # display('securities_marketdata_df 2:', securities_marketdata_df) # для отладки
 
@@ -288,8 +292,7 @@ f'''--- Комплект файлов:
         keep=False)
         ]
 
-    display('securities_marketdata_df_duplicated:', securities_marketdata_df_duplicated) # для отладки
-    
+    # display('securities_marketdata_df_duplicated:', securities_marketdata_df_duplicated) # для отладки
 
     if len(securities_marketdata_df_duplicated) > 0:
         print('Работаю со срезом securities_marketdata_df , содержащим дублирующиеся по ISIN строки')
