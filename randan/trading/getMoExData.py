@@ -96,14 +96,14 @@ def securities_marketdata_df_duplicated_withinIsin_processor(securities_marketda
         (securities_marketdata_df_duplicated_withinIsin['CURRENCYID'] == 'SUR'),
         (securities_marketdata_df_duplicated_withinIsin['CURRENCYID'] == 'CNY')
         ]
-    
+
     # for condition in conditionS[:2]: # для отладки
     for condition in conditionS:
         # print('condition:', condition) # для отладки
         if (sum(condition) > 0) & (sum(condition) < len(securities_marketdata_df_duplicated_withinIsin)):
             # тут и ниже первая часть условия проверыет применимость всего условия; вторая часть условия: если в рассматриваемом столбце
                 # не только проверяемые тексты, то строки securities_marketdata_df_duplicated_withinIsin с остальными значениями не нужны
-    
+
             securities_marketdata_df_duplicated_withinIsin = securities_marketdata_df_duplicated_withinIsin[condition]
 
     return securities_marketdata_df_duplicated_withinIsin
@@ -112,24 +112,24 @@ def securities_marketdata_df_duplicated_withinIsin_processor(securities_marketda
 def securities_marketdata_df_duplicates_processor(securities_marketdata_df, securities_marketdata_df_duplicated):
     securities_marketdata_df_notDuplicated =\
         securities_marketdata_df[~securities_marketdata_df['SECID'].isin(securities_marketdata_df_duplicated['SECID'])]
-    
+
     # display('securities_marketdata_df_notDuplicated:', securities_marketdata_df_notDuplicated) # для отладки
-    
+
     # print(len(securities_marketdata_df_duplicated) + len(securities_marketdata_df_notDuplicated) == len(securities_marketdata_df))
-    
+
     securities_marketdata_df_duplicated_secidS = list(securities_marketdata_df_duplicated['SECID'].unique())
     securities_marketdata_df_duplicated_secidS.sort()
     # print(securities_marketdata_df_duplicated_secidS) # для отладки
-    
+
     for secid in tqdm(securities_marketdata_df_duplicated_secidS):
         # print('secid:', secid) # для отладки
-    
+
         securities_marketdata_df_duplicated_withinIsin =\
             securities_marketdata_df_duplicated[securities_marketdata_df_duplicated['SECID'] == secid]
-    
+
         securities_marketdata_df_duplicated_withinIsin =\
             securities_marketdata_df_duplicated_withinIsin_processor(securities_marketdata_df_duplicated_withinIsin)
-    
+
         columnsWithDifferences = securities_marketdata_df_duplicated_withinIsin.columns[
             securities_marketdata_df_duplicated_withinIsin.nunique() > 1
             ].tolist()
@@ -139,23 +139,23 @@ def securities_marketdata_df_duplicates_processor(securities_marketdata_df, secu
         if 'SYSTIME' in columnsWithDifferences:# либо выбрать наиболее свежую запись
             securities_marketdata_df_duplicated_withinIsin =\
                 securities_marketdata_df_duplicated_withinIsin.sort_values('SYSTIME').iloc[[-1], :]
-    
+
         else:# либо усреднить значения по столбцам columnsWithDifferences ,..
             meanS = securities_marketdata_df_duplicated_withinIsin[columnsWithDifferences].mean()
             # display('meanS:', meanS) # для отладки
-    
+
             for column in columnsWithDifferences: # .. импутировать их в securities_marketdata_df_duplicated_withinIsin и..
                 securities_marketdata_df_duplicated_withinIsin[column] = meanS[column]
-    
+
             securities_marketdata_df_duplicated_withinIsin = securities_marketdata_df_duplicated_withinIsin.drop_duplicates()
                 # .. удалить дубликаты
-    
+
         if len(securities_marketdata_df_duplicated_withinIsin) != 1:
             print('secid инструментов, имеющих после обработки дубликатов 0 записей или более 1 записи:', secid) # для отладки
             display(securities_marketdata_df_duplicated_withinIsin[columnsWithDifferences] if columnsWithDifferences else securities_marketdata_df_duplicated_withinIsin)
-    
+
         securities_marketdata_df_notDuplicated = pandas.concat([securities_marketdata_df_notDuplicated, securities_marketdata_df_duplicated_withinIsin])
-    
+
     # display('securities_marketdata_df_notDuplicated:', securities_marketdata_df_notDuplicated) # для отладки
     return securities_marketdata_df_notDuplicated
 
@@ -232,7 +232,7 @@ f'''--- Комплект файлов:
     sectionOfJson_list = ['securities']
     if market == 'bonds': sectionOfJson_list.append('marketdata_yields')
     if (market == 'forts') | (market == 'shares'): sectionOfJson_list.append('marketdata')
-    
+
     securities_marketdata_df = pandas.DataFrame()
     for sectionOfJson in tqdm(sectionOfJson_list):
         # print('sectionOfJson:', sectionOfJson) # для отладки
