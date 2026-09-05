@@ -20,6 +20,7 @@ for attempt in range(1, 4):
             # (а) редактирования столбца одного датафрейма на основе того же столбца другого датафрейма
             # (б) предобработки нестандартизированнрого текста
 
+        from tqdm import tqdm
         import os, pandas, re
         break # выход из цикла for attempt in range(3)
 
