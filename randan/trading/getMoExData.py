@@ -53,7 +53,7 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
 #     return columnNameS
 
     # .. выгрузки таблиц -- фрагментов данных формата JSON из БД МосБиржи
-def json2df(columnS_forComparisom, headers, sectionOfJson, url):
+def json2df(columnS_forComparisom, headers, pause, sectionOfJson, url):
     df = pandas.DataFrame()
     df_additional_previous = pandas.DataFrame()
     start = 0
@@ -61,7 +61,13 @@ def json2df(columnS_forComparisom, headers, sectionOfJson, url):
         # print('start:', start, '                    ', end='\r') # для отладки
         params = {'start': start} # 'limit': 100,
 
-        data_json = requests.get(url, headers=headers, params=params).json()
+        try: data_json = requests.get(url, headers=headers, params=params).json()
+        except Exception as excptn:
+            print('Exception 1 в json2df') # для отладки
+            print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
+            print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+            time.sleep(pause)
+
         df_additional = pandas.DataFrame(columns=data_json[sectionOfJson]['columns'], data=data_json[sectionOfJson]['data'])
         # df_additional = df_additional.fillna('Нет данных')
         # display('df_additional:', df_additional) # для отладки
@@ -74,7 +80,7 @@ def json2df(columnS_forComparisom, headers, sectionOfJson, url):
                 break
 
         except Exception as excptn:
-            # print('Exception') # для отладки
+            # print('Exception 2 в json2df') # для отладки
             # print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
             # print(traceback.format_exc()) # показ точной строчки кода с ошибкой
             # print('Похоже, df_additional != df_additional_previous; продолжаю итерировать') # для отладки
@@ -133,7 +139,7 @@ plusNotTraded : bool -- в случае True функция возвращает
     print('Создаю файл с режимами торгов')
     if (market == 'bonds') | (market == 'shares'): url = f'https://iss.moex.com/iss/engines/stock/markets/{market}'
     if market == 'forts': url = f'https://iss.moex.com/iss/engines/futures/markets/{market}'
-    boardS = json2df(['id'], headers, 'boards', url + '.json')
+    boardS = json2df(['id'], headers, pause, 'boards', url + '.json')
     # boardS = pseudojson2df(headers, 0, url)
     # display('boardS:', boardS) # для отладки
 
@@ -174,7 +180,7 @@ f'''--- Файл с доступными securities и финансовой ин
     for sectionOfJson in sectionOfJson_list:
         # print('sectionOfJson:', sectionOfJson) # для отладки
         # <Формирование словаря полей БД МосБиржи>
-        columnsDescriptionS_additional = json2df(['id'], headers, sectionOfJson, url + '.json')
+        columnsDescriptionS_additional = json2df(['id'], headers, pause, sectionOfJson, url + '.json')
         # columnsDescriptionS_additional = pseudojson2df(headerS, index, url)
         columnsDescriptionS_additional.loc[:, 'data id'] = sectionOfJson
         # columnsDescriptionS_additional.loc[:, 'data id'] = index
@@ -186,7 +192,7 @@ f'''--- Файл с доступными securities и финансовой ин
             securities_marketdata_df_additional_1 = pandas.DataFrame()
             for board in boardS['boardid']:
                 print('board:', board)
-                securities_marketdata_df_additional_2 = json2df(['SECID', 'BOARDID'], headers, sectionOfJson, url + f'/boards/{board}/securities.json')
+                securities_marketdata_df_additional_2 = json2df(['SECID', 'BOARDID'], headers, pause, sectionOfJson, url + f'/boards/{board}/securities.json')
                 securities_marketdata_df_additional_2['board'] = board
                 securities_marketdata_df_additional_1 = pandas.concat([securities_marketdata_df_additional_1, securities_marketdata_df_additional_2], ignore_index=True)
 
