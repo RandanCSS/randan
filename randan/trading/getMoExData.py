@@ -204,10 +204,11 @@ f'''--- Комплект файлов:
         decision = input()
         if decision:
             print('Использую существующий комплект')
-            boardS = pandas.read_excel(path_boards)
-            columnsDescriptionS = pandas.read_excel(path_columnsDescriptions)
-            securities_marketdata_df = pandas.read_excel(path_securities_marketdata)
-            if returnDfs: return boardS, columnsDescriptionS, securities_marketdata_df
+            if returnDfs:
+                boardS = pandas.read_excel(path_boards)
+                columnsDescriptionS = pandas.read_excel(path_columnsDescriptions)
+                securities_marketdata_df = pandas.read_excel(path_securities_marketdata)
+                return boardS, columnsDescriptionS, securities_marketdata_df
 
 # 2.1 Если нет комплекта
 # 2.1.0 Формирование файла с режимами торгов boardS
