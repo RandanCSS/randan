@@ -16,7 +16,6 @@ for attempt in range(1, 4):
     try:
         # from bs4 import BeautifulSoup
         from IPython.display import display
-        # from tqdm import tqdm
         from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
         from tqdm import tqdm
         import os, pandas, requests, time, traceback, warnings # , re
