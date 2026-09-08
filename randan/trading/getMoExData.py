@@ -313,7 +313,7 @@ f'''--- Комплект файлов:
 
     for column_withDateTime in columnS_withDateTime:
         if column_withDateTime in securities_marketdata_df.columns:
-            securities_marketdata_df[column_withDateTime] = pandas.to_datetime(securities_marketdata_df[column_withDateTime])
+            securities_marketdata_df[column_withDateTime] = pandas.to_datetime(securities_marketdata_df[column_withDateTime], errors='coerce')
 
     # securities_marketdata_df['SYSTIME'] = pandas.to_datetime(securities_marketdata_df['SYSTIME'])
 
