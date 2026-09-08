@@ -19,7 +19,7 @@ for attempt in range(1, 4):
         # from tqdm import tqdm
         from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
         from tqdm import tqdm
-        import os, pandas, requests, traceback, warnings # , re
+        import os, pandas, requests, time, traceback, warnings # , re
         break # выход из цикла for attempt in range(3)
 
     except ModuleNotFoundError:
