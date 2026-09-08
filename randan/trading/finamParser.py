@@ -95,13 +95,22 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
         # display('bondsFinAM:', bondsFinAM) # для отладки
 
         bondsFinAM = getFeaturesByURL_FinAM(attemptsMax, bondsFinAM, bondsFinAM_row, columnS_target, driver, pause)
+        if bondsFinAM.loc[bondsFinAM_row, 'Статус'] != 'в обращении':
+            print(
+f'''Поскольку bondStatus: {bondsFinAM.loc[bondsFinAM_row, 'Статус']} (не в обращении), остальные характеристики облигации не требуются.
+'''
+                )
+
+            bondsFinAM_row += 1
+            return bondsFinAM, bondsFinAM_row, driver, goS
 
         isin = bondsFinAM.loc[bondsFinAM_row, columnS_target[0]]
         table_FinAM = getTableByURL_FinAM(source['MATDATE'][sourceRow], driver, isin, pause)
+
         try: table_TB = getTableByURL_TB(driver_TB, isin, pause)
         except Exception as excptn:
-            print('except после getTableByURL_TB в bondsOfIdentifierProcessor') # для отладки
-            print('excptn:', excptn) # для отладки
+            print('Exception после getTableByURL_TB в bondsOfIdentifierProcessor') # для отладки
+            print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
             print(traceback.format_exc()) # показ точной строчки кода с ошибкой
             goS = False
             return bondsFinAM, bondsFinAM_row, driver, goS
@@ -128,16 +137,18 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
                 break # выход из цикла for attempt in range(3)
 
             except Exception as excptn:
-                print('attempt 2 в bondsOfIdentifierProcessor :', attempt) # для отладки
-
-                print('Exception 1 в bondsOfIdentifierProcessor :', excptn)
+                print('Exception 1 в bondsOfIdentifierProcessor') # для отладки
+                print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
                 print(traceback.format_exc()) # показ точной строчки кода с ошибкой
 
-                # Закрыть или обнулить драйвер
-                forSelenium.driverCloser(driver)
+                print('attempt', attempt) # для отладки
 
-                # Воссоздать драйвер и подготовить для следующей итерации цикла for attempt in range(3) или обращения вне цика
+                forSelenium.driverCloser(driver)
+                    # закрыть или обнулить драйвер
+
                 driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
+                    # воссоздать драйвер и подготовить для следующей итерации цикла for attempt in range(3) или обращения вне цика
+
                 driver.set_page_load_timeout((1 + attempt) * 100 * pause)
 
                 # Если число попыток истекло, а результат так и не достигнут
@@ -176,6 +187,11 @@ def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_t
 
         else: break # выход из цикла for attempt in range(1)
 
+    bondStatus = driver.find_element(By.XPATH, "//dt[@class='col1' and text()='Статус:']/following-sibling::dd[1]/span").text
+    print('bondStatus:', bondStatus) # для отладки
+
+    bondsFinAM.loc[bondsFinAM_row, 'Статус'] = bondStatus
+
     for textTarget in columnS_target:
         # print('textTarget:', textTarget) # для отладки
         if textTarget in driver.find_element("tag name", "body").text:
@@ -199,15 +215,6 @@ def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_t
                 bondsFinAM.loc[bondsFinAM_row, 'Амортизация FinAm'] = 1 if ('погаш' in textFetched.lower()) & ('част' in textFetched.lower()) else 0
 
                 spread = spreadExtract(textFetched)
-                # spread = re.findall(r'Преми.+|Спред.+|RUONIA.+', textFetched, re.IGNORECASE)
-                # print('spread:', spread) # для отладки
-                # if spread != []:
-                #     spread = spread[0]
-                #     spread = re.findall(r'\d+,?\d*', spread)
-                #     if spread != []: bondsFinAM.loc[bondsFinAM_row, 'Спред'] = float(spread[0].replace(',', '.'))
-                #     else: bondsFinAM.loc[bondsFinAM_row, 'Спред'] = 0
-
-                # else: bondsFinAM.loc[bondsFinAM_row, 'Спред'] = 0
 
             else:
                 attempt = 0
@@ -475,7 +482,8 @@ def getTableByURL_TB(driver_TB, isin, pause):
             return table_TB
 
         except Exception as excptn:
-            print('Exception в getTableByURL_TB :', excptn)
+            print('Exception в getTableByURL_TB') # для отладки
+            print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
             print(traceback.format_exc()) # показ точной строчки кода с ошибкой
 
             if attempt == 3:
@@ -692,16 +700,18 @@ def finamParser(attemptsMax,
                     break # выход из цикла for attempt in range(3)
 
                 except Exception as excptn:
-                    print('attempt 2 в finamParser :', attempt) # для отладки
-
-                    print('Exception 1 в finamParser :', excptn)
+                    print('Exception 1 в finamParser') # для отладки
+                    print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
                     print(traceback.format_exc()) # показ точной строчки кода с ошибкой
 
-                    # Закрыть или обнулить драйвер # DS считает, что ненужно. Что на первой итерации соединение нестабильно и если его каждый раз переустанавливать, то оно так и будет нестабильным
+                    print('attempt:', attempt)
                     forSelenium.driverCloser(driver)
+                        # закрыть или обнулить драйвер # DS считает, что ненужно, что на первой итерации соединение нестабильно
+                            # и если его каждый раз переустанавливать, то оно так и будет нестабильным
 
-                    # Воссоздать драйвер и подготовить для следующей итерации цикла for attempt in range(3) или обращения вне цика
                     driver = forSelenium.driverCreator(version_main, headless=False, use_subprocess=True)
+                        # воссоздать драйвер и подготовить для следующей итерации цикла for attempt in range(3) или обращения вне цика
+
                     driver.set_page_load_timeout((1 + attempt) * 100 * pause)
 
                     # Если число попыток истекло, а результат так и не достигнут
