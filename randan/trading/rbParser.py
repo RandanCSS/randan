@@ -214,7 +214,7 @@ def loginerRB(attemptsMax, boundarieS, driver, pause,  xPathS, login_password=No
 
         else:
             print(
-'''--- НЕ нашёл файл credentialsRB.json . Введите в окно Ваши логин и пароль для на сайте rusnonds.ru . После ввода нажмите Enter'''
+'''--- НЕ нашёл файл credentialsRB.json . Введите в окно Ваши логин и пароль для сайта rusnonds.ru . После ввода нажмите Enter'''
                   )
 
             while True:
