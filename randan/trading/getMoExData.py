@@ -136,11 +136,20 @@ def securities_marketdata_df_duplicates_processor(securities_marketdata_df, secu
 
         # print('columnsWithDifferences:', columnsWithDifferences) # для отладки
 
-        if 'SYSTIME' in columnsWithDifferences:# либо выбрать наиболее свежую запись
-            securities_marketdata_df_duplicated_withinIsin =\
-                securities_marketdata_df_duplicated_withinIsin.sort_values('SYSTIME').iloc[[-1], :]
+        conditionNext = True
 
-        else:# либо усреднить значения по столбцам columnsWithDifferences ,..
+        # либо выбрать наиболее свежую запись по одному из столбцов с DateTime
+        for columnWithDateTime in ['SYSTIME', 'ZCYCMOMENT', 'TRADEMOMENT']:
+            if columnWithDateTime in columnsWithDifferences:
+                securities_marketdata_df_duplicated_withinIsin =\
+                    securities_marketdata_df_duplicated_withinIsin.sort_values(columnWithDateTime).iloc[[-1], :]
+
+                conditionNext = False
+                break
+
+        if conditionNext:# либо усреднить значения по столбцам columnsWithDifferences ,..
+            # display(securities_marketdata_df_duplicated_withinIsin[columnsWithDifferences]) # для отладки
+
             meanS = securities_marketdata_df_duplicated_withinIsin[columnsWithDifferences].mean()
             # display('meanS:', meanS) # для отладки
 
@@ -284,6 +293,7 @@ f'''--- Комплект файлов:
     if market == 'bonds':
         securities_marketdata_df['URL MoEx'] = 'https://www.moex.com/ru/issue.aspx?code=' + securities_marketdata_df['ISIN']
         securities_marketdata_df['TRADEMOMENT'] = pandas.to_datetime(securities_marketdata_df['TRADEMOMENT'])
+        securities_marketdata_df['ZCYCMOMENT'] = pandas.to_datetime(securities_marketdata_df['ZCYCMOMENT'])
 
     # display('securities_marketdata_df 2:', securities_marketdata_df) # для отладки
 
