@@ -21,9 +21,9 @@ def containerExport(folderFile, container):
     file.write(container)
     file.close()
 
-def containerImport(containerName, containerType):
-    file = open(f'{rootName}{slash}{containerName}.txt')
-    # file = open(f'{containerName}.txt') # для отладки
+def containerImport(folderFile, containerType):
+    # file = open(f'{rootName}{slash}{containerName}.txt')
+    file = open(f'{folderFile}.txt')
     container = file.read()
     file.close()
     if container:
