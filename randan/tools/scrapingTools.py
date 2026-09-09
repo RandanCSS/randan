@@ -23,7 +23,7 @@ def containerExport(folderFile, container):
 
 def containerImport(folderFile, containerType):
     # file = open(f'{rootName}{slash}{containerName}.txt')
-    file = open(f'{folderFile}.txt')
+    file = open(folderFile)
     container = file.read()
     file.close()
     if container:
