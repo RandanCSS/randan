@@ -39,8 +39,6 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 '''
                   )
 
-coLabFolder = coLabAdaptor.coLabAdaptor()
-
 # 1. Вспомогательные функции..
 # .. выгрузки таблиц -- фрагментов данных формата JSON из БД МосБиржи
 def json2df(columnS_forComparisom, headers, pause, sectionOfJson, url):
