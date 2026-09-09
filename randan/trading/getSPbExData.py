@@ -81,12 +81,11 @@ def getSPbExData(folder=coLabFolder,
 plusNotTraded : bool -- в случае True функция возвращает и неторгуемые securities
     returnDfs : bool -- в случае True функция возвращает итоговые датафреймы boardS, columnsDescriptionS и securities_marketdata_df строго в такой последовательности
     '''
-    headers = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
 
     # Блок, поскольку folder многократно используется внутри функции в формулах
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     # if folder: print('folder до:', folder) # для отладки
-    if (folder == None) | (folder == ''): folder = ''
+    if not folder: folder = ''
     else: folder += slash
     # if folder: print('folder после:', folder) # для отладки
 
@@ -111,9 +110,9 @@ f'''--- Файл:
 # 2.1 Если нет комплекта
 # 2.1.0 Поиск Т-токена
     if not tToken:
-        rootNameS = os.listdir()
+        rootNameS = os.listdir(folder if folder else None)
         if 'tToken.txt' in rootNameS:
-            tToken = scrapingTools.containerImport(rootName + slash + 'tToken.txt', str)
+            tToken = scrapingTools.containerImport(folder + 'tToken.txt', str)
             print('Проверяю наличие файла tToken.txt с Т-токеном, гипотетически сохранёнными при первом запуске скрипта')
             print(f'Нашёл файл tToken.txt; далее буду использовать Т-токен {tToken} из него:')
 
@@ -123,7 +122,7 @@ f'''--- Файл:
                   )
 
             while True:
-                tToken = input('Введите в окно Ваш логин и нажмите Enter')
+                tToken = input('Введите в окно Ваш Т-токен и нажмите Enter')
                 if len(tToken) > 0:
                     print('-- далее будет использован этот Т-токен')
                     break
@@ -131,7 +130,9 @@ f'''--- Файл:
                 else:
                     print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
 
-            containerExport('tToken.txt', tToken)
+            scrapingTools.containerExport('tToken.txt', tToken)
+
+    headers = {'Authorization': f'Bearer {tToken}', 'Content-Type': 'application/json'}
 
 # 2.1.1 Формирование файла с доступными инструментами (securities) и их финансовыми данными (marketdata или marketdata_yields)
     # <Формирование файла с доступными securities в интересующих режимах торгов>
