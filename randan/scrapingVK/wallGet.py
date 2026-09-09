@@ -313,13 +313,13 @@ f'''    Скрипт нацелен на выгрузку характерист
     for rootName in rootNameS:
         if 'Temporal' in rootName:
             if len(os.listdir(rootName)) == 4:
-                domain = scrapingTools.containerImport('domain', str)
+                domain = scrapingTools.containerImport(rootName + slash + 'domain.txt', str)
 
                 with open(f'{rootName}{slash}fields.json', 'r', encoding='utf-8') as file:
                     fields = json.load(file)
 
-                filter = scrapingTools.containerImport('filter', str)
-                offset = scrapingTools.containerImport('offset', int)
+                filter = scrapingTools.containerImport(rootName + slash + 'filter.txt', str)
+                offset = scrapingTools.containerImport(rootName + slash + 'offset.txt', int)
 
                 print(f"Нашёл директорию '{rootName}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
                       , '\n- скрипт остановился на offset', offset)
