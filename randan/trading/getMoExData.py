@@ -2,7 +2,7 @@
 
 '''
 A module to import and process bonds' feachures from the Moscow Exchange
-Модуль для выгрузки характеристик торгуемых на МосБирже облигаций
+Модуль для выгрузки характеристик торгуемых на МосБирже акций, облигаций, фьючерсов
 '''
 # import sys
 # sys.path.append(r"C:\Users\Alexey\Dropbox\Мои\RAnDan\myModules")
@@ -16,7 +16,6 @@ for attempt in range(1, 4):
     try:
         # from bs4 import BeautifulSoup
         from IPython.display import display
-        from randan.tools import coLabAdaptor # авторский модуль для адаптации текущего скрипта к файловой системе CoLab
         from tqdm import tqdm
         import os, pandas, requests, time, traceback, warnings # , re
         break # выход из цикла for attempt in range(3)
@@ -175,7 +174,7 @@ def getMoExData(folder=coLabFolder,
                 plusNotTraded=False,
                 returnDfs=False):
     '''
-    Функция умеет выгружать характеристики торгуемых на МосБирже облигаций, причём не дефолтные (далее -- Д) и не повышенного инвестиционного риска (далее -- ПИР). Дополнительно выгружается словарь полей БД МосБиржи. Также она умеет выгружать фьючерсы
+    Функция умеет выгружать характеристики торгуемых на МосБирже акций, облигаций, фьючерсов. Дополнительно выгружается словарь полей БД МосБиржи.
 
     Parameters
     ----------
