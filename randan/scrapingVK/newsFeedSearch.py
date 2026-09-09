@@ -405,15 +405,15 @@ f'''    Скрипт нацелен на выгрузку характерист
                 with open(f'{rootName}{slash}fields.json', 'r', encoding='utf-8') as file:
                     fields = json.load(file)
 
-                method = scrapingTools.containerImport('method', str)
+                method = scrapingTools.containerImport(rootName + slash + 'method.txt', str)
 
-                q = scrapingTools.containerImport('q', str)
+                q = scrapingTools.containerImport(rootName + slash + 'q.txt', str)
                 if q == '': q = None # для единообразия
 
-                stageTarget = scrapingTools.containerImport('stageTarget', int)
-                targetCount = scrapingTools.containerImport('targetCount', int)
-                year = scrapingTools.containerImport('year', int)
-                yearsRange = scrapingTools.containerImportyearsRangeq', str)
+                stageTarget = scrapingTools.containerImport(rootName + slash + 'stageTarget.txt', int)
+                targetCount = scrapingTools.containerImport(rootName + slash + 'targetCount.txt', int)
+                year = scrapingTools.containerImport(rootName + slash + 'year.txt', int)
+                yearsRange = scrapingTools.containerImport(rootName + slash + 'yearsRange.txt', str)
 
                 print(f"Нашёл директорию '{rootName}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
                       # , '\n- было выявлено целевое число объектов (targetCount)', targetCount
