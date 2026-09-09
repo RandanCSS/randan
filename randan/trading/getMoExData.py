@@ -14,8 +14,11 @@ from subprocess import check_call
 # --- остальные модули и пакеты
 for attempt in range(1, 4):
     try:
-        # from bs4 import BeautifulSoup
         from IPython.display import display
+
+        from randan.tools import coLabAdaptor # модули для
+            # (а) адаптации текущего скрипта к файловой системе CoLab
+
         from tqdm import tqdm
         import os, pandas, requests, time, traceback, warnings # , re
         break # выход из цикла for attempt in range(3)
@@ -38,6 +41,8 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
                   )
+
+coLabFolder = coLabAdaptor.coLabAdaptor()
 
 # 1. Вспомогательные функции..
 # .. выгрузки таблиц -- фрагментов данных формата JSON из БД МосБиржи
