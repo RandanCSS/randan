@@ -16,9 +16,10 @@ for attempt in range(1, 4):
     try:
         from IPython.display import display
 
-        from randan.tools import cellsLeftMerger, scrapingTools #  модули для
+        from randan.tools import cellsLeftMerger, coLabAdaptor, scrapingTools #  модули для
             # (а) упрощения операции левостороннего присоединения датафрейма-донора к датафрейму-реципиенту по специальному столбцу
-            # (б) упрощения скрапинга
+            # (б) адаптации текущего скрипта к файловой системе CoLab
+            # (в) упрощения скрапинга
 
         from tqdm import tqdm
         import os, pandas, requests, time, traceback
@@ -42,6 +43,8 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
                   )
+
+coLabFolder = coLabAdaptor.coLabAdaptor()
 
 # 1. Вспомогательная функция..
 # .. выгрузки таблиц -- фрагментов данных формата JSON из БД СПб Биржи
