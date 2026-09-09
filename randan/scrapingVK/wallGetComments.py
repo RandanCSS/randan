@@ -332,9 +332,9 @@ f'''    Скрипт нацелен на выгрузку характерист
                     with open(f'{rootName}{slash}fields.json', 'r', encoding='utf-8') as file:
                         fields = json.load(file)
 
-                    offset = scrapingTools.containerImport('offset', int)
-                    owner_id = scrapingTools.containerImport('owner_id', str)
-                    post_id = scrapingTools.containerImport('post_id', str)
+                    offset = scrapingTools.containerImport(rootName + slash + 'offset.txt', int)
+                    owner_id = scrapingTools.containerImport(rootName + slash + 'owner_id.txt', str)
+                    post_id = scrapingTools.containerImport(rootName + slash + 'post_id.txt', str)
 
                     print(
 f'''Нашёл директорию '{rootName}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:
