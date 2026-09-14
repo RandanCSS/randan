@@ -3,7 +3,7 @@
 
 '''
 A module for facilitating the use of selenium
-Модуль для упрощения некоторых оперций в selenium
+Модуль для упрощения некоторых операций в selenium
 '''
 # import sys
 # sys.path.append(r"C:\Users\Alexey\Dropbox\Мои\RAnDan\myModules")
