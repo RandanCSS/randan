@@ -341,7 +341,7 @@ f'''--- Комплект файлов:
 
     columnsDescriptionS.to_excel(path_columnsDescriptions, index=False)
     securities_marketdata_df.to_excel(path_securities_marketdata, index=False)
-    if returnDfs: return boardS, columnsDescriptionS, securities_marketdata_df
+    if returnDfs: return boardS, columnsDescriptionS, securities_marketdata_df, securities_marketdata_df_duplicated
 
 # Схема API MoEx
 
