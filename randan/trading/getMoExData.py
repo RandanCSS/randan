@@ -150,7 +150,7 @@ def securities_marketdata_df_duplicates_processor(columnS_withDateTime, securiti
 
         if conditionNext:# либо усреднить значения по столбцам columnsWithDifferences ,..
             # print('columnsWithDifferences:', columnsWithDifferences) # для отладки
-            display(securities_marketdata_df_duplicated_withinIsin[columnsWithDifferences]) # для отладки
+            # display(securities_marketdata_df_duplicated_withinIsin[columnsWithDifferences]) # для отладки
 
             meanS = securities_marketdata_df_duplicated_withinIsin[columnsWithDifferences].mean()
             # display('meanS:', meanS) # для отладки
@@ -163,7 +163,7 @@ def securities_marketdata_df_duplicates_processor(columnS_withDateTime, securiti
 
         if len(securities_marketdata_df_duplicated_withinIsin) != 1:
             print('secid инструментов, имеющих после обработки дубликатов 0 записей или более 1 записи:', secid) # для отладки
-            display(securities_marketdata_df_duplicated_withinIsin[columnsWithDifferences] if columnsWithDifferences else securities_marketdata_df_duplicated_withinIsin)
+            # display(securities_marketdata_df_duplicated_withinIsin[columnsWithDifferences] if columnsWithDifferences else securities_marketdata_df_duplicated_withinIsin)
 
         securities_marketdata_df_notDuplicated = pandas.concat([securities_marketdata_df_notDuplicated, securities_marketdata_df_duplicated_withinIsin])
 
