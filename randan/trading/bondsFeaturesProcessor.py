@@ -275,7 +275,9 @@ def currencyEffectProcessor(bondS_in, currencieS):
 # <Умножение FACEVALUE и ACCRUEDINT для иновалютных облигаций на цену соответствующей валюты в рублях>
 
     # Импорт курсов инвалют
-    boardS, columnsDescriptionS, exchangesRaw = getMoExData.getMoExData(market='forts', returnDfs=True)
+    boardS, columnsDescriptionS, exchangesRaw, securities_marketdata_df_duplicated =\
+        getMoExData.getMoExData(market='forts', returnDfs=True)
+
     exchangesRaw = exchangesRaw[['SHORTNAME', 'LAST', 'SETTLEPRICE']]
     exchangesRaw.columns = ['Unnamed: 0', 'Цена послед.', 'Цена закр.']
     # display(exchangesRaw) # для отладки
@@ -366,7 +368,9 @@ def bondsFeaturesProcessor(attemptsMax,
     warnings.filterwarnings("ignore")
 
 # 2.1 Добавить характеристики облигаций из БД МосБиржи
-    boardS, columnsDescriptionS, securitieS = getMoExData.getMoExData(market='bonds', returnDfs=True)
+    boardS, columnsDescriptionS, securitieS, securities_marketdata_df_duplicated =\
+        getMoExData.getMoExData(market='bonds', returnDfs=True)
+
     bondS = bondS.merge(securitieS, how='left', on='ISIN', suffixes=('_drop', '')) # дропнуть старые столбцы, оставить новые
     bondS = bondS[[column for column in bondS.columns if not column.endswith('_drop')]]
     # print('bondS.columns:', bondS.columns) # для отладки
@@ -563,7 +567,9 @@ def bondsFeaturesProcessor(attemptsMax,
     #     bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column] = bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column].astype(float)
 
     # # Умножение FACEVALUE и ACCRUEDINT на цену валюты в рублях
-    # boardS, columnsDescriptionS, exchangesRaw = getMoExData.getMoExData(market='forts', returnDfs=True)
+    # boardS, columnsDescriptionS, exchangesRaw, securities_marketdata_df_duplicated =\
+        # getMoExData.getMoExData(market='forts', returnDfs=True)
+
     # exchangesRaw = exchangesRaw[['SHORTNAME', 'LAST', 'SETTLEPRICE']]
     # exchangesRaw.columns = ['Unnamed: 0', 'Цена послед.', 'Цена закр.']
     # # display(exchangesRaw) # для отладки
