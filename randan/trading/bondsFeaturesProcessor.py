@@ -643,15 +643,20 @@ def bondsFeaturesProcessor(attemptsMax,
 
     # <Сравнение текущего момента и рекомендованной повторной даты выгрузки информации с FinAM; при необходимости, новая выгрузка>
         if fileUptodateName: 
-            date_call = fileUptodateName.split(' ')[0]
-            if (date_call == 'No') | (date_call == 'Не_в_обращении'): date_call = momentCurrent # -- заглушка; нужна для работы условия momentCurrent > date_call
+            date_call = fileUptodateName.split(isin)[0].strip()
+            bondStatus = fileUptodateName.split(isin)[-1].strip().lower()
+
+            if (date_call == 'No rate') | (bondStatus != 'в обращении'): date_call = momentCurrent # -- заглушка; нужна для работы условия momentCurrent > date_call
             else: date_call = datetime.strptime(date_call, '%Y%m%d')
+            # if (date_call == 'No') | (date_call == 'Не_в_обращении'): date_call = momentCurrent # -- заглушка; нужна для работы условия momentCurrent > date_call
+            # else: date_call = datetime.strptime(date_call, '%Y%m%d')
+
             # print('date_call:', date_call) # для отладки
 
         else: date_call = momentCurrent - timedelta(days=2) # заглушка; нужна для работы условия momentCurrent > date_call
 
         if momentCurrent > date_call: # если текущий момент оставил позади рекомендованную повторную дату выгрузки информации с FinAM
-
+            print('date_call:', date_call) # для отладки
             print('Требуется новая выгрузка с FinAM')
 
             bondsFinAM = pandas.DataFrame(columns=[
@@ -701,6 +706,10 @@ def bondsFeaturesProcessor(attemptsMax,
             fileUptodateName = files2df.getFileUptodateName(isin, None, path_1)
             # print('fileUptodateName:', fileUptodateName) # для отладки
     # <\Сравнение текущего момента и рекомендованной повторной даты выгрузки информации с FinAM; при необходимости, новая выгрузка>
+
+        if bondStatus != 'в обращении':
+            bondS[bondS['ISIN'] == isin]['Статус'] = bondStatus
+            continue # текущая итерация завершается, начинается новая
 
         table_FinAM = pandas.read_excel(path_1 + slash + fileUptodateName, header=[0, 1], index_col=0)
         # display('table_FinAM:', table_FinAM) # для отладки
