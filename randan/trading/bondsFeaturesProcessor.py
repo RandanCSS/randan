@@ -286,6 +286,7 @@ def currencyEffectProcessor(bondS_in, currencieS):
     exchangeS = pandas.DataFrame()
     for currency in currencieS:
     # for currency in currencieS[0:1]: # для отладки
+        print('currency:', currency) # для отладки
         exchangesAdditional = exchangesRaw[exchangesRaw['Unnamed: 0'].str.contains(currency, case=False)]
         # display('exchangesAdditional:', exchangesAdditional) # для отладки
 
@@ -558,7 +559,7 @@ def bondsFeaturesProcessor(attemptsMax,
         bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column] =\
             bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column].astype(float)
 
-    currencieS = list(bondS['FACEUNIT'].unique()) # валюта номинала
+    currencieS = list(bondS[bondS['FACEUNIT'].notna()]['FACEUNIT'].unique()) # валюта номинала
     print('currencieS:', currencieS) # для отладки
 
     currencieS.remove('SUR')
@@ -713,19 +714,21 @@ def bondsFeaturesProcessor(attemptsMax,
                 table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace(',', '.')
                 table_FinAM[table_FinAM_column] = pandas.to_numeric(table_FinAM[table_FinAM_column], errors='ignore')
 
-        if bond_df.loc[bond_df_index, 'BUYBACKDATE'] != '0000-00-00': # есть оферта
-            # print("bond_df.loc[bond_df_index, 'BUYBACKDATE'] != '0000-00-00'") # для отладки   
+        if bond_df.loc[bond_df_index, 'BUYBACKDATE']: # есть оферта
+            # print("bond_df.loc[bond_df_index, 'BUYBACKDATE']") # для отладки   
             date_final = bond_df.loc[bond_df_index, 'BUYBACKDATE']
 
-        elif bond_df.loc[bond_df_index, 'MATDATE'] != '0000-00-00': # есть конечная дата обращения
-            # print("bond_df.loc[bond_df_index, 'MATDATE'] != '0000-00-00'") # для отладки   
+        elif bond_df.loc[bond_df_index, 'MATDATE']: # есть конечная дата обращения
+            # print("bond_df.loc[bond_df_index, 'MATDATE']") # для отладки   
             date_final = bond_df.loc[bond_df_index, 'MATDATE']
 
         else: # нет оферты и нет конечной даты обращения
             # print('Нет оферты и нет конечной даты обращения') # для отладки   
             date_final = table_FinAM.loc[table_FinAM.index[-1], (             'Купоны',                'Дата')].strftime('%Y-%m-%d')
 
-        date_final = datetime.strptime(date_final, '%Y-%m-%d').date()
+        date_final = date_final.date()
+        # date_final = datetime.strptime(date_final, '%Y-%m-%d').date()
+
         print('date_final:', date_final) # для отладки
 
         df_current = table_FinAM[table_FinAM[(             'Купоны',                'Дата')].dt.date >= momentCurrent.date()] # фильтр дата >= сегодняшней
