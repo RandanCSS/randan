@@ -493,10 +493,10 @@ def bondsFeaturesProcessor(attemptsMax,
 #     bondS = pandas.concat([bondS_unsubordinated, bondS_subordinated])
 
 # 2.2 Фильтры по датам
-    for column in ['MATDATE', 'NEXTCOUPON']:
-        bondS = bondS[bondS[column].notna()]
-        bondS.loc[bondS[column] == '0000-00-00', column] =\
-            bondS.loc[bondS[column] == '0000-00-00', 'SETTLEDATE'] # иначе к столбцу не применяется .astype('datetime64[ns]')
+    # for column in ['MATDATE', 'NEXTCOUPON']:
+    #     bondS = bondS[bondS[column].notna()]
+    #     bondS.loc[bondS[column] == '0000-00-00', column] =\
+    #         bondS.loc[bondS[column] == '0000-00-00', 'SETTLEDATE'] # иначе к столбцу не применяется .astype('datetime64[ns]')
 
     # Сколько дней до купона?
     bondS = bondS[bondS['MATDATE'] != bondS['SETTLEDATE']] # исключить облигации, по которым погашение уже на след.день
@@ -505,7 +505,7 @@ def bondsFeaturesProcessor(attemptsMax,
     # display(bondS[['MATDATE', 'NEXTCOUPON', 'SETTLEDATE']].head(50)) # для отладки
     # display(bondS[['MATDATE', 'NEXTCOUPON', 'SETTLEDATE']].tail(50)) # для отладки
 
-    bondS['До купона'] = bondS['NEXTCOUPON'].astype('datetime64[ns]') - bondS['SETTLEDATE'].astype('datetime64[ns]')
+    # bondS['До купона'] = bondS['NEXTCOUPON'].astype('datetime64[ns]') - bondS['SETTLEDATE'].astype('datetime64[ns]')
     bondS['До купона'] = bondS['До купона'].astype(str)
     bondS['До купона'] = bondS['До купона'].str.split(' ').str[0]
     bondS['До купона'] = bondS['До купона'].astype(int)
