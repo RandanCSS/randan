@@ -114,11 +114,11 @@ def normalize_datetime_columns(bondS_in):
                             'ZCYCMOMENT']
 
     for column_withDateTime in columnS_withDateTime:
-        if column_withDateTime in securities_marketdata_df.columns:
+        if column_withDateTime in bondS.columns:
             bondS[column_withDateTime] = pandas.to_datetime(bondS[column_withDateTime], errors='coerce')
 
-    bondS['SETTLEDATE'] = bondS['SETTLEDATE'].fillna(pandas.Timestamp.today().normalize())
-    return bondS
+    if 'SETTLEDATE' in bondS.columns: bondS['SETTLEDATE'] = bondS['SETTLEDATE'].fillna(pandas.Timestamp.today().normalize())
+    return bondS, columnS_withDateTime
 
 # .. работы с дубликатами в рамках одного и того же SECID
 def securities_marketdata_df_duplicated_withinIsin_processor(securities_marketdata_df_duplicated_withinIsin):
@@ -322,7 +322,7 @@ f'''Комплект файлов:
     securities_marketdata_df = securities_marketdata_df[securities_marketdata_df['BOARDID'].isin(boardS['boardid'])]
         # учёт желаемых режимов торгов (аргумент plusNotTraded )
 
-    securities_marketdata_df = normalize_datetime_columns(securities_marketdata_df)
+    securities_marketdata_df, columnS_withDateTime = normalize_datetime_columns(securities_marketdata_df)
 
     # securities_marketdata_df['SYSTIME'] = pandas.to_datetime(securities_marketdata_df['SYSTIME'])
 
