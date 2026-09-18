@@ -632,9 +632,9 @@ def tables_FinAM_TB_connector(bondStatus, folder, isin, table_FinAM, table_TB):
         if os.path.exists(path_1) != True: os.makedirs(path_1)
         # print('Сохраняю table_FinAM в', path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx') # для отладки
 
-        # table_FinAM.to_excel(path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
-        if bondStatus == 'в обращении': table_FinAM.to_excel(path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
-        else: table_FinAM.to_excel(path_1 + slash + 'Не_в_обращении ' + isin + '.xlsx')
+        table_FinAM.to_excel(path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}{' ' + bondStatus}.xlsx')
+        # if bondStatus == 'в обращении': table_FinAM.to_excel(path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
+        # else: table_FinAM.to_excel(path_1 + slash + 'Не_в_обращении ' + isin + '.xlsx')
 
         # table_FinAM = pandas.read_excel(path_1 + slash + '???.xlsx', header=[0, 1], index_col=0)
             # заготовка
@@ -652,9 +652,9 @@ def tables_FinAM_TB_connector(bondStatus, folder, isin, table_FinAM, table_TB):
         path_2 = folder + 'Таблицы TB'
         if os.path.exists(path_2) != True: os.makedirs(path_2)
 
-        # table_TB.to_excel(path_2 + slash + f'{date_call_TB + ' ' if date_call_TB else ''}{isin}.xlsx')
-        if bondStatus == 'в обращении': table_TB.to_excel(path_2 + slash + f'{date_call_TB + ' ' if date_call_TB else ''}{isin}.xlsx')
-        else: table_TB.to_excel(path_2 + slash + 'Не_в_обращении ' + isin + '.xlsx')
+        table_TB.to_excel(path_2 + slash + f'{date_call_TB + ' ' if date_call_TB else ''}{isin}.xlsx')
+        # if bondStatus == 'в обращении': table_TB.to_excel(path_2 + slash + f'{date_call_TB + ' ' if date_call_TB else ''}{isin}{' ' + bondStatus}.xlsx')
+        # else: table_TB.to_excel(path_2 + slash + 'Не_в_обращении ' + isin + '.xlsx')
 
 # 2. Основная функция
 def finamParser(attemptsMax,
