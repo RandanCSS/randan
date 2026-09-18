@@ -644,9 +644,8 @@ def bondsFeaturesProcessor(attemptsMax,
     # <Сравнение текущего момента и рекомендованной повторной даты выгрузки информации с FinAM; при необходимости, новая выгрузка>
         if fileUptodateName: 
             date_call = fileUptodateName.split(' ')[0]
-            date_call = datetime.strptime(date_call, '%Y%m%d') if date_call != 'No' else momentCurrent
-                # else momentCurrent -- заглушка; нужна для работы условия momentCurrent > date_call
-
+            if (date_call == 'No') | (date_call == 'Не_в_обращении'): date_call = momentCurrent # -- заглушка; нужна для работы условия momentCurrent > date_call
+            else: date_call = datetime.strptime(date_call, '%Y%m%d')
             # print('date_call:', date_call) # для отладки
 
         else: date_call = momentCurrent - timedelta(days=2) # заглушка; нужна для работы условия momentCurrent > date_call
@@ -680,8 +679,6 @@ def bondsFeaturesProcessor(attemptsMax,
                                                                                   version_main)
 
             bondsFinAM.loc[:, 'Момент обращения к FinAM'] = momentCurrent.strftime('%Y%m%d_%H%M')
-            display('bondsFinAM:', bondsFinAM) # для отладки
-
             display('bondsFinAM:', bondsFinAM) # для отладки
             bondsFinAM.to_excel(folder + 'Замеры рейтингов' + slash + momentCurrent.strftime('%Y%m%d_%H%M') + '_bondsFinAM.xlsx', index=False)
                 # на случай ошибки
@@ -724,7 +721,7 @@ def bondsFeaturesProcessor(attemptsMax,
 
         else: # нет оферты и нет конечной даты обращения
             # print('Нет оферты и нет конечной даты обращения') # для отладки   
-            date_final = table_FinAM.loc[table_FinAM.index[-1], (             'Купоны',                'Дата')].strftime('%Y-%m-%d')
+            date_final = table_FinAM.loc[table_FinAM.index[-1], (             'Купоны',                'Дата')] # .strftime('%Y-%m-%d')
 
         date_final = date_final.date()
         # date_final = datetime.strptime(date_final, '%Y-%m-%d').date()
