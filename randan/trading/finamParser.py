@@ -95,14 +95,14 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
         # display('bondsFinAM:', bondsFinAM) # для отладки
 
         bondsFinAM = getFeaturesByURL_FinAM(attemptsMax, bondsFinAM, bondsFinAM_row, columnS_target, driver, pause)
-        if bondsFinAM.loc[bondsFinAM_row, 'Статус'] != 'в обращении':
-            print(
-f'''Поскольку bondStatus: {bondsFinAM.loc[bondsFinAM_row, 'Статус']} (не в обращении), остальные характеристики облигации не требуются.
-'''
-                )
+#         if bondsFinAM.loc[bondsFinAM_row, 'Статус'] != 'в обращении':
+#             print(
+# f'''Поскольку bondStatus: {bondsFinAM.loc[bondsFinAM_row, 'Статус']} (не в обращении), остальные характеристики облигации не требуются.
+# '''
+#                 )
 
-            bondsFinAM_row += 1
-            return bondsFinAM, bondsFinAM_row, driver, goS
+#             bondsFinAM_row += 1
+#             return bondsFinAM, bondsFinAM_row, driver, goS
 
         isin = bondsFinAM.loc[bondsFinAM_row, columnS_target[0]]
         table_FinAM = getTableByURL_FinAM(source['MATDATE'][sourceRow], driver, isin, pause)
@@ -115,7 +115,7 @@ f'''Поскольку bondStatus: {bondsFinAM.loc[bondsFinAM_row, 'Статус
             goS = False
             return bondsFinAM, bondsFinAM_row, driver, goS
 
-        tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB)
+        tables_FinAM_TB_connector(bondsFinAM.loc[bondsFinAM_row, 'Статус'], folder, isin, table_FinAM, table_TB)
 
         bondsFinAM_row += 1 # у некоторых облигаций без ISIN не будут заполнены и поля из описания платежей;
             # такие облигации нужны в базе, чтобы повторно не обращаться к ним
@@ -586,7 +586,7 @@ def spreadExtract(textFetched):
 
     return 0
 
-def tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB):
+def tables_FinAM_TB_connector(bondStatus, folder, isin, table_FinAM, table_TB):
     # Блок, поскольку folder многократно используется внутри функции в формулах
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     # if folder: print('folder до:', folder) # для отладки
@@ -627,7 +627,8 @@ def tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB):
 
         if os.path.exists(path_1) != True: os.makedirs(path_1)
         # print('Сохраняю table_FinAM в', path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx') # для отладки
-        table_FinAM.to_excel(path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
+        if bondStatus == 'в обращении': table_FinAM.to_excel(path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
+        else: table_FinAM.to_excel(path_1 + slash + 'Не_в_обращении ' + isin + '.xlsx')
 
         # table_FinAM = pandas.read_excel(path_1 + slash + '???.xlsx', header=[0, 1], index_col=0)
             # заготовка
@@ -644,7 +645,8 @@ def tables_FinAM_TB_connector(folder, isin, table_FinAM, table_TB):
 
         path_2 = folder + 'Таблицы TB'
         if os.path.exists(path_2) != True: os.makedirs(path_2)
-        table_TB.to_excel(path_2 + slash + f'{date_call_TB + ' ' if date_call_TB else ''}{isin}.xlsx')
+        if bondStatus == 'в обращении': table_TB.to_excel(path_2 + slash + f'{date_call_TB + ' ' if date_call_TB else ''}{isin}.xlsx')
+        else: table_TB.to_excel(path_2 + slash + 'Не_в_обращении ' + isin + '.xlsx')
 
 # 2. Основная функция
 def finamParser(attemptsMax,
