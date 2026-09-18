@@ -95,6 +95,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
         # display('bondsFinAM:', bondsFinAM) # для отладки
 
         bondsFinAM = getFeaturesByURL_FinAM(attemptsMax, bondsFinAM, bondsFinAM_row, columnS_target, driver, pause)
+        bondStatus = bondsFinAM.loc[bondsFinAM_row, 'Статус']
 #         if bondsFinAM.loc[bondsFinAM_row, 'Статус'] != 'в обращении':
 #             print(
 # f'''Поскольку bondStatus: {bondsFinAM.loc[bondsFinAM_row, 'Статус']} (не в обращении), остальные характеристики облигации не требуются.
@@ -105,7 +106,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
 #             return bondsFinAM, bondsFinAM_row, driver, goS
 
         isin = bondsFinAM.loc[bondsFinAM_row, columnS_target[0]]
-        table_FinAM = getTableByURL_FinAM(source['MATDATE'][sourceRow], driver, isin, pause)
+        table_FinAM = getTableByURL_FinAM(bondStatus, source['MATDATE'][sourceRow], driver, isin, pause)
 
         try: table_TB = getTableByURL_TB(driver_TB, isin, pause)
         except Exception as excptn:
@@ -115,7 +116,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
             goS = False
             return bondsFinAM, bondsFinAM_row, driver, goS
 
-        tables_FinAM_TB_connector(bondsFinAM.loc[bondsFinAM_row, 'Статус'], folder, isin, table_FinAM, table_TB)
+        tables_FinAM_TB_connector(bondStatus, folder, isin, table_FinAM, table_TB)
 
         bondsFinAM_row += 1 # у некоторых облигаций без ISIN не будут заполнены и поля из описания платежей;
             # такие облигации нужны в базе, чтобы повторно не обращаться к ним
@@ -240,7 +241,7 @@ def getFeaturesByURL_FinAM(attemptsMax, bondsFinAM_in, bondsFinAM_row, columnS_t
 
     return bondsFinAM
 
-def getTableByURL_FinAM(date_maturity, driver, isin, pause):
+def getTableByURL_FinAM(bondStatus, date_maturity, driver, isin, pause):
     table_FinAM = pandas.DataFrame() # заготовка
 
     # Подождать загрузку таблицы (любой элемент с классом "light")
@@ -312,7 +313,9 @@ def getTableByURL_FinAM(date_maturity, driver, isin, pause):
 
     # </Обрезка лишних столбцов (которые могут быть правее (          'Погашение',        'Размер (ден)') и сток (которые состоят только из NaN>
 
-        if sum(table_FinAM[(   'Купоны',        'Ставка')].notna()) > 0: # если есть непустые ячейки в столбце 'Ставка'
+        if (bondStatus == 'в обращении') & (sum(table_FinAM[(   'Купоны',        'Ставка')].notna()) > 0):
+            # если статус 'в обращении' и есть непустые ячейки в столбце 'Ставка'
+
             table_FinAM[(   'Купоны',        'Ставка')] = table_FinAM[(   'Купоны',        'Ставка')].str.replace('%', '').astype(float)
 
     except TypeError:
