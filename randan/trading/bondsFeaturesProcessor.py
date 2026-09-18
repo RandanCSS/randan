@@ -357,6 +357,7 @@ def bondsFeaturesProcessor(attemptsMax,
 # 2.0 Настройки
     bondS = bonds_in.copy()
     bondS = bondS.drop_duplicates('ISIN', keep='last', ignore_index=True)
+    bondS = getMoExData.normalize_datetime_columns(bondS)
 
     # Блок, поскольку folder многократно используется внутри функции в формулах
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
@@ -428,8 +429,7 @@ def bondsFeaturesProcessor(attemptsMax,
 
     bondS = bondS.merge(issuerS_withActualRating[['Эмитент', 'Issuer D Rating']], how="left", on='Эмитент', suffixes=("_drop", ""))
     bondS = bondS[[column for column in bondS.columns if not column.endswith("_drop")]]
-
-    # display('bondS:', bondS) # для отладки
+    # display('bondS 1:', bondS) # для отладки
 
 # При отсутствии столбца Issuer D Rating добавить его, "расшерив" рейтинг из issuerS_withActualRating # и выгрузка с сайта moex.ru
     for issuer_withActualRating in issuerS_withActualRating['Эмитент']:
@@ -500,54 +500,54 @@ def bondsFeaturesProcessor(attemptsMax,
 
     # Сколько дней до купона?
     bondS = bondS[bondS['MATDATE'] != bondS['SETTLEDATE']] # исключить облигации, по которым погашение уже на след.день
-    # bondS = bondS[bondS['NEXTCOUPON'] != bondS['SETTLEDATE']] # исключить облигации, по которым купон уже на след.день
-    # display(bondS['MATDATE'].sort_values()) # для отладки
-    # display(bondS[['MATDATE', 'NEXTCOUPON', 'SETTLEDATE']].head(50)) # для отладки
-    # display(bondS[['MATDATE', 'NEXTCOUPON', 'SETTLEDATE']].tail(50)) # для отладки
 
+    bondS['До купона'] = bondS['NEXTCOUPON'] - bondS['SETTLEDATE']
     # bondS['До купона'] = bondS['NEXTCOUPON'].astype('datetime64[ns]') - bondS['SETTLEDATE'].astype('datetime64[ns]')
-    bondS['До купона'] = bondS['До купона'].astype(str)
-    bondS['До купона'] = bondS['До купона'].str.split(' ').str[0]
-    bondS['До купона'] = bondS['До купона'].astype(int)
+
+    # bondS['До купона'] = bondS['До купона'].astype(str)
+    # bondS['До купона'] = bondS['До купона'].str.split(' ').str[0]
+    # bondS['До купона'] = bondS['До купона'].astype(int)
     # display(bondS) # для отладки
 
-    # Сколько дней до возможности погасить?
-    bondS_offer = bondS[bondS['BUYBACKDATE'] != '0000-00-00'] # облигации С офертой
-    offerS = bondS_offer.index
-    # display(bondS) # для отладки
+    # <Сколько дней до возможности погасить?>
+    bondS_withBuyback = bondS[bondS['BUYBACKDATE'].notna()] # облигации С офертой
+    # display('bondS_withBuyback 1:', bondS_withBuyback) # для отладки
 
     # Сколько дней до оферты
     # Вычесть из даты оферты след.день
-    bondS_offer['До возможности погасить'] = (bondS_offer['BUYBACKDATE'].astype(str) + '--' + bondS_offer['SETTLEDATE'].astype(str)).apply(lambda text:\
+    bondS_withBuyback['До возможности погасить'] = (bondS_withBuyback['BUYBACKDATE'].astype(str) + '--' + bondS_withBuyback['SETTLEDATE'].astype(str)).apply(lambda text:\
         str(date(int(text.split('--')[0].split('-')[0]), int(text.split('--')[0].split('-')[1]), int(text.split('--')[0].split('-')[2]))\
             - date(int(text.split('--')[1].split('-')[0]), int(text.split('--')[1].split('-')[1]), int(text.split('--')[1].split('-')[2]))
             ).split(' ')[0]
         )
 
-    bondS_offer.loc[bondS_offer[bondS_offer['До возможности погасить'] == '0:00:00'].index, 'До возможности погасить'] = 0
-    bondS_offer['До возможности погасить'] = bondS_offer['До возможности погасить'].astype(int)
-    bondS_offer['Оферта'] = 'Есть'
-    # display(bondS_offer) # для отладки
+    # bondS_withBuyback.loc[bondS_withBuyback[bondS_withBuyback['До возможности погасить'] == '0:00:00'].index, 'До возможности погасить'] = 0
+    bondS_withBuyback['До возможности погасить'] = bondS_withBuyback['До возможности погасить'].astype(int)
+    bondS_withBuyback['Оферта'] = 'Есть'
+    # display('bondS_withBuyback 2:', bondS_withBuyback) # для отладки
 
     # Облигации БЕЗ оферты
-    bondS_other = bondS.drop(offerS)
-    # display(bondS_other) # для отладки
+    bondS_withoutBuyback = bondS[bondS['BUYBACKDATE'].isna()]
+    # display('bondS_withoutBuyback 1:', bondS_withBuyback) # для отладки
 
     # До погашения
     # Вычесть из даты погашения след.день
-    bondS_other['До возможности погасить'] = (bondS_other['MATDATE'].astype(str) + '--' + bondS_other['SETTLEDATE'].astype(str)).apply(lambda text:\
+    display("bondS_withoutBuyback['SETTLEDATE'].sort_values():", bondS_withoutBuyback['SETTLEDATE'].sort_values()) # для отладки
+    bondS_withoutBuyback['До возможности погасить'] = (bondS_withoutBuyback['MATDATE'].astype(str) + '--' + bondS_withoutBuyback['SETTLEDATE'].astype(str)).apply(lambda text:\
         str(date(int(text.split('--')[0].split('-')[0]), int(text.split('--')[0].split('-')[1]), int(text.split('--')[0].split('-')[2]))\
             - date(int(text.split('--')[1].split('-')[0]), int(text.split('--')[1].split('-')[1]), int(text.split('--')[1].split('-')[2]))
             ).split(' ')[0]
         )
 
-    bondS_offer.loc[bondS_offer[bondS_offer['До возможности погасить'] == '0:00:00'].index, 'До возможности погасить'] = 0
-    bondS_other['До возможности погасить'] = bondS_other['До возможности погасить'].astype(int)
-    bondS_other['Оферта'] = 'Нет'
-    # display(bondS_other) # для отладки
+    # bondS_withBuyback.loc[bondS_withBuyback[bondS_withBuyback['До возможности погасить'] == '0:00:00'].index, 'До возможности погасить'] = 0
+    bondS_withoutBuyback['До возможности погасить'] = bondS_withoutBuyback['До возможности погасить'].astype(int)
+    bondS_withoutBuyback['Оферта'] = 'Нет'
+    # display('bondS_withoutBuyback 2:', bondS_withBuyback) # для отладки
 
-    bondS = pandas.concat([bondS_offer, bondS_other])
-    # display(bondS) # для отладки
+    bondS = pandas.concat([bondS_withBuyback, bondS_withoutBuyback])
+    # display('bondS 2:', bondS) # для отладки
+
+    # <\Сколько дней до возможности погасить?>
 
 # 2.3 Расчёт эффекта валютных курсов для иновалютных облигаций
 
