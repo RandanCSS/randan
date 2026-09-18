@@ -314,7 +314,7 @@ def getTableByURL_FinAM(bondStatus, date_maturity, driver, isin, pause):
     # </Обрезка лишних столбцов (которые могут быть правее (          'Погашение',        'Размер (ден)') и сток (которые состоят только из NaN>
 
         if (bondStatus == 'в обращении') & (sum(table_FinAM[(   'Купоны',        'Ставка')].notna()) > 0):
-            # если статус 'в обращении' и есть непустые ячейки в столбце 'Ставка'
+            # если статус "в обращении" и есть непустые ячейки в столбце 'Ставка'
 
             table_FinAM[(   'Купоны',        'Ставка')] = table_FinAM[(   'Купоны',        'Ставка')].str.replace('%', '').astype(float)
 
@@ -345,8 +345,9 @@ def getTableByURL_FinAM(bondStatus, date_maturity, driver, isin, pause):
         else: return pandas.DataFrame() # заглушка
 
     # Преобразовать столбец "Дата" в формат datetime
-    table_FinAM[(             'Купоны',                'Дата')] =\
-        pandas.to_datetime(table_FinAM[(             'Купоны',                'Дата')], format='%d.%m.%Y')
+    if bondStatus == 'в обращении':
+        table_FinAM[(             'Купоны',                'Дата')] =\
+            pandas.to_datetime(table_FinAM[(             'Купоны',                'Дата')], format='%d.%m.%Y')
 
     return table_FinAM
 
@@ -613,7 +614,7 @@ def tables_FinAM_TB_connector(bondStatus, folder, isin, table_FinAM, table_TB):
     # date_call = max(date_call_FinAM, date_call_TB).strftime("%Y%m%d") # альтернатива
 
     if len(table_FinAM) > 0:
-        if sum(table_FinAM[(   'Купоны',        'Ставка')].notna()) > 0:
+        if (bondStatus == 'в обращении') & (sum(table_FinAM[(   'Купоны',        'Ставка')].notna()) > 0):
 
             date_call_FinAM = table_FinAM.loc[
                 table_FinAM[table_FinAM[(   'Купоны',        'Ставка')].notna()].index[-1],
@@ -630,15 +631,16 @@ def tables_FinAM_TB_connector(bondStatus, folder, isin, table_FinAM, table_TB):
 
         if os.path.exists(path_1) != True: os.makedirs(path_1)
         # print('Сохраняю table_FinAM в', path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx') # для отладки
-        if bondStatus == 'в обращении': table_FinAM.to_excel(path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
-        else: table_FinAM.to_excel(path_1 + slash + 'Не_в_обращении ' + isin + '.xlsx')
+        table_FinAM.to_excel(path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
+        # if bondStatus == 'в обращении': table_FinAM.to_excel(path_1 + slash + f'{date_call_FinAM + ' ' if date_call_FinAM else ''}{isin}.xlsx')
+        # else: table_FinAM.to_excel(path_1 + slash + 'Не_в_обращении ' + isin + '.xlsx')
 
         # table_FinAM = pandas.read_excel(path_1 + slash + '???.xlsx', header=[0, 1], index_col=0)
             # заготовка
 
     if len(table_TB) > 0:
 
-        if sum(table_TB['Ставка'].isna()) > 0: # если есть даты с неизвестной ставкой, берётся первая из таких дат
+        if (bondStatus == 'в обращении') & (sum(table_TB['Ставка'].isna()) > 0): # если статус "в обращении" и есть даты с неизвестной ставкой, берётся первая из таких дат
             date_call_TB = table_TB.loc[table_TB[table_TB['Ставка'].isna()].index[0], 'Дата'].date().strftime("%Y%m%d")
 
         else: # если нет дат с неизвестной ставкой, берётся последняя из дат
@@ -648,8 +650,9 @@ def tables_FinAM_TB_connector(bondStatus, folder, isin, table_FinAM, table_TB):
 
         path_2 = folder + 'Таблицы TB'
         if os.path.exists(path_2) != True: os.makedirs(path_2)
-        if bondStatus == 'в обращении': table_TB.to_excel(path_2 + slash + f'{date_call_TB + ' ' if date_call_TB else ''}{isin}.xlsx')
-        else: table_TB.to_excel(path_2 + slash + 'Не_в_обращении ' + isin + '.xlsx')
+        table_TB.to_excel(path_2 + slash + f'{date_call_TB + ' ' if date_call_TB else ''}{isin}.xlsx')
+        # if bondStatus == 'в обращении': table_TB.to_excel(path_2 + slash + f'{date_call_TB + ' ' if date_call_TB else ''}{isin}.xlsx')
+        # else: table_TB.to_excel(path_2 + slash + 'Не_в_обращении ' + isin + '.xlsx')
 
 # 2. Основная функция
 def finamParser(attemptsMax,
