@@ -149,7 +149,7 @@ def securities_marketdata_df_duplicates_processor(columnS_withDateTime, securiti
                 break
 
         if conditionNext:# либо усреднить значения по столбцам columnsWithDifferences ,..
-            print('columnsWithDifferences:', columnsWithDifferences) # для отладки
+            # print('columnsWithDifferences:', columnsWithDifferences) # для отладки
             display(securities_marketdata_df_duplicated_withinIsin[columnsWithDifferences]) # для отладки
 
             meanS = securities_marketdata_df_duplicated_withinIsin[columnsWithDifferences].mean()
@@ -219,7 +219,7 @@ f'''--- Комплект файлов:
                 boardS = pandas.read_excel(path_boards)
                 columnsDescriptionS = pandas.read_excel(path_columnsDescriptions)
                 securities_marketdata_df = pandas.read_excel(path_securities_marketdata)
-                return boardS, columnsDescriptionS, securities_marketdata_df
+                return boardS, columnsDescriptionS, securities_marketdata_df, securities_marketdata_df_duplicated
 
 # 2.1 Если нет комплекта
 # 2.1.0 Формирование файла с режимами торгов boardS
