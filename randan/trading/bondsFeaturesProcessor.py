@@ -357,7 +357,6 @@ def bondsFeaturesProcessor(attemptsMax,
 # 2.0 Настройки
     bondS = bonds_in.copy()
     bondS = bondS.drop_duplicates('ISIN', keep='last', ignore_index=True)
-    bondS = getMoExData.normalize_datetime_columns(bondS)
 
     # Блок, поскольку folder многократно используется внутри функции в формулах
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
@@ -374,6 +373,7 @@ def bondsFeaturesProcessor(attemptsMax,
 
     bondS = bondS.merge(securitieS, how='left', on='ISIN', suffixes=('_drop', '')) # дропнуть старые столбцы, оставить новые
     bondS = bondS[[column for column in bondS.columns if not column.endswith('_drop')]]
+    bondS, columnS_withDateTime = getMoExData.normalize_datetime_columns(bondS) # нормализация тех строк датафрейма, котрых не коснулась выдача .getMoExData()
     # print('bondS.columns:', bondS.columns) # для отладки
 
 # При отсутствии столбца Эмитент добавить его посредством функции issuerNameProcessor
@@ -532,12 +532,13 @@ def bondsFeaturesProcessor(attemptsMax,
 
     # До погашения
     # Вычесть из даты погашения след.день
-    display("bondS_withoutBuyback['SETTLEDATE'].sort_values():", bondS_withoutBuyback['SETTLEDATE'].sort_values()) # для отладки
-    bondS_withoutBuyback['До возможности погасить'] = (bondS_withoutBuyback['MATDATE'].astype(str) + '--' + bondS_withoutBuyback['SETTLEDATE'].astype(str)).apply(lambda text:\
-        str(date(int(text.split('--')[0].split('-')[0]), int(text.split('--')[0].split('-')[1]), int(text.split('--')[0].split('-')[2]))\
-            - date(int(text.split('--')[1].split('-')[0]), int(text.split('--')[1].split('-')[1]), int(text.split('--')[1].split('-')[2]))
-            ).split(' ')[0]
-        )
+    bondS_withoutBuyback['До возможности погасить'] = bondS_withoutBuyback['MATDATE'] - bondS_withoutBuyback['SETTLEDATE']
+    # display("bondS_withoutBuyback['SETTLEDATE'].sort_values():", bondS_withoutBuyback['SETTLEDATE'].sort_values()) # для отладки
+    # bondS_withoutBuyback['До возможности погасить'] = (bondS_withoutBuyback['MATDATE'].astype(str) + '--' + bondS_withoutBuyback['SETTLEDATE'].astype(str)).apply(lambda text:\
+    #     str(date(int(text.split('--')[0].split('-')[0]), int(text.split('--')[0].split('-')[1]), int(text.split('--')[0].split('-')[2]))\
+    #         - date(int(text.split('--')[1].split('-')[0]), int(text.split('--')[1].split('-')[1]), int(text.split('--')[1].split('-')[2]))
+    #         ).split(' ')[0]
+    #     )
 
     # bondS_withBuyback.loc[bondS_withBuyback[bondS_withBuyback['До возможности погасить'] == '0:00:00'].index, 'До возможности погасить'] = 0
     bondS_withoutBuyback['До возможности погасить'] = bondS_withoutBuyback['До возможности погасить'].astype(int)
