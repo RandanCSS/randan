@@ -88,6 +88,38 @@ def json2df(columnS_forComparisom, headers, pause, sectionOfJson, url):
     # display('df:', df) # для отладки
     return df
 
+# .. нормализации столбцов с содержимым дата-время
+def normalize_datetime_columns(bondS_in):
+    bondS = bondS_in.copy()
+    columnS_withDateTime = ['BUYBACKDATE',
+                            'CALLOPTIONDATE',
+                            'DATEYIELDFROMISSUER',
+                            'IMTIME',
+                            'ISSUECAPITALIZATION_UPDATETIME',
+                            'LASTDELDATE',
+                            'LASTTRADEDATE',
+                            'MATDATE',
+                            'NEXTCOUPON',
+                            'OFFERDATE',
+                            'PREVDATE',
+                            'PUTOPTIONDATE',
+                            'SETTLEDATE',
+                            'SYSTIME',
+                            'TIME',
+                            'TRADE_SESSION_DATE',
+                            'TRADEDATE',
+                            'TRADEMOMENT',
+                            'UPDATETIME',
+                            'YIELDDATE',
+                            'ZCYCMOMENT']
+
+    for column_withDateTime in columnS_withDateTime:
+        if column_withDateTime in securities_marketdata_df.columns:
+            bondS[column_withDateTime] = pandas.to_datetime(bondS[column_withDateTime], errors='coerce')
+
+    bondS['SETTLEDATE'] = bondS['SETTLEDATE'].fillna(pandas.Timestamp.today().normalize())
+    return bondS
+
 # .. работы с дубликатами в рамках одного и того же SECID
 def securities_marketdata_df_duplicated_withinIsin_processor(securities_marketdata_df_duplicated_withinIsin):
     conditionS = [
@@ -204,7 +236,7 @@ plusNotTraded : bool -- в случае True функция возвращает
     if os.path.exists(path_boards) & os.path.exists(path_columnsDescriptions) & os.path.exists(path_securities_marketdata):
 
         print(
-f'''--- Комплект файлов:
+f'''Комплект файлов:
 '{path_boards}' -- режимы торгов
 '{path_columnsDescriptions}' -- словарь полей БД МосБиржи
 '{path_securities_marketdata}' -- доступные инструменты (securities) и их финансовые данные (marketdata или marketdata_yields)
@@ -219,7 +251,7 @@ f'''--- Комплект файлов:
                 boardS = pandas.read_excel(path_boards)
                 columnsDescriptionS = pandas.read_excel(path_columnsDescriptions)
                 securities_marketdata_df = pandas.read_excel(path_securities_marketdata)
-                return boardS, columnsDescriptionS, securities_marketdata_df, securities_marketdata_df_duplicated
+                return boardS, columnsDescriptionS, securities_marketdata_df, pandas.DataFrame()
 
 # 2.1 Если нет комплекта
 # 2.1.0 Формирование файла с режимами торгов boardS
@@ -290,31 +322,7 @@ f'''--- Комплект файлов:
     securities_marketdata_df = securities_marketdata_df[securities_marketdata_df['BOARDID'].isin(boardS['boardid'])]
         # учёт желаемых режимов торгов (аргумент plusNotTraded )
 
-    columnS_withDateTime = ['BUYBACKDATE',
-                            'CALLOPTIONDATE',
-                            'DATEYIELDFROMISSUER',
-                            'IMTIME',
-                            'ISSUECAPITALIZATION_UPDATETIME',
-                            'LASTDELDATE',
-                            'LASTTRADEDATE',
-                            'MATDATE',
-                            'NEXTCOUPON',
-                            'OFFERDATE',
-                            'PREVDATE',
-                            'PUTOPTIONDATE',
-                            'SETTLEDATE',
-                            'SYSTIME',
-                            'TIME',
-                            'TRADE_SESSION_DATE',
-                            'TRADEDATE',
-                            'TRADEMOMENT',
-                            'UPDATETIME',
-                            'YIELDDATE',
-                            'ZCYCMOMENT']
-
-    for column_withDateTime in columnS_withDateTime:
-        if column_withDateTime in securities_marketdata_df.columns:
-            securities_marketdata_df[column_withDateTime] = pandas.to_datetime(securities_marketdata_df[column_withDateTime], errors='coerce')
+    securities_marketdata_df = normalize_datetime_columns(securities_marketdata_df)
 
     # securities_marketdata_df['SYSTIME'] = pandas.to_datetime(securities_marketdata_df['SYSTIME'])
 
@@ -334,7 +342,7 @@ f'''--- Комплект файлов:
     # display('securities_marketdata_df_duplicated:', securities_marketdata_df_duplicated) # для отладки
 
     if len(securities_marketdata_df_duplicated) > 0:
-        print('Работаю со срезом securities_marketdata_df , содержащим дублирующиеся по ISIN строки')
+        print('Работаю со срезом securities_marketdata_df , содержащим дублирующиеся по SECID строки')
         securities_marketdata_df = securities_marketdata_df_duplicates_processor(columnS_withDateTime,
                                                                                  securities_marketdata_df,
                                                                                  securities_marketdata_df_duplicated)
