@@ -111,7 +111,7 @@ f'''Поскольку bondStatus: {bondsFinAM.loc[bondsFinAM_row, 'Статус
         except Exception as excptn:
             print('Exception после getTableByURL_TB в bondsOfIdentifierProcessor') # для отладки
             print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
-            print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+            print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
             goS = False
             return bondsFinAM, bondsFinAM_row, driver, goS
 
@@ -139,7 +139,7 @@ f'''Поскольку bondStatus: {bondsFinAM.loc[bondsFinAM_row, 'Статус
             except Exception as excptn:
                 print('Exception 1 в bondsOfIdentifierProcessor') # для отладки
                 print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
-                print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+                print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
                 print('attempt', attempt) # для отладки
 
@@ -323,7 +323,17 @@ def getTableByURL_FinAM(date_maturity, driver, isin, pause):
             # для дисконтной бескупонной облигации датафрейм рисуется с нуля
 
         # if 'Дисконтные бескупонные облигации' in table_html: # для дисконтной бескупонной облигации датафрейм рисутеся с нуля
-            date_maturity = datetime.strptime(date_maturity, '%Y-%m-%d').strftime('%d.%m.%Y')
+            for frmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d'):
+                try:
+                    date_maturity = datetime.strptime(str(date_maturity), frmt).strftime('%d.%m.%Y')
+                    break
+
+                except ValueError: continue
+
+            else: raise ValueError('Не удалось распарсить дату:', date_maturity)
+
+            # date_maturity = datetime.strptime(date_maturity, '%Y-%m-%d').strftime('%d.%m.%Y')
+
             table_FinAM = pandas.DataFrame(columns=pandas.MultiIndex.from_tuples(columnS_target),
                                            data=[[1, date_maturity, 0, 0, 0, 100, None]])
 
@@ -484,7 +494,7 @@ def getTableByURL_TB(driver_TB, isin, pause):
         except Exception as excptn:
             print('Exception в getTableByURL_TB') # для отладки
             print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
-            print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+            print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
             if attempt == 3:
                 print('Три попытки getTableByURL_TB не увенчались успехом')
@@ -702,7 +712,7 @@ def finamParser(attemptsMax,
                 except Exception as excptn:
                     print('Exception 1 в finamParser') # для отладки
                     print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
-                    print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+                    print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
                     print('attempt:', attempt)
                     forSelenium.driverCloser(driver)
