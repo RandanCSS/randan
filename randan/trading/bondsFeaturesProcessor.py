@@ -644,14 +644,15 @@ def bondsFeaturesProcessor(attemptsMax,
     # <Сравнение текущего момента и рекомендованной повторной даты выгрузки информации с FinAM; при необходимости, новая выгрузка>
         if fileUptodateName: 
             date_call = fileUptodateName.split(isin)[0].strip()
-            bondStatus = fileUptodateName.split(isin)[-1].strip().lower()
+            # print('date_call:', date_call) # для отладки
+
+            bondStatus = fileUptodateName.split(isin)[-1].strip().replace('.xlsx', '').lower()
+            # print('bondStatus:', bondStatus) # для отладки
 
             if (date_call == 'No rate') | (bondStatus != 'в обращении'): date_call = momentCurrent # -- заглушка; нужна для работы условия momentCurrent > date_call
             else: date_call = datetime.strptime(date_call, '%Y%m%d')
             # if (date_call == 'No') | (date_call == 'Не_в_обращении'): date_call = momentCurrent # -- заглушка; нужна для работы условия momentCurrent > date_call
             # else: date_call = datetime.strptime(date_call, '%Y%m%d')
-
-            # print('date_call:', date_call) # для отладки
 
         else: date_call = momentCurrent - timedelta(days=2) # заглушка; нужна для работы условия momentCurrent > date_call
 
@@ -708,6 +709,7 @@ def bondsFeaturesProcessor(attemptsMax,
     # <\Сравнение текущего момента и рекомендованной повторной даты выгрузки информации с FinAM; при необходимости, новая выгрузка>
 
         if bondStatus != 'в обращении':
+            print("bondStatus НЕ 'в обращении'")
             bondS[bondS['ISIN'] == isin]['Статус'] = bondStatus
             continue # текущая итерация завершается, начинается новая
 
