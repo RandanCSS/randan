@@ -372,8 +372,11 @@ def bondsFeaturesProcessor(attemptsMax,
     boardS, columnsDescriptionS, securitieS, securities_marketdata_df_duplicated =\
         getMoExData.getMoExData(market='bonds', returnDfs=True)
 
-    bondS = bondS.merge(securitieS, how='left', on='ISIN', suffixes=('_drop', '')) # дропнуть старые столбцы, оставить новые
+    bondS = bondS.merge(securitieS, on='ISIN', suffixes=('_drop', '')) # , how='left' -- по умолчанию , how='inner', чтобы остались только записи, относящиеся к обращающимся на МосБирже облигациям
+        # дропнуть старые столбцы, оставить новые
+
     bondS = bondS[[column for column in bondS.columns if not column.endswith('_drop')]]
+    bondS = bondS[bondS['SECNAME'].notna()]
     bondS, columnS_withDateTime = getMoExData.normalize_datetime_columns(bondS) # нормализация тех строк датафрейма, котрых не коснулась выдача .getMoExData()
     # print('bondS.columns:', bondS.columns) # для отладки
 
@@ -647,7 +650,7 @@ def bondsFeaturesProcessor(attemptsMax,
             # print('date_call:', date_call) # для отладки
 
             bondStatus = fileUptodateName.split(isin)[-1].strip().replace('.xlsx', '').lower()
-            # print('bondStatus:', bondStatus) # для отладки
+            print('bondStatus:', bondStatus) # для отладки
 
             if (date_call == 'No rate') | (bondStatus != 'в обращении'): date_call = momentCurrent # -- заглушка; нужна для работы условия momentCurrent > date_call
             else: date_call = datetime.strptime(date_call, '%Y%m%d')
@@ -706,6 +709,10 @@ def bondsFeaturesProcessor(attemptsMax,
 
             fileUptodateName = files2df.getFileUptodateName(isin, None, path_1)
             # print('fileUptodateName:', fileUptodateName) # для отладки
+
+            bondStatus = fileUptodateName.split(isin)[-1].strip().replace('.xlsx', '').lower()
+            print('bondStatus после новой выгрузки с FinAM:', bondStatus) # для отладки
+
     # <\Сравнение текущего момента и рекомендованной повторной даты выгрузки информации с FinAM; при необходимости, новая выгрузка>
 
         if bondStatus != 'в обращении':
