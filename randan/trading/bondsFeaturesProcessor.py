@@ -744,7 +744,7 @@ def bondsFeaturesProcessor(attemptsMax,
         date_final = date_final.date()
         # date_final = datetime.strptime(date_final, '%Y-%m-%d').date()
 
-        print('date_final:', date_final) # для отладки
+        print('', date_final) # для отладки
 
         df_current = table_FinAM[table_FinAM[(             'Купоны',                'Дата')].dt.date >= momentCurrent.date()] # фильтр дата >= сегодняшней
         df_current = df_current[df_current[(             'Купоны',                'Дата')].dt.date <= date_final] # фильтр дата <= date_final
