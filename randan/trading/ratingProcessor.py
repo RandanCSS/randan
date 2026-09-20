@@ -110,7 +110,7 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
 
     except Exception as excptn:
         print('Exception 1:', excptn)
-        print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+        print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
         pageSource = driver.page_source
         print(pageSource) # для отладки
@@ -124,7 +124,7 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
 
         except Exception as excptn:
             print('Exception 2:', excptn)
-            print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+            print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
             bondS.loc[bondS['Эмитент'] == identifier, 'Rating Notation'] = 'Проблема загрузки страницы'
 
@@ -149,7 +149,7 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
             print('  ✅ Предупреждение про Cookie закрыто') # , end='\r'
         except Exception as excptn:
             print('Exception 3:', excptn)
-            print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+            print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
             print('  ✅ Предупреждение про Cookie не найдено') # , end='\r'
 
         try:
@@ -160,7 +160,7 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
             print('  ✅ Дисклеймер закрыт') # , end='\r'
         except Exception as excptn:
             print('Exception 4:', excptn)
-            print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+            print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
             print('  ✅ Дисклеймер не найден') # , end='\r'
 
     # textTarget = 'Кредитный рейтинг эмитента' # для отладки
@@ -179,7 +179,7 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
             headerElementS = tableWithRating.find_elements(By.XPATH, ".//thead//th")
         except Exception as excptn: # если нет thead, ищем th в первой строке
             print('Exception 5:', excptn)
-            print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+            print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
             headerElementS = tableWithRating.find_elements(By.XPATH, ".//tr[1]/th")
 
         headerS = []
@@ -330,7 +330,7 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, version_main, subordinated=
 
                     except Exception as excptn:
                         print('Exception 1:', excptn)
-                        print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+                        print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
                         # Заглушки вместо выдачи функции getRatingFromMoEx при её неуспехе
                         bondS_withoutRating_processed = pandas.DataFrame(columns=['ISIN'])
@@ -392,7 +392,7 @@ def timeoutExceptionProcesser(driver, isin, pause, version_main):
 
         except Exception as excptn:
             print('Exception 1:', excptn)
-            print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+            print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
             forSelenium.driverCloser(driver)
 
     return driver
