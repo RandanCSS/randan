@@ -49,6 +49,8 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
 # 1. Вспомогательные функции для..
 # .. расчёта доходностей облигации (бескупонной, без реинвестирования и с реинвестированием -- по формулам простого и сложного процентов)
 def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, momentCurrent):
+    visualizeForDebug = True    
+
     bond_df = bond_df_in.copy()
     # display('bond_df 1 в bondYieldCalculator :', bond_df) # для отладки
 
@@ -156,80 +158,78 @@ def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, moment
             df_current.loc[df_current_row - 1, 'Остаточный номинал на конец периода'] -\
             df_current.loc[df_current_row, 'Погашение в купонный период']
 
-    # С реинвестированием
+        if len(df_current) < 3: print('От текущей даты до оферты | погашения нет выплат (амортизации, купона), поэтому нет возможности успеть реинвестировать')
+        else: # С реинвестированием
+            # Купон начисляется на тело, находящееся в строчке выше;
+                # амортизация вычитается из тела, находящегося в строчке выше,
+                # на основе тела, находящегося в строчке выше и пересчитываемого на каждой итерации нормированного процента. Отличие от не РИ
 
-        # Купон начисляется на тело, находящееся в строчке выше;
-            # амортизация вычитается из тела, находящегося в строчке выше,
-            # на основе тела, находящегося в строчке выше и пересчитываемого на каждой итерации нормированного процента. Отличие от не РИ
+            df_current.loc[df_current_row, '% от Номинала НРМРВНН РИ'] =\
+                (100 * df_current.loc[df_current_row:, '% от Номинала НРМРВНН'] /\
+                df_current.loc[df_current_row: ,'% от Номинала НРМРВНН'].sum())\
+                    [df_current_row] # пересчёт % нормированного для всех остающихся строк df_current и использование значения из верхней
 
-        df_current.loc[df_current_row, '% от Номинала НРМРВНН РИ'] =\
-            (100 * df_current.loc[df_current_row:, '% от Номинала НРМРВНН'] /\
-            df_current.loc[df_current_row: ,'% от Номинала НРМРВНН'].sum())\
-                [df_current_row] # пересчёт % нормированного для всех остающихся строк df_current и использование значения из верхней
+            df_current.loc[df_current_row, 'Погашение в купонный период РИ'] =\
+                df_current.loc[df_current_row - 1, 'Остаточный номинал на конец периода РИ'] *\
+                (df_current.loc[df_current_row, '% от Номинала НРМРВНН РИ'] / 100)
 
-        df_current.loc[df_current_row, 'Погашение в купонный период РИ'] =\
-            df_current.loc[df_current_row - 1, 'Остаточный номинал на конец периода РИ'] *\
-            (df_current.loc[df_current_row, '% от Номинала НРМРВНН РИ'] / 100)
-
-        df_current.loc[df_current_row, 'Купонный доход за купонный период РИ'] =\
-            df_current.loc[df_current_row - 1, 'Остаточный номинал на конец периода РИ'] *\
-            df_current.loc[df_current_row, 'Ставка'] / 36500 *\
-            df_current.loc[df_current_row, 'Дней в купонном периоде']
-
-        if df_current_row == 0: df_current.loc[df_current_row, 'Купонный доход за купонный период РИ'] += bond_df.loc[bond_df_index, 'ACCRUEDINT']
-            # учесть НКД
-
-        if df_current_row == 0: # на этой итерации Сумму РИ формируется впервые, поэтому нет купона на Сумму РИ
-            df_current.loc[df_current_row, 'Дней в купонном периоде для РИ'] = 0
-            df_current.loc[df_current_row, 'Купонный доход на Сумму для РИ за купонный период'] = 0
-
-        if df_current_row > 0:
-
-            df_current.loc[df_current_row, 'Дней в купонном периоде для РИ'] =\
-                df_current.loc[df_current_row, 'Дней в купонном периоде'] - 3
-                    # 3 дня теряются на получение инветсором выплаты и реинвесирование (в ту же облигацию)
-
-            df_current.loc[df_current_row, 'Купонный доход на Сумму для РИ за купонный период'] =\
-                df_current.loc[df_current_row - 1, 'Сумма для РИ'] *\
+            df_current.loc[df_current_row, 'Купонный доход за купонный период РИ'] =\
+                df_current.loc[df_current_row - 1, 'Остаточный номинал на конец периода РИ'] *\
                 df_current.loc[df_current_row, 'Ставка'] / 36500 *\
-                df_current.loc[df_current_row, 'Дней в купонном периоде для РИ']
-                    # 3 дня теряются на получение инветсором выплаты и реинвесирование (в ту же облигацию)
+                df_current.loc[df_current_row, 'Дней в купонном периоде']
 
-        df_current.loc[df_current_row, 'Полный доход за купонный период РИ'] =\
-            df_current.loc[df_current_row, 'Купонный доход за купонный период РИ'] +\
-            df_current.loc[df_current_row, 'Погашение в купонный период РИ'] +\
-            df_current.loc[df_current_row, 'Купонный доход на Сумму для РИ за купонный период']
+            if df_current_row == 0: df_current.loc[df_current_row, 'Купонный доход за купонный период РИ'] += bond_df.loc[bond_df_index, 'ACCRUEDINT']
+                # учесть НКД
 
-        df_current.loc[df_current_row, 'Сумма для РИ'] =\
-            df_current.loc[df_current_row, 'Полный доход за купонный период РИ'] * (100 / price_coefficient) # экстраполяция
-                # ситуации отклонения рыночной цены от остающегося в обращении номинала,
-                    # характерной для первой покупки, на все покупки реинвестирования
+            if df_current_row == 0: # на этой итерации Сумму РИ формируется впервые, поэтому нет купона на Сумму РИ
+                df_current.loc[df_current_row, 'Дней в купонном периоде для РИ'] = 0
+                df_current.loc[df_current_row, 'Купонный доход на Сумму для РИ за купонный период'] = 0
 
-        # На основе тела, находящегося в строчке выше, а также амортизации в текущей строчке формируется тела, находящееся в текущей строчке
+            if df_current_row > 0:
 
-        if df_current_row < df_current.index[-1]:
-            df_current.loc[df_current_row, 'Остаточный номинал на конец периода РИ'] =\
-                df_current.loc[df_current_row - 1, 'Остаточный номинал на конец периода РИ'] -\
+                df_current.loc[df_current_row, 'Дней в купонном периоде для РИ'] =\
+                    df_current.loc[df_current_row, 'Дней в купонном периоде'] - 3
+                        # 3 дня теряются на получение инветсором выплаты и реинвесирование (в ту же облигацию)
+
+                df_current.loc[df_current_row, 'Купонный доход на Сумму для РИ за купонный период'] =\
+                    df_current.loc[df_current_row - 1, 'Сумма для РИ'] *\
+                    df_current.loc[df_current_row, 'Ставка'] / 36500 *\
+                    df_current.loc[df_current_row, 'Дней в купонном периоде для РИ']
+                        # 3 дня теряются на получение инветсором выплаты и реинвесирование (в ту же облигацию)
+
+            df_current.loc[df_current_row, 'Полный доход за купонный период РИ'] =\
+                df_current.loc[df_current_row, 'Купонный доход за купонный период РИ'] +\
                 df_current.loc[df_current_row, 'Погашение в купонный период РИ'] +\
-                df_current.loc[df_current_row, 'Сумма для РИ']
+                df_current.loc[df_current_row, 'Купонный доход на Сумму для РИ за купонный период']
 
-        else: # на последней итерации нет смысла в РИ
-            df_current.loc[df_current_row, 'Остаточный номинал на конец периода РИ'] =\
-                df_current.loc[df_current_row - 1, 'Остаточный номинал на конец периода РИ'] -\
-                df_current.loc[df_current_row, 'Погашение в купонный период РИ']
+            df_current.loc[df_current_row, 'Сумма для РИ'] =\
+                df_current.loc[df_current_row, 'Полный доход за купонный период РИ'] * (100 / price_coefficient) # экстраполяция
+                    # ситуации отклонения рыночной цены от остающегося в обращении номинала,
+                        # характерной для первой покупки, на все покупки реинвестирования
 
-    display('head:', df_current.head()) # для отладки
-    display('tail:', df_current.tail()) # для отладки
+            # На основе тела, находящегося в строчке выше, а также амортизации в текущей строчке формируется тела, находящееся в текущей строчке
+
+            if df_current_row < df_current.index[-1]:
+                df_current.loc[df_current_row, 'Остаточный номинал на конец периода РИ'] =\
+                    df_current.loc[df_current_row - 1, 'Остаточный номинал на конец периода РИ'] -\
+                    df_current.loc[df_current_row, 'Погашение в купонный период РИ'] +\
+                    df_current.loc[df_current_row, 'Сумма для РИ']
+
+            else: # на последней итерации нет смысла в РИ
+                df_current.loc[df_current_row, 'Остаточный номинал на конец периода РИ'] =\
+                    df_current.loc[df_current_row - 1, 'Остаточный номинал на конец периода РИ'] -\
+                    df_current.loc[df_current_row, 'Погашение в купонный период РИ']
+
+    if visualizeForDebug: display('head:', df_current.head()) # для отладки
+    if visualizeForDebug: display('tail:', df_current.tail()) # для отладки
 
     bond_df.loc[bond_df_index, 'Купонный доход к погашению'] = df_current['Купонный доход за купонный период'].sum()
 
     print("bond_df.loc[bond_df_index, 'Купонный доход к погашению']:",
             bond_df.loc[bond_df_index, 'Купонный доход к погашению']) # для отладки
 
-
     period_total = df_current['Дней в купонном периоде'].sum()
     print('period_total:', period_total) # для отладки
-
 
     income_redemption = df_current['Погашение в купонный период'].sum()
     print('income_redemption:', income_redemption) # для отладки
@@ -250,20 +250,21 @@ def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, moment
           bond_df.loc[bond_df_index, 'Доходность без реинвестирования, годовых']) # для отладки
 
 
-    income_Reinvestment = df_current.loc[df_current.index[-1], 'Полный доход за купонный период РИ']
-    print('income_Reinvestment:', income_Reinvestment) # для отладки
+    if len(df_current) > 2:
+        income_Reinvestment = df_current.loc[df_current.index[-1], 'Полный доход за купонный период РИ']
+        print('income_Reinvestment:', income_Reinvestment) # для отладки
 
-    bond_df.loc[bond_df_index, 'Доходность с реинвестированием, годовых, простой процент'] =\
-        365 * ((income_Reinvestment - price_dirty) / price_dirty) / period_total
+        bond_df.loc[bond_df_index, 'Доходность с реинвестированием, годовых, простой процент'] =\
+            365 * ((income_Reinvestment - price_dirty) / price_dirty) / period_total
 
-    bond_df.loc[bond_df_index, 'Доходность с реинвестированием, годовых, сложный процент'] =\
-        (income_Reinvestment / price_dirty) ** (365 / period_total) - 1
+        bond_df.loc[bond_df_index, 'Доходность с реинвестированием, годовых, сложный процент'] =\
+            (income_Reinvestment / price_dirty) ** (365 / period_total) - 1
 
-    print("bond_df.loc[bond_df_index, 'Доходность с реинвестированием, годовых, простой процент']:",
-          bond_df.loc[bond_df_index, 'Доходность с реинвестированием, годовых, простой процент']) # для отладки
+        print("bond_df.loc[bond_df_index, 'Доходность с реинвестированием, годовых, простой процент']:",
+              bond_df.loc[bond_df_index, 'Доходность с реинвестированием, годовых, простой процент']) # для отладки
 
-    print("bond_df.loc[bond_df_index, 'Доходность с реинвестированием, годовых, сложный процент']:",
-          bond_df.loc[bond_df_index, 'Доходность с реинвестированием, годовых, сложный процент']) # для отладки
+        print("bond_df.loc[bond_df_index, 'Доходность с реинвестированием, годовых, сложный процент']:",
+              bond_df.loc[bond_df_index, 'Доходность с реинвестированием, годовых, сложный процент']) # для отладки
 
     df_current = df_current[:].round(2)
     return bond_df, df_current
@@ -528,14 +529,16 @@ def bondsFeaturesProcessor(attemptsMax,
 
     # Сколько дней до оферты
     # Вычесть из даты оферты след.день
-    bondS_withBuyback['До возможности погасить'] = (bondS_withBuyback['BUYBACKDATE'].astype(str) + '--' + bondS_withBuyback['SETTLEDATE'].astype(str)).apply(lambda text:\
-        str(date(int(text.split('--')[0].split('-')[0]), int(text.split('--')[0].split('-')[1]), int(text.split('--')[0].split('-')[2]))\
-            - date(int(text.split('--')[1].split('-')[0]), int(text.split('--')[1].split('-')[1]), int(text.split('--')[1].split('-')[2]))
-            ).split(' ')[0]
-        )
+    bondS_withBuyback['До возможности погасить'] = (bondS_withBuyback['BUYBACKDATE'] - bondS_withBuyback['SETTLEDATE']).dt.days
+
+    # bondS_withBuyback['До возможности погасить'] = (bondS_withBuyback['BUYBACKDATE'].astype(str) + '--' + bondS_withBuyback['SETTLEDATE'].astype(str)).apply(lambda text:\
+    #     str(date(int(text.split('--')[0].split('-')[0]), int(text.split('--')[0].split('-')[1]), int(text.split('--')[0].split('-')[2]))\
+    #         - date(int(text.split('--')[1].split('-')[0]), int(text.split('--')[1].split('-')[1]), int(text.split('--')[1].split('-')[2]))
+    #         ).split(' ')[0]
+    #     )
 
     # bondS_withBuyback.loc[bondS_withBuyback[bondS_withBuyback['До возможности погасить'] == '0:00:00'].index, 'До возможности погасить'] = 0
-    bondS_withBuyback['До возможности погасить'] = bondS_withBuyback['До возможности погасить'].astype(int)
+    # bondS_withBuyback['До возможности погасить'] = bondS_withBuyback['До возможности погасить'].astype(int)
     bondS_withBuyback['Оферта'] = 'Есть'
     # display('bondS_withBuyback 2:', bondS_withBuyback) # для отладки
 
@@ -545,7 +548,7 @@ def bondsFeaturesProcessor(attemptsMax,
 
     # До погашения
     # Вычесть из даты погашения след.день
-    bondS_withoutBuyback['До возможности погасить'] = bondS_withoutBuyback['MATDATE'] - bondS_withoutBuyback['SETTLEDATE']
+    bondS_withoutBuyback['До возможности погасить'] = (bondS_withoutBuyback['MATDATE'] - bondS_withoutBuyback['SETTLEDATE']).dt.days
     # display("bondS_withoutBuyback['SETTLEDATE'].sort_values():", bondS_withoutBuyback['SETTLEDATE'].sort_values()) # для отладки
     # bondS_withoutBuyback['До возможности погасить'] = (bondS_withoutBuyback['MATDATE'].astype(str) + '--' + bondS_withoutBuyback['SETTLEDATE'].astype(str)).apply(lambda text:\
     #     str(date(int(text.split('--')[0].split('-')[0]), int(text.split('--')[0].split('-')[1]), int(text.split('--')[0].split('-')[2]))\
@@ -554,7 +557,7 @@ def bondsFeaturesProcessor(attemptsMax,
     #     )
 
     # bondS_withBuyback.loc[bondS_withBuyback[bondS_withBuyback['До возможности погасить'] == '0:00:00'].index, 'До возможности погасить'] = 0
-    bondS_withoutBuyback['До возможности погасить'] = bondS_withoutBuyback['До возможности погасить'].astype(int)
+    # bondS_withoutBuyback['До возможности погасить'] = bondS_withoutBuyback['До возможности погасить'].astype(int)
     bondS_withoutBuyback['Оферта'] = 'Нет'
     # display('bondS_withoutBuyback 2:', bondS_withBuyback) # для отладки
 
@@ -744,14 +747,16 @@ def bondsFeaturesProcessor(attemptsMax,
                 table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace(',', '.')
                 table_FinAM[table_FinAM_column] = pandas.to_numeric(table_FinAM[table_FinAM_column], errors='ignore')
 
+        table_FinAM[(             'Купоны',                'Дата')] = table_FinAM[(             'Купоны',                'Дата')].dt.date
+
         # display(bond_df.loc[bond_df_index, ['ISIN', 'BUYBACKDATE', 'MATDATE']]) # для отладки
 
         if pandas.notna(bond_df.loc[bond_df_index, 'BUYBACKDATE']): # есть оферта         
-            # print("bond_df.loc[bond_df_index, 'BUYBACKDATE']") # для отладки   
+            print("bond_df.loc[bond_df_index, 'BUYBACKDATE']") # для отладки   
             date_final = bond_df.loc[bond_df_index, 'BUYBACKDATE']
 
         elif pandas.notna(bond_df.loc[bond_df_index, 'MATDATE']): # есть конечная дата обращения
-            # print("bond_df.loc[bond_df_index, 'MATDATE']") # для отладки   
+            print("bond_df.loc[bond_df_index, 'MATDATE']") # для отладки   
             date_final = bond_df.loc[bond_df_index, 'MATDATE']
 
         else: # нет оферты и нет конечной даты обращения
@@ -763,15 +768,21 @@ def bondsFeaturesProcessor(attemptsMax,
 
         print('date_final:', date_final) # для отладки
 
-        df_current = table_FinAM[table_FinAM[(             'Купоны',                'Дата')].dt.date >= momentCurrent.date()] # фильтр дата >= сегодняшней
-        df_current = df_current[df_current[(             'Купоны',                'Дата')].dt.date <= date_final] # фильтр дата <= date_final
-        df_current = df_current.sort_values((             'Купоны',                'Дата'))
-        df_current = df_current.drop([(   'Купоны', '% от Номинала'), (   'Купоны',  'Размер (ден)')], axis=1) # столбцы лишние
-        df_current.columns = df_current.columns.droplevel(0) # MultiIndex -> обычные заголовки
-        df_current = df_current.reset_index(drop=True)
-        # display('df_current 1:', df_current) # для отладки
+        if date_final > momentCurrent.date():
+            df_current = table_FinAM[table_FinAM[(             'Купоны',                'Дата')] <= date_final] # фильтр дата <= date_final
+            # display('df_current 1:', df_current) # для отладки
 
-        if len(df_current) > 0:
+            if len(df_current[df_current[(             'Купоны',                'Дата')] >= momentCurrent.date()]) == 0:
+                if len(df_current[df_current[(             'Купоны',                'Дата')] >= momentCurrent.date()]) < len(df_current):
+                    print(f'Между текущей датой и date_final ({date_final}) нет строк в df_current , потому беру строку, предшествующую date_final, и меняю в ней дату на date_final')
+                    df_current.loc[df_current.index[-1], (             'Купоны',                'Дата')] = date_final
+
+            df_current = df_current[df_current[(             'Купоны',                'Дата')] >= momentCurrent.date()] # фильтр дата >= сегодняшней        
+            df_current = df_current.sort_values((             'Купоны',                'Дата'))
+            df_current = df_current.drop([(   'Купоны', '% от Номинала'), (   'Купоны',  'Размер (ден)')], axis=1) # столбцы лишние
+            df_current.columns = df_current.columns.droplevel(0) # MultiIndex -> обычные заголовки
+            df_current = df_current.reset_index(drop=True)
+
             bond_df, df_current = bondYieldCalculator(bond_df, bond_df_index, df_current, driver_CB, momentCurrent)
             if sum(df_current['Ставка'].notna()) > 0:
                 date_call = df_current.loc[df_current[df_current['Ставка'].notna()].index[-1], 'Дата'].date().strftime('%Y%m%d')
@@ -797,36 +808,7 @@ def bondsFeaturesProcessor(attemptsMax,
 
     bondS.to_excel(folder + 'Замеры рейтингов' + slash + momentCurrent.strftime('%Y%m%d_%H%M') + '_bondS.xlsx')
 
-
-
-    # # Если купить примерно на 1000 единиц валюты, то придётся заплатить
-    # bondS['Полная цена покупки'] = 1000 + 1000 / bondS['FACEVALUE'] * bondS['ACCRUEDINT']
-    # bondS['Полная цена покупки'] = bondS['Полная цена покупки'].astype(float).round(2)
-
-    # # На 1000 единиц валюты к погашению будет начислен купоный доход
-    # if 'Купон RB' in bondS.columns:
-    #     bondS.loc[(bondS['COUPONPERCENT'].isna()) | (bondS['COUPONPERCENT'] == ''), 'Сводный купон'] =\
-    #         bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'Купон RB']
-
-    # bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'Сводный купон'] =\
-    #     bondS.loc[(bondS['COUPONPERCENT'].notna()) & (bondS['COUPONPERCENT'] != ''), 'COUPONPERCENT']
-
-    # bondS['Купоный доход к погашению'] = 1000 * bondS['Сводный купон'] / 36500 * bondS['До возможности погасить']
-    # bondS['Купоный доход к погашению'] = bondS['Купоный доход к погашению'].astype(float).round(2)
-
-    # # Плюс 1000 единиц валюты изменятся к погашению в связи с приведением цены к номиналу
-    # bondS['Бескупонная доходность к погашению'] = 1000 * (100 - bondS['PRICE']) / 100
-    # bondS['Бескупонная доходность к погашению'] = bondS['Бескупонная доходность к погашению'].astype(float).round(2)
-
-    # # Годовая доходность к погашению = суммарный доход к полной цене покупки
-    # bondS['Доходность годовых к погашению'] =\
-    #     365 * (
-    #     100 * (1000 + bondS['Купоный доход к погашению'] + bondS['Бескупонная доходность к погашению'])\
-    #     / bondS['Полная цена покупки'] - 100\
-    #     ) / bondS['До возможности погасить']
-    # bondS['Доходность годовых к погашению'] = bondS['Доходность годовых к погашению'].astype(float).round(4)
-
-    # !!! Стоимость!!!
+# !!! Стоимость!!!
     if 'Лотов' in bondS.columns: bondS['Стоимость'] = bondS['Лотов'] * bondS['PRICE'] * 10 * bondS['FACEVALUE'] / 1000
         # если поданы на вход облигации из портфеля (уже купленные)
     # display(bondS) # для отладки
