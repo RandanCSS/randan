@@ -109,7 +109,8 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
         print('  ✅ Облигация найдена по ISIN') # , end='\r'
 
     except Exception as excptn:
-        print('Exception 1:', excptn)
+        print('Exception 1 в getRatingFromMoEx')
+        print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
         print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
         pageSource = driver.page_source
@@ -123,7 +124,8 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
         try: driver.get(f'https://www.moex.com/ru/issue.aspx?code={secid}')
 
         except Exception as excptn:
-            print('Exception 2:', excptn)
+            print('Exception 2 в getRatingFromMoEx')
+            print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
             print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
             bondS.loc[bondS['Эмитент'] == identifier, 'Rating Notation'] = 'Проблема загрузки страницы'
@@ -148,7 +150,8 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
             cookieAnchor.find_element(By.XPATH, ".//p[text()='Согласен']").click()
             print('  ✅ Предупреждение про Cookie закрыто') # , end='\r'
         except Exception as excptn:
-            print('Exception 3:', excptn)
+            print('Exception 3 в getRatingFromMoEx')
+            print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
             print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
             print('  ✅ Предупреждение про Cookie не найдено') # , end='\r'
 
@@ -159,7 +162,8 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
             disclaimerAnchor.find_element(By.XPATH, ".//button[text()='Согласен']").click()
             print('  ✅ Дисклеймер закрыт') # , end='\r'
         except Exception as excptn:
-            print('Exception 4:', excptn)
+            print('Exception 4 в getRatingFromMoEx')
+            print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
             print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
             print('  ✅ Дисклеймер не найден') # , end='\r'
 
@@ -178,7 +182,8 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
         try:
             headerElementS = tableWithRating.find_elements(By.XPATH, ".//thead//th")
         except Exception as excptn: # если нет thead, ищем th в первой строке
-            print('Exception 5:', excptn)
+            print('Exception 5 в getRatingFromMoEx')
+            print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
             print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
             headerElementS = tableWithRating.find_elements(By.XPATH, ".//tr[1]/th")
 
@@ -329,7 +334,8 @@ def ratingMoExForBondsWithoutRating(bondS_in, pause, version_main, subordinated=
                         identifierS_double.remove(identifier)
 
                     except Exception as excptn:
-                        print('Exception 1:', excptn)
+                        print('Exception 1 в ratingMoExForBondsWithoutRating')
+                        print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
                         print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
                         # Заглушки вместо выдачи функции getRatingFromMoEx при её неуспехе
@@ -391,7 +397,8 @@ def timeoutExceptionProcesser(driver, isin, pause, version_main):
                 return driver
 
         except Exception as excptn:
-            print('Exception 1:', excptn)
+            print('Exception 1 timeoutExceptionProcesser')
+            print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
             print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
             forSelenium.driverCloser(driver)
 
