@@ -284,7 +284,7 @@ def currencyEffectProcessor(bondS_in, currencieS):
 
     exchangeS_raw = exchangeS_raw[['Unnamed: 0', 'LASTTRADEDATE', 'Цена закр.', 'Цена послед.']]
     exchangeS_raw['LASTTRADEDATE'] = exchangeS_raw['LASTTRADEDATE'].dt.date
-    display(exchangeS_raw) # для отладки
+    # display('exchangeS_raw:', exchangeS_raw) # для отладки
 
     # Список валют иновалютных облигаций и запись их курсов в exchangeS
     # currencieS = ['UCHF', 'CNYRUBF', 'EURRUBF', 'SUR', 'USDRUBF']
