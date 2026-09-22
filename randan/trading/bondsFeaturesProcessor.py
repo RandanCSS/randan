@@ -309,7 +309,7 @@ def currencyEffectProcessor(bondS_in, currencieS):
     for column in ['Цена послед.', 'Цена закр.']:
         exchangeS[column] = pandas.to_numeric(exchangeS[column], errors='coerce')
 
-    display("exchangeS[['Цена послед.', 'Цена закр.', 'Валюта']]:", exchangeS[['Цена послед.', 'Цена закр.', 'Валюта']]) # для отладки
+    display('exchangeS:', exchangeS) # для отладки
 
     exchangeS.loc[exchangeS['Цена послед.'] == 0, 'Цена послед.'] = exchangeS.loc[exchangeS['Цена послед.'] == 0, 'Цена закр.']
         # на случай нулей в столбце 'Цена послед.'
