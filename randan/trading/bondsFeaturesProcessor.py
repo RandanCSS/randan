@@ -565,7 +565,7 @@ def bondsFeaturesProcessor(attemptsMax,
     currencieS = list(bondS[bondS['FACEUNIT'].notna()]['FACEUNIT'].unique()) # валюта номинала
     print('currencieS:', currencieS) # для отладки
 
-    currencieS.remove('SUR')
+    if 'SUR' in currencieS: currencieS.remove('SUR')
     if len(currencieS) > 0: bondS = currencyEffectProcessor(bondS, currencieS)
 
     # for column in ['ACCRUEDINT', 'COUPONPERCENT', 'FACEVALUE', 'PRICE']:
@@ -662,6 +662,12 @@ def bondsFeaturesProcessor(attemptsMax,
         if momentCurrent > date_call: # если текущий момент оставил позади рекомендованную повторную дату выгрузки информации с FinAM
             print('date_call:', date_call) # для отладки
             print('Требуется новая выгрузка с FinAM')
+            if fileUptodateName:
+                print(f"Перемещаю файл '{fileUptodateName}' в директорию 'Таблицы FinAM На удаление'")
+                path_2 = path_1 + slash + 'Таблицы FinAM На удаление'
+                if os.path.exists(path_2) != True: os.makedirs(path_2)
+                if os.path.exists(path_2 + slash + fileUptodateName): os.remove(path_2 + slash + fileUptodateName) # на случай задвоения файлов (причина не ясна)
+                os.rename(path_1 + slash + fileUptodateName, path_2 + slash + fileUptodateName)
 
             bondsFinAM = pandas.DataFrame(columns=[
                 'Эмитент',
@@ -729,22 +735,24 @@ def bondsFeaturesProcessor(attemptsMax,
                 table_FinAM[table_FinAM_column] = table_FinAM[table_FinAM_column].str.replace(',', '.')
                 table_FinAM[table_FinAM_column] = pandas.to_numeric(table_FinAM[table_FinAM_column], errors='ignore')
 
-        if bond_df.loc[bond_df_index, 'BUYBACKDATE']: # есть оферта
+        # display(bond_df.loc[bond_df_index, ['ISIN', 'BUYBACKDATE', 'MATDATE']]) # для отладки
+
+        if pandas.notna(bond_df.loc[bond_df_index, 'BUYBACKDATE']): # есть оферта         
             # print("bond_df.loc[bond_df_index, 'BUYBACKDATE']") # для отладки   
             date_final = bond_df.loc[bond_df_index, 'BUYBACKDATE']
 
-        elif bond_df.loc[bond_df_index, 'MATDATE']: # есть конечная дата обращения
+        elif pandas.notna(bond_df.loc[bond_df_index, 'MATDATE']): # есть конечная дата обращения
             # print("bond_df.loc[bond_df_index, 'MATDATE']") # для отладки   
             date_final = bond_df.loc[bond_df_index, 'MATDATE']
 
         else: # нет оферты и нет конечной даты обращения
-            # print('Нет оферты и нет конечной даты обращения') # для отладки   
+            print('Нет оферты и нет конечной даты обращения') # для отладки   
             date_final = table_FinAM.loc[table_FinAM.index[-1], (             'Купоны',                'Дата')] # .strftime('%Y-%m-%d')
 
         date_final = date_final.date()
         # date_final = datetime.strptime(date_final, '%Y-%m-%d').date()
 
-        print('', date_final) # для отладки
+        print('date_final:', date_final) # для отладки
 
         df_current = table_FinAM[table_FinAM[(             'Купоны',                'Дата')].dt.date >= momentCurrent.date()] # фильтр дата >= сегодняшней
         df_current = df_current[df_current[(             'Купоны',                'Дата')].dt.date <= date_final] # фильтр дата <= date_final
@@ -752,7 +760,7 @@ def bondsFeaturesProcessor(attemptsMax,
         df_current = df_current.drop([(   'Купоны', '% от Номинала'), (   'Купоны',  'Размер (ден)')], axis=1) # столбцы лишние
         df_current.columns = df_current.columns.droplevel(0) # MultiIndex -> обычные заголовки
         df_current = df_current.reset_index(drop=True)
-        # display('df_current:', df_current) # для отладки
+        # display('df_current 1:', df_current) # для отладки
 
         if len(df_current) > 0:
             bond_df, df_current = bondYieldCalculator(bond_df, bond_df_index, df_current, driver_CB, momentCurrent)
@@ -762,16 +770,17 @@ def bondsFeaturesProcessor(attemptsMax,
 
             else: date_call = 'No rate'
 
-            path_2 = folder + 'Таблицы текущего периода'
-            if os.path.exists(path_2) != True: os.makedirs(path_2)
-            df_current.to_excel(path_2 + slash + f'{date_call + ' ' if date_call else ''}{isin}.xlsx')
+            path_3 = folder + 'Таблицы текущего периода'
+            if os.path.exists(path_3) != True: os.makedirs(path_3)
+            df_current.to_excel(path_3 + slash + f'{date_call + ' ' if date_call else ''}{isin}.xlsx')
 
         else:
-            bond_df.loc[bond_df_index, 'Статус'] = 1
-            path_3 = path_1 + slash + 'Таблицы FinAM Архив'
-            if os.path.exists(path_3) != True: os.makedirs(path_3)
-            if os.path.exists(path_3 + slash + fileUptodateName): os.remove(path_3 + slash + fileUptodateName) # на случай задвоения файлов (причина не ясна)
-            os.rename(path_1 + slash + fileUptodateName, path_3 + slash + fileUptodateName)
+            display('df_current 2:', df_current) # для отладки            
+            bond_df.loc[bond_df_index, 'Статус'] = 'не в обращении'
+            path_4 = path_1 + slash + 'Таблицы FinAM Архив'
+            if os.path.exists(path_4) != True: os.makedirs(path_4)
+            if os.path.exists(path_4 + slash + fileUptodateName): os.remove(path_4 + slash + fileUptodateName) # на случай задвоения файлов (причина не ясна)
+            os.rename(path_1 + slash + fileUptodateName, path_4 + slash + fileUptodateName)
 
         # Следует мёрджить по ISIN , причём требуется не обновление данных, а дополнение, поэтому cellsLeftMerger
         bondS = cellsLeftMerger.cellsLeftMerger(bond_df, bondS, 'ISIN') # следует мёрджить по ISIN
