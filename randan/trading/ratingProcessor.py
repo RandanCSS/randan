@@ -114,7 +114,7 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
         print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
         pageSource = driver.page_source
-        print(pageSource) # для отладки
+        # print(pageSource) # для отладки
 
         print('  ✅ Облигация НЕ найдена по ISIN, ищу по SECID') # , end='\r'
         secidIndex = bondS.loc[bondS['ISIN'] == isin, 'SECID'].index
