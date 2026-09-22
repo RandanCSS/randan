@@ -273,34 +273,43 @@ def currencyEffectProcessor(bondS_in, currencieS):
     bondS = bondS_in.copy()
 
 # <Умножение FACEVALUE и ACCRUEDINT для иновалютных облигаций на цену соответствующей валюты в рублях>
-
-    # Импорт курсов инвалют
-    boardS, columnsDescriptionS, exchangesRaw, securities_marketdata_df_duplicated =\
+# Импорт курсов инвалют
+    boardS, columnsDescriptionS, exchangeS_raw, securities_marketdata_df_duplicated_forts =\
         getMoExData.getMoExData(market='forts', returnDfs=True)
 
-    exchangesRaw = exchangesRaw[['SHORTNAME', 'LAST', 'SETTLEPRICE']]
-    exchangesRaw.columns = ['Unnamed: 0', 'Цена послед.', 'Цена закр.']
-    # display(exchangesRaw) # для отладки
+    exchangeS_raw = exchangeS_raw[['LAST', 'LASTTRADEDATE', 'SETTLEPRICE', 'SHORTNAME']]
+
+    exchangeS_raw =\
+        exchangeS_raw.rename(columns={'SHORTNAME': 'Unnamed: 0', 'LAST': 'Цена послед.', 'SETTLEPRICE': 'Цена закр.'})
+
+    exchangeS_raw = exchangeS_raw[['Unnamed: 0', 'LASTTRADEDATE', 'Цена закр.', 'Цена послед.']]
+    exchangeS_raw['LASTTRADEDATE'] = exchangeS_raw['LASTTRADEDATE'].dt.date
+    display(exchangeS_raw) # для отладки
 
     # Список валют иновалютных облигаций и запись их курсов в exchangeS
-    exchangeS = pandas.DataFrame()
+    # currencieS = ['UCHF', 'CNYRUBF', 'EURRUBF', 'SUR', 'USDRUBF']
+    exchangeS = []
     for currency in currencieS:
     # for currency in currencieS[0:1]: # для отладки
         print('currency:', currency) # для отладки
-        exchangesAdditional = exchangesRaw[exchangesRaw['Unnamed: 0'].str.contains(currency, case=False)]
-        # display('exchangesAdditional:', exchangesAdditional) # для отладки
+        exchangeS_additional = exchangeS_raw[exchangeS_raw['Unnamed: 0'].str.contains(currency, case=False)]
 
-        if len(exchangesAdditional) > 1: exchangesAdditional = exchangesAdditional.iloc[[0], :] # чтобы не брать пару USD|CNY
-        # display('exchangesAdditional:', exchangesAdditional) # для отладки
+        # display("exchangeS_additional.sort_values('LASTTRADEDATE'):",
+        #         exchangeS_additional.sort_values('LASTTRADEDATE')) # для отладки
 
-        exchangesAdditional['Валюта'] = currency
-        exchangeS = pandas.concat([exchangeS, exchangesAdditional])
+        exchangeS_additional = exchangeS_additional.sort_values('LASTTRADEDATE').head(1)
+        # display('exchangeS_additional:', exchangeS_additional) # для отладки
+
+        exchangeS_additional['Валюта'] = currency
+        exchangeS.append(exchangeS_additional)
+
+    exchangeS = pandas.concat(exchangeS, ignore_index=True)
 
     # Предобрабока столбцов с финансовой информацией в exchangeS
     for column in ['Цена послед.', 'Цена закр.']:
-        exchangeS[column] = exchangeS[column].astype(float)
+        exchangeS[column] = pandas.to_numeric(exchangeS[column], errors='coerce')
 
-    display('exchangeS:', exchangeS[['Цена послед.', 'Цена закр.', 'Валюта']]) # для отладки
+    display("exchangeS[['Цена послед.', 'Цена закр.', 'Валюта']]:", exchangeS[['Цена послед.', 'Цена закр.', 'Валюта']]) # для отладки
 
     exchangeS.loc[exchangeS['Цена послед.'] == 0, 'Цена послед.'] = exchangeS.loc[exchangeS['Цена послед.'] == 0, 'Цена закр.']
         # на случай нулей в столбце 'Цена послед.'
@@ -318,7 +327,7 @@ def currencyEffectProcessor(bondS_in, currencieS):
 
     for currency in currencieS:
         currencyExchangeValue = exchangeS.loc[exchangeS['Валюта'] == currency, 'Цена послед.'][exchangeS[exchangeS['Валюта'] == currency].index[0]]
-        # print('currencyExchangeValue:', currencyExchangeValue) # для отладки
+        print('currencyExchangeValue:', currencyExchangeValue) # для отладки
         # print('type(currencyExchangeValue):', type(currencyExchangeValue)) # для отладки
 
         bondS.loc[bondS['FACEUNIT'] == currency, 'FACEVALUE'] *= currencyExchangeValue # 'FACEUNIT' -- внутренняя валюта облигации
@@ -572,16 +581,16 @@ def bondsFeaturesProcessor(attemptsMax,
     #     bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column] = bondS.loc[(bondS[column].notna()) & (bondS[column] != ''), column].astype(float)
 
     # # Умножение FACEVALUE и ACCRUEDINT на цену валюты в рублях
-    # boardS, columnsDescriptionS, exchangesRaw, securities_marketdata_df_duplicated =\
+    # boardS, columnsDescriptionS, exchangeS_raw, securities_marketdata_df_duplicated =\
         # getMoExData.getMoExData(market='forts', returnDfs=True)
 
-    # exchangesRaw = exchangesRaw[['SHORTNAME', 'LAST', 'SETTLEPRICE']]
-    # exchangesRaw.columns = ['Unnamed: 0', 'Цена послед.', 'Цена закр.']
-    # # display(exchangesRaw) # для отладки
+    # exchangeS_raw = exchangeS_raw[['SHORTNAME', 'LAST', 'SETTLEPRICE']]
+    # exchangeS_raw.columns = ['Unnamed: 0', 'Цена послед.', 'Цена закр.']
+    # # display(exchangeS_raw) # для отладки
 
     # # Из QUIK
-    # # exchangesRaw = pandas(r'C:\Users\Alexey\Dropbox\QUIK_УралСиб_Driver\Текущие_торги.xlsx', usecols='A, D, F')
-    # # display(exchangesRaw) # для отладки
+    # # exchangeS_raw = pandas(r'C:\Users\Alexey\Dropbox\QUIK_УралСиб_Driver\Текущие_торги.xlsx', usecols='A, D, F')
+    # # display(exchangeS_raw) # для отладки
 
     # currencieS = list(bondS['FACEUNIT'].unique()) # валюта номинала
     # print('currencieS:', currencieS) # для отладки
@@ -590,12 +599,12 @@ def bondsFeaturesProcessor(attemptsMax,
 
     # for currency in currencieS:
     # # for currency in currencieS[0:1]: # для отладки
-    #     exchangesAdditional = exchangesRaw[exchangesRaw['Unnamed: 0'].str.contains(currency, case=False)]
-    #     # display('exchangesAdditional:', exchangesAdditional) # для отладки
-    #     if len(exchangesAdditional) > 1: exchangesAdditional = exchangesAdditional.iloc[[0], :] # чтобы не брать пару USD|CNY
-    #     # display('exchangesAdditional:', exchangesAdditional) # для отладки
-    #     exchangesAdditional['Валюта'] = currency
-    #     exchangeS = pandas.concat([exchangeS, exchangesAdditional])
+    #     exchangeS_additional = exchangeS_raw[exchangeS_raw['Unnamed: 0'].str.contains(currency, case=False)]
+    #     # display('exchangeS_additional:', exchangeS_additional) # для отладки
+    #     if len(exchangeS_additional) > 1: exchangeS_additional = exchangeS_additional.iloc[[0], :] # чтобы не брать пару USD|CNY
+    #     # display('exchangeS_additional:', exchangeS_additional) # для отладки
+    #     exchangeS_additional['Валюта'] = currency
+    #     exchangeS = pandas.concat([exchangeS, exchangeS_additional])
 
     # for column in ['Цена послед.', 'Цена закр.']:
     #     exchangeS[column] = exchangeS[column].astype(float)
