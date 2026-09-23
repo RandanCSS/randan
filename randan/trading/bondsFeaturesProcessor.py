@@ -109,7 +109,9 @@ def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, moment
     # display('df_current 2:', df_current) # для отладки
 
     # Добавить строчку № -1 , в которую внести сегодяншнюю дату и рыночную цену (в %) покупки облигации
-    df_current.loc[-1, 'Дата'] = momentCurrent.date()
+    df_current.loc[-1, 'Дата'] = pandas.to_datetime(momentCurrent).date()
+    # df_current.loc[-1, 'Дата'] = momentCurrent.date()
+    
     df_current.loc[-1, '% от Номинала НРМРВНН'] = 0
     df_current.loc[-1, 'Остаточный номинал на конец периода'] = bond_df['FACEVALUE'][bond_df_index]
     df_current.loc[-1, 'Остаточный номинал на конец периода РИ'] = bond_df['FACEVALUE'][bond_df_index] # РИ -- реинвестирование
@@ -424,7 +426,7 @@ def bondsFeaturesProcessor(attemptsMax,
     issuerS_withActualRating.loc[issuerS_withActualRating['Issuer D Rating'] != issuerS_withActualRating['Issuer D Rating Previous'], 'С прошлого замера'] = 'Рейтинг изменился'
 
     print('\n Изменения рейтинга с прошлого замера:')
-    print('  Повышение')
+    print('\033[32m  Повышение\033[0m')
     issuerS_withActualRating_up = issuerS_withActualRating[
         (issuerS_withActualRating['Issuer D Rating'].notna()) & (issuerS_withActualRating['Issuer D Rating Previous'].notna()) &\
         (issuerS_withActualRating['Issuer D Rating'] > issuerS_withActualRating['Issuer D Rating Previous'])
@@ -432,7 +434,7 @@ def bondsFeaturesProcessor(attemptsMax,
 
     display(issuerS_withActualRating_up)
 
-    print('  Понижение')
+    print('\033[31m  Понижение\033[0m')
     issuerS_withActualRating_down = issuerS_withActualRating[
         (issuerS_withActualRating['Issuer D Rating'].notna()) & (issuerS_withActualRating['Issuer D Rating Previous'].notna()) &\
         (issuerS_withActualRating['Issuer D Rating'] < issuerS_withActualRating['Issuer D Rating Previous'])
@@ -764,7 +766,8 @@ def bondsFeaturesProcessor(attemptsMax,
             print('Нет оферты и нет конечной даты обращения') # для отладки   
             date_final = table_FinAM.loc[table_FinAM.index[-1], (             'Купоны',                'Дата')] # .strftime('%Y-%m-%d')
 
-        date_final = date_final.date()
+        date_final = pandas.to_datetime(date_final).date()
+        # date_final = date_final.date()
         # date_final = datetime.strptime(date_final, '%Y-%m-%d').date()
 
         print('date_final:', date_final) # для отладки
