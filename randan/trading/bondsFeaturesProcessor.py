@@ -109,7 +109,7 @@ def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, moment
     # display('df_current 2:', df_current) # для отладки
 
     # Добавить строчку № -1 , в которую внести сегодяншнюю дату и рыночную цену (в %) покупки облигации
-    df_current.loc[-1, 'Дата'] = pandas.to_datetime(momentCurrent).date()
+    df_current.loc[-1, 'Дата'] = pandas.to_datetime(momentCurrent).date() # применимо к текстовому объекту
     # df_current.loc[-1, 'Дата'] = momentCurrent.date()
     
     df_current.loc[-1, '% от Номинала НРМРВНН'] = 0
@@ -766,7 +766,7 @@ def bondsFeaturesProcessor(attemptsMax,
             print('Нет оферты и нет конечной даты обращения') # для отладки   
             date_final = table_FinAM.loc[table_FinAM.index[-1], (             'Купоны',                'Дата')] # .strftime('%Y-%m-%d')
 
-        date_final = pandas.to_datetime(date_final).date()
+        date_final = pandas.to_datetime(date_final).date() # применимо к текстовому объекту
         # date_final = date_final.date()
         # date_final = datetime.strptime(date_final, '%Y-%m-%d').date()
 
