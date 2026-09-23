@@ -49,7 +49,8 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
 # 1. Вспомогательные функции для..
 # .. расчёта доходностей облигации (бескупонной, без реинвестирования и с реинвестированием -- по формулам простого и сложного процентов)
 def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, momentCurrent):
-    visualizeForDebug = True    
+    visualizeForDebug = False    
+    # visualizeForDebug = True    
 
     bond_df = bond_df_in.copy()
     # display('bond_df 1 в bondYieldCalculator :', bond_df) # для отладки
