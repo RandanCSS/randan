@@ -109,7 +109,7 @@ def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, moment
     # display('df_current 2:', df_current) # для отладки
 
     # Добавить строчку № -1 , в которую внести сегодяншнюю дату и рыночную цену (в %) покупки облигации
-    df_current.loc[-1, 'Дата'] = pandas.to_datetime(momentCurrent).date() # применимо к текстовому объекту
+    df_current.loc[-1, 'Дата'] = pandas.to_datetime(momentCurrent).date() # pandas.to_datetime() работает не только с ячейками DataFrame, но и с отдельными скалярными значениями
     # df_current.loc[-1, 'Дата'] = momentCurrent.date()
     
     df_current.loc[-1, '% от Номинала НРМРВНН'] = 0
@@ -117,7 +117,7 @@ def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, moment
     df_current.loc[-1, 'Остаточный номинал на конец периода РИ'] = bond_df['FACEVALUE'][bond_df_index] # РИ -- реинвестирование
 
     df_current = df_current.sort_index()
-    df_current['Дата'] = pandas.to_datetime(df_current['Дата'])
+    df_current['Дата'] = pandas.to_datetime(df_current['Дата']) # pandas.to_datetime() работает не только с ячейками DataFrame, но и с отдельными скалярными значениями
 
     price = (bond_df['FACEVALUE'] * (bond_df['PRICE'] / 100))[bond_df_index] # остаточный номинал * роночную цену (в %)
         # остаточный номинал = обращающееся тело долга
@@ -766,7 +766,7 @@ def bondsFeaturesProcessor(attemptsMax,
             print('Нет оферты и нет конечной даты обращения') # для отладки   
             date_final = table_FinAM.loc[table_FinAM.index[-1], (             'Купоны',                'Дата')] # .strftime('%Y-%m-%d')
 
-        date_final = pandas.to_datetime(date_final).date() # применимо к текстовому объекту
+        date_final = pandas.to_datetime(date_final).date() # pandas.to_datetime() работает не только с ячейками DataFrame, но и с отдельными скалярными значениями
         # date_final = date_final.date()
         # date_final = datetime.strptime(date_final, '%Y-%m-%d').date()
 
