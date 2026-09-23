@@ -14,6 +14,11 @@ from subprocess import check_call
 # --- остальные модули и пакеты
 for attempt in range(1, 4):
     try:
+        # !pip install grpcio-tools requests pandas
+        from grpc_tools import protoc
+
+        from google.protobuf import descriptor_pb2 # для чтения binary descriptor
+        from io import StringIO
         from IPython.display import display
 
         from randan.tools import cellsLeftMerger, coLabAdaptor, scrapingTools #  модули для
@@ -22,7 +27,7 @@ for attempt in range(1, 4):
             # (в) упрощения скрапинга
 
         from tqdm import tqdm
-        import os, pandas, requests, time, traceback
+        import grpc_tools, os, pandas, requests, subprocess, time, traceback
         break # выход из цикла for attempt in range(3)
 
     except ModuleNotFoundError:
@@ -46,7 +51,7 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
 
-# 1. Вспомогательная функция..
+# 1. Вспомогательная функция для..
 # .. выгрузки таблиц -- фрагментов данных формата JSON из БД СПб Биржи
 def get_json_df(body, headers, pause, url):
     try:
@@ -60,7 +65,172 @@ def get_json_df(body, headers, pause, url):
     except Exception as excptn:
         print('Exception в get_json_df') # для отладки
         print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
-        print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+        print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
+
+# .. чтения и парсинга (десериализации) файла схемы .proto
+def proto2df(section):
+
+# 1. Клонирование репозитория
+    REPO_DIR = 'investAPI' # REPO_DIR -- директория для клона репозитория
+    if not os.path.isdir(REPO_DIR): # создать клон репозитория
+        subprocess.run(
+            ['git', 'clone', '--depth', '1', 'https://github.com/RussianInvestments/investAPI.git', REPO_DIR],
+            check=True,
+        )
+
+    PROTO_DIR = os.path.abspath(os.path.join(REPO_DIR, 'src', 'docs', 'contracts')) # абсолютный путь к папке контрактов внутри репозитория
+
+    GRPC_INCLUDE = os.path.abspath(os.path.join(os.path.dirname(grpc_tools.__file__), '_proto'))
+        # получить путь к встроенным протобуфам grpcio-tools (чтобы он находил google/protobuf/*.proto ) 
+
+# 2. Компиляция текстового файла схемы .proto (например, marketdata.proto) в бинарный файл дескриптора OUT_PB
+    OUT_PB = f'{section}.pb' # имя дескриптора
+
+    args = ['protoc', # имя программы (формальность)
+            f'-I{PROTO_DIR}', # ищет локальные импорты Т-Банка (включая их папку google/)
+            f'-I{GRPC_INCLUDE}', # ищет стандартные google/protobuf/*.proto
+            '--include_source_info', # сохраняет комментарии в бинарный дескриптор
+            f'--descriptor_set_out={OUT_PB}', # куда положить результат (.pb)
+            os.path.join(PROTO_DIR, f'{section}.proto')] # ЧТО компилировать
+
+    # <Перехват stderr, чтобы увидеть ошибку, если protoc упадёт>
+    old_stderr = sys.stderr
+    sys.stderr = stderr_capture = StringIO()
+    return_code = protoc.main(args) # компиляция
+    error_message = stderr_capture.getvalue()
+    sys.stderr = old_stderr # вернуть stderr на место
+
+    if return_code != 0:
+        print('❌ ОШИБКА PROTOC:\n', error_message)
+        raise RuntimeError(f'protoc failed with code {return_code}')
+
+    else:
+        print('✅ Компиляция успешна!', os.path.getsize(OUT_PB), 'bytes')    
+    # </Перехват stderr, чтобы увидеть ошибку, если protoc упадёт>
+
+# 3. Чтение и парсинг бинарного дескриптора OUT_PB и запись в контейнер fdS
+    # Распаковка бинарного дескриптора (схемы API) в объекты Python
+    fdS = descriptor_pb2.FileDescriptorSet() # инициализация контейнера
+    with open(OUT_PB, "rb") as file: fdS.ParseFromString(file.read()) # чтение и парсинг (десериализация)
+
+# 4 Распаковка дерева в таблицу
+    data = []
+
+    # Маппинг числовых типов протобуфа в строки
+    TYPE_MAP = {1: 'double', 2: 'float', 3: 'int64', 4: 'uint64', 5: 'int32',
+                6: 'fixed64', 7: 'fixed32', 8: 'bool', 9: 'string', 10: 'group',
+                11: 'message', 12: 'bytes', 13: 'uint32', 14: 'enum',
+                15: 'sfixed32', 16: 'sfixed64', 17: 'sint32', 18: 'sint64'}
+
+    # Функция для сборки словаря комментариев из source_code_info дескриптора
+    # Protobuf хранит комментарии по числовым путям (path), например [4, 0, 2, 1]
+    def build_comments_map(file_desc):
+        comments = {}
+        for location in file_desc.source_code_info.location:
+            partS = []
+            if location.leading_comments: partS.append(location.leading_comments.strip())
+            if location.trailing_comments: partS.append(location.trailing_comments.strip())
+            comment_text = ' '.join(partS)
+            if comment_text: comments[tuple(location.path)] = comment_text
+        return comments
+
+    # Рекурсивная функция для извлечения enum (перечислений)
+    def extract_enum(comments_map, enum_desc, parent_path, path_prefix):
+        for val_index, val_desc in enumerate(enum_desc.value):
+            # Путь к значению enum: [..., 2(val_index)]
+            path = tuple(path_prefix + [2, val_index])
+            comment = comments_map.get(path, "")
+            
+            data.append({'Message_Path': parent_path,
+                         'Message': enum_desc.name,
+                         'Field_ID': val_desc.number,
+                         'Field_Name': val_desc.name,
+                         'Field_Type': 'EnumValue',
+                         'Comment': comment})
+
+    # Рекурсивная функция для прохода по всем message (сообщениям) (включая вложенные)
+    def extract_message(comments_map, msg_desc, parent_path, path_prefix):
+        current_path = f'{parent_path}.{msg_desc.name}' if parent_path else msg_desc.name
+    
+        for field_index, field in enumerate(msg_desc.field):
+            # Путь к полю: [..., 2(field_index)]
+            path = tuple(path_prefix + [2, field_index])
+            comment = comments_map.get(path, '')
+
+            # Определить тип поля
+            if field.type_name: # для message и enum (типы 11 и 14) имя хранится тут
+                field_type = field.type_name
+
+            else: field_type = TYPE_MAP.get(field.type, 'unknown')
+
+            # Если массив (repeated)
+            if field.label == descriptor_pb2.FieldDescriptorProto.LABEL_REPEATED:
+                field_type = f'repeated {field_type}'
+
+            data.append({'Message_Path': current_path,
+                         'Message': msg_desc.name,
+                         'Field_ID': field.number,
+                         'Field_Name': field.name,
+                         'Field_Type': field_type,
+                         'Comment': comment})
+    
+        # Рекурсивный проход по вложенным message (внутри Message путь 3 - nested_type)
+        for nested_index, nested_desc in enumerate(msg_desc.nested_type):
+            extract_message(comments_map, nested_desc, current_path, path_prefix + [3, nested_index])
+         
+        # Рекурсивный проход по вложенным enum (внутри Message путь 4 - enum_type)
+        for enum_index, enum_desc in enumerate(msg_desc.enum_type):
+            extract_enum(comments_map, enum_desc, current_path, path_prefix + [4, enum_index])
+
+    # Проход по всем файлам в схеме API (например, marketdata.proto и его зависимости)
+    for file_desc in fdS.file:
+        comments_map = build_comments_map(file_desc)
+    
+        # Top-level сообщения (путь 4 -- message_type)
+        for msg_index, msg_desc in enumerate(file_desc.message_type):
+            extract_message(comments_map, msg_desc, '', [4, msg_index])
+    
+        # Top-level enum (путь 5 -- enum_type)
+        for enum_index, enum_desc in enumerate(file_desc.enum_type):
+            extract_enum(comments_map, enum_desc, enum_desc.name, [5, enum_index])
+
+    df = pandas.DataFrame(data)
+    return df
+
+# .. парсинга ячеек со словарём с целой частью числа (units) и дробной его частью (nano)
+def singleJsonParcer(series, row):
+    df = pandas.json_normalize(series[row])
+    # display('df:', df) # для отладки
+    df['nano'] = df['nano'].abs()
+    df['units'] = df['units'].astype(str) + '.' + df['nano'].astype(str)
+    df['units'] = df['units'].astype(float)
+    df = df.drop('nano', axis=1)
+
+    df = df.rename(columns={'units': row}) # поменять имя столбца на значение securitieS_row
+    df = df.T
+    df = df.rename(columns={0: series.name}) # поменять имя столбца на значение securitieS_row
+    return df
+
+# .. парсинга ячеек столбца values датафрейма marketdata_df
+def valuesParcer(marketdata_df, marketdata_df_row):
+    df = pandas.json_normalize(marketdata_df['values'][marketdata_df_row])
+    # display('df:', df) # для отладки
+    df['value.nano'] = df['value.nano'].abs()
+    df['value.units'] = df['value.units'].astype(str) + '.' + df['value.nano'].astype(str)
+    df['value.units'] = df['value.units'].astype(float)
+    df = df.drop('value.nano', axis=1)
+
+    df['time'] = pandas.to_datetime(df['time'], format="mixed", utc=True)
+    date_time_mean = df['time'].mean()
+    # print('Усреднённые даты и время', date_time_mean) # для отладки
+    df = df.drop('time', axis=1)
+
+    df = df.set_index('type').rename_axis(None) # сделать столбец type индексом без собственного заголовка
+    df = df.rename(columns={'value.units': marketdata_df_row}) # поменять имя столбца value.units на значение marketdata_df_row
+    df = df.T
+    df.loc[:, 'Усреднённые даты и время'] = date_time_mean
+    df['Усреднённые даты и время'] = pandas.to_datetime(df['Усреднённые даты и время'], utc=True)
+    return df
 
 # 2. Основная функция
 def getSPbExData(folder=coLabFolder,
@@ -89,13 +259,13 @@ plusNotTraded : bool -- в случае True функция возвращает
     else: folder += slash
     # if folder: print('folder после:', folder) # для отладки
 
-# 2.0 Проверка наличия файла Securities and Marketdata SPbEx.xlsx и вопрос про необходимость его обновления
+    # 2.0 Проверка наличия файла Securities and Marketdata SPbEx.xlsx и вопрос про необходимость его обновления
     path_securities_marketdata = folder + market + ' Securities and Marketdata SPbEx.xlsx'
     if os.path.exists(path_securities_marketdata):
 
         print(
 f'''--- Файл:
-'{path_securities_marketdata}' -- доступные инструменты (securities) и их финансовые данные (marketdata или marketdata_yields)
+'{path_securities_marketdata}' -- доступные инструменты (securities) и их финансовые данные (marketdata)
 существует; если хотите обновить этот комплект, просто нажмите Enter (это недолго)
 --- Если хотите НЕ обновить, то нажмите пробел и затем Enter'''
               )
@@ -107,36 +277,36 @@ f'''--- Файл:
                 securities_marketdata_df = pandas.read_excel(path_securities_marketdata)
                 return securities_marketdata_df
 
-# 2.1 Если нет комплекта
-# 2.1.0 Поиск Т-токена
+    # 2.1 Если нет комплекта
+    # 2.1.0 Поиск Т-токена
     if not tToken:
         rootNameS = os.listdir(folder if folder else None)
         if 'tToken.txt' in rootNameS:
             tToken = scrapingTools.containerImport(folder + 'tToken.txt', str)
             print('Проверяю наличие файла tToken.txt с Т-токеном, гипотетически сохранёнными при первом запуске скрипта')
-            print(f'Нашёл файл tToken.txt; далее буду использовать Т-токен {tToken} из него:')
+            print(f'Нашёл файл tToken.txt; далее буду использовать Т-токен {tToken} из него')
 
-        else:
-            print(
+    else:
+        print(
 '''--- НЕ нашёл файл tToken.txt . Введите в окно Ваш Т-токен для https://developer.tbank.ru/invest/api . После ввода нажмите Enter'''
-                  )
+              )
 
-            while True:
-                tToken = input('Введите в окно Ваш Т-токен и нажмите Enter')
-                if len(tToken) > 0:
-                    print('-- далее будет использован этот Т-токен')
-                    break
+        while True:
+            tToken = input('Введите в окно Ваш Т-токен и нажмите Enter')
+            if len(tToken) > 0:
+                print('-- далее будет использован этот Т-токен')
+                break
 
-                else:
-                    print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
+            else:
+                print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
 
-            scrapingTools.containerExport('tToken.txt', tToken)
+        scrapingTools.containerExport('tToken.txt', tToken)
 
     headers = {'Authorization': f'Bearer {tToken}', 'Content-Type': 'application/json'}
 
-# 2.1.1 Формирование файла с доступными инструментами (securities) и их финансовыми данными (marketdata или marketdata_yields)
+    # 2.1.1 Формирование файла с доступными инструментами (securities) и их финансовыми данными (marketdata)
     # <Формирование файла с доступными securities в интересующих режимах торгов>
-    print('Создаю файл с доступными инструментами (securities) и их финансовыми данными (marketdata или marketdata_yields)')
+    print('Создаю файл с доступными инструментами (securities) и их финансовыми данными (marketdata)')
     body = {}
     securitieS = get_json_df(body, headers, pause, 'https://invest-public-api.tbank.ru/rest/tinkoff.public.invest.api.contract.v1.InstrumentsService/Bonds')
 
@@ -150,15 +320,35 @@ f'''--- Файл:
               'INSTRUMENT_VALUE_YIELD'] # YTM
 
     marketdata_df = pandas.DataFrame()
-    for isin in tqdm(securitieS['isin']):
-        body = {'instrumentId': figi, values: valueS}
-        marketdata_df_additional = get_json_df(body, headers, pause, 'https://invest-public-api.tbank.ru/rest/tinkoff.public.invest.api.contract.v1.MarketDataService/GetMarketValues')
-        marketdata_df = pandas.concat([marketdata_df, marketdata_df_additional])
+    # for isin in tqdm(securitieS['isin']):
+    body = {'instrumentId': list(securitieS['figi']), 'values': valueS}
+    marketdata_df_additional = get_json_df(
+        body,
+        headers,
+        pause,
+        'https://invest-public-api.tbank.ru/rest/tinkoff.public.invest.api.contract.v1.MarketDataService/GetMarketValues'
+        )
+    marketdata_df = pandas.concat([marketdata_df, marketdata_df_additional])
 
     # display('marketdata_df 1:', marketdata_df) # для отладки
 
+    marketdata_values_df = pandas.DataFrame()
+    for marketdata_df_row in tqdm(marketdata_df.index):
+        if marketdata_df['values'][marketdata_df_row]: marketdata_values_df_additional = valuesParcer(marketdata_df, marketdata_df_row)
+        else: marketdata_values_df_additional = pandas.DataFrame(index=[marketdata_df_row])
+        marketdata_values_df = pandas.concat([marketdata_values_df, marketdata_values_df_additional])
+
+    # display('marketdata_values_df:', marketdata_values_df) # для отладки
+
+    marketdata_df = pandas.concat([marketdata_df, marketdata_values_df], axis=1)
+    for marketdata_df_column in marketdata_df.columns: # убрать tz у всех datetime-столбцов с timezone
+        if isinstance(marketdata_df[marketdata_df_column].dtype, pandas.DatetimeTZDtype):
+            marketdata_df[marketdata_df_column] = marketdata_df[marketdata_df_column].dt.tz_convert(None)
+
+    # display('marketdata_df 2:', marketdata_df) # для отладки
+
     securities_marketdata_df = cellsLeftMerger.cellsLeftMerger(marketdata_df,
                                                                securitieS,
-                                                               'isin') # следует мёрджить по ISIN
+                                                               'ticker') # следует мёрджить по ticker
 
     if returnDfs: return securities_marketdata_df
