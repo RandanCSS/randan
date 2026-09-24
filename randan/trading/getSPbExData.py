@@ -78,7 +78,12 @@ def proto2df(section):
             check=True,
         )
 
-    PROTO_DIR = os.path.abspath(os.path.join(REPO_DIR, 'src', 'docs', 'contracts')) # абсолютный путь к папке контрактов внутри репозитория
+    try: PROTO_DIR = os.path.abspath(os.path.join(REPO_DIR, 'src', 'docs', 'contracts')) # абсолютный путь к папке контрактов внутри репозитория
+    except Exception as excptn:
+        print('Exception в proto2df') # для отладки
+        print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
+        print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой    
+        PROTO_DIR = os.path.abspath(os.path.join(REPO_DIR, 'src', 'proto')) # абсолютный путь к папке контрактов внутри репозитория
 
     GRPC_INCLUDE = os.path.abspath(os.path.join(os.path.dirname(grpc_tools.__file__), '_proto'))
         # получить путь к встроенным протобуфам grpcio-tools (чтобы он находил google/protobuf/*.proto ) 
