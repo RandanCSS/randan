@@ -27,7 +27,7 @@ for attempt in range(1, 4):
             # (в) упрощения скрапинга
 
         from tqdm import tqdm
-        import grpc_tools, os, pandas, requests, subprocess, time, traceback
+        import grpc_tools, os, pandas, requests, subprocess, time, traceback, urllib3
         break # выход из цикла for attempt in range(3)
 
     except ModuleNotFoundError:
@@ -50,6 +50,7 @@ f'''Пакет {module} НЕ прединсталлирован; он требу
                   )
 
 coLabFolder = coLabAdaptor.coLabAdaptor()
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # 1. Вспомогательная функция для..
 # .. выгрузки таблиц -- фрагментов данных формата JSON из БД СПб Биржи
@@ -61,7 +62,7 @@ def get_json_df(body, headers, pause, url, max_retries=3):
             
             data = response.json().get('instruments', [])
             df = pandas.DataFrame(data=data)
-            return df
+            return body['instrumentId'] if 'instrumentId' in body.keys() else [], df
 
         except requests.exceptions.HTTPError as excptn:
             status_code = excptn.response.status_code
@@ -76,7 +77,7 @@ def get_json_df(body, headers, pause, url, max_retries=3):
             else: # если ошибка другая (например 400 Bad Request) -- нет смысла пробовать снова
                 print('Exception в get_json_df (фатальная ошибка HTTP)')
                 print(f'{type(excptn).__name__}: {str(excptn).split("Stacktrace:")[0].strip()}')
-                return pandas.DataFrame() # заглушка, чтобы не сломать concat в вызывающем цикле
+                return [], pandas.DataFrame() # заглушка, чтобы не сломать concat в вызывающем цикле
                 
         except Exception as excptn:
             # Любая другая ошибка (например, оборвалось соединение)
@@ -87,8 +88,9 @@ def get_json_df(body, headers, pause, url, max_retries=3):
 
     # Если все попытки исчерпаны
     print(f'Не удалось получить данные после {max_retries} попыток. Пропускаю батч.')
-    return pandas.DataFrame() # заглушка, чтобы не сломать concat в вызывающем цикле
+    return [], pandas.DataFrame() # заглушка, чтобы не сломать concat в вызывающем цикле
 
+    
 # .. чтения и парсинга (десериализации) файла схемы .proto
 def proto2df(section):
 
@@ -100,12 +102,10 @@ def proto2df(section):
             check=True,
         )
 
-    try: PROTO_DIR = os.path.abspath(os.path.join(REPO_DIR, 'src', 'docs', 'contracts')) # абсолютный путь к папке контрактов внутри репозитория
-    except Exception as excptn:
-        print('Exception в proto2df') # для отладки
-        print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
-        print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой    
-        PROTO_DIR = os.path.abspath(os.path.join(REPO_DIR, 'src', 'proto')) # абсолютный путь к папке контрактов внутри репозитория
+    PROTO_DIR = os.path.abspath(os.path.join(REPO_DIR, 'src', 'docs', 'contracts')) # абсолютный путь к директории контрактов внутри репозитория
+    if not os.path.exists(PROTO_DIR):
+        PROTO_DIR = os.path.abspath(os.path.join(REPO_DIR, 'src', 'proto'))
+            # алиьтернативный абсолютный путь к директории контрактов внутри репозитория
 
     GRPC_INCLUDE = os.path.abspath(os.path.join(os.path.dirname(grpc_tools.__file__), '_proto'))
         # получить путь к встроенным протобуфам grpcio-tools (чтобы он находил google/protobuf/*.proto ) 
@@ -224,16 +224,27 @@ def proto2df(section):
     df = pandas.DataFrame(data)
     return df
 
+# .. парсинга ячеек столбца statistic датафрейма marketdata_df
+def statisticParcer(marketdata_df, marketdata_df_row):
+    df = pandas.json_normalize(marketdata_df['values'][marketdata_df_row])
+    df = df.rename(columns={'time': 'tradeTime'})
+    # display('df:', df) # для отладки
+    return df
+
 # .. парсинга ячеек со словарём с целой частью числа (units) и дробной его частью (nano)
-def singleJsonParcer(series, row):
+def units_nano_parcer(series, row):
     df = pandas.json_normalize(series[row])
     # display('df:', df) # для отладки
-    df['nano'] = df['nano'].abs()
-    df['units'] = df['units'].astype(str) + '.' + df['nano'].astype(str)
-    df['units'] = df['units'].astype(float)
-    df = df.drop('nano', axis=1)
 
-    df = df.rename(columns={'units': row}) # поменять имя столбца на значение securitieS_row
+    df['value'] = df['units'] + df['value.nano'] / 1e9
+    df = df.drop(['nano', 'units'], axis=1)
+    
+    # df['nano'] = df['nano'].abs()
+    # df['units'] = df['units'].astype(str) + '.' + df['nano'].astype(str)
+    # df['units'] = df['units'].astype(float)
+    # df = df.drop('nano', axis=1)
+
+    df = df.rename(columns={'value': row}) # поменять имя столбца на значение securitieS_row
     df = df.T
     df = df.rename(columns={0: series.name}) # поменять имя столбца на значение securitieS_row
     return df
@@ -304,12 +315,14 @@ f'''--- Файл:
                 securities_marketdata_df = pandas.read_excel(path_securities_marketdata)
                 return securities_marketdata_df
 
+            else: return
+
     # 2.1 Если нет комплекта
     # 2.1.0 Поиск Т-токена
     if not tToken:
-        rootNameS = os.listdir(folder if folder else None)
+        rootNameS = os.listdir()
         if 'tToken.txt' in rootNameS:
-            tToken = scrapingTools.containerImport(folder + 'tToken.txt', str)
+            tToken = scrapingTools.containerImport('tToken.txt', str)
             print('Проверяю наличие файла tToken.txt с Т-токеном, гипотетически сохранёнными при первом запуске скрипта')
             print(f'Нашёл файл tToken.txt; далее буду использовать Т-токен {tToken} из него')
 
@@ -340,10 +353,14 @@ f'''--- Файл:
     body = {'instrumentStatus': 'INSTRUMENT_STATUS_ALL'} if plusNotTraded else {'instrumentStatus': 'INSTRUMENT_STATUS_BASE'}
         # около 1500-2000 торгуемых облигаций
 
-    securitieS = get_json_df(body,
-                             headers,
-                             pause,
-                             'https://invest-public-api.tbank.ru/rest/tinkoff.public.invest.api.contract.v1.InstrumentsService/Bonds')
+    batch, securitieS = get_json_df(
+        body,
+        headers,
+        pause,
+        'https://invest-public-api.tbank.ru/rest/tinkoff.public.invest.api.contract.v1.InstrumentsService/Bonds'
+    )
+
+    time.sleep(pause)
 
     valueS = ['INSTRUMENT_VALUE_UNSPECIFIED', # неопределенное значение (обычно не используется)
               'INSTRUMENT_VALUE_LAST_PRICE', # последняя цена
@@ -355,23 +372,45 @@ f'''--- Файл:
               'INSTRUMENT_VALUE_YIELD'] # YTM
 
     print('Теперь выружаю их финансовые данные (marketdata)')
+    batcheS_notProcessed = list(securitieS['figi'])
     marketdata = []
-    for batch_lenth in tqdm(range(0, len(securitieS), 1500)):
-        body = {'instrumentId': list(securitieS['figi'][batch_lenth: batch_lenth + 1500]), 'values': valueS}
+    while batcheS_notProcessed:
+        body = {'instrumentId': list(batcheS_notProcessed[:1500]), 'values': valueS}
 
-        marketdata_df_additional = get_json_df(
+        batch, marketdata_df_additional = get_json_df(
             body,
             headers,
             pause,
             'https://invest-public-api.tbank.ru/rest/tinkoff.public.invest.api.contract.v1.MarketDataService/GetMarketValues'
-            )
+        )
     
+        if batch: # если итерация успешна, из batcheS_notProcessed исключаются элементы batch
+            batch_set = set(batch)
+            batcheS_notProcessed = [x for x in batcheS_notProcessed if x not in batch_set]
+
         if not marketdata_df_additional.empty: marketdata.append(marketdata_df_additional)
+
+        print('По завершении итерации цикла while размер batcheS_notProcessed =', len(batcheS_notProcessed))
         time.sleep(pause)
 
     marketdata_df = pandas.concat(marketdata, ignore_index=True) if marketdata else pandas.DataFrame()
-
     # display('marketdata_df 1:', marketdata_df) # для отладки
+
+    print('Распарсиваю столбец statistic в marketdata_df')
+    marketdata_df_withStatistic = marketdata_df[marketdata_df['statistic'].notna()]
+    # display('marketdata_df_withStatistic:', marketdata_df_withStatistic) # для отладки
+
+    marketdata_statistic = []
+    for marketdata_df_row in tqdm(marketdata_df_withStatistic.index):
+        if marketdata_df_withStatistic['statistic'][marketdata_df_row]:
+            marketdata_statistic_df_additional = statisticParcer(marketdata_df_withStatistic, marketdata_df_row)
+
+        else: marketdata_statistic_df_additional = pandas.DataFrame(index=[marketdata_df_row])
+
+        marketdata_statistic.append(marketdata_statistic_df_additional)
+
+    marketdata_statistic_df = pandas.concat(marketdata_statistic)
+    # display('marketdata_statistic_df:', marketdata_statistic_df) # для отладки
 
     print('Распарсиваю столбец values в marketdata_df')
     marketdata_df_withValues = marketdata_df[marketdata_df['values'].apply(lambda cellContent: cellContent != [])]
