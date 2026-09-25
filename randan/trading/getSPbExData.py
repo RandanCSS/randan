@@ -59,7 +59,7 @@ def get_json_df(body, headers, pause, url):
         response.raise_for_status()  # проверка на ошибки HTTP
         data = response.json().get('instruments', [])
         df = pandas.DataFrame(data=data)
-        # display('data:', data) # для отладки
+        # display('df:', df) # для отладки
         return df
 
     except Exception as excptn:
@@ -312,8 +312,16 @@ f'''--- Файл:
     # 2.1.1 Формирование файла с доступными инструментами (securities) и их финансовыми данными (marketdata)
     # <Формирование файла с доступными securities в интересующих режимах торгов>
     print('Создаю файл с доступными инструментами (securities) и их финансовыми данными (marketdata)')
-    body = {}
-    securitieS = get_json_df(body, headers, pause, 'https://invest-public-api.tbank.ru/rest/tinkoff.public.invest.api.contract.v1.InstrumentsService/Bonds')
+
+    print('Выружаю доступные инструменты (securities)')
+
+    body = {'instrumentStatus': 'INSTRUMENT_STATUS_ALL'} if plusNotTraded else {'instrumentStatus': 'INSTRUMENT_STATUS_BASE'}
+        # около 1500-2000 торгуемых облигаций
+
+    securitieS = get_json_df(body,
+                             headers,
+                             pause,
+                             'https://invest-public-api.tbank.ru/rest/tinkoff.public.invest.api.contract.v1.InstrumentsService/Bonds')
 
     valueS = ['INSTRUMENT_VALUE_UNSPECIFIED', # неопределенное значение (обычно не используется)
               'INSTRUMENT_VALUE_LAST_PRICE', # последняя цена
@@ -324,25 +332,38 @@ f'''--- Файл:
               'INSTRUMENT_VALUE_THEOR_PRICE', # теоретическая цена
               'INSTRUMENT_VALUE_YIELD'] # YTM
 
-    marketdata_df = pandas.DataFrame()
-    # for isin in tqdm(securitieS['isin']):
-    body = {'instrumentId': list(securitieS['figi']), 'values': valueS}
-    marketdata_df_additional = get_json_df(
-        body,
-        headers,
-        pause,
-        'https://invest-public-api.tbank.ru/rest/tinkoff.public.invest.api.contract.v1.MarketDataService/GetMarketValues'
-        )
-    marketdata_df = pandas.concat([marketdata_df, marketdata_df_additional])
+    print('Выружаю их финансовые данные (marketdata)')
+    marketdata = []
+    for batch_lenth in tqdm(range(0, len(securitieS), 1500)):
+        body = {'instrumentId': list(securitieS['figi'][batch_lenth: batch_lenth + 1500]), 'values': valueS}
+
+        marketdata_df_additional = get_json_df(
+            body,
+            headers,
+            pause,
+            'https://invest-public-api.tbank.ru/rest/tinkoff.public.invest.api.contract.v1.MarketDataService/GetMarketValues'
+            )
+    
+        marketdata.append(marketdata_df_additional)
+
+    marketdata_df = pandas.concat(marketdata, ignore_index=True)
 
     # display('marketdata_df 1:', marketdata_df) # для отладки
 
-    marketdata_values_df = pandas.DataFrame()
-    for marketdata_df_row in tqdm(marketdata_df.index):
-        if marketdata_df['values'][marketdata_df_row]: marketdata_values_df_additional = valuesParcer(marketdata_df, marketdata_df_row)
-        else: marketdata_values_df_additional = pandas.DataFrame(index=[marketdata_df_row])
-        marketdata_values_df = pandas.concat([marketdata_values_df, marketdata_values_df_additional])
+    print('Распарсиваю столбец values в marketdata_df')
+    marketdata_df_withValues = marketdata_df[marketdata_df['values'].apply(lambda cellContent: cellContent != [])]
+    # display('marketdata_df_withValues:', marketdata_df_withValues) # для отладки
 
+    marketdata_values = []
+    for marketdata_df_row in tqdm(marketdata_df_withValues.index):
+        if marketdata_df_withValues['values'][marketdata_df_row]:
+            marketdata_values_df_additional = valuesParcer(marketdata_df_withValues, marketdata_df_row)
+
+        else: marketdata_values_df_additional = pandas.DataFrame(index=[marketdata_df_row])
+
+        marketdata_values = marketdata_values.append(marketdata_values_df_additional)
+
+    marketdata_values_df = pandas.concat(marketdata_values)
     # display('marketdata_values_df:', marketdata_values_df) # для отладки
 
     marketdata_df = pandas.concat([marketdata_df, marketdata_values_df], axis=1)
@@ -351,6 +372,8 @@ f'''--- Файл:
             marketdata_df[marketdata_df_column] = marketdata_df[marketdata_df_column].dt.tz_convert(None)
 
     # display('marketdata_df 2:', marketdata_df) # для отладки
+
+    # if returnDfs: return marketdata_df, securitieS
 
     securities_marketdata_df = cellsLeftMerger.cellsLeftMerger(marketdata_df,
                                                                securitieS,
