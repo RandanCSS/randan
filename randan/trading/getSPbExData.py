@@ -229,6 +229,8 @@ def statisticParcer(marketdata_df, marketdata_df_row):
     df = pandas.json_normalize(marketdata_df['statistic'][marketdata_df_row])
     df = df.rename(columns={'time': 'tradeTime'})
     # display('df:', df) # для отладки
+    df.index = [marketdata_df_row] * len(df) # вернуть индекс исходной строки
+    
     return df
 
 # .. парсинга ячеек со словарём с целой частью числа (units) и дробной его частью (nano)
@@ -413,6 +415,8 @@ f'''--- Файл:
     marketdata_statistic_df = pandas.concat(marketdata_statistic)
     # display('marketdata_statistic_df:', marketdata_statistic_df) # для отладки
 
+    marketdata_df = pandas.concat([marketdata_df, marketdata_statistic_df], axis=1)
+
     print('Распарсиваю столбец values в marketdata_df')
     marketdata_df_withValues = marketdata_df[marketdata_df['values'].apply(lambda cellContent: cellContent != [])]
     # display('marketdata_df_withValues:', marketdata_df_withValues) # для отладки
@@ -430,6 +434,7 @@ f'''--- Файл:
     # display('marketdata_values_df:', marketdata_values_df) # для отладки
 
     marketdata_df = pandas.concat([marketdata_df, marketdata_values_df], axis=1)
+
     for marketdata_df_column in marketdata_df.columns: # убрать tz у всех datetime-столбцов с timezone
         if isinstance(marketdata_df[marketdata_df_column].dtype, pandas.DatetimeTZDtype):
             marketdata_df[marketdata_df_column] = marketdata_df[marketdata_df_column].dt.tz_convert(None)
