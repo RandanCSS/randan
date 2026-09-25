@@ -361,7 +361,7 @@ f'''--- Файл:
         headers,
         pause,
         'https://invest-public-api.tbank.ru/rest/tinkoff.public.invest.api.contract.v1.InstrumentsService/Bonds'
-    )
+    ) # из документации: https://developer.tbank.ru/invest/services/instruments/head-instruments
 
     time.sleep(pause)
 
