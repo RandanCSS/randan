@@ -53,19 +53,41 @@ coLabFolder = coLabAdaptor.coLabAdaptor()
 
 # 1. Вспомогательная функция для..
 # .. выгрузки таблиц -- фрагментов данных формата JSON из БД СПб Биржи
-def get_json_df(body, headers, pause, url):
-    try:
-        response = requests.post(url, headers=headers, json=body, verify=False)
-        response.raise_for_status()  # проверка на ошибки HTTP
-        data = response.json().get('instruments', [])
-        df = pandas.DataFrame(data=data)
-        # display('df:', df) # для отладки
-        return df
+def get_json_df(body, headers, pause, url, max_retries=3):
+    for attempt in range(max_retries): # цикл попыток
+        try:
+            response = requests.post(url, headers=headers, json=body, timeout=30, verify=False)
+            response.raise_for_status()  # проверка на ошибки HTTP
+            
+            data = response.json().get('instruments', [])
+            df = pandas.DataFrame(data=data)
+            return df
 
-    except Exception as excptn:
-        print('Exception в get_json_df') # для отладки
-        print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
-        print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
+        except requests.exceptions.HTTPError as excptn:
+            status_code = excptn.response.status_code
+            
+            # Если ошибка 500, 502, 503, 504 или 429 (лимит запросов) -- попробовать снова
+            if status_code in [429, 500, 502, 503, 504]:
+                # Ждем: твоя пауза + экспоненциальная задержка (1с, 2с, 4с)
+                wait_time = pause + (2 ** attempt) 
+                print(f'Ошибка {status_code}. Жду {wait_time} сек и пробую снова (попытка {attempt + 1}/{max_retries})...')
+                time.sleep(wait_time)
+
+            else: # если ошибка другая (например 400 Bad Request) -- нет смысла пробовать снова
+                print('Exception в get_json_df (фатальная ошибка HTTP)')
+                print(f'{type(excptn).__name__}: {str(excptn).split("Stacktrace:")[0].strip()}')
+                return pandas.DataFrame() # заглушка, чтобы не сломать concat в вызывающем цикле
+                
+        except Exception as excptn:
+            # Любая другая ошибка (например, оборвалось соединение)
+            print('Exception в get_json_df (сетевая ошибка)')
+            print(traceback.format_exc().split('Stacktrace:')[0].strip())
+            wait_time = pause + (2 ** attempt)
+            time.sleep(wait_time)
+
+    # Если все попытки исчерпаны
+    print(f'Не удалось получить данные после {max_retries} попыток. Пропускаю батч.')
+    return pandas.DataFrame() # заглушка, чтобы не сломать concat в вызывающем цикле
 
 # .. чтения и парсинга (десериализации) файла схемы .proto
 def proto2df(section):
@@ -313,7 +335,7 @@ f'''--- Файл:
     # <Формирование файла с доступными securities в интересующих режимах торгов>
     print('Создаю файл с доступными инструментами (securities) и их финансовыми данными (marketdata)')
 
-    print('Выружаю доступные инструменты (securities)')
+    print('Для этого сначала выружаю доступные инструменты (securities)')
 
     body = {'instrumentStatus': 'INSTRUMENT_STATUS_ALL'} if plusNotTraded else {'instrumentStatus': 'INSTRUMENT_STATUS_BASE'}
         # около 1500-2000 торгуемых облигаций
@@ -332,7 +354,7 @@ f'''--- Файл:
               'INSTRUMENT_VALUE_THEOR_PRICE', # теоретическая цена
               'INSTRUMENT_VALUE_YIELD'] # YTM
 
-    print('Выружаю их финансовые данные (marketdata)')
+    print('Теперь выружаю их финансовые данные (marketdata)')
     marketdata = []
     for batch_lenth in tqdm(range(0, len(securitieS), 1500)):
         body = {'instrumentId': list(securitieS['figi'][batch_lenth: batch_lenth + 1500]), 'values': valueS}
@@ -344,9 +366,10 @@ f'''--- Файл:
             'https://invest-public-api.tbank.ru/rest/tinkoff.public.invest.api.contract.v1.MarketDataService/GetMarketValues'
             )
     
-        marketdata.append(marketdata_df_additional)
+        if not marketdata_df_additional.empty: marketdata.append(marketdata_df_additional)
+        time.sleep(pause)
 
-    marketdata_df = pandas.concat(marketdata, ignore_index=True)
+    marketdata_df = pandas.concat(marketdata, ignore_index=True) if marketdata else pandas.DataFrame()
 
     # display('marketdata_df 1:', marketdata_df) # для отладки
 
@@ -377,6 +400,6 @@ f'''--- Файл:
 
     securities_marketdata_df = cellsLeftMerger.cellsLeftMerger(marketdata_df,
                                                                securitieS,
-                                                               'ticker') # следует мёрджить по ticker
+                                                               ['classCode', 'ticker']) # следует мёрджить по classCode и ticker
 
     if returnDfs: return securities_marketdata_df
