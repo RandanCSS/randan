@@ -71,17 +71,17 @@ def get_json_df(body, headers, pause, url, max_retries=3):
             if status_code in [429, 500, 502, 503, 504]:
                 # Ждем: твоя пауза + экспоненциальная задержка (1с, 2с, 4с)
                 wait_time = pause + (2 ** attempt) 
-                print(f'Ошибка {status_code}. Жду {wait_time} сек и пробую снова (попытка {attempt + 1}/{max_retries})...')
+                print(f'  Ошибка {status_code}. Жду {wait_time} сек и пробую снова (попытка {attempt + 1}/{max_retries})...')
                 time.sleep(wait_time)
 
             else: # если ошибка другая (например 400 Bad Request) -- нет смысла пробовать снова
-                print('Exception в get_json_df (фатальная ошибка HTTP)')
+                print('  Exception в get_json_df (фатальная ошибка HTTP)')
                 print(f'{type(excptn).__name__}: {str(excptn).split("Stacktrace:")[0].strip()}')
                 return [], pandas.DataFrame() # заглушка, чтобы не сломать concat в вызывающем цикле
                 
         except Exception as excptn:
             # Любая другая ошибка (например, оборвалось соединение)
-            print('Exception в get_json_df (сетевая ошибка)')
+            print('  Exception в get_json_df (сетевая ошибка)')
             print(traceback.format_exc().split('Stacktrace:')[0].strip())
             wait_time = pause + (2 ** attempt)
             time.sleep(wait_time)
@@ -236,7 +236,7 @@ def units_nano_parcer(series, row):
     df = pandas.json_normalize(series[row])
     # display('df:', df) # для отладки
 
-    df['value'] = df['units'] + df['nano'] / 1e9
+    df['value'] = pandas.to_numeric(df['units'], errors='coerce') + pandas.to_numeric(df['nano'], errors='coerce') / 1e9
     df = df.drop(['nano', 'units'], axis=1)
     
     df = df.rename(columns={'value': row}) # поменять имя столбца на значение securitieS_row
@@ -248,8 +248,10 @@ def units_nano_parcer(series, row):
 def valuesParcer(marketdata_df, marketdata_df_row):
     df = pandas.json_normalize(marketdata_df['values'][marketdata_df_row])
     # display('df:', df) # для отладки
+    # display("df['value.units']:", df['value.units']) # для отладки
+    # display("df['value.nano']:", df['value.nano']) # для отладки
 
-    df['value'] = df['value.units'] + df['value.nano'] / 1e9
+    df['value'] = pandas.to_numeric(df['value.units'], errors='coerce') + pandas.to_numeric(df['value.nano'], errors='coerce') / 1e9
     df = df.drop(['value.nano', 'value.units'], axis=1)
     
     # df['value.nano'] = df['value.nano'].abs()
@@ -389,7 +391,7 @@ f'''--- Файл:
 
         if not marketdata_df_additional.empty: marketdata.append(marketdata_df_additional)
 
-        print('По завершении итерации цикла while размер batcheS_notProcessed =', len(batcheS_notProcessed))
+        print('  По завершении итерации цикла while размер batcheS_notProcessed =', len(batcheS_notProcessed))
         time.sleep(pause)
 
     marketdata_df = pandas.concat(marketdata, ignore_index=True) if marketdata else pandas.DataFrame()
