@@ -361,7 +361,7 @@ f'''--- Файл:
 
         else: marketdata_values_df_additional = pandas.DataFrame(index=[marketdata_df_row])
 
-        marketdata_values = marketdata_values.append(marketdata_values_df_additional)
+        marketdata_values.append(marketdata_values_df_additional)
 
     marketdata_values_df = pandas.concat(marketdata_values)
     # display('marketdata_values_df:', marketdata_values_df) # для отладки
