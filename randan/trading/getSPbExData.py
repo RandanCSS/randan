@@ -226,7 +226,7 @@ def proto2df(section):
 
 # .. парсинга ячеек столбца statistic датафрейма marketdata_df
 def statisticParcer(marketdata_df, marketdata_df_row):
-    df = pandas.json_normalize(marketdata_df['values'][marketdata_df_row])
+    df = pandas.json_normalize(marketdata_df['statistic'][marketdata_df_row])
     df = df.rename(columns={'time': 'tradeTime'})
     # display('df:', df) # для отладки
     return df
@@ -236,14 +236,9 @@ def units_nano_parcer(series, row):
     df = pandas.json_normalize(series[row])
     # display('df:', df) # для отладки
 
-    df['value'] = df['units'] + df['value.nano'] / 1e9
+    df['value'] = df['units'] + df['nano'] / 1e9
     df = df.drop(['nano', 'units'], axis=1)
     
-    # df['nano'] = df['nano'].abs()
-    # df['units'] = df['units'].astype(str) + '.' + df['nano'].astype(str)
-    # df['units'] = df['units'].astype(float)
-    # df = df.drop('nano', axis=1)
-
     df = df.rename(columns={'value': row}) # поменять имя столбца на значение securitieS_row
     df = df.T
     df = df.rename(columns={0: series.name}) # поменять имя столбца на значение securitieS_row
@@ -253,10 +248,14 @@ def units_nano_parcer(series, row):
 def valuesParcer(marketdata_df, marketdata_df_row):
     df = pandas.json_normalize(marketdata_df['values'][marketdata_df_row])
     # display('df:', df) # для отладки
-    df['value.nano'] = df['value.nano'].abs()
-    df['value.units'] = df['value.units'].astype(str) + '.' + df['value.nano'].astype(str)
-    df['value.units'] = df['value.units'].astype(float)
-    df = df.drop('value.nano', axis=1)
+
+    df['value'] = df['value.units'] + df['value.nano'] / 1e9
+    df = df.drop(['value.nano', 'value.units'], axis=1)
+    
+    # df['value.nano'] = df['value.nano'].abs()
+    # df['value.units'] = df['value.units'].astype(str) + '.' + df['value.nano'].astype(str)
+    # df['value.units'] = df['value.units'].astype(float)
+    # df = df.drop('value.nano', axis=1)
 
     df['time'] = pandas.to_datetime(df['time'], format="mixed", utc=True)
     date_time_mean = df['time'].mean()
@@ -264,7 +263,7 @@ def valuesParcer(marketdata_df, marketdata_df_row):
     df = df.drop('time', axis=1)
 
     df = df.set_index('type').rename_axis(None) # сделать столбец type индексом без собственного заголовка
-    df = df.rename(columns={'value.units': marketdata_df_row}) # поменять имя столбца value.units на значение marketdata_df_row
+    df = df.rename(columns={'value': marketdata_df_row}) # поменять имя столбца value.units на значение marketdata_df_row
     df = df.T
     df.loc[:, 'Усреднённые даты и время'] = date_time_mean
     df['Усреднённые даты и время'] = pandas.to_datetime(df['Усреднённые даты и время'], utc=True)
