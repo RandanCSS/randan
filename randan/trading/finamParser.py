@@ -352,7 +352,7 @@ def getTableByURL_FinAM(bondStatus, date_maturity, driver, isin, pause):
     return table_FinAM
 
 def getTableByURL_TB(driver_TB, isin, pause):
-    driver_TB.get(f'https://www.tbank.ru/invest/bonds/{isin}/coupons/')
+    driver_TB.get(f'https://www.tbank-online.com/invest/bonds/{isin}/coupons/')
     time.sleep(pause)
     table_TB = pandas.DataFrame() # заготовка
 
