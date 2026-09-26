@@ -69,7 +69,7 @@ def bondYieldCalculator(bond_df_in, bond_df_index, df_current, driver_CB, moment
 
             df_current.loc[df_current.index[0], 'Ставка'] = rate_CB
 
-    if len(df_current) > 1 & (sum(df_current['Ставка'].notna()) == 1): df_current['Ставка'] = df_current.loc[df_current.index[0], 'Ставка']
+    if (len(df_current) > 1) & (sum(df_current['Ставка'].notna()) == 1): df_current['Ставка'] = df_current.loc[df_current.index[0], 'Ставка']
         # экстраполяция, исходя из допущения неизменности ставки на весь период до оферты | погашения
             # -- иначе несравнимы облигации с плавающим текущим купоном и с фиксированным текущим купоном
 
@@ -754,12 +754,13 @@ def bondsFeaturesProcessor(attemptsMax,
 
         # display(bond_df.loc[bond_df_index, ['ISIN', 'BUYBACKDATE', 'MATDATE']]) # для отладки
 
+        # display(bond_df.loc[bond_df_index, 'BUYBACKDATE']) # для отладки   
         if pandas.notna(bond_df.loc[bond_df_index, 'BUYBACKDATE']): # есть оферта         
-            print("bond_df.loc[bond_df_index, 'BUYBACKDATE']") # для отладки   
+            print("bond_df.loc[bond_df_index, 'BUYBACKDATE']:", bond_df.loc[bond_df_index, 'BUYBACKDATE']) # для отладки   
             date_final = bond_df.loc[bond_df_index, 'BUYBACKDATE']
 
         elif pandas.notna(bond_df.loc[bond_df_index, 'MATDATE']): # есть конечная дата обращения
-            print("bond_df.loc[bond_df_index, 'MATDATE']") # для отладки   
+            print("bond_df.loc[bond_df_index, 'MATDATE']:", bond_df.loc[bond_df_index, 'MATDATE']) # для отладки   
             date_final = bond_df.loc[bond_df_index, 'MATDATE']
 
         else: # нет оферты и нет конечной даты обращения
