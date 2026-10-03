@@ -233,6 +233,8 @@ def loginerRB(driver, pause, login_password=None):
     driver.find_element(By.XPATH, "//main//form//button//span[contains(@class, 'label') and text()='войти']").click()
         # нажать кнопку 'войти' с XPath /html/body/div/div/div/main/div/div/div[2]/form/div[5]/button[2]/span
 
+    time.sleep(pause) # если не подождать, вход в аккаунт не происходит
+
 # .. для обработки блоков resultS_container
 def resultS_container_processor(bondS_FinAM_RB,
                                 bondsRB,
