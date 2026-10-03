@@ -176,32 +176,10 @@ def issuerIdentifierNormalizer(issuerIdentidier):
     return issuerIdentidier
 
 # .. для авторизации на сайте rusnonds.ru
-def loginerRB(attemptsMax, boundarieS, driver, pause,  xPathS, login_password=None):
-    # Вызов окна ввода логина и пароля
-    # print('xPathS[0]:', xPathS[0]) # для отладки
-    goS, xPath_loginPrompt = forSelenium.tryerSleeper(attemptsMax, boundarieS[0], driver, pause, xPathS[0])
-    print('xPath_loginPrompt:', xPath_loginPrompt) # для отладки
-    if goS == False:
-        print('Следует проверить xPath вручную')
-        warnings.filterwarnings("ignore")
-        input()
-        sys.exit()
-    driver.find_element(By.XPATH, xPath_loginPrompt).click()
-
-    # Ввод логина и пароля
-    # print('xPathS[1]:', xPathS[1]) # для отладки
-    if xPathS[1] == None: xPath_credentialsEntry = xPath_loginPrompt
-    else:
-        goS, xPath_credentialsEntry = forSelenium.tryerSleeper(attemptsMax, boundarieS[1], driver, pause, xPathS[1])
-        print('xPath_credentialsEntry:', xPath_credentialsEntry) # для отладки
-        if goS == False:
-            print('Следует проверить xPath вручную')
-            warnings.filterwarnings("ignore")
-            input()
-            sys.exit()
-        # return xPath_credentialsEntry, xPath_credentialsEntry
-
-        rootNameS = os.listdir()
+def loginerRB(driver, pause, login_password=None):
+    import json
+    driver.get('https://rusbonds.ru/login') # вызов страницы ввода логина и пароля
+    rootNameS = os.listdir()
 
 # <Поиск логина и пароля>
     if not login_password:
@@ -241,18 +219,19 @@ def loginerRB(attemptsMax, boundarieS, driver, pause,  xPathS, login_password=No
 
     login = str(list(login_password.keys())[0])
     password = str(login_password[login])
-    driver.find_element(By.XPATH, xPath_credentialsEntry + '/div[2]/div/div/div[1]/input').send_keys(login)
-    driver.find_element(By.XPATH, xPath_credentialsEntry + '/div[3]/div/div/div[1]').click()
-    driver.find_element(By.XPATH, xPath_credentialsEntry + '/div[3]/div/div/div[1]/input').send_keys(password)
-    driver.find_element(By.XPATH, xPath_credentialsEntry + '/div[5]/button[2]/span').click()
 
-    print(
-'''--- Сейчас в браузере может появиться Captcha; обработайте её вручную
---- Расположите два окна: с этим скриптом и управляемое им окно браузера -- так, чтобы они оба были видны; нажмите Enter'''
-          )
-    
-    input()
-    return xPath_loginPrompt, xPath_credentialsEntry
+    # Ввод логина и пароля
+    # Архтектура: /html/body/div[1]/div/div/main/div/div/div[2]/form/div[2]/div/div/div[1]/input
+    element_login = driver.find_element(By.XPATH, "//main//form//input[@type='text' and @autocomplete='off' and @class='el-input__inner']")
+    element_login.click()
+    element_login.send_keys(login)
+
+    element_password = driver.find_element(By.XPATH, "//main//form//input[@type='password' and @autocomplete='off' and @class='el-input__inner']")
+    element_password.click()
+    element_password.send_keys(password)
+
+    driver.find_element(By.XPATH, "//main//form//button//span[contains(@class, 'label') and text()='войти']").click()
+        # нажать кнопку 'войти' с XPath /html/body/div/div/div/main/div/div/div[2]/form/div[5]/button[2]/span
 
 # .. для обработки блоков resultS_container
 def resultS_container_processor(bondS_FinAM_RB,
