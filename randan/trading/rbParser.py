@@ -177,7 +177,6 @@ def issuerIdentifierNormalizer(issuerIdentidier):
 
 # .. для авторизации на сайте rusnonds.ru
 def loginerRB(driver, pause, login_password=None):
-    import json
     driver.get('https://rusbonds.ru/login') # вызов страницы ввода логина и пароля
     rootNameS = os.listdir()
 
@@ -216,6 +215,7 @@ def loginerRB(driver, pause, login_password=None):
             login_password = {login: password}
             with open("credentialsRB.json", 'w', encoding='utf-8') as file:
                 json.dump(login_password, file, ensure_ascii=False, indent=4)
+# </Поиск логина и пароля>
 
     login = str(list(login_password.keys())[0])
     password = str(login_password[login])
