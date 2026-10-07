@@ -3,7 +3,7 @@
 
 '''
 (EN) A module for adapting the current script to the CoLab file system
-(RU) Авторский модуль для адаптации текущего скрипта к файловой системе CoLab
+(RU) Модуль для адаптации текущего скрипта к файловой системе CoLab
 '''
 
 def coLabAdaptor():
