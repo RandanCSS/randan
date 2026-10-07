@@ -257,7 +257,7 @@ def newsFeedSearch(access_token=None,
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
       start_time : int -- формат Unix
     '''
-    if not params and not access_token and not count and not end_time and not field and not latitude and not longitude and not q and not start_time and not returnDfs:
+    if not params and not access_token and not count and not end_time and not fields and not latitude and not longitude and not q and not start_time and not returnDfs:
         # print('Пользователь не подал аргументы') # для отладки
         experiencedMode = False
 
