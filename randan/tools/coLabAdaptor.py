@@ -17,7 +17,7 @@ def coLabAdaptor():
             colabMode = True
             from google.colab import drive
             drive.mount('/content/drive')
-            coLabFolder = 'drive/MyDrive/Colab Notebooks'
+            coLabFolder = '/content/drive/MyDrive/Colab Notebooks'
             break
         except ModuleNotFoundError:
             attempt += 1
