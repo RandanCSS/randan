@@ -1,8 +1,8 @@
 # coding: utf-8
 
 '''
-A module designed to facilitate the scraping and parsing of data from the finam.ru website
-Модуль для упрощения выгрузки данных с сайта finam.ru и их парсинга
+(EN) A module designed to facilitate the scraping and parsing of data from the finam.ru website
+(RU) Модуль для упрощения выгрузки данных с сайта finam.ru и их парсинга
 '''
 # import sys
 # sys.path.append(r"C:\Users\Alexey\Dropbox\Мои\RAnDan\myModules")
@@ -42,16 +42,13 @@ for attempt in range(1, 4):
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
 Попытка № {attempt} из 3
 '''
-              )
-        check_call([sys.executable, "-m", "pip", "install", module])
-        if attempt == 3:
-            print(
-f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
-поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
-'''
-                  )
+        )
 
-coLabFolder = coLabAdaptor.coLabAdaptor()
+        check_call([sys.executable, '-m', 'pip', 'install', module])
+        if attempt == 3: print(
+f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
+'''
+        )
 
 # Вспомогательные функции..
 # .. обработки облигаций, относящихся к одному Identifier
@@ -670,10 +667,11 @@ def finamParser(attemptsMax,
                 folder=coLabFolder):
 
     # Блок, поскольку folder многократно используется внутри функции в формулах
-    coLabFolder = coLabAdaptor.coLabAdaptor()
+    coLabFolder = coLabAdaptor.coLabAdaptor() # либо '/content/drive/MyDrive/Colab Notebooks' , либо None
     folder = coLabFolder
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     if not folder: folder = ''
+    # if folder is None) | (folder == ''): folder = ''
     else: folder += slash
 
     columnS_target = ['ISIN код:', 'Рег. номер:', 'Описание купонов']
