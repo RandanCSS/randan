@@ -1,4 +1,10 @@
-# Модуль для для выяснения, какие инструменты (акции, облигации и т.д.) есть в портфеле, на основе брокерских отчётов
+#!/usr/bin/env python
+# coding: utf-8
+
+'''
+(EN) A module that precesses broker reports for clarifing what assets the portfolio consists of
+(RU) Модуль для выяснения, какие инструменты (акции, облигации и т.д.) есть в портфеле, на основе брокерских отчётов
+'''
 
 # 0. Активировать требуемые для работы скрипта модули и пакеты 
 # sys & subprocess -- эти пакеты должны быть предустанавлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
@@ -23,16 +29,15 @@ for attempt in range(1, 4):
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
 Попытка № {attempt} из 3
 '''
-              )
-        check_call([sys.executable, "-m", "pip", "install", module])
-        if  attempt == 3:
-            print(
-f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
-поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
-'''
-                  )
+        )
 
-coLabFolder = coLabAdaptor.coLabAdaptor()
+        check_call([sys.executable, '-m', 'pip', 'install', module])
+        if attempt == 3: print(
+f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
+'''
+        )
+
+coLabFolder = coLabAdaptor.coLabAdaptor() # либо '/content/drive/MyDrive/Colab Notebooks' , либо None
 
 # 1.0 Вспомогательные функции..
 # # 1.0.0 поиска в брокерском отчёте строчек, ограничивающих интересующий раздел
@@ -62,10 +67,9 @@ def boundColibrator(bound, column, df, softCondition, text):
 # 1.0.1 организации обработки отчётов каждого брокера за интересующий период
 def brokerReportsProcessor(broker, fileNameS, folder, period):
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    # if folder: print('folder до:', folder) # для отладки
-    if (folder == None) | (folder == ''): folder = ''
+    if not folder: folder = ''
+    # if folder is None) | (folder == ''): folder = ''
     else: folder += slash
-    # if folder: print('folder после:', folder) # для отладки
 
     # print('fileNameS:', fileNameS) # для отладки
     assetS = pandas.DataFrame()
@@ -110,10 +114,9 @@ def columnNameFinder(df, text):
 # 1.0.4 поиска в директориях брокеров отчётов за интересующий период
 def reportSearch(broker, folder, period):
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    # if folder: print('folder до:', folder) # для отладки
-    if (folder == None) | (folder == ''): folder = ''
+    if not folder: folder = ''
+    # if folder is None) | (folder == ''): folder = ''
     else: folder += slash
-    # if folder: print('folder после:', folder) # для отладки
     
     fileNameS = []
     goC = True
@@ -283,6 +286,11 @@ def getAssets(
     period = int(period) - 89 if period[-2:] == '01' else int(period) - 1 # на случай января
     # print('Целевой период:', period) # для отладки
     
+    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+    if not folder: folder = ''
+    # if folder is None) | (folder == ''): folder = ''
+    else: folder += slash
+
     warnings.filterwarnings("ignore")
 
 # 2.1 Выяснение, какие облигации есть в портфеле, на основе брокерских отчётов
