@@ -62,8 +62,9 @@ def isin_restoration(bondS_FinAM_RB, bondsRB, column_target_FinAM, columnS_targe
             time.sleep(pause)
 
         except Exception as excptn:
-            # print('Exception 1:', excptn)
-            # print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+            print('Exception 1 в isin_restoration') # для отладки
+            print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
+            print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
             form_input = driver.find_element(By.XPATH, "//form//input[@class='input']")
             form_input.click()
@@ -153,8 +154,9 @@ def isin_restoration(bondS_FinAM_RB, bondsRB, column_target_FinAM, columnS_targe
                                 print('Скролю') # для отладки
 
             except Exception as excptn: # чтобы скрипт на скорости не прорускал клик (цикл while tryer)
-                # print('Exception:', excptn)
-                # print(traceback.format_exc()) # показ точной строчки кода с ошибкой
+                print('Exception 2 в isin_restoration') # для отладки
+                print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
+                print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
                 time.sleep(pause * tryer)
                 tryer += 1
