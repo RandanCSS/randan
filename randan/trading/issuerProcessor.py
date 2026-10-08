@@ -32,14 +32,13 @@ for attempt in range(1, 4):
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
 Попытка № {attempt} из 3
 '''
-              )
+        )
+
         check_call([sys.executable, '-m', 'pip', 'install', module])
-        if  attempt == 3:
-            print(
-f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
-поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
+        if attempt == 3: print(
+f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
-                  )
+        )
 
 # Функции..
 # .. компановки информации об эмитентах торгуемых на МосБирже облигаций в датафрейм (словарь)
@@ -84,10 +83,12 @@ def issuerExtractor(dfIn):
     df['Эмитент'] = df['Эмитент'].apply(lambda cellContent: re.sub(r' 0\d+.*', '', cellContent))
     df['Эмитент'] = df['Эмитент'].apply(lambda cellContent: re.sub(r' \d+ обл\.?', '', cellContent))
     df['Эмитент'] = df['Эмитент'].apply(textPreprocessor.simbolsCleaner)
+
     df['Эмитент'] = df['Эмитент'].str.replace('ПАО ', '').str.replace(' ПАО', '')\
         .str.replace('АО ', '').str.replace(' АО', '')\
         .str.replace('ООО ', '').str.replace(' ООО', '')\
         .str.replace('"', '')
+
     df['Эмитент'] = df['Эмитент'].apply(lambda cellContent: cellContent if cellContent[0] != ' ' else cellContent[1:])
     df['Эмитент'] = df['Эмитент'].apply(lambda cellContent: cellContent if cellContent[-1] != ' ' else cellContent[:-1])
     df['Эмитент'] = df['Эмитент'].str.split(' Б ').str[0]
