@@ -1,4 +1,10 @@
-# Модуль для гармонизации и обработки характеристик облигаций
+#!/usr/bin/env python
+# coding: utf-8
+
+'''
+(EN) A module that harminizes and preprocesses bonds' features
+(RU) Модуль для гармонизации и обработки характеристик облигаций
+'''
 
 # 0. Активировать требуемые для работы скрипта модули и пакеты 
 # sys & subprocess -- эти пакеты должны быть предустанавлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
@@ -35,16 +41,13 @@ for attempt in range(1, 4):
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
 Попытка № {attempt} из 3
 '''
-              )
-        check_call([sys.executable, "-m", "pip", "install", module])
-        if attempt == 3:
-            print(
-f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
-поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
-'''
-                  )
+        )
 
-coLabFolder = coLabAdaptor.coLabAdaptor()
+        check_call([sys.executable, '-m', 'pip', 'install', module])
+        if attempt == 3: print(
+f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
+'''
+        )
 
 # 1. Вспомогательные функции для..
 # .. расчёта доходностей облигации (бескупонной, без реинвестирования и с реинвестированием -- по формулам простого и сложного процентов)
@@ -373,11 +376,12 @@ def bondsFeaturesProcessor(attemptsMax,
     bondS = bondS.drop_duplicates('ISIN', keep='last', ignore_index=True)
 
     # Блок, поскольку folder многократно используется внутри функции в формулах
+    coLabFolder = coLabAdaptor.coLabAdaptor() # либо '/content/drive/MyDrive/Colab Notebooks' , либо None
+    folder = coLabFolder
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    # if folder: print('folder до:', folder) # для отладки
-    if (folder == None) | (folder == ''): folder = ''
+    if not folder: folder = ''
+    # if folder is None) | (folder == ''): folder = ''
     else: folder += slash
-    # if folder: print('folder после:', folder) # для отладки
 
     warnings.filterwarnings("ignore")
 
