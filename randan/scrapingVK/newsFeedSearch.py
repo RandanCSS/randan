@@ -38,7 +38,8 @@ for attempt in range(1, 4):
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
 Попытка № {attempt} из 3
 '''
-              )
+        )
+
         check_call([sys.executable, '-m', 'pip', 'install', module])
         if attempt == 3: print(
 f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
@@ -191,29 +192,6 @@ f'''Поскольку исполнение скрипта натолкнуло�
 
     return df
 
-# .. обработки выдачи аргумента fields
-def fieldsProcessor(dfIn, fieldsColumn, response):
-    df = dfIn.copy()
-    idColumnS = []
-    for column in df.columns:
-    # for column in df.columns[1:]: # для отладки
-        if 'id' in column:
-            # print('column:', column) # для отладки
-            idColumnS.append(column)
-
-    columnsToJSON = varPreprocessor.jsonChecker(df)
-    idColumnS.extend(columnsToJSON)
-
-    fieldsDf = pandas.json_normalize(response[fieldsColumn])
-    idS = pandas.json_normalize(response[fieldsColumn])['id'].to_list()
-    if idS:
-        if len(idS) > 0:
-            idsCopy = pandas.json_normalize(response[fieldsColumn])['id'].to_list()
-            idsCopyStr = '' # список в текстовый объект, чтобы ниже подать его внутрь столбца idColumnsConcatinated, созданного конкатенацией idColumnS
-            for idCopy in idsCopy: idsCopyStr += str(idCopy) + ', '
-            idsCopyStr = idsCopyStr[:-2]
-            # print('idsCopyStr':, idsCopyStr) # для отладки
-
     def fieldsIdsChecker(cellContent): # функция, приминяемая ниже посредством apply , чтобы ускорить процесс (по сравнению с циклом по ячейкам)
         if pandas.isna(cellContent): return ''
         idsCopy = cellContent.split('idsCopy')[1].split(', ')
@@ -226,10 +204,13 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
             # print('idsToItemS не пустой список:', idsToItemS) # для отладки
 
             try: return fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')
-            except:
-                print('!!! Ошибка:', sys.exc_info()[1])
+            except Exception as excptn:
+                print('Exception в fieldsIdsChecker') # для отладки
+                print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
+                print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
                 # print('dict:', fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')) # для отладки
                 return ''
+
         else:
             # print('idsToItemS пустой список:', idsToItemS) # для отладки
             return ''
@@ -239,10 +220,13 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
 
     df['idColumnsConcatinated'] += 'idsCopy' + idsCopyStr
     df[fieldsColumn] = df['idColumnsConcatinated'].apply(fieldsIdsChecker)
-    try:
+    try: df[fieldsColumn] = df[fieldsColumn].replace('N/A', numpy.nan)
+    except Exception as excptn:
+        print('Exception в dfsProcessor') # для отладки
+        print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
+        print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
         df[fieldsColumn] = df[fieldsColumn].replace('N/A', numpy.nan)
-    except:
-        df[fieldsColumn] = df[fieldsColumn].replace('N/A', numpy.nan)
+
     return df
 
 # 2. Основная функция
