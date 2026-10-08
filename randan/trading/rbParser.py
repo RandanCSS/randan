@@ -2,8 +2,8 @@
 # coding: utf-8
 
 '''
-A module designed to facilitate the scraping and parsing of data from the rusnonds.ru website
-Модуль для упрощения выгрузки данных с сайта rusnonds.ru и их парсинга
+(EN) A module designed to facilitate the scraping and parsing of data from the rusnonds.ru website
+(RU) Модуль для упрощения выгрузки данных с сайта rusnonds.ru и их парсинга
 '''
 
 # 0. Активировать требуемые для работы скрипта модули и пакеты 
@@ -25,24 +25,25 @@ for attempt in range(1, 4):
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
         if '.' in module: module = module.split('.')[0]
-
         print(
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
 Попытка № {attempt} из 3
 '''
-              )
+        )
 
         check_call([sys.executable, '-m', 'pip', 'install', module])
-        if  attempt == 3:
-            print(
-f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
-поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
+        if attempt == 3: print(
+f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
-                  )
+        )
 
 # Функции для..
 # .. выгрузки с RB характеристик облигаций с ISIN или с SecName или REGNUMBER
 def isin_restoration(bondS_FinAM_RB, bondsRB, column_target_FinAM, columnS_target_RB, driver, errorS, folder, momentCurrent, pause):
+    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+    if not folder: folder = ''
+    # if folder is None) | (folder == ''): folder = ''
+    else: folder += slash
 
     if 'ISIN код' not in bondsRB.columns: bondsRB = bondsRB.rename(columns={'ISIN': 'ISIN код'})
 
@@ -245,6 +246,12 @@ def resultS_container_processor(bondS_FinAM_RB,
                                 folder,
                                 momentCurrent,
                                 resultS_container):
+
+    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+    if not folder: folder = ''
+    # if folder is None) | (folder == ''): folder = ''
+    else: folder += slash
+
     success = True
     for result_container in resultS_container:
         if result_container.text != '':
