@@ -1,9 +1,11 @@
+#!/usr/bin/env python
 # coding: utf-8
 
 '''
-A module to import and process bond issuer ratings from the Moscow Exchange
-Модуль для импорта рейтинга эмитентов торгуемых на МосБирже облигаций и его обработки
+(EN) A module to import and process bond issuers ratings from the Moscow Exchange
+(RU) Модуль для импорта рейтингов эмитентов торгуемых на МосБирже облигаций и его обработки
 '''
+
 # import sys
 # sys.path.append(r"C:\Users\Alexey\Dropbox\Мои\RAnDan\myModules")
 
@@ -36,14 +38,13 @@ for attempt in range(1, 4):
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
 Попытка № {attempt} из 3
 '''
-              )
-        check_call([sys.executable, "-m", "pip", "install", module])
-        if  attempt == 3:
-            print(
-f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
-поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
+        )
+
+        check_call([sys.executable, '-m', 'pip', 'install', module])
+        if attempt == 3: print(
+f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
-                  )
+        )
 
 # Вспомогательные функции..
 # .. поиска эмитентов, у облигаций которых в столбце Bond D Rating (а) ни у одной нет рейтинга,
@@ -232,7 +233,7 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
 
     return bondS, bondS_rowS, driver
 
-    # перевода в число рейтинга с эмитентов торгуемых на МосБирже облигаций
+# .. перевода в число рейтинга с эмитентов торгуемых на МосБирже облигаций
 def ratingDigitizer(letters, raitingSource):
     if raitingSource == 'RB':
         letters = letters.replace(' ГМ', '').replace(' Неквалы', '').replace(' Остальные', '')
