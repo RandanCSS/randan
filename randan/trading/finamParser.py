@@ -108,7 +108,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
         try: table_TB = getTableByURL_TB(driver_TB, isin, pause)
         except Exception as excptn:
             print('Exception после getTableByURL_TB в bondsOfIdentifierProcessor') # для отладки
-            print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
+            print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
             print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
             goS = False
             return bondsFinAM, bondsFinAM_row, driver, goS
@@ -136,7 +136,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
 
             except Exception as excptn:
                 print('Exception 1 в bondsOfIdentifierProcessor') # для отладки
-                print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
+                print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
                 print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
                 print('attempt', attempt) # для отладки
@@ -494,7 +494,7 @@ def getTableByURL_TB(driver_TB, isin, pause):
 
         except Exception as excptn:
             print('Exception в getTableByURL_TB') # для отладки
-            print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
+            print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
             print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
             if attempt == 3:
@@ -719,7 +719,7 @@ def finamParser(attemptsMax,
 
                 except Exception as excptn:
                     print('Exception 1 в finamParser') # для отладки
-                    print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
+                    print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
                     print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
                     print('attempt:', attempt)
