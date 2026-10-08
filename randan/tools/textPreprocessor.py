@@ -11,30 +11,26 @@ import sys
 from subprocess import check_call
 
 # --- остальные модули и пакеты
-attempt = 0
-while True:
+for attempt in range(1, 4):
     try:
         from autocorrect import Speller
         import itertools, numpy, os, pandas, pymystem3, re, stop_words, time, warnings
-        break
+        break # выход из цикла for attempt in range(3)
+
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
-        if '.' in module: module = module.split('.')[1]
+        if '.' in module: module = module.split('.')[0] 
         print(
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка № {attempt} из 10
+Попытка № {attempt} из 3
 '''
               )
-        check_call([sys.executable, "-m", "pip", "install", module])
-        attempt += 1
-        if  attempt == 10:
-            print(
-f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
-поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
+        check_call([sys.executable, '-m', 'pip', 'install', module])
+        if attempt == 3: print(
+f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
-                  )
-            break
+        )
 
 def autoCorrectorText(fast, language, text, tokensCorrectedQuantityMax, userWordS):
     """
