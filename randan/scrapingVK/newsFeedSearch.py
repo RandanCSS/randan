@@ -40,18 +40,17 @@ f'''Пакет {module} НЕ прединсталлирован, но он тр�
 '''
               )
         check_call([sys.executable, '-m', 'pip', 'install', module])
-        if  attempt == 3:
-            print(
-f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
-поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
+        if attempt == 3: print(
+f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
-                  )
+        )
 
 # 1. Вспомогательные функции для..
 # .. метода search из API ВК, помогающая работе с ключами
 def bigSearch(API_keyS,
               count,
               end_time,
+              extraParams,
               fields,
               iteration,
               keyOrder,
@@ -66,6 +65,7 @@ def bigSearch(API_keyS,
 
     dfAdd = pandas.DataFrame()
     goS = True
+    if isinstance(fields, list): fields = ','.join(fields)
 
     params = {'access_token': API_keyS[keyOrder], # обязательный параметр
               'count': count, # опциональный параметр
@@ -79,9 +79,21 @@ def bigSearch(API_keyS,
               'start_time': start_time, # опциональный параметр
               'v': '5.199'} # обязательный параметр
 
+    PROTECTED = {'access_token', 'v'}
+    if extraParams:
+        for key, value in extraParams.items():
+            if key in PROTECTED: continue
+            if key not in params or params[key] is None: params[key] = value
+
+    # Все list/tuple в строку через запятую
+    for key, value in list(params.items()):
+        if isinstance(value, (list, tuple)):
+            params[key] = ','.join(map(str, value))
+
     tryer = 0
     while True:
         try: # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
+            params = {key: value for key, value in params.items() if value is not None}
             response = requests.get('https://api.vk.ru/method/newsfeed.search', params=params)
             response = response.json() # отобразить выдачу метода get в виде JSON
             # print('response', response) # для отладки
@@ -92,7 +104,9 @@ def bigSearch(API_keyS,
                 dfAdd = pandas.json_normalize(response['items'])
                 break # нет смысла в новых итерациях цикла while goC
 
-            else: goC, goS, keyOrder, pause, response, tryer = scrapingTools.errorProcessor(API_keyS, keyOrder, pause, response, tryer)
+            else:
+                goC, goS, keyOrder, pause, response, tryer = scrapingTools.errorProcessor(API_keyS, keyOrder, pause, response, tryer)
+                if not goS: break
 
         except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
             response = {'items': [], 'total_count': 0} # принудительная выдача для response
@@ -111,11 +125,12 @@ def bigSearch(API_keyS,
 
 # .. обработки выдачи любого из методов, помогающая работе с ключами
 def dfsProcessor(complicatedNamePart,
-                 coLabFolder,
                  dfAdd,
                  dfFinal, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода search
                  dfIn,
+                 fields,
                  fileFormatChoice,
+                 folder,
                  goS, # единственная из функций, принимающая этот аргумент
                  method,
                  momentCurrent,
@@ -125,13 +140,16 @@ def dfsProcessor(complicatedNamePart,
                  targetCount,
                  year,
                  yearsRange):
+
     df = pandas.concat([dfIn, dfAdd])
     columnsForCheck = []
     if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
         for column in df.columns:
             if 'id' in column: columnsForCheck.append(column)
     # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck) # для отладки
-    df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True) # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
+
+    if columnsForCheck: df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
+        # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
 
     if not goS:
         print(
@@ -148,19 +166,19 @@ f'''Поскольку исполнение скрипта натолкнуло�
         with open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}fields.json", 'w', encoding='utf-8') as file:
             json.dump(fields, file, ensure_ascii=False, indent=4)
 
-        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}method.txt", method)
-        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}q.txt", q if q else '')
-        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}stageTarget.txt", stage) # stage и stageTarget принимает значения [0; 3]
-        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}targetCount.txt", targetCount if targetCount else '0')
-        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}year.txt", str(year)) # год, на котором остановилось исполнение скрипта
-        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}yearsRange.txt", yearsRange if yearsRange else '')
+        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}method.txt", method)
+        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}q.txt", q if q else '')
+        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}stageTarget.txt", stage) # stage и stageTarget принимает значения [0; 3]
+        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}targetCount.txt", targetCount if targetCount else '0')
+        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}year.txt", str(year)) # год, на котором остановилось исполнение скрипта
+        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}yearsRange.txt", yearsRange if yearsRange else '')
 
         df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
+                             currentMoment=momentCurrent.strftime('%Y%m%d'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              dfIn=df,
                              fileFormatChoice=fileFormatChoice,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                             coLabFolder=coLabFolder,
-                             currentMoment=momentCurrent.strftime('%Y%m%d')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                             folder=folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal",
+                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method) # чтобы избавиться от лишней точки в имени файла
 
         warnings.filterwarnings('ignore')
 
@@ -188,12 +206,13 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
 
     fieldsDf = pandas.json_normalize(response[fieldsColumn])
     idS = pandas.json_normalize(response[fieldsColumn])['id'].to_list()
-    if len(idS) > 0:
-        idsCopy = pandas.json_normalize(response[fieldsColumn])['id'].to_list()
-        idsCopyStr = '' # список в текстовый объект, чтобы ниже подать его внутрь столбца idColumnsConcatinated, созданного конкатенацией idColumnS
-        for idCopy in idsCopy: idsCopyStr += str(idCopy) + ', '
-        idsCopyStr = idsCopyStr[:-2]
-        # print('idsCopyStr':, idsCopyStr) # для отладки
+    if idS:
+        if len(idS) > 0:
+            idsCopy = pandas.json_normalize(response[fieldsColumn])['id'].to_list()
+            idsCopyStr = '' # список в текстовый объект, чтобы ниже подать его внутрь столбца idColumnsConcatinated, созданного конкатенацией idColumnS
+            for idCopy in idsCopy: idsCopyStr += str(idCopy) + ', '
+            idsCopyStr = idsCopyStr[:-2]
+            # print('idsCopyStr':, idsCopyStr) # для отладки
 
     def fieldsIdsChecker(cellContent): # функция, приминяемая ниже посредством apply , чтобы ускорить процесс (по сравнению с циклом по ячейкам)
         if pandas.isna(cellContent): return ''
@@ -221,7 +240,7 @@ def fieldsProcessor(dfIn, fieldsColumn, response):
     df['idColumnsConcatinated'] += 'idsCopy' + idsCopyStr
     df[fieldsColumn] = df['idColumnsConcatinated'].apply(fieldsIdsChecker)
     try:
-        df[fieldsColumn] = df[fieldsColumn].replace('N/A', numpy.NaN)
+        df[fieldsColumn] = df[fieldsColumn].replace('N/A', numpy.nan)
     except:
         df[fieldsColumn] = df[fieldsColumn].replace('N/A', numpy.nan)
     return df
@@ -263,6 +282,8 @@ def newsFeedSearch(access_token=None,
 
     else:
         experiencedMode = True
+        KNOWN_KEYS = {'access_token', 'count', 'end_time', 'fields', 'latitude', 'longitude', 'q', 'start_time'}
+        extraParams = {}        
         if params:
             access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
             # print('access_token:', access_token) # для отладки
@@ -286,35 +307,40 @@ def newsFeedSearch(access_token=None,
             # print('q:', q) # для отладки
 
             start_time = scrapingTools.argument_key_comparison(start_time, 'start_time', params)
-            if start_time:
-                if type(start_time) != int: start_time = int(start_time)
+            if start_time is not None:
+                if not isinstance(start_time, int): start_time = int(start_time)
             # print('start_time:', start_time) # для отладки
 
+            extraParams = {key: value for key, value in params.items() if key not in KNOWN_KEYS}
+                # всё, что осталось -- пользовательские аргументы метода
+
+            extraParams = {key: value for key, value in extraParams.items() if value is not None}
+
         if count:
-            if type(count) != int: count = int(count)
+            if not isinstance(count, int): count = int(count)
 
         else: count = 200
 
         # print('count:', count) # для отладки
 
-        if end_time:
-            if type(end_time) != int: end_time = int(end_time)
+        if end_time is not None:
+            if not isinstance(end_time, int): end_time = int(end_time)
         # print('end_time:', end_time) # для отладки
 
-        if latitude:
-            if type(latitude) != int: latitude = int(latitude)
+        if latitude is not None:
+            if not isinstance(latitude, float): latitude = float(latitude)
         # print('latitude:', latitude) # для отладки
 
-        if longitude:
-            if type(longitude) != int: longitude = int(longitude)
+        if longitude is not None:
+            if not isinstance(longitude, float): longitude = float(longitude)
         # print('longitude:', longitude) # для отладки
         
         if q:
-            if type(q) != str: q = str(q)
-        # print('longitude:', longitude) # для отладки
+            if not isinstance(q, str): q = str(q)
+        # print('q:', q) # для отладки
 
-        if start_time:
-            if type(start_time) != int: start_time = int(start_time)
+        if start_time is not None:
+            if not isinstance(start_time, int): start_time = int(start_time)
         # print('start_time:', start_time) # для отладки
 
     if not experiencedMode:
@@ -331,11 +357,13 @@ f'''    Скрипт нацелен на выгрузку характерист
 
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API ВК
+
     # Блок, поскольку folder многократно используется внутри функции в формулах
-    coLabFolder = coLabAdaptor.coLabAdaptor()
+    coLabFolder = coLabAdaptor.coLabAdaptor() # либо '/content/drive/MyDrive/Colab Notebooks' , либо None
     folder = coLabFolder
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if (folder == None) | (folder == ''): folder = ''
+    if not folder: folder = ''
+    # if folder is None) | (folder == ''): folder = ''
     else: folder += slash
 
     fileFormatChoice = '.xlsx' # базовый формат сохраняемых файлов; формат .json добавляется опционально через наличие columnsToJSON
@@ -465,7 +493,7 @@ f'''
                 folderFile = None # для унификации
                 break
             else:
-                itemS, error, folder = files2df.files2df(folderFile)
+                itemS, error, folder = files2df.files2df(folderFile) # смена folder на явно переданную пользователем
                 if error:
                     if 'No such file or directory' in error:
                         print('Путь:', folderFile, '-- не существует; попробуйте, пожалуйста, ещё раз..')
@@ -499,7 +527,7 @@ f'''Если требуется конкретный временнОй диап
             while True:
                 yearsRange = input()
                 if len(yearsRange) != 0:
-                    yearsRange = re.sub(r' *', '', yearsRange)
+                    yearsRange = re.sub(r'\s*', '', yearsRange)
                     if '-' in yearsRange:
                         yearsRange = yearsRange.split('-')
                         if len(yearsRange) == 2:
@@ -513,17 +541,17 @@ f'''Если требуется конкретный временнОй диап
                 else:
                     yearsRange = None # для унификации
                     break
-        if start_time:
+        if start_time is not None:
             yearMinByUser = int(datetime.fromtimestamp(start_time).strftime('%Y')) # из experiencedMode
-            # print('elif start_time', yearMinByUser) # для отладки
+            # print('elif start_time is not None', yearMinByUser) # для отладки
 
-        if end_time:
+        if end_time is not None:
             yearMaxByUser = int(datetime.fromtimestamp(end_time).strftime('%Y')) # из experiencedMode
-            # print('elif end_time:', yearMaxByUser) # для отладки
+            # print('elif end_time is not None:', yearMaxByUser) # для отладки
             year = yearMaxByUser
 
         if yearMinByUser and not yearMaxByUser: yearMaxByUser = int(momentCurrent.strftime('%Y')) # в случае отсутствия пользовательской верхней временнОй границы при наличии нижней
-        elif not yearMinByUser and yearMaxByUser: yearMaxByUser = 1970 # в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
+        elif not yearMinByUser and yearMaxByUser: yearMinByUser = 1970 # в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
 
         # print('yearMinByUser', yearMinByUser) # для отладки
         # print('yearMaxByUser', yearMaxByUser) # для отладки
@@ -563,6 +591,7 @@ f'''В скрипте используются следующие аргумен
             itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS=API_keyS,
                                                                                    count=count,
                                                                                    end_time=end_time,
+                                                                                   extraParams=extraParams,
                                                                                    fields=fields,
                                                                                    iteration=iteration,
                                                                                    keyOrder=keyOrder,
@@ -588,12 +617,13 @@ f'''В скрипте используются следующие аргумен
             else: targetCount = None # проверка, что функция bigSearch завершилась успехом
 
             itemS = dfsProcessor(complicatedNamePart=complicatedNamePart,
-                                 coLabFolder=coLabFolder,
-                                 fileFormatChoice=fileFormatChoice,
-                                 goS=goS,
                                  dfAdd=itemsAdditional,
                                  dfFinal=itemS,
                                  dfIn=itemS,
+                                 fields=fields,
+                                 fileFormatChoice=fileFormatChoice,
+                                 folder=folder,
+                                 goS=goS,
                                  method=method,
                                  momentCurrent=momentCurrent,
                                  q=q,
@@ -612,6 +642,7 @@ f'''В скрипте используются следующие аргумен
                 itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS=API_keyS,
                                                                                        count=count,
                                                                                        end_time=end_time,
+                                                                                       extraParams=extraParams,
                                                                                        fields=fields,
                                                                                        iteration=iteration,
                                                                                        keyOrder=keyOrder,
@@ -625,12 +656,13 @@ f'''В скрипте используются следующие аргумен
                 # print('''    response['next_from'] после bigSearch''', response['next_from']) # для отладки
 
                 itemS = dfsProcessor(complicatedNamePart=complicatedNamePart,
-                                     coLabFolder=coLabFolder,
-                                     fileFormatChoice=fileFormatChoice,
-                                     goS=goS,
                                      dfAdd=itemsAdditional,
                                      dfFinal=itemS,
                                      dfIn=itemS,
+                                     fields=fields,
+                                     fileFormatChoice=fileFormatChoice,
+                                     folder=folder,
+                                     goS=goS,
                                      method=method,
                                      momentCurrent=momentCurrent,
                                      q=q,
@@ -667,6 +699,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                             itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS=API_keyS,
                                                                                                           count=count,
                                                                                                           end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
+                                                                                                          extraParams=extraParams,
                                                                                                           fields=fields,
                                                                                                           iteration=iteration,
                                                                                                           keyOrder=keyOrder,
@@ -681,12 +714,13 @@ f'''Метод {method} выдаёт ограниченное количеств
                             # display(itemsMonthlyAdditional.sort_values('date')['date'].drop_duplicates()) # для отладки
 
                             itemsYearlyAdditional = dfsProcessor(complicatedNamePart=complicatedNamePart,
-                                                                 coLabFolder=coLabFolder,
-                                                                 fileFormatChoice=fileFormatChoice,
-                                                                 goS=goS,
                                                                  dfAdd=itemsMonthlyAdditional,
                                                                  dfFinal=itemS,
                                                                  dfIn=itemsYearlyAdditional,
+                                                                 fields=fields,
+                                                                 fileFormatChoice=fileFormatChoice,
+                                                                 folder=folder,
+                                                                 goS=goS,
                                                                  method=method,
                                                                  momentCurrent=momentCurrent,
                                                                  q=q,
@@ -707,6 +741,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                 itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS=API_keyS,
                                                                                                               count=count,
                                                                                                               end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
+                                                                                                              extraParams=extraParams,
                                                                                                               fields=fields,
                                                                                                               iteration=iteration,
                                                                                                               keyOrder=keyOrder,
@@ -721,12 +756,13 @@ f'''Метод {method} выдаёт ограниченное количеств
                                 # display(itemsMonthlyAdditional.sort_values('date')['date'].drop_duplicates()) # для отладки
 
                                 itemsYearlyAdditional = dfsProcessor(complicatedNamePart=complicatedNamePart,
-                                                                     coLabFolder=coLabFolder,
-                                                                     fileFormatChoice=fileFormatChoice,
-                                                                     goS=goS,
                                                                      dfAdd=itemsMonthlyAdditional,
                                                                      dfFinal=itemS,
                                                                      dfIn=itemsYearlyAdditional,
+                                                                     fields=fields,
+                                                                     fileFormatChoice=fileFormatChoice,
+                                                                     folder=folder,
+                                                                     goS=goS,
                                                                      method=method,
                                                                      momentCurrent=momentCurrent,
                                                                      q=q,
@@ -742,12 +778,13 @@ f'''Метод {method} выдаёт ограниченное количеств
                         # display(itemsYearlyAdditional.sort_values('date')['date'].drop_duplicates()) # для отладки
 
                         itemS = dfsProcessor(complicatedNamePart=complicatedNamePart,
-                                             coLabFolder=coLabFolder,
-                                             fileFormatChoice=fileFormatChoice,
-                                             goS=goS,
                                              dfAdd=itemsYearlyAdditional,
                                              dfFinal=itemS,
                                              dfIn=itemS,
+                                             fields=fields,
+                                             fileFormatChoice=fileFormatChoice,
+                                             folder=folder,
+                                             goS=goS,
                                              method=method,
                                              momentCurrent=momentCurrent,
                                              q=q,
@@ -790,11 +827,11 @@ f'''
 
 # 2.1.2 Экспорт выгрузки метода search и финальное завершение скрипта
         df2file.df2fileShell(complicatedNamePart=complicatedNamePart,
+                             currentMoment=momentCurrent.strftime('%Y%m%d_%H%M'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              dfIn=itemS,
                              fileFormatChoice=fileFormatChoice,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                             coLabFolder=coLabFolder,
-                             currentMoment=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                             folder=folder,
+                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method) # чтобы избавиться от лишней точки в имени файла
 
         print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
         if os.path.exists(rootName):
@@ -812,10 +849,6 @@ JSONS = []
 for cellContent in Исходный_датафрейм[column].dropna():
     JSONS.extend(cellContent)
 Новый_датафрейм = pandas.json_normalize(JSONS).drop_duplicates('id').reset_index(drop=True)
-
-Чтобы сохранить результат распаковки в ту же директорию, в которую уже сохранены основные данные, используйте такой код:
-from randan.tools.df2file import df2fileShell
-df2fileShell('{complicatedNamePart}', Новый_датафрейм, '{fileFormatChoice}', column, {'{coLabFolder}' if coLabFolder else None}, "{momentCurrent.strftime('%Y%m%d_%H%M')}")
 '''
                                  )
         if returnDfs: return itemS
@@ -823,28 +856,29 @@ df2fileShell('{complicatedNamePart}', Новый_датафрейм, '{fileForma
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         # display(itemS)
         if len(itemS) > 0:
-            if itemsYearlyAdditional:
+            if itemsYearlyAdditional is not None:
                 dfAdd = itemsYearlyAdditional
                 dfFinal = itemS
                 dfIn = itemS
 
-            elif itemsMonthlyAdditional:
+            elif itemsMonthlyAdditional is not None:
                 dfAdd = itemsMonthlyAdditional
                 dfFinal = itemS
                 dfIn = itemsYearlyAdditional
 
-            elif itemsAdditional:
+            elif itemsAdditional is not None:
                 dfAdd = itemsAdditional
                 dfFinal = itemS
                 dfIn = itemS
 
             dfsProcessor(complicatedNamePart=complicatedNamePart,
-                         coLabFolder=coLabFolder,
-                         fileFormatChoice=fileFormatChoice,
-                         goS=False,
                          dfAdd=dfAdd,
                          dfFinal=itemS,
                          dfIn=itemS,
+                         fields=fields,
+                         fileFormatChoice=fileFormatChoice,
+                         folder=folder,
+                         goS=False,
                          method=method,
                          momentCurrent=momentCurrent,
                          q=q,
