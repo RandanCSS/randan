@@ -75,7 +75,7 @@ def get_json_df(body, headers, pause, url, max_retries=3):
 
             else: # если ошибка другая (например 400 Bad Request) -- нет смысла пробовать снова
                 print('  Exception в get_json_df (фатальная ошибка HTTP)')
-                print(f'{type(excptn).__name__}: {str(excptn).split("Stacktrace:")[0].strip()}')
+                print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}")
                 return [], pandas.DataFrame() # заглушка, чтобы не сломать concat в вызывающем цикле
                 
         except Exception as excptn:
