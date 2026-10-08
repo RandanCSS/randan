@@ -55,7 +55,7 @@ def json2df(columnS_forComparisom, headers, pause, sectionOfJson, url):
         try: data_json = requests.get(url, headers=headers, params=params).json()
         except Exception as excptn:
             print('Exception 1 в json2df') # для отладки
-            print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
+            print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
             print(traceback.format_exc()) # показ точной строчки кода с ошибкой
             time.sleep(pause)
 
@@ -72,7 +72,7 @@ def json2df(columnS_forComparisom, headers, pause, sectionOfJson, url):
 
         except Exception as excptn:
             # print('Exception 2 в json2df') # для отладки
-            # print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
+            # print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
             # print(traceback.format_exc()) # показ точной строчки кода с ошибкой
             # print('Похоже, df_additional != df_additional_previous; продолжаю итерировать') # для отладки
             pass
