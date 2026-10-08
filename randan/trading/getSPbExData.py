@@ -1,8 +1,10 @@
+#!/usr/bin/env python
 # coding: utf-8
 
 '''
-A module to import and process bonds' feachures from the SPb Exchange
-Модуль для выгрузки характеристик торгуемых на СПб Бирже облигаций
+(EN) A module to import and process bonds' feachures from the SPb Exchange
+(RU) Модуль для выгрузки характеристик торгуемых на СПб Бирже облигаций
+
 '''
 # import sys
 # sys.path.append(r"C:\Users\Alexey\Dropbox\Мои\RAnDan\myModules")
@@ -34,22 +36,19 @@ for attempt in range(1, 4):
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
         if '.' in module: module = module.split('.')[0]
-
         print(
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
 Попытка № {attempt} из 3
 '''
-              )
+        )
 
         check_call([sys.executable, '-m', 'pip', 'install', module])
-        if  attempt == 3:
-            print(
-f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
-поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
+        if attempt == 3: print(
+f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
-                  )
+        )
 
-coLabFolder = coLabAdaptor.coLabAdaptor()
+coLabFolder = coLabAdaptor.coLabAdaptor() # либо '/content/drive/MyDrive/Colab Notebooks' , либо None
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # 1. Вспомогательная функция для..
@@ -295,10 +294,9 @@ plusNotTraded : bool -- в случае True функция возвращает
 
     # Блок, поскольку folder многократно используется внутри функции в формулах
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    # if folder: print('folder до:', folder) # для отладки
     if not folder: folder = ''
+    # if folder is None) | (folder == ''): folder = ''
     else: folder += slash
-    # if folder: print('folder после:', folder) # для отладки
 
     # 2.0 Проверка наличия файла Securities and Marketdata SPbEx.xlsx и вопрос про необходимость его обновления
     path_securities_marketdata = folder + market + ' Securities and Marketdata SPbEx.xlsx'
