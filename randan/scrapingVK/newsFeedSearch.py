@@ -192,43 +192,6 @@ f'''Поскольку исполнение скрипта натолкнуло�
 
     return df
 
-    def fieldsIdsChecker(cellContent): # функция, приминяемая ниже посредством apply , чтобы ускорить процесс (по сравнению с циклом по ячейкам)
-        if pandas.isna(cellContent): return ''
-        idsCopy = cellContent.split('idsCopy')[1].split(', ')
-        cellContent = cellContent.split('idsCopy')[0]
-        idsToItemS = []
-        for idCopy in idsCopy:
-            if idCopy in cellContent: idsToItemS.append(int(idCopy))
-
-        if len(idsToItemS) > 0:
-            # print('idsToItemS не пустой список:', idsToItemS) # для отладки
-
-            try: return fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')
-            except Exception as excptn:
-                print('Exception в fieldsIdsChecker') # для отладки
-                print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
-                print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
-                # print('dict:', fieldsDf[fieldsDf['id'].isin(idsToItemS)].to_dict('records')) # для отладки
-                return ''
-
-        else:
-            # print('idsToItemS пустой список:', idsToItemS) # для отладки
-            return ''
-
-    df['idColumnsConcatinated'] = ''
-    for idColumn in idColumnS: df['idColumnsConcatinated'] += ' ' + df[idColumn].astype(str)
-
-    df['idColumnsConcatinated'] += 'idsCopy' + idsCopyStr
-    df[fieldsColumn] = df['idColumnsConcatinated'].apply(fieldsIdsChecker)
-    try: df[fieldsColumn] = df[fieldsColumn].replace('N/A', numpy.nan)
-    except Exception as excptn:
-        print('Exception в dfsProcessor') # для отладки
-        print(f'{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}') # для отладки
-        print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
-        df[fieldsColumn] = df[fieldsColumn].replace('N/A', numpy.nan)
-
-    return df
-
 # 2. Основная функция
 def newsFeedSearch(access_token=None,
                    count=None,
