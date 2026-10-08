@@ -2,7 +2,8 @@
 # coding: utf-8
 
 '''
-A module for saving a dataframe to a file of one of the formats: CSV, Excel and JSON. It facilitates working with data from social media
+(EN) A module for exporting a dataframe to a file of one of the formats: CSV, Excel and JSON
+(RU) Модуль для экспорта датафрейма в файл одного из флорматов: CSV, Excel и JSON
 '''
 
 # sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
@@ -10,30 +11,26 @@ import sys
 from subprocess import check_call
 
 # --- остальные модули и пакеты
-attempt = 0
-while True:
+for attempt in range(1, 4):
     try:
         from randan.tools import textPreprocessor, varPreprocessor
         import os, pandas
-        break
+        break # выход из цикла for attempt in range(3)
+
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
-        if '.' in module: module = module.split('.')[1] 
+        if '.' in module: module = module.split('.')[0] 
         print(
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка № {attempt} из 10
+Попытка № {attempt} из 3
 '''
               )
-        check_call([sys.executable, "-m", "pip", "install", module])
-        attempt += 1
-        if  attempt == 10:
-            print(
-f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
-поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
+        check_call([sys.executable, '-m', 'pip', 'install', module])
+        if attempt == 3: print(
+f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
-                  )
-            break
+        )
 
 def df2file(df, *arg): # арки: fileName и folder
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
@@ -56,19 +53,21 @@ def df2file(df, *arg): # арки: fileName и folder
         folder += slash
 
     if fileName == '':
-        fileName = input('--- Впишите имя сохраняемого файла и нажмите Enter:')
+        fileName = input('--- Впишите имя сохраняемого файла (с расширением) и нажмите Enter:')
     
     if folder != '':
-        print(f'Директория, в которую сохраняю файл "{fileName}":', os.getcwd() + slash + folder)
+        print(f"Директория, в которую сохраняю файл '{fileName}':", os.getcwd() + slash + folder)
+
     elif slash in fileName: # если директория содерджится в fileName
         folder = slash.join(fileName.split(slash)[:-1])
         fileName = fileName.split(slash)[-1]
-        print(f'Директория, в которую сохраняю файл "{fileName}":', os.getcwd() + slash + folder)
+        print(f"Директория, в которую сохраняю файл '{fileName}':", os.getcwd() + slash + folder)
     else:
         folder = input('--- Впишите директорию, в которую сохранить файл (если имя файла уже содержит путь к нему, то не вписывайте ничего) и нажмите Enter:')
 
-    if slash != folder[-1]:
+    if folder and not folder.endswith(slash):
         folder += slash
+
 # ********** Выяснить расширение сохраняемого файла
     # print('Имя сохраняемого файла:', fileName)
     fileFormatChoice = fileName.split('.')[-1]
@@ -79,17 +78,17 @@ def df2file(df, *arg): # арки: fileName и folder
             fileFormatChoice = input()
             # print(folder + fileName.capitalize() + fileFormatChoice)
             if len(fileFormatChoice) == 0:
-                fileFormatChoice = '.xlsx'
+                fileFormatChoice = 'xlsx'
                 break
             elif fileFormatChoice == 'c':
-                fileFormatChoice = '.csv'
+                fileFormatChoice = 'csv'
                 break
             elif fileFormatChoice == 'j':
-                fileFormatChoice = '.json'
+                fileFormatChoice = 'json'
                 break
             else:
                 print('--- Вы ввели что-то не то; попробуйте, пожалуйста, ещё раз..')
-        fileName += fileFormatChoice
+        fileName += '.' + fileFormatChoice
 
 # ********** В зависимости от расширения сохраняемого файла выполнить сохранение
     # print('Расширение файла:', fileFormatChoice)
@@ -100,12 +99,12 @@ def df2file(df, *arg): # арки: fileName и folder
         for column in textColS: df[column] = df[column].apply(textPreprocessor.dropControlCharacters)
             # чистка текстов от control characters (недопустимых при экспорте в файлы формата типа Excel)
 
-        attempt = 0
-        while True:
+        for attempt in range(1, 4):
             try:
-                df.to_excel(folder + fileName)
+                df.to_excel(folder + fileName, engine='xlsxwriter', index=False)
                 # print(folder + fileName)
-                break
+                break # выход из цикла for attempt in range(3)
+
             except:
                 errorDescription = sys.exc_info()
                 print(errorDescription[1])
@@ -113,43 +112,37 @@ def df2file(df, *arg): # арки: fileName и folder
                     module = 'xlsxwriter'
                     print('Для устранения ошибки требуется пакет', {module}, 'поэтому он будет инсталирован сейчас\n')
                     check_call([sys.executable, "-m", "pip", "install", module])
-                    attempt += 1
-                    if  attempt == 10:
-                        print('Пакет', module
-                              , 'НЕ прединсталлируется с установкой Анаконды, для работы скрипта требуется этот пакет,'
-                              , 'но инсталлировать его не удаётся, попробуйте инсталлировать его вручную, после чего снова запустите требуемый скрипт пакета\n')
-                        break
-                else: break
+                    if attempt == 3: print(
+f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
+'''
+                    )
+
     if fileFormatChoice == 'csv':
         textColS = df.select_dtypes(include=['object', 'string']).columns
         for column in textColS: df[column] = df[column].apply(textPreprocessor.dropControlCharacters)
             # чистка текстов от control characters (недопустимых при экспорте в файлы формата типа Excel)
 
-        df.to_csv(folder + fileName)   
-    if fileFormatChoice == 'json':
-        df.to_json(folder + fileName)
+        df.to_csv(folder + fileName, encoding='utf-8-sig', index=False)
 
-def df2fileShell(complicatedNamePart, dfIn, fileFormatChoice, method, coLabFolder, currentMoment):
-    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    folder = currentMoment + complicatedNamePart
-    if coLabFolder == None:
-        print('Сохраняю выгрузку метода', method, '                              ') #, f'в директорию "{folder}"'
-        if os.path.exists(folder) == False:
-            print('Такой директории не существовало, поэтому она создана')
-            os.makedirs(folder)
-        # else:
-            # print('Эта директория существует')
-    else:
-        print('Сохраняю выгрузку метода', method, '                              ') #, f'в директорию "{os.getcwd() + slash + coLabFolder + slash + folder}"'
-        if os.path.exists(os.getcwd() + slash + coLabFolder + slash + folder) == False:
-            print('Такой директории не существовало, поэтому она создана')
-            os.makedirs(os.getcwd() + slash + coLabFolder + slash + folder)
-        # else:
-            # print('Эта директория существует')
-    
-    # df2file(itemS) # при такой записи имя сохранаяемого файла и директория, в которую сохранить, вводятся вручную
-    # print('При сохранении возможно появление обширного предупреждения UserWarning: Ignoring URL.'
-    #       , 'Оно вызвано слишком длинными URL-адресами в датафрейме и не является проблемой; его следует пролистать и перейти к диалоговому окну' )
+    if fileFormatChoice == 'json': df.to_json(folder + fileName, force_ascii=False, indent=4, orient='records')
+
+def df2fileShell(complicatedNamePart, currentMoment, dfIn, fileFormatChoice, folder, method):
+    # slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+    # folder = currentMoment + complicatedNamePart
+    # if coLabFolder == None:
+    #     print('Сохраняю выгрузку метода', method, '                              ') #, f'в директорию "{folder}"'
+    #     if os.path.exists(folder) == False:
+    #         print('Такой директории не существовало, поэтому она создана')
+    #         os.makedirs(folder)
+    #     # else:
+    #         # print('Эта директория существует')
+    # else:
+    #     print('Сохраняю выгрузку метода', method, '                              ') #, f'в директорию "{os.getcwd() + slash + coLabFolder + slash + folder}"'
+    #     if os.path.exists(os.getcwd() + slash + coLabFolder + slash + folder) == False:
+    #         print('Такой директории не существовало, поэтому она создана')
+    #         os.makedirs(os.getcwd() + slash + coLabFolder + slash + folder)
+    #     # else:
+    #         # print('Эта директория существует')
 
     # Проверка всех столбцов на наличие в их ячейках JSON-формата
     columnsToJSON = varPreprocessor.jsonChecker(dfIn)
@@ -164,10 +157,10 @@ def df2fileShell(complicatedNamePart, dfIn, fileFormatChoice, method, coLabFolde
         if 'owner_id' in dfIn.columns: columnsToJSON.append('owner_id')
 
         print('columnsToJSON:', columnsToJSON) # для отладки
-        df2file(dfIn[columnsToJSON], f'{folder}_{method}_JSON_varS.json', folder if coLabFolder == None else coLabFolder + slash + folder)
+        df2file(dfIn[columnsToJSON], f'{folder}_{method}_JSON_varS.json', folder)
         columnsToJSON.remove('id')
         if 'from_id' in columnsToJSON: columnsToJSON.remove('from_id')
         if 'owner_id' in columnsToJSON: columnsToJSON.remove('owner_id')
 
-        df2file(dfIn.drop(columnsToJSON, axis=1), f'{folder}_{method}_Other_varS{fileFormatChoice}', folder if coLabFolder == None else coLabFolder + slash + folder)
-    else: df2file(dfIn, f'{folder}_{method}{fileFormatChoice}', folder if coLabFolder == None else coLabFolder + slash + folder)
+        df2file(dfIn.drop(columnsToJSON, axis=1), f'{folder}_{method}_Other_varS.{fileFormatChoice}', folder)
+    else: df2file(dfIn, f'{folder}_{method}.{fileFormatChoice}', folder)
