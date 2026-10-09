@@ -34,6 +34,7 @@ for attempt in range(1, 4):
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
         if '.' in module: module = module.split('.')[0]
+
         print(
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
 Попытка № {attempt} из 3
@@ -340,8 +341,8 @@ f'''    Скрипт нацелен на выгрузку характерист
         if 'credentialsVK.txt' in rootNameS:
             file = open('credentialsVK.txt')
             API_keyS = file.read()
-            print("Проверяю наличие файла credentialsVK.txt с ключ{'ами' if len(API_keyS) > 1 else 'ом'}, гипотетически сохранённым{'и' if len(API_keyS) > 1 else ''} при первом запуске скрипта")
-            print("Нашёл файл credentialsVK.txt; далее буду использовать ключ{'и' if len(API_keyS) > 1 else ''} из него:", API_keyS)
+            print("Проверяю наличие файла credentialsVK.txt с ключ{'ами' if ',' in API_keyS else 'ом'}, гипотетически сохранённым{'и' if ',' in API_keyS else ''} при первом запуске скрипта")
+            print("Нашёл файл credentialsVK.txt; далее буду использовать ключ{'и' if ',' in API_keyS else ''} из него:", API_keyS)
 
         else:
             print(
@@ -352,7 +353,7 @@ f'''    Скрипт нацелен на выгрузку характерист
             while True:
                 API_keyS = input()
                 if len(API_keyS) > 0:
-                    print(f"-- далее буд{'у' if len(API_keyS) > 1 else 'е'}т использован{'ы' if len(API_keyS) > 1 else ''} эт{'и' if len(API_keyS) > 1 else 'от'} ключ{'и' if len(API_keyS) > 1 else ''}")
+                    print(f"-- далее буд{'у' if ',' in API_keyS else 'е'}т использован{'ы' if ',' in API_keyS else ''} эт{'и' if ',' in API_keyS else 'от'} ключ{'и' if ',' in API_keyS else ''}")
 
                     from randan.tools.textPreprocessor import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
                     API_keyS = multispaceCleaner(API_keyS)
