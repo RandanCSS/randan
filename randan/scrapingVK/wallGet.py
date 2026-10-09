@@ -32,25 +32,24 @@ for attempt in range(1, 4):
     except ModuleNotFoundError:
         errorDescription = sys.exc_info()
         module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
-        if '.' in module: module = module.split('.')[0]
+        if '.' in module: module = module.split('.')[0] 
+
         print(
 f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
 Попытка № {attempt} из 3
 '''
-              )
+        )
+
         check_call([sys.executable, '-m', 'pip', 'install', module])
-        if  attempt == 3:
-            print(
-f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
-поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
+        if attempt == 3: print(
+f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
 '''
-                  )
+        )
 
 # 1. Вспомогательные функции для..
 # .. метода get из API ВК, помогающая работе с ключами
 # .. обработки выдачи, помогающая работе с ключами
 def dfsProcessor(complicatedNamePart,
-                 coLabFolder,
                  dfAdd,
                  dfFinal, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода get
                  dfIn,
@@ -58,26 +57,35 @@ def dfsProcessor(complicatedNamePart,
                  fields,
                  fileFormatChoice,
                  filter,
+                 folder,
                  goS, # единственная из функций, принимающая этот аргумент
                  method,
                  momentCurrent,
                  offset,
                  slash):
+
     df = pandas.concat([dfIn, dfAdd])
     columnsForCheck = []
+
+    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+    if not folder: folder = ''
+    # if folder is None) | (folder == ''): folder = ''
+    else: folder += slash
+
     if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
         for column in df.columns:
             if 'id' in column: columnsForCheck.append(column)
 
     # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck) # для отладки
 
-    df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
+    if columnsForCheck: df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
         # при дублировании записей из itemS из Temporal и от пользователя и новых записей, оставить новые
 
     if not goS:
         print(
 f'''Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"'''
-              )
+        )
+
         if not os.path.exists(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"):
             os.makedirs(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal")
             print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" создана''')
@@ -85,31 +93,31 @@ f'''Поскольку исполнение скрипта натолкнуло�
             # print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" существует''')
 
 # Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
-        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}domain.txt", domain if domain else '')
+        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}filter.txt", domain if domain else '')
 
         if not fields: fields = []
         with open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}fields.json", 'w', encoding='utf-8') as file:
             json.dump(fields, file, ensure_ascii=False, indent=4)
 
-        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}filter.txt", filter if filter else '')
-        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}method.txt", method)
-        scrapingTools.containerExport(f'{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}offset.txt', offset)
+        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}filter.txt", filter if filter else '')
+        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}method.txt", method)
+        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}offset.txt", offset)
 
         df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
+                             currentMoment=momentCurrent.strftime('%Y%m%d'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              dfIn=df,
                              fileFormatChoice=fileFormatChoice,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method,
-                                 # чтобы избавиться от лишней точки в имени файла
-
-                             coLabFolder=coLabFolder,
-                             currentMoment=momentCurrent.strftime('%Y%m%d'))
-                                 # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                             folder=folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal,
+                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method)
+                                 # чтобы избавиться от лишней точки в имени файла  
 
         warnings.filterwarnings('ignore')
+
         print(
 '''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
 Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
-              )
+        )
+
         sys.exit()
 
     return df
@@ -123,6 +131,7 @@ def wallGetCore(API_keyS,
                 keyOrder,
                 offset,
                 pause):
+
     dfAdd = pandas.DataFrame()
     goS = True
 
@@ -165,7 +174,7 @@ def wallGetCore(API_keyS,
         iteration += 1
         if len(dfAdd) > 0: dfAdd = scrapingVK_tools.dfColumnsProcessor(dfAdd, fields, response)
 
-    return dfAdd, goS, iteration, keyOrder, pause, response
+    return dfAdd, goS, iteration, keyOrder, pause
 
 # 2. Основная функция
 def wallGet(access_token=None,
@@ -176,6 +185,7 @@ def wallGet(access_token=None,
             offset=None,
             params=None,
             returnDfs=False):
+
     method = 'wall.get'
 
     f'''
@@ -232,14 +242,14 @@ def wallGet(access_token=None,
         if domain:
             if type(domain) != str: domain = str(domain)
 
-        else: domain = '80054288' # моя страница
-
         # print('domain:', domain) # для отладки
 
         if offset:
             if type(offset) != int: offset = int(offset)
         # print('offset:', offset) # для отладки
             
+    if not domain: domain = '80054288' # моя страница
+
     if not experiencedMode:
         print(
 '''    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию: https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ). Для получения API key следует создать приложение и из него скопировать сервисный ключ. Приложение -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому ВК. Авторизация сервисным ключом позволяет использовать некоторые методы API -- в документации API ВК ( https://dev.vk.com/ru/method ) они помечены серым кружком (одним или в сочетании с кружками другого цвета). Его достаточно, если выполнять действия, которые были бы доступны Вам как обычному пользователю ВК: посмотреть открытые персональные и групповые страницы, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления поста из чужого аккаунта, то Вам потребуется дополнительная авторизация.
@@ -256,10 +266,11 @@ f'''    Скрипт нацелен на выгрузку характерист
 # 2.0.0 Некоторые базовые настройки запроса к API ВК
 
     # Блок, поскольку folder многократно используется внутри функции в формулах
-    coLabFolder = coLabAdaptor.coLabAdaptor()
+    coLabFolder = coLabAdaptor.coLabAdaptor() # либо '/content/drive/MyDrive/Colab Notebooks' , либо None
     folder = coLabFolder
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if (folder == None) | (folder == ''): folder = ''
+    if not folder: folder = ''
+    # if folder is None) | (folder == ''): folder = ''
     else: folder += slash
 
     fileFormatChoice = '.xlsx' # базовый формат сохраняемых файлов; формат .json добавляется опционально через наличие columnsToJSON
@@ -280,7 +291,8 @@ f'''    Скрипт нацелен на выгрузку характерист
         if 'credentialsVK.txt' in rootNameS:
             file = open('credentialsVK.txt')
             API_keyS = file.read()
-            print("Проверяю наличие файла credentialsVK.txt с ключ{'ами' if len(API_keyS) > 1 else 'ом'}, гипотетически сохранённым{'и' if len(API_keyS) > 1 else ''} при первом запуске скрипта")
+            file.close()
+            print("Проверяю наличие файла credentialsVK.txt с ключ{'ами' if ',' in API_keyS else 'ом'}, гипотетически сохранённым{'и' if ',' in API_keyS else ''} при первом запуске скрипта")
             print("Нашёл файл credentialsVK.txt; далее буду использовать ключ{'и' if len(API_keyS) > 1 else ''} из него:", API_keyS)
 
         else:
@@ -288,11 +300,12 @@ f'''    Скрипт нацелен на выгрузку характерист
 '''--- НЕ нашёл файл credentialsVK.txt . Введите в окно Ваш API key для авторизации в API ВК 
 (примерная инструкция, как создать API key, доступна по ссылке https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8 ). Для подстраховки от ограничения действия API key желательно создать несколько ключей (три -- отлично) и ввести их без кавычек через запятую с пробелом
 --- После ввода нажмите Enter'''
-                  )
+            )
+
             while True:
                 API_keyS = input()
                 if len(API_keyS) > 0:
-                    print(f"-- далее буд{'у' if len(API_keyS) > 1 else 'е'}т использован{'ы' if len(API_keyS) > 1 else ''} эт{'и' if len(API_keyS) > 1 else 'от'} ключ{'и' if len(API_keyS) > 1 else ''}")
+                    print(f"-- далее буд{'у' if ',' in API_keyS else 'е'}т использован{'ы' if ',' in API_keyS else ''} эт{'и' if ',' in API_keyS else 'от'} ключ{'и' if ',' in API_keyS else ''}")
 
                     from randan.tools.textPreprocessor import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
                     API_keyS = multispaceCleaner(API_keyS)
@@ -312,7 +325,7 @@ f'''    Скрипт нацелен на выгрузку характерист
     print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
     for rootName in rootNameS:
         if 'Temporal' in rootName:
-            if len(os.listdir(rootName)) == 4:
+            if len(os.listdir(rootName)) > 6: # допустимо 6 или 7 файлов
                 domain = scrapingTools.containerImport(rootName + slash + 'domain.txt', str)
 
                 with open(f'{rootName}{slash}fields.json', 'r', encoding='utf-8') as file:
@@ -331,7 +344,7 @@ f'''    Скрипт нацелен на выгрузку характерист
 '''--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
 --- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите 'R' и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter'''
-                      )
+                )
 
                 decision = input()
                 if len(decision) == 0:
@@ -364,7 +377,8 @@ f'''    Скрипт нацелен на выгрузку характерист
 --- Если планируете первичный сбор, нажмите Enter
 --- Если располагаете файлом формата XLSX, укажите полный путь, включая название файла, и нажмите Enter.
 Затем при необходимости сможете добавить к нему другие располагаемые файлы'''
-              )
+        )
+
         while True:
             folderFile = input()
             if len(folderFile) == 0:
@@ -386,14 +400,14 @@ f'''    Скрипт нацелен на выгрузку характерист
             print(
 '''Скрипт умеет искать посты открытых страниц
 --- Введите название интересующей страницы (персональной и группы), после чего нажмите Enter'''
-                  )
+            )
 
             if folderFile:
                 print(
 'ВАЖНО! В результате исполнения текущего скрипта данные из указанного Вами файла', folderFile, 'будут дополнены актуальными данными из выдачи скрипта',
 '(возможно появление новых объектов и новых столбцов, а также актуализация содержимого столбцов),',
 'поэтому, вероятно, следует ввести название той же страницы, что и при формировании указанного Вами файла'
-                      )
+                )
 
             domain = input()
             if domain == '': domain = None # для единообразия
@@ -405,6 +419,7 @@ f'''    Скрипт нацелен на выгрузку характерист
 
 # 2.1 Первичный сбор контента методом get
 # 2.1.0 Первое обращение к API
+    itemsAdditional = pandas.DataFrame() # на случай, если сигнал прерывания поступит до dfsProcessor
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         method = 'wall.get'
         iteration = 0 # номер итерации применения текущего метода
@@ -415,7 +430,7 @@ f'В скрипте используются следующие аргумент
 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
 f'Если хотите добавить другие аргументы метода {method} API ВК, доступные по ссылке https://dev.vk.com/ru/method/{method} ,',
 f'-- можете подать их в скобки функции wallGet перед её запуском или скопировать код исполняемого сейчас скрипта и сделать это внутри кода внутри метода {method} в разделе 2'
-              )
+        )
 
         # print('experiencedMode:', experiencedMode) # для отладки
         if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
@@ -424,15 +439,15 @@ f'-- можете подать их в скобки функции wallGet пе�
         iteration = 1
         if not offset: offset = 0 # если offset ни подан пользователем, ни сохранён при прошлом запуске
         while True:
-            itemsAdditional, goS, iteration, keyOrder, pause, response = wallGetCore(API_keyS,
-                                                                                     count,
-                                                                                     domain,
-                                                                                     fields,
-                                                                                     filter,
-                                                                                     iteration,
-                                                                                     keyOrder,
-                                                                                     offset,
-                                                                                     pause)
+            itemsAdditional, goS, iteration, keyOrder, pause = wallGetCore(API_keyS,
+                                                                           count,
+                                                                           domain,
+                                                                           fields,
+                                                                           filter,
+                                                                           iteration,
+                                                                           keyOrder,
+                                                                           offset,
+                                                                           pause)
 
             # print('goS:', goS) # для отладки
             if goS & (len(itemsAdditional) == 0):
@@ -441,7 +456,6 @@ f'-- можете подать их в скобки функции wallGet пе�
 
             else:
                 itemS = dfsProcessor(complicatedNamePart,
-                                     coLabFolder,
                                      itemsAdditional,
                                      itemS, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода get
                                      itemS,
@@ -449,31 +463,31 @@ f'-- можете подать их в скобки функции wallGet пе�
                                      fields,
                                      fileFormatChoice,
                                      filter,
+                                     folder,
                                      goS, # единственная из функций, принимающая этот аргумент
                                      method,
                                      momentCurrent,
                                      offset,
                                      slash)
 
-                offset += count
+                offset += min(int(count), 100) # VK API wall.get принимает count не более 100. Если пользователь подаст больше, offset += count начнёт перепрыгивать посты
                 time.sleep(pause)
 
 # 2.1.2 Экспорт выгрузки метода get и финальное завершение скрипта
         df2file.df2fileShell(complicatedNamePart=complicatedNamePart,
+                             currentMoment=momentCurrent.strftime('%Y%m%d_%H%M'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              dfIn=itemS,
                              fileFormatChoice=fileFormatChoice,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method,
+                             folder=folder,
+                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method)
                                 # чтобы избавиться от лишней точки в имени файла
-
-                             coLabFolder=coLabFolder,
-                             currentMoment=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
 
         print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
         if os.path.exists(rootName):
             print('rootName:', rootName)
             print(
-    'Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'
-                  )
+'Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'
+            )
             shutil.rmtree(rootName, ignore_errors=True)
         if fields: print(
 f'''
@@ -484,20 +498,17 @@ JSONS = []
 for cellContent in Исходный_датафрейм[column].dropna():
     JSONS.extend(cellContent)
 Новый_датафрейм = pandas.json_normalize(JSONS).drop_duplicates('id').reset_index(drop=True)
-
-Чтобы сохранить результат распаковки в ту же директорию, в которую уже сохранены основные данные, используйте такой код:
-from randan.tools.df2file import df2fileShell
-df2fileShell('{complicatedNamePart}', Новый_датафрейм, '{fileFormatChoice}', column, {'{coLabFolder}' if coLabFolder else None}, '{momentCurrent.strftime('%Y%m%d_%H%M')}')
 '''
-                                 )
+        )
+
         if returnDfs: return itemS
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         # display(itemS)
-        if not itemS: itemS = pandas.DataFrame()
+        if itemS is None or itemS.empty: itemS = pandas.DataFrame()
+
         dfsProcessor(complicatedNamePart,
-                     coLabFolder,
-                     dfAdd,
+                     itemsAdditional,
                      itemS, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода get
                      itemS,
                      domain,
@@ -505,6 +516,7 @@ df2fileShell('{complicatedNamePart}', Новый_датафрейм, '{fileForma
                      fileFormatChoice,
                      filter,
                      goS, # единственная из функций, принимающая этот аргумент
+                     folder,
                      method,
                      momentCurrent,
                      offset,
