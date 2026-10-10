@@ -6,13 +6,17 @@
 (RU) Модуль для гармонизации и обработки характеристик облигаций
 '''
 
-# 0. Активировать требуемые для работы скрипта модули и пакеты 
-# sys & subprocess -- эти пакеты должны быть предустанавлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+# Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
+# В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
+# subprocess & sys -- эти пакеты обычно предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+from subprocess import check_call, CalledProcessError
 import sys
-from subprocess import check_call
 
 # --- остальные модули и пакеты
-for attempt in range(1, 4):
+MAX_ATTEMPTS = 3
+attempt = 1
+
+while True:
     try:
         from datetime import date, datetime, timedelta
         from IPython.display import display
@@ -23,7 +27,7 @@ for attempt in range(1, 4):
             # (в) операций с эмитентами торгуемых на МосБирже облигаций
             # (г) упрощения некоторых оперций в selenium
 
-        from randan.tools import cellsLeftMerger, coLabAdaptor, files2df # авторские модули для
+        from randan.tools import cellsLeftMerger, coLabAdaptor, files2df # модули для
             # (а) упрощения операции левостороннего присоединения датафрейма-донора к датафрейму-реципиенту по специальному столбцу
             # (б) адаптации текущего скрипта к файловой системе CoLab
             # (в) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
@@ -31,23 +35,27 @@ for attempt in range(1, 4):
         from selenium.webdriver.common.by import By # для поиска элементов HTML-кода
         from tqdm import tqdm
         import os, pandas, warnings
-        break # выход из цикла for attempt in range(3)
+        break # выход из цикла while True
 
-    except ModuleNotFoundError:
-        errorDescription = sys.exc_info()
-        module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
-        if '.' in module: module = module.split('.')[0]
+    except ModuleNotFoundError as excptn_1:
+        module = excptn_1.name.split('.')[0]
+        if attempt > MAX_ATTEMPTS:
+            print(
+f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт'
+            )
+
+            raise
+
         print(
-f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка № {attempt} из 3
-'''
+f'Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас. Попытка № {attempt} из {MAX_ATTEMPTS}'
         )
 
-        check_call([sys.executable, '-m', 'pip', 'install', module])
-        if attempt == 3: print(
-f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
-'''
-        )
+        try: check_call([sys.executable, '-m', 'pip', 'install', module, '--quiet', '--disable-pip-version-check'])
+        except CalledProcessError as excptn_2:
+            print(f"Не удалось установить {module}. {type(excptn_2).__name__}: {str(excptn_2).split('Stacktrace:')[0].strip()}")
+            raise
+
+        attempt += 1
 
 # 1. Вспомогательные функции для..
 # .. расчёта доходностей облигации (бескупонной, без реинвестирования и с реинвестированием -- по формулам простого и сложного процентов)
@@ -351,11 +359,11 @@ def bondsFeaturesProcessor(attemptsMax,
                            driver,
                            driver_CB,
                            driver_TB,
+                           folder,
                            issuerS,
                            momentCurrent,
                            pause,
                            version_main,
-                           folder=coLabFolder,
                            returnDfs=False):
     """
     Функция для выяснения, какие облигации есть в портфеле, на основе брокерских отчётов
@@ -374,16 +382,8 @@ def bondsFeaturesProcessor(attemptsMax,
 # 2.0 Настройки
     bondS = bonds_in.copy()
     bondS = bondS.drop_duplicates('ISIN', keep='last', ignore_index=True)
-
-    # Блок, поскольку folder многократно используется внутри функции в формулах
-    coLabFolder = coLabAdaptor.coLabAdaptor() # либо '/content/drive/MyDrive/Colab Notebooks' , либо None
-    folder = coLabFolder
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if not folder: folder = ''
-    # if folder is None) | (folder == ''): folder = ''
-    else: folder += slash
-
-    warnings.filterwarnings("ignore")
 
 # 2.1 Добавить характеристики облигаций из БД МосБиржи
     boardS, columnsDescriptionS, securitieS, securities_marketdata_df_duplicated =\
@@ -405,7 +405,7 @@ def bondsFeaturesProcessor(attemptsMax,
 
 # 2.2 Импорт словарей (актуального и прошлого) эмитентов с рейтингом из Акуальные эмитенты.xlsx в issuerS_withActualRating
     # print('folder:', folder) # для отладки
-    if os.path.exists(folder + 'Замеры рейтингов') != True:
+    if not os.path.exists(folder + 'Замеры рейтингов'):
         print('Найдите и запустите скрипт bondsRatingS')
         issuerS_withActualRating = pandas.DataFrame()
 
@@ -652,7 +652,7 @@ def bondsFeaturesProcessor(attemptsMax,
 
         # print('folder:', folder) # для отладки
         path_1 = folder + 'Таблицы FinAM'
-        if os.path.exists(path_1) != True:
+        if not os.path.exists(path_1):
             print(
     '''Найдите и запустите скрипт bondsRatingS, после чего снова запустите текущий скрипт
     А сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть'''
@@ -684,7 +684,7 @@ def bondsFeaturesProcessor(attemptsMax,
             if fileUptodateName:
                 print(f"Перемещаю файл '{fileUptodateName}' в директорию 'Таблицы FinAM На удаление'")
                 path_2 = path_1 + slash + 'Таблицы FinAM На удаление'
-                if os.path.exists(path_2) != True: os.makedirs(path_2)
+                if not os.path.exists(path_2): os.makedirs(path_2)
                 if os.path.exists(path_2 + slash + fileUptodateName): os.remove(path_2 + slash + fileUptodateName) # на случай задвоения файлов (причина не ясна)
                 os.rename(path_1 + slash + fileUptodateName, path_2 + slash + fileUptodateName)
 
@@ -705,10 +705,11 @@ def bondsFeaturesProcessor(attemptsMax,
                                                                                   'ISIN',
                                                                                   driver,
                                                                                   driver_TB,
+                                                                                  folder,
                                                                                   momentCurrent,
                                                                                   pause,
                                                                                   bond_df, # список ISIN или эмитентов
-                                                                                  # новым эмитентам и рейтингам на этом этапе появиться неоткуда
+                                                                                      # новым эмитентам и рейтингам на этом этапе появиться неоткуда
 
                                                                                   version_main)
 
@@ -800,14 +801,14 @@ def bondsFeaturesProcessor(attemptsMax,
             else: date_call = 'No rate'
 
             path_3 = folder + 'Таблицы текущего периода'
-            if os.path.exists(path_3) != True: os.makedirs(path_3)
+            if not os.path.exists(path_3): os.makedirs(path_3)
             df_current.to_excel(path_3 + slash + f'{date_call + ' ' if date_call else ''}{isin}.xlsx')
 
         else:
             display('df_current 2:', df_current) # для отладки            
             bond_df.loc[bond_df_index, 'Статус'] = 'не в обращении'
             path_4 = path_1 + slash + 'Таблицы FinAM Архив'
-            if os.path.exists(path_4) != True: os.makedirs(path_4)
+            if not os.path.exists(path_4): os.makedirs(path_4)
             if os.path.exists(path_4 + slash + fileUptodateName): os.remove(path_4 + slash + fileUptodateName) # на случай задвоения файлов (причина не ясна)
             os.rename(path_1 + slash + fileUptodateName, path_4 + slash + fileUptodateName)
 
