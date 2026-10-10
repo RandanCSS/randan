@@ -44,21 +44,7 @@ f'Пакет {module} НЕ прединсталлирован, но он тре�
 
         attempt += 1
 
-coLabFolder = coLabAdaptor.coLabAdaptor() # либо '/content/drive/MyDrive/Colab Notebooks' , либо None
-
 # 1.0 Вспомогательные функции..
-# # 1.0.0 поиска в брокерском отчёте строчек, ограничивающих интересующий раздел
-# def boundColibrator(assetS, bound, col, name):
-#     if len(bound) == 1:
-#         bound = bound[0]
-#     elif len(bound) > 1:
-#         # print('Найдено строк:', len(bound)) # для оталдки
-#         # display(assetS.loc[bound, col]) # для оталдки
-#         bound = assetS.loc[bound, col][
-#             assetS.loc[bound, col].dropna().astype(str).str.contains(name)
-#                 ].index[0]
-#     return bound
-
 # .. поиска в таблице строчек, ограничивающих интересующий раздел
 def boundColibrator(bound, column, df, softCondition, text):
     # if type(bound) == list:
@@ -73,14 +59,11 @@ def boundColibrator(bound, column, df, softCondition, text):
 
 # 1.0.1 организации обработки отчётов каждого брокера за интересующий период
 def brokerReportsProcessor(broker, fileNameS, folder, period):
+    assetS = pandas.DataFrame()
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if not folder: folder = ''
-    # if folder is None) | (folder == ''): folder = ''
-    else: folder += slash
 
     # print('fileNameS:', fileNameS) # для отладки
-    assetS = pandas.DataFrame()
-    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     for fileName in fileNameS:
         # print('fileName:', fileName) # для отладки
         assetS_additional = pandas.read_excel(folder + broker + slash + 'Отчёты' + slash + fileName, header=None)
@@ -120,11 +103,8 @@ def columnNameFinder(df, text):
 
 # 1.0.4 поиска в директориях брокеров отчётов за интересующий период
 def reportSearch(broker, folder, period):
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if not folder: folder = ''
-    # if folder is None) | (folder == ''): folder = ''
-    else: folder += slash
-    
     fileNameS = []
     goC = True
     while goC:
@@ -132,31 +112,17 @@ def reportSearch(broker, folder, period):
             if str(period) in fileName:
                 # print(f"Нашёл файл '{fileName}'") # для оталдки
                 fileNameS.append(fileName)
-        if len(fileNameS) > 0:
-            goC = False
-            return fileNameS, period
-            break
-        if goC:
-            print(f"НЕ нашёл файл за период '{period}'; перехожу к предыдущему периоду")
-            period = period - 1 if str(period)[-2:] != '01' else period - 89 # на случай января
-            if period == 202001:
+
+        if len(fileNameS) > 0: return fileNameS, period
+        print(f"НЕ нашёл файл за период '{period}'; перехожу к предыдущему периоду")
+        period = period - 1 if str(period)[-2:] != '01' else period - 89 # на случай января
+        if period == 202001:
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
                 print(f"Безуспешно добрался до периода '{period}'; завершаю поиск и исполнение текущей функции")
                 print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть')
                 input()
                 sys.exit()
-                break
-
-# # 1.0.5 поиска в брокерском отчёте фрагментов, соответствующих интересующим разделам
-# def sectionFinder(assetS, text, textNext):
-#     column = columnFinder(assetS, name)
-#     upper_bound = assetS[assetS[col].notna() & assetS[col].str.contains(name)].index
-#     upper_bound = boundColibrator(upper_bound, column, assetS, True, text)
-
-#     lower_bound = assetS[assetS[col].notna()].index[-1]
-#     if textNext != '':
-#         lower_bound = assetS[assetS[col].notna() & assetS[col].str.contains(textNext)].index
-#         lower_bound = boundColibrator(lower_bound, column, assetS, True, text)
-#     return assetS, lower_bound, upper_bound
 
 # .. поиска в таблице фрагментов, содержащих ключевой текст
 def sectionFinder(df, softCondition, text, textClosing): # textClosing -- текст, следующий за искомым подразделом; должен располагаться в том же столбце
@@ -174,7 +140,7 @@ def sectionFinder(df, softCondition, text, textClosing): # textClosing -- тек
         boundLarger = df[df[column].notna() & df[column].str.contains(textClosing)].index if softCondition else df[df[column] == textClosing].index
         # print('boundLarger:', boundLarger) # для оталдки
 
-        boundLarger = boundColibrator(boundLarger, column, df, softCondition, text)
+        boundLarger = boundColibrator(boundLarger, column, df, softCondition, textClosing) # text заменён на textClosing по рекомендации ИИ
     # print('boundLarger:', boundLarger) # для оталдки
     return boundLarger, boundSmaller
 
@@ -273,7 +239,7 @@ def УралСиб(assetS):
 # 2. Основная функция
 def getAssets(
               brokerS=['ВТБ', 'Тинькофф', 'УралСиб'],
-              folder=coLabFolder,
+              folder=None,
               returnDfs=False
               ):
     """
@@ -288,18 +254,13 @@ def getAssets(
     """
         
 # 2.0 Настройки
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
+
     print('Работаю с месячным периодом; желательно, чтобы все обрабатываемые брокерские отчёты относились к одному периоду')
     period = date.today().strftime("%Y%m%d")[:4] + date.today().strftime("%Y%m%d")[4:6]
     period = int(period) - 89 if period[-2:] == '01' else int(period) - 1 # на случай января
     # print('Целевой период:', period) # для отладки
     
-    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if not folder: folder = ''
-    # if folder is None) | (folder == ''): folder = ''
-    else: folder += slash
-
-    warnings.filterwarnings("ignore")
-
 # 2.1 Выяснение, какие облигации есть в портфеле, на основе брокерских отчётов
     assetS = pandas.DataFrame()
     for broker in brokerS:
@@ -311,7 +272,8 @@ def getAssets(
     # display(assetS) # для отладки
 
     # Удалить лишние пробелы во всём накопленном датафрейме
-    assetS['ISIN'] = assetS['ISIN'].apply(lambda text: re.sub(r' +', r'', text))
+    assetS['ISIN'] = assetS['ISIN'].str.replace(r' +', '', regex=True)
+    # assetS['ISIN'] = assetS['ISIN'].apply(lambda text: re.sub(r' +', r'', text))
     # display(assetS) # для отладки
 
 # 2.3 Облигации по ключу: ISIN
