@@ -20,8 +20,7 @@ attempt = 1
 
 while True:
     try:
-        from google.colab import drive
-        import numpy, os
+        import os
         break # выход из цикла while True
 
     except ModuleNotFoundError as excptn_1:
@@ -45,25 +44,22 @@ f'Пакет {module} НЕ прединсталлирован, но он тре�
         attempt += 1
     
 def coLabAdaptor():
-    attempt = 0
+    MAX_ATTEMPTS = 3
     folderCoLab = None
-    colabMode = False
-    while True:
+    for attempt in range(1, MAX_ATTEMPTS + 1):
         try:
             from google.colab import drive
-            print('Похоже, я исполняюсь в CoLab, поэтому сейчас появится окно с просьбой открыть доступ для сохранения результатов работы на Ваш Google Drive\n')
-            colabMode = True
             drive.mount('/content/drive')
             folderCoLab = '/content/drive/MyDrive/Colab Notebooks'
+            print('Похоже, я исполняюсь в CoLab, поэтому сейчас появится окно с просьбой открыть доступ для сохранения результатов работы на Ваш Google Drive\n')
             break
+
         except ModuleNotFoundError:
-            attempt += 1
-            if attempt == 2:
-                # print('Похоже, я исполняюсь не в CoLab\n')
-                break
+            if attempt == MAX_ATTEMPTS: print('Похоже, я исполняюсь не в CoLab\n')
+
     return folderCoLab
 
-def folderCoLab_folderIn_comparison(folder)
+def folderCoLab_folderIn_comparison(folder):
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     if not folder:
         folderCoLab = coLabAdaptor.coLabAdaptor() # либо '/content/drive/MyDrive/Colab Notebooks' , либо None
@@ -71,4 +67,3 @@ def folderCoLab_folderIn_comparison(folder)
 
     if folder: folder += slash
     return folder
-
