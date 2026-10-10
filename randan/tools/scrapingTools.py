@@ -6,11 +6,11 @@
 (RU) Модуль для упрощения скрапинга
 '''
 
-# 0. Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
-# 0.0 В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
-# sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
-import sys
+# Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
+# В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
+# subprocess & sys -- эти пакеты обычно предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
 from subprocess import check_call, CalledProcessError
+import sys
 
 # --- остальные модули и пакеты
 MAX_ATTEMPTS = 3
@@ -42,37 +42,30 @@ f'Пакет {module} НЕ прединсталлирован, но он тре�
         attempt += 1
 
 def argument_key_comparison(argument, key, params):
-    if (key in params.keys()) & (argument != None):
-        if params[key] != argument:
-            print(f'!!   Вы подали {key} и как аргумент, и через словарь params , причём Вы подали разные значения туда и туда; будет использовано значение, поданное в params !!\n')
-            argument = params[key]
-    elif (key in params.keys()) & (argument == None): argument = params[key]
-    elif (key not in params.keys()) & (argument != None): pass # отдельный аргумент определён, поэтому запрос к пользователю не поступит
-    else: pass # НИ ключ params , НИ отдельный аргумент НЕ определены, поэтому запрос к пользователю поступит
+    if key in params.keys():
+        if argument is not None and argument != params[key]:
+            print(f'!! Вы подали {key} и как аргумент, и через словарь params , причём Вы подали разные значения туда и туда; будет использовано значение, поданное в params !!')
+        return params[key]
     return argument
+    #         argument = params[key]
+    # elif (key in params.keys()) & (argument == None): argument = params[key]
+    # elif (key not in params.keys()) & (argument != None): pass # отдельный аргумент определён, поэтому запрос к пользователю не поступит
+    # else: pass # НИ ключ params , НИ отдельный аргумент НЕ определены, поэтому запрос к пользователю поступит
+    # return argument
 
-def containerExport(folderFile, container):
-    file = open(folderFile, 'w+') # открыть на запись
-    file.write(container)
-    file.close()
+def containerExport(folder_file, container):
+    with open(folder_file, 'w', encoding='utf-8') as file: file.write(container)
 
-def containerImport(folderFile, containerType):
-    # file = open(f'{rootName}{slash}{containerName}.txt')
-    file = open(folderFile)
-    container = file.read()
-    file.close()
-    if container:
-        if type(container) != containerType: container = containerType(container) # мало ли какой тип окажется при импорте
-
+def containerImport(folder_file, containerType): # containerType: float, int, str
+    with open(folder_file, encoding='utf-8') as file: container = file.read()
+    if container and not isinstance(container, containerType): container = containerType(container) # мало ли какой тип окажется при импорте
     return container
 
 # .. работы с ключами
 def credentialsProcessor(access_token, api_name, instruction_url, nameS_in_folderCurrent):
     if not access_token:
         if f'credentials{api_name}.txt' in nameS_in_folderCurrent:
-            file = open(f'credentials{api_name}.txt')
-            api_keyS = file.read().strip()
-            file.close()
+            with open(f'credentials{api_name}.txt', encoding='utf-8') as file: api_keyS = file.read().strip()
             print(f"Проверяю наличие файла credentials{api_name}.txt с ключ{'ами' if ',' in api_keyS else 'ом'}, гипотетически сохранённым{'и' if ',' in api_keyS else ''} при первом запуске скрипта")
             print(f"Нашёл файл credentials{api_name}.txt; далее буду использовать ключ{'и' if ',' in api_keyS else ''} из него:", api_keyS)
 
@@ -85,19 +78,19 @@ f'''--- НЕ нашёл файл credentials{api_name}.txt . Введите в �
 
             while True:
                 api_keyS = input()
-                if len(api_keyS) > 0:
+                if api_keyS:
                     print(f"-- далее буд{'у' if ',' in api_keyS else 'е'}т использован{'ы' if ',' in api_keyS else ''} эт{'и' if ',' in api_keyS else 'от'} ключ{'и' if ',' in api_keyS else ''}")
 
                     api_keyS = textPreprocessor.multispaceCleaner(api_keyS)
-                    if len(api_keyS) > 0:
-                        while api_keyS[-1] == ',': api_keyS = api_keyS[:-1] # избавиться от запятых в конце текста
-
-                    containerExport(f'credentials{api_name}.txt', api_keyS)
+                    while len(api_keyS) > 0 and api_keyS[-1] == ',': api_keyS = api_keyS[:-1] # избавиться от запятых в конце текста
+                    if api_keyS: containerExport(f'credentials{api_name}.txt', api_keyS)
                     break
 
                 else:
                     print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
-        api_keyS = api_keyS.replace(' ', '').replace(',', ', ').split(', ')
+
+        api_keyS = [key.strip() for key in api_keyS.replace(' ', '').split(',') if key.strip()]
+        # api_keyS = api_keyS.replace(' ', '').replace(',', ', ').split(', ')
 
     else: api_keyS = [access_token]
     print('Количество ключей:', len(api_keyS), '\n')
