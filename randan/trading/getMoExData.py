@@ -5,15 +5,18 @@
 (EN) A module to import bonds', furures', and shares' feachures from the Moscow Exchange 
 (RU) Модуль для выгрузки характеристик торгуемых на МосБирже акций, облигаций, фьючерсов
 '''
-# import sys
-# sys.path.append(r"C:\Users\Alexey\Dropbox\Мои\RAnDan\myModules")
 
-# sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+# Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
+# В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
+# subprocess & sys -- эти пакеты обычно предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+from subprocess import check_call, CalledProcessError
 import sys
-from subprocess import check_call
 
 # --- остальные модули и пакеты
-for attempt in range(1, 4):
+MAX_ATTEMPTS = 3
+attempt = 1
+
+while True:
     try:
         from IPython.display import display
 
@@ -22,42 +25,52 @@ for attempt in range(1, 4):
 
         from tqdm import tqdm
         import os, pandas, requests, time, traceback, warnings # , re
-        break # выход из цикла for attempt in range(3)
+        break # выход из цикла while True
 
-    except ModuleNotFoundError:
-        errorDescription = sys.exc_info()
-        module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
-        if '.' in module: module = module.split('.')[0]
+    except ModuleNotFoundError as excptn_1:
+        module = excptn_1.name.split('.')[0]
+        if attempt > MAX_ATTEMPTS:
+            print(
+f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт'
+            )
+
+            raise
+
         print(
-f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка № {attempt} из 3
-'''
+f'Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас. Попытка № {attempt} из {MAX_ATTEMPTS}'
         )
 
-        check_call([sys.executable, '-m', 'pip', 'install', module])
-        if attempt == 3: print(
-f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
-'''
-        )
+        try: check_call([sys.executable, '-m', 'pip', 'install', module, '--quiet', '--disable-pip-version-check'])
+        except CalledProcessError as excptn_2:
+            print(f"Не удалось установить {module}. {type(excptn_2).__name__}: {str(excptn_2).split('Stacktrace:')[0].strip()}")
+            raise
 
-coLabFolder = coLabAdaptor.coLabAdaptor() # либо '/content/drive/MyDrive/Colab Notebooks' , либо None
+        attempt += 1
 
 # 1. Вспомогательные функции..
 # .. выгрузки таблиц -- фрагментов данных формата JSON из БД МосБиржи
 def json2df(columnS_forComparisom, headers, pause, sectionOfJson, url):
+    attempt = 1
     df = pandas.DataFrame()
     df_additional_previous = pandas.DataFrame()
+    MAX_ATTEMPTS = 3
     start = 0
     while True:
         # print('start:', start, '                    ', end='\r') # для отладки
         params = {'start': start} # 'limit': 100,
-
         try: data_json = requests.get(url, headers=headers, params=params).json()
         except Exception as excptn:
             print('Exception 1 в json2df') # для отладки
             print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
             print(traceback.format_exc()) # показ точной строчки кода с ошибкой
-            time.sleep(pause)
+            attempt += 1
+            if attempt < MAX_ATTEMPTS:
+                time.sleep(pause)
+                continue
+
+            else:
+                print('Похоже, requests безрезультатен, завершаю попытки') # для отладки
+                return df
 
         df_additional = pandas.DataFrame(columns=data_json[sectionOfJson]['columns'], data=data_json[sectionOfJson]['data'])
         # df_additional = df_additional.fillna('Нет данных')
@@ -82,7 +95,6 @@ def json2df(columnS_forComparisom, headers, pause, sectionOfJson, url):
         start += len(df_additional)
 
     # break # для отладки
-    df = pandas.DataFrame(columns=data_json[sectionOfJson]['columns'], data=data_json[sectionOfJson]['data'])
     # display('df:', df) # для отладки
     return df
 
@@ -201,7 +213,7 @@ def securities_marketdata_df_duplicates_processor(columnS_withDateTime, securiti
     return securities_marketdata_df_notDuplicated
 
 # 2. Основная функция
-def getMoExData(folder=coLabFolder,
+def getMoExData(folder=None,
                 market='bonds',
                 pause=0.1,
                 plusNotTraded=False,
@@ -218,13 +230,8 @@ def getMoExData(folder=coLabFolder,
 plusNotTraded : bool -- в случае True функция возвращает и неторгуемые securities
     returnDfs : bool -- в случае True функция возвращает итоговые датафреймы boardS, columnsDescriptionS и securities_marketdata_df строго в такой последовательности
     '''
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     headers = {'User-Agent': 'Mozilla/5.0'}
-
-    # Блок, поскольку folder многократно используется внутри функции в формулах
-    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if not folder: folder = ''
-    # if folder is None) | (folder == ''): folder = ''
-    else: folder += slash
 
 # 2.0 Проверка наличия комплекта файлов и вопрос про необходимость его обновления
     path_boards = folder + market + ' Boards.xlsx'
@@ -248,12 +255,12 @@ f'''Комплект файлов:
                 boardS = pandas.read_excel(path_boards)
                 columnsDescriptionS = pandas.read_excel(path_columnsDescriptions)
                 securities_marketdata_df = pandas.read_excel(path_securities_marketdata)
-                return boardS, columnsDescriptionS, securities_marketdata_df, pandas.DataFrame()
+                return boardS, columnsDescriptionS, securities_marketdata_df, None
 
 # 2.1 Если нет комплекта
 # 2.1.0 Формирование файла с режимами торгов boardS
     print('Создаю файл с режимами торгов')
-    if (market == 'bonds') | (market == 'shares'): url = f'https://iss.moex.com/iss/engines/stock/markets/{market}'
+    if market == 'bonds' or market == 'shares': url = f'https://iss.moex.com/iss/engines/stock/markets/{market}'
     if market == 'forts': url = f'https://iss.moex.com/iss/engines/futures/markets/{market}'
     boardS = json2df(['id'], headers, pause, 'boards', url + '.json')
     boardS.to_excel(path_boards, index=False)
