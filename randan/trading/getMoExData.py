@@ -24,7 +24,7 @@ while True:
             # (а) адаптации текущего скрипта к файловой системе CoLab
 
         from tqdm import tqdm
-        import os, pandas, requests, time, traceback
+        import os, pandas, requests, time, traceback, urllib3
         break # выход из цикла while True
 
     except ModuleNotFoundError as excptn_1:
