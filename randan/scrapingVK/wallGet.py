@@ -6,88 +6,56 @@
 (RU) Модуль для упрощения выгрузки контента ВК методом его API wall.get и максимизации размера этой выгрузки
 '''
 
-# 0. Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
-# 0.0 В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
-# sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+# Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
+# В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
+# subprocess & sys -- эти пакеты обычно предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+from subprocess import check_call, CalledProcessError
 import sys
-from subprocess import check_call
 
 # --- остальные модули и пакеты
-for attempt in range(1, 4):
+MAX_ATTEMPTS = 3
+attempt = 1
+
+while True:
     try:
         from datetime import datetime
         from IPython.display import display
         from randan.scrapingVK import scrapingVK_tools # модуль для упрощения скрапинга VK
 
-        from randan.tools import coLabAdaptor, df2file, files2df, scrapingTools, textPreprocessor # модули для
+        from randan.tools import coLabAdaptor, df2file, files2df, scrapingTools # модули для
             # (а) адаптации текущего скрипта к файловой системе CoLab
             # (б) сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
             # (в) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
             # (г) упрощения скрапинга
-            # (д) предобработки нестандартизированного текста
 
         import json, os, pandas, shutil, requests, time, warnings
-        break # выход из цикла for attempt in range(3)
+        break # выход из цикла while True
 
-    except ModuleNotFoundError:
-        errorDescription = sys.exc_info()
-        module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
-        if '.' in module: module = module.split('.')[0] 
-
-        print(
-f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка № {attempt} из 3
-'''
-        )
-
-        check_call([sys.executable, '-m', 'pip', 'install', module])
-        if attempt == 3: print(
-f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
-'''
-        )
-
-# 1. Вспомогательные функции для..
-# .. работы с ключами
-def credentialsProcessor(access_token, api_name, instruction_url, nameS_in_folderCurrent):
-    if not access_token:
-        if f'credentials{api_name}.txt' in nameS_in_folderCurrent:
-            file = open(f'credentials{api_name}.txt')
-            api_keyS = file.read().strip()
-            file.close()
-            print(f"Проверяю наличие файла credentials{api_name}.txt с ключ{'ами' if ',' in api_keyS else 'ом'}, гипотетически сохранённым{'и' if ',' in api_keyS else ''} при первом запуске скрипта")
-            print(f"Нашёл файл credentials{api_name}.txt; далее буду использовать ключ{'и' if ',' in api_keyS else ''} из него:", api_keyS)
-
-        else:
+    except ModuleNotFoundError as excptn_1:
+        module = excptn_1.name.split('.')[0]
+        if attempt > MAX_ATTEMPTS:
             print(
-f'''--- НЕ нашёл файл credentials{api_name}.txt . Введите в окно Ваш API key для авторизации в API {api_name} 
-(примерная инструкция, как создать API key, доступна по ссылке {instruction_url} ). Для подстраховки от ограничения действия API key желательно создать несколько ключей (три -- отлично) и ввести их без кавычек через запятую с пробелом
---- После ввода нажмите Enter'''
+f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт'
             )
 
-            while True:
-                api_keyS = input()
-                if len(api_keyS) > 0:
-                    print(f"-- далее буд{'у' if ',' in api_keyS else 'е'}т использован{'ы' if ',' in api_keyS else ''} эт{'и' if ',' in api_keyS else 'от'} ключ{'и' if ',' in api_keyS else ''}")
+            raise
 
-                    api_keyS = textPreprocessor.multispaceCleaner(api_keyS)
-                    if len(api_keyS) > 0:
-                        while api_keyS[-1] == ',': api_keyS = api_keyS[:-1] # избавиться от запятых в конце текста
+        print(
+f'Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас. Попытка № {attempt} из {MAX_ATTEMPTS}'
+        )
 
-                    scrapingTools.containerExport(f'credentials{api_name}.txt', api_keyS)
-                    break
+        try: check_call([sys.executable, '-m', 'pip', 'install', module, '--quiet', '--disable-pip-version-check'])
+        except CalledProcessError as excptn_2:
+            print(f"Не удалось установить {module}. {type(excptn_2).__name__}: {str(excptn_2).split('Stacktrace:')[0].strip()}")
+            raise
 
-                else:
-                    print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
-        api_keyS = api_keyS.replace(' ', '').replace(',', ', ').split(', ')
+        attempt += 1
 
-    else: api_keyS = [access_token]
-    print('Количество ключей:', len(api_keyS), '\n')
-    return api_keyS
-
+# 1. Вспомогательные функции для..
 # .. обработки выдачи, помогающая работе с ключами
 def dfsProcessor(complicatedNamePart,
-                 dfAdd,
-                 dfIn,
+                 df_additional,
+                 df_in,
                  domain,
                  fields,
                  fileFormatChoice,
@@ -98,7 +66,9 @@ def dfsProcessor(complicatedNamePart,
                  momentCurrent,
                  offset):
 
-    if dfAdd is not None: df = pandas.concat([dfIn, dfAdd])
+    if df_additional is None: df_additional = pandas.DataFrame()
+    if df_in is None: df_in = pandas.DataFrame()
+    df = pandas.concat([df_in, df_additional])
     columnsForCheck = []
 
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
@@ -139,13 +109,12 @@ f'''Поскольку исполнение скрипта натолкнуло�
 
         df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
                              currentMoment=momentCurrent.strftime('%Y%m%d'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                             dfIn=df,
+                             df_in=df,
                              fileFormatChoice=fileFormatChoice,
                              folder=temporal_exportPath,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method)
                                  # чтобы избавиться от лишней точки в имени файла  
 
-        warnings.filterwarnings('ignore', category=UserWarning)
         print('Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
 
     return df
@@ -160,7 +129,7 @@ def wallGetCore(api_keyS,
                 offset,
                 pause):
 
-    dfAdd = pandas.DataFrame()
+    df_additional = pandas.DataFrame()
     goS = True
 
     params_initial = {'access_token': api_keyS[keyOrder], # обязательный параметр
@@ -183,7 +152,7 @@ def wallGetCore(api_keyS,
                 response = response['response']
                 # print('    response.keys() внутри wallGetCore', response.keys()) # для отладки
 
-                dfAdd = pandas.json_normalize(response['items'])
+                df_additional = pandas.json_normalize(response['items'])
                 break # нет смысла в новых итерациях цикла while goC
 
             else: goC, goS, keyOrder, pause, response, tryer = scrapingVK_tools.errorProcessor(api_keyS, keyOrder, pause, response, tryer)
@@ -200,9 +169,9 @@ def wallGetCore(api_keyS,
         print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
 
         iteration += 1
-        if len(dfAdd) > 0: dfAdd = scrapingVK_tools.dfColumnsProcessor(dfAdd, fields, response)
+        if len(df_additional) > 0: df_additional = scrapingVK_tools.dfColumnsProcessor(df_additional, fields, response)
 
-    return dfAdd, goS, iteration, keyOrder, pause
+    return df_additional, goS, iteration, keyOrder, pause
 
 # 2. Основная функция
 def wallGet(access_token=None,
@@ -257,7 +226,7 @@ def wallGet(access_token=None,
             if filter: filter = scrapingTools.argument_key_comparison(filter, 'filter', params)
             # print('filter:', filter) # для отладки
 
-            if offset: offset = scrapingTools.argument_key_comparison(offset, 'offset', params)
+            if offset is not None: offset = scrapingTools.argument_key_comparison(offset, 'offset', params)
             # print('offset:', offset) # для отладки
 
         if count:
@@ -270,7 +239,7 @@ def wallGet(access_token=None,
             if not isinstance(domain, str): domain = str(domain)
         # print('domain:', domain) # для отладки
 
-        if offset:
+        if offset is not None:
             if not isinstance(offset, int): offset = int(offset)
         # print('offset:', offset) # для отладки
             
@@ -312,7 +281,7 @@ f'''    Скрипт нацелен на выгрузку характерист
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     nameS_in_folderCurrent = os.listdir()
-    api_keyS = credentialsProcessor(access_token, 'VK', 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', nameS_in_folderCurrent)
+    api_keyS = scrapingTools.credentialsProcessor(access_token, 'VK', 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', nameS_in_folderCurrent)
 # Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
     print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
@@ -337,6 +306,7 @@ f"В текущей директории '{name_in_folderCurrent}' есть ди
                 print('- пользователь НЕ определил поля' if not fields else f"- пользователь определил поля: '{fields}'")
                 print('- пользователь НЕ определил фильтр' if not filter else f"- пользователь определил фильтр: '{filter}'")
 
+                folderWithTemporal = name_in_folderCurrent
                 print(
 '''--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
 --- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите 'R' и нажмите Enter
@@ -361,7 +331,7 @@ f"В текущей директории '{name_in_folderCurrent}' есть ди
                         temporalName = None # флаг, что данные, сохранённые при прошлом запуске скрипта, не найдены
                         print(message)
 
-                elif decision == 'R': shutil.rmtree(name_in_folderCurrent, ignore_errors=True)
+                elif decision == 'R': shutil.rmtree(folderWithTemporal, ignore_errors=True)
             
 # Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
     if not temporalName: # если itemsTemporal, в т.ч. пустой, не существует
@@ -448,8 +418,8 @@ f'-- можете подать их в скобки функции wallGet пе�
                                                                            pause)
 
             # print('goS:', goS) # для отладки
-            if goS and len(itemS_additional) == 0: # нет сигнала остановиться, но и ничего нового не выгружено
-                print('Все посты страницы выгружены')
+            if len(itemS_additional) == 0: #ничего нового не выгружено независимо от сигнала остановиться
+                print('Ни один дополнительный пост НЕ выгружен')
                 break
 
             elif goS and len(itemS_additional) > 0: # нет сигнала остановиться и новые записи выгружены
@@ -489,17 +459,24 @@ f'-- можете подать их в скобки функции wallGet пе�
 # 2.1.2 Экспорт выгрузки метода get и финальное завершение скрипта
         df2file.df2fileShell(complicatedNamePart=complicatedNamePart,
                              currentMoment=momentCurrent.strftime('%Y%m%d_%H%M'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                             dfIn=itemS,
+                             df_in=itemS,
                              fileFormatChoice=fileFormatChoice,
                              folder=folder,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method)
                                 # чтобы избавиться от лишней точки в имени файла
 
         print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
-        if os.path.exists(name_in_folderCurrent):
-            print('name_in_folderCurrent:', name_in_folderCurrent)
-            print('Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта')
-            shutil.rmtree(name_in_folderCurrent, ignore_errors=True)
+        if folderWithTemporal:
+            if os.path.exists(folderWithTemporal):
+                # print('folderWithTemporal:', folderWithTemporal) # для отладки
+                print(
+'''Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, можно удалить её во избежание путаницы при следующих запусках скрипта
+--- Если хотите их удалить, введите 'R' и нажмите Enter'''
+                )
+
+                decision = input()
+                if decision == 'R': shutil.rmtree(folderWithTemporal, ignore_errors=True)
+
         if fields: print(
 f'''
 Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
