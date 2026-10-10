@@ -4,7 +4,6 @@
 '''
 (EN) A module designed to facilitate the scraping and parsing of data from the finam.ru website
 (RU) Модуль для упрощения выгрузки данных с сайта finam.ru и их парсинга
-
 '''
 
 # Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
