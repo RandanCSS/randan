@@ -2,19 +2,21 @@
 # coding: utf-8
 
 '''
-(EN) A module to import and process bonds' feachures from the SPb Exchange
+(EN) A module to import and process bonds' features from the SPb Exchange
 (RU) Модуль для выгрузки характеристик торгуемых на СПб Бирже облигаций
-
 '''
-# import sys
-# sys.path.append(r"C:\Users\Alexey\Dropbox\Мои\RAnDan\myModules")
 
-# sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+# Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
+# В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
+# subprocess & sys -- эти пакеты обычно предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+from subprocess import check_call, CalledProcessError
 import sys
-from subprocess import check_call
 
 # --- остальные модули и пакеты
-for attempt in range(1, 4):
+MAX_ATTEMPTS = 3
+attempt = 1
+
+while True:
     try:
         # !pip install grpcio-tools requests pandas
         from grpc_tools import protoc
@@ -30,25 +32,28 @@ for attempt in range(1, 4):
 
         from tqdm import tqdm
         import grpc_tools, os, pandas, requests, subprocess, time, traceback, urllib3
-        break # выход из цикла for attempt in range(3)
+        break # выход из цикла while True
 
-    except ModuleNotFoundError:
-        errorDescription = sys.exc_info()
-        module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
-        if '.' in module: module = module.split('.')[0]
+    except ModuleNotFoundError as excptn_1:
+        module = excptn_1.name.split('.')[0]
+        if attempt > MAX_ATTEMPTS:
+            print(
+f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт'
+            )
+
+            raise
+
         print(
-f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка № {attempt} из 3
-'''
+f'Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас. Попытка № {attempt} из {MAX_ATTEMPTS}'
         )
 
-        check_call([sys.executable, '-m', 'pip', 'install', module])
-        if attempt == 3: print(
-f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
-'''
-        )
+        try: check_call([sys.executable, '-m', 'pip', 'install', module, '--quiet', '--disable-pip-version-check'])
+        except CalledProcessError as excptn_2:
+            print(f"Не удалось установить {module}. {type(excptn_2).__name__}: {str(excptn_2).split('Stacktrace:')[0].strip()}")
+            raise
 
-coLabFolder = coLabAdaptor.coLabAdaptor() # либо '/content/drive/MyDrive/Colab Notebooks' , либо None
+        attempt += 1
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # 1. Вспомогательная функция для..
@@ -61,7 +66,7 @@ def get_json_df(body, headers, pause, url, max_retries=3):
             
             data = response.json().get('instruments', [])
             df = pandas.DataFrame(data=data)
-            return body['instrumentId'] if 'instrumentId' in body.keys() else [], df
+            return list(df['figi'].unique()) if 'figi' in df.columns else [], df
 
         except requests.exceptions.HTTPError as excptn:
             status_code = excptn.response.status_code
@@ -104,7 +109,7 @@ def proto2df(section):
     PROTO_DIR = os.path.abspath(os.path.join(REPO_DIR, 'src', 'docs', 'contracts')) # абсолютный путь к директории контрактов внутри репозитория
     if not os.path.exists(PROTO_DIR):
         PROTO_DIR = os.path.abspath(os.path.join(REPO_DIR, 'src', 'proto'))
-            # алиьтернативный абсолютный путь к директории контрактов внутри репозитория
+            # альтернативный абсолютный путь к директории контрактов внутри репозитория
 
     GRPC_INCLUDE = os.path.abspath(os.path.join(os.path.dirname(grpc_tools.__file__), '_proto'))
         # получить путь к встроенным протобуфам grpcio-tools (чтобы он находил google/protobuf/*.proto ) 
@@ -273,7 +278,7 @@ def valuesParcer(marketdata_df, marketdata_df_row):
     return df
 
 # 2. Основная функция
-def getSPbExData(folder=coLabFolder,
+def getSPbExData(folder=None,
                  market='bonds',
                  pause=0.1,
                  plusNotTraded=False,
@@ -284,19 +289,15 @@ def getSPbExData(folder=coLabFolder,
 
     Parameters
     ----------
-       folder : str -- путь к директории, включая её имя, в которой будут искаться файлы и куда будут сохраняться; по умолчанию не в CoLab поиск и сохранение происходят в директории, в которой вызывается текущая функция, а в CoLab в директории Colab Notebooks
+           folder : str -- путь к директории, включая её имя, в которой будут искаться файлы и куда будут сохраняться; по умолчанию не в CoLab поиск и сохранение происходят в директории, в которой вызывается текущая функция, а в CoLab в директории Colab Notebooks
 
-       market : str -- если интересуют облигации, подходит значение по умолчанию 'bonds' , если фьючерсы, впишите 'forts' , если акции, впишите 'shares'
-        pause : float -- длительность приостановки исполнения скрипта в секундах
-plusNotTraded : bool -- в случае True функция возвращает и неторгуемые securities
-    returnDfs : bool -- в случае True функция возвращает итоговые датафреймы boardS, columnsDescriptionS и securities_marketdata_df строго в такой последовательности
+           market : str -- если интересуют облигации, подходит значение по умолчанию 'bonds' , если фьючерсы, впишите 'forts' , если акции, впишите 'shares'
+            pause : float -- длительность приостановки исполнения скрипта в секундах
+    plusNotTraded : bool -- в случае True функция возвращает и неторгуемые securities
+        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм securities_marketdata_df
     '''
 
-    # Блок, поскольку folder многократно используется внутри функции в формулах
-    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if not folder: folder = ''
-    # if folder is None) | (folder == ''): folder = ''
-    else: folder += slash
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
 
     # 2.0 Проверка наличия файла Securities and Marketdata SPbEx.xlsx и вопрос про необходимость его обновления
     path_securities_marketdata = folder + market + ' Securities and Marketdata SPbEx.xlsx'
@@ -324,32 +325,33 @@ f'''--- Файл:
         rootNameS = os.listdir()
         if 'tToken.txt' in rootNameS:
             tToken = scrapingTools.containerImport('tToken.txt', str)
+            tToken = tToken.strip()
             print('Проверяю наличие файла tToken.txt с Т-токеном, гипотетически сохранёнными при первом запуске скрипта')
             print(f'Нашёл файл tToken.txt; далее буду использовать Т-токен {tToken} из него')
 
-    else:
-        print(
+        else:
+            print(
 '''--- НЕ нашёл файл tToken.txt . Введите в окно Ваш Т-токен для https://developer.tbank.ru/invest/api . После ввода нажмите Enter'''
-              )
+)
 
-        while True:
-            tToken = input('Введите в окно Ваш Т-токен и нажмите Enter')
-            if len(tToken) > 0:
-                print('-- далее будет использован этот Т-токен')
-                break
+            while True:
+                tToken = input('Введите в окно Ваш Т-токен и нажмите Enter')
+                tToken = tToken.strip()
+                if len(tToken) > 0:
+                    print('-- далее будет использован этот Т-токен')
+                    break
+    
+                else:
+                    print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
 
-            else:
-                print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
-
-        scrapingTools.containerExport('tToken.txt', tToken)
-
+    scrapingTools.containerExport('tToken.txt', tToken)
     headers = {'Authorization': f'Bearer {tToken}', 'Content-Type': 'application/json'}
 
     # 2.1.1 Формирование файла с доступными инструментами (securities) и их финансовыми данными (marketdata)
     # <Формирование файла с доступными securities в интересующих режимах торгов>
     print('Создаю файл с доступными инструментами (securities) и их финансовыми данными (marketdata)')
 
-    print('Для этого сначала выружаю доступные инструменты (securities)')
+    print('Для этого сначала выгружаю доступные инструменты (securities)')
 
     body = {'instrumentStatus': 'INSTRUMENT_STATUS_ALL'} if plusNotTraded else {'instrumentStatus': 'INSTRUMENT_STATUS_BASE'}
         # около 1500-2000 торгуемых облигаций
@@ -372,26 +374,26 @@ f'''--- Файл:
               'INSTRUMENT_VALUE_THEOR_PRICE', # теоретическая цена
               'INSTRUMENT_VALUE_YIELD'] # YTM
 
-    print('Теперь выружаю их финансовые данные (marketdata)')
-    batcheS_notProcessed = list(securitieS['figi'])
+    print('Теперь выгружаю их финансовые данные (marketdata)')
+    figiS_notProcessed = list(securitieS['figi'])
     marketdata = []
-    while batcheS_notProcessed:
-        body = {'instrumentId': list(batcheS_notProcessed[:1500]), 'values': valueS}
+    while figiS_notProcessed:
+        body = {'instrumentId': list(figiS_notProcessed[:1500]), 'values': valueS}
 
-        batch, marketdata_df_additional = get_json_df(
+        batch_processed, marketdata_df_additional = get_json_df(
             body,
             headers,
             pause,
             'https://invest-public-api.tbank.ru/rest/tinkoff.public.invest.api.contract.v1.MarketDataService/GetMarketValues'
         )
     
-        if batch: # если итерация успешна, из batcheS_notProcessed исключаются элементы batch
-            batch_set = set(batch)
-            batcheS_notProcessed = [x for x in batcheS_notProcessed if x not in batch_set]
+        if batch_processed: # если итерация успешна, из figiS_notProcessed исключаются элементы batch_processed
+            batch_processed_set = set(batch_processed)
+            figiS_notProcessed = [figi for figi in figiS_notProcessed if figi not in batch_processed_set]
 
         if not marketdata_df_additional.empty: marketdata.append(marketdata_df_additional)
 
-        print('  По завершении итерации цикла while размер batcheS_notProcessed =', len(batcheS_notProcessed))
+        print('  По завершении итерации цикла while размер figiS_notProcessed =', len(figiS_notProcessed))
         time.sleep(pause)
 
     marketdata_df = pandas.concat(marketdata, ignore_index=True) if marketdata else pandas.DataFrame()
