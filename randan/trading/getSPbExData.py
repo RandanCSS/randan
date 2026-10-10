@@ -242,7 +242,7 @@ def units_nano_parcer(series, row):
     df = pandas.json_normalize(series[row])
     # display('df:', df) # для отладки
 
-    df['value'] = pandas.to_numeric(df['units'], errors='coerce') + pandas.to_numeric(df['nano'], errors='coerce') / 1e9
+    df['value'] = pandas.to_numeric(df['units'], errors='coerce') + pandas.to_numeric(df['nano'], errors='coerce') / 10**9
     df = df.drop(['nano', 'units'], axis=1)
     
     df = df.rename(columns={'value': row}) # поменять имя столбца на значение securitieS_row
@@ -257,7 +257,7 @@ def valuesParcer(marketdata_df, marketdata_df_row):
     # display("df['value.units']:", df['value.units']) # для отладки
     # display("df['value.nano']:", df['value.nano']) # для отладки
 
-    df['value'] = pandas.to_numeric(df['value.units'], errors='coerce') + pandas.to_numeric(df['value.nano'], errors='coerce') / 1e9
+    df['value'] = pandas.to_numeric(df['value.units'], errors='coerce') + pandas.to_numeric(df['value.nano'], errors='coerce') / 10**9
     df = df.drop(['value.nano', 'value.units'], axis=1)
     
     # df['value.nano'] = df['value.nano'].abs()
@@ -295,6 +295,7 @@ def getSPbExData(folder=None,
             pause : float -- длительность приостановки исполнения скрипта в секундах
     plusNotTraded : bool -- в случае True функция возвращает и неторгуемые securities
         returnDfs : bool -- в случае True функция возвращает итоговый датафрейм securities_marketdata_df
+           tToken : str -- следует получить в приложении Т Банка
     '''
 
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
