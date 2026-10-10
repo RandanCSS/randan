@@ -2,78 +2,6 @@
 # coding: utf-8
 
 '''
-(EN) A module for adapting the current script to the CoLab file system
-(RU) Модуль для адаптации текущего скрипта к файловой системе CoLab
-'''
-
-'''
-
-# Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
-# В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
-# subprocess & sys -- эти пакеты обычно предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
-from subprocess import check_call, CalledProcessError
-import sys
-
-# --- остальные модули и пакеты
-MAX_ATTEMPTS = 3
-attempt = 1
-
-while True:
-    try:
-        import os
-        break # выход из цикла while True
-
-    except ModuleNotFoundError as excptn_1:
-        module = excptn_1.name.split('.')[0]
-        if attempt > MAX_ATTEMPTS:
-            print(
-f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт'
-            )
-
-            raise
-
-        print(
-f'Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас. Попытка № {attempt} из {MAX_ATTEMPTS}'
-        )
-
-        try: check_call([sys.executable, '-m', 'pip', 'install', module, '--quiet', '--disable-pip-version-check'])
-        except CalledProcessError as excptn_2:
-            print(f"Не удалось установить {module}. {type(excptn_2).__name__}: {str(excptn_2).split('Stacktrace:')[0].strip()}")
-            raise
-
-        attempt += 1
-    
-def coLabAdaptor():
-    MAX_ATTEMPTS = 3
-    folderCoLab = None
-    for attempt in range(1, MAX_ATTEMPTS + 1):
-        try:
-            from google.colab import drive
-            drive.mount('/content/drive')
-            folderCoLab = '/content/drive/MyDrive/Colab Notebooks'
-            print('Похоже, я исполняюсь в CoLab, поэтому сейчас появится окно с просьбой открыть доступ для сохранения результатов работы на Ваш Google Drive\n')
-            break
-
-        except ModuleNotFoundError:
-            if attempt == MAX_ATTEMPTS: print('Похоже, я исполняюсь не в CoLab\n')
-
-    return folderCoLab
-
-def folderCoLab_folderIn_comparison(folder):
-    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if not folder:
-        folderCoLab = coLabAdaptor.coLabAdaptor() # либо '/content/drive/MyDrive/Colab Notebooks' , либо None
-        if folderCoLab: folder = folderCoLab
-
-    if folder: folder += slash
-    return folder
-
-
-
-#!/usr/bin/env python
-# coding: utf-8
-
-'''
 (EN) A module designed to facilitate the scraping and parsing of data from the finam.ru website
 (RU) Модуль для упрощения выгрузки данных с сайта finam.ru и их парсинга
 
@@ -138,7 +66,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
     bondsFinAM = bondsFinAM_in.copy()
     # print('bondsOfIdentifier.index :', bondsOfIdentifier.index) # для отладки
 
-    folder = folderCoLab_folderIn_comparison(folder)
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
 
     # # Архитектура
     # # /html/body/div[2]/div[3]/div/table/tbody/tr/td[1]/div/div[1]/table/tbody/tr[7]/td[1]/span
@@ -202,7 +130,7 @@ def bondsOfIdentifierProcessor(attemptsMax, bondsFinAM_in, bondsFinAM_row, bonds
         bondsFinAM_row += 1 # у некоторых облигаций без ISIN не будут заполнены и поля из описания платежей;
             # такие облигации нужны в базе, чтобы повторно не обращаться к ним
 
-        folder = folderCoLab_folderIn_comparison(folder)
+        folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
         time.sleep(pause) # для замедления перехода между page
 
         # Обёртка для driver.get() , чтобы не потерять промежуточные результаты
@@ -670,7 +598,7 @@ def spreadExtract(textFetched):
     return 0
 
 def tables_FinAM_TB_connector(bondStatus, folder, isin, table_FinAM, table_TB):
-    folder = folderCoLab_folderIn_comparison(folder)
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     if (len(table_FinAM) > 0) & (len(table_TB) > 0):
 
@@ -753,7 +681,7 @@ def finamParser(attemptsMax,
 
     bondsFinAM_row = 0 # далее bondsFinAM_row увеличивается на 1 при каждом исполнении функции bondsOfIdentifierProcessor
     bondsOfIdentifier_Excluded = pandas.DataFrame()
-    folder = folderCoLab_folderIn_comparison(folder)
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     goS = True
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
 
