@@ -2,7 +2,7 @@
 # coding: utf-8
 
 '''
-(EN) A module to import bonds', furures', and shares' feachures from the Moscow Exchange 
+(EN) A module to import bonds', futures', and shares' features from the Moscow Exchange 
 (RU) Модуль для выгрузки характеристик торгуемых на МосБирже акций, облигаций, фьючерсов
 '''
 
@@ -24,7 +24,7 @@ while True:
             # (а) адаптации текущего скрипта к файловой системе CoLab
 
         from tqdm import tqdm
-        import os, pandas, requests, time, traceback, warnings # , re
+        import os, pandas, requests, time, traceback
         break # выход из цикла while True
 
     except ModuleNotFoundError as excptn_1:
@@ -49,7 +49,7 @@ f'Пакет {module} НЕ прединсталлирован, но он тре�
 
 # 1. Вспомогательные функции..
 # .. выгрузки таблиц -- фрагментов данных формата JSON из БД МосБиржи
-def json2df(columnS_forComparisom, headers, pause, sectionOfJson, url):
+def json2df(columnS_forComparison, headers, pause, sectionOfJson, url):
     attempt = 1
     df = pandas.DataFrame()
     df_additional_previous = pandas.DataFrame()
@@ -64,7 +64,7 @@ def json2df(columnS_forComparisom, headers, pause, sectionOfJson, url):
             print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
             print(traceback.format_exc()) # показ точной строчки кода с ошибкой
             attempt += 1
-            if attempt < MAX_ATTEMPTS:
+            if attempt <= MAX_ATTEMPTS:
                 time.sleep(pause)
                 continue
 
@@ -77,7 +77,7 @@ def json2df(columnS_forComparisom, headers, pause, sectionOfJson, url):
         # display('df_additional:', df_additional) # для отладки
 
         try:
-            if (len(df_additional) == 0) | ((df_additional[columnS_forComparisom] != df_additional_previous).sum().sum() == 0):
+            if (len(df_additional) == 0) | ((df_additional[columnS_forComparison] != df_additional_previous).sum().sum() == 0):
                     # во второй части условия проверяется наличие различия между датафреймами хотя бы в одной ячейке
 
                 # print('Похоже, df_additional == df_additional_previous; завершаю цикл') # для отладки
@@ -91,7 +91,7 @@ def json2df(columnS_forComparisom, headers, pause, sectionOfJson, url):
             pass
 
         df = pandas.concat([df, df_additional])
-        df_additional_previous = df_additional[columnS_forComparisom]
+        df_additional_previous = df_additional[columnS_forComparison]
         start += len(df_additional)
 
     # break # для отладки
@@ -152,23 +152,19 @@ def securities_marketdata_df_duplicated_withinIsin_processor(securities_marketda
     return securities_marketdata_df_duplicated_withinIsin
 
 # .. работы со срезом securities_marketdata_df , содержащим дублирующиеся по SECID строки
-def securities_marketdata_df_duplicates_processor(columnS_withDateTime, securities_marketdata_df, securities_marketdata_df_duplicated):
-    securities_marketdata_df_notDuplicated =\
-        securities_marketdata_df[~securities_marketdata_df['SECID'].isin(securities_marketdata_df_duplicated['SECID'])]
+def securities_marketdata_df_duplicates_processor(columnS_withDateTime, secidS_duplicated, securities_marketdata_df):
+    securities_marketdata_df_notDuplicated = securities_marketdata_df[~securities_marketdata_df['SECID'].isin(secidS_duplicated)]
 
     # display('securities_marketdata_df_notDuplicated:', securities_marketdata_df_notDuplicated) # для отладки
 
-    # print(len(securities_marketdata_df_duplicated) + len(securities_marketdata_df_notDuplicated) == len(securities_marketdata_df))
+    secidS_duplicated.sort()
+    # print(secidS_duplicated) # для отладки
 
-    securities_marketdata_df_duplicated_secidS = list(securities_marketdata_df_duplicated['SECID'].unique())
-    securities_marketdata_df_duplicated_secidS.sort()
-    # print(securities_marketdata_df_duplicated_secidS) # для отладки
-
-    for secid in tqdm(securities_marketdata_df_duplicated_secidS):
+    for secid in tqdm(secidS_duplicated):
         # print('secid:', secid) # для отладки
 
         securities_marketdata_df_duplicated_withinIsin =\
-            securities_marketdata_df_duplicated[securities_marketdata_df_duplicated['SECID'] == secid]
+            securities_marketdata_df[securities_marketdata_df['SECID'] == secid]
 
         securities_marketdata_df_duplicated_withinIsin =\
             securities_marketdata_df_duplicated_withinIsin_processor(securities_marketdata_df_duplicated_withinIsin)
@@ -223,12 +219,12 @@ def getMoExData(folder=None,
 
     Parameters
     ----------
-       folder : str -- путь к директории, включая её имя, в которой будут искаться файлы и куда будут сохраняться; по умолчанию не в CoLab поиск и сохранение происходят в директории, в которой вызывается текущая функция, а в CoLab в директории Colab Notebooks
-
-       market : str -- если интересуют облигации, подходит значение по умолчанию 'bonds' , если фьючерсы, впишите 'forts' , если акции, впишите 'shares'
-        pause : float -- длительность приостановки исполнения скрипта в секундах
-plusNotTraded : bool -- в случае True функция возвращает и неторгуемые securities
-    returnDfs : bool -- в случае True функция возвращает итоговые датафреймы boardS, columnsDescriptionS и securities_marketdata_df строго в такой последовательности
+           folder : str -- путь к директории, включая её имя, в которой будут искаться файлы и куда будут сохраняться; по умолчанию не в CoLab поиск и сохранение происходят в директории, в которой вызывается текущая функция, а в CoLab в директории Colab Notebooks
+    
+           market : str -- если интересуют облигации, подходит значение по умолчанию 'bonds' , если фьючерсы, впишите 'forts' , если акции, впишите 'shares'
+            pause : float -- длительность приостановки исполнения скрипта в секундах
+    plusNotTraded : bool -- в случае True функция возвращает и неторгуемые securities
+        returnDfs : bool -- в случае True функция возвращает итоговые датафреймы boardS, columnsDescriptionS и securities_marketdata_df строго в такой последовательности
     '''
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     headers = {'User-Agent': 'Mozilla/5.0'}
@@ -251,16 +247,15 @@ f'''Комплект файлов:
         decision = input()
         if decision:
             print('Использую существующий комплект')
-            if returnDfs:
-                boardS = pandas.read_excel(path_boards)
-                columnsDescriptionS = pandas.read_excel(path_columnsDescriptions)
-                securities_marketdata_df = pandas.read_excel(path_securities_marketdata)
-                return boardS, columnsDescriptionS, securities_marketdata_df, None
+            boardS = pandas.read_excel(path_boards)
+            columnsDescriptionS = pandas.read_excel(path_columnsDescriptions)
+            securities_marketdata_df = pandas.read_excel(path_securities_marketdata)
+            if returnDfs: return boardS, columnsDescriptionS, securities_marketdata_df, None
 
 # 2.1 Если нет комплекта
 # 2.1.0 Формирование файла с режимами торгов boardS
     print('Создаю файл с режимами торгов')
-    if market == 'bonds' or market == 'shares': url = f'https://iss.moex.com/iss/engines/stock/markets/{market}'
+    if market in ('bonds', 'shares'): url = f'https://iss.moex.com/iss/engines/stock/markets/{market}'
     if market == 'forts': url = f'https://iss.moex.com/iss/engines/futures/markets/{market}'
     boardS = json2df(['id'], headers, pause, 'boards', url + '.json')
     boardS.to_excel(path_boards, index=False)
@@ -279,7 +274,7 @@ f'''Комплект файлов:
 
     sectionOfJson_list = ['securities']
     if market == 'bonds': sectionOfJson_list.append('marketdata_yields')
-    if (market == 'forts') | (market == 'shares'): sectionOfJson_list.append('marketdata')
+    if market in ('forts', 'shares'): sectionOfJson_list.append('marketdata')
 
     securities_marketdata_df = pandas.DataFrame()
     for sectionOfJson in tqdm(sectionOfJson_list):
@@ -310,7 +305,7 @@ f'''Комплект файлов:
 
         else:
             securities_marketdata_df =\
-                securities_marketdata_df.merge(securities_marketdata_df_additional_1, how='left', on='SECID', suffixes=('', '_drop'))
+                securities_marketdata_df.merge(securities_marketdata_df_additional_1, how='left', on=['BOARDID', 'SECID'], suffixes=('', '_drop'))
 
             securities_marketdata_df =\
                 securities_marketdata_df[[column for column in securities_marketdata_df.columns if not column.endswith('_drop')]]
@@ -327,29 +322,24 @@ f'''Комплект файлов:
         # учёт желаемых режимов торгов (аргумент plusNotTraded )
 
     securities_marketdata_df, columnS_withDateTime = normalize_datetime_columns(securities_marketdata_df)
-
-    # securities_marketdata_df['SYSTIME'] = pandas.to_datetime(securities_marketdata_df['SYSTIME'])
-
-    # if market == 'bonds':
-    #     securities_marketdata_df['URL MoEx'] = 'https://www.moex.com/ru/issue.aspx?code=' + securities_marketdata_df['ISIN']
-    #     securities_marketdata_df['TRADEMOMENT'] = pandas.to_datetime(securities_marketdata_df['TRADEMOMENT'])
-    #     securities_marketdata_df['ZCYCMOMENT'] = pandas.to_datetime(securities_marketdata_df['ZCYCMOMENT'])
-
     # display('securities_marketdata_df 2:', securities_marketdata_df) # для отладки
 
-    securities_marketdata_df_duplicated =\
-    securities_marketdata_df[securities_marketdata_df.duplicated(
-        ['ISIN', 'REGNUMBER', 'SECID', 'SECNAME', 'SHORTNAME'] if 'ISIN' in securities_marketdata_df and 'REGNUMBER' in securities_marketdata_df else ['SECID', 'SECNAME', 'SHORTNAME'],
-        keep=False)
-        ]
+    mask_duplicates = securities_marketdata_df.duplicated([column for column in ['ISIN', 'REGNUMBER', 'SECID', 'SECNAME', 'SHORTNAME'] if column in securities_marketdata_df.columns], keep=False)
+    secidS_duplicated = list(securities_marketdata_df.loc[mask_duplicates, 'SECID'].unique())
+    if secidS_duplicated: securities_marketdata_df_duplicated = securities_marketdata_df[securities_marketdata_df['SECID'].isin(secidS_duplicated)]
+    else: securities_marketdata_df_duplicated = pandas.DataFrame()
+        # = securities_marketdata_df[securities_marketdata_df.duplicated(
+        #     ['ISIN', 'REGNUMBER', 'SECID', 'SECNAME', 'SHORTNAME'] if 'ISIN' in securities_marketdata_df.columns and 'REGNUMBER' in securities_marketdata_df else ['SECID', 'SECNAME', 'SHORTNAME'],
+        #     keep=False)
+        #     ]
 
     # display('securities_marketdata_df_duplicated:', securities_marketdata_df_duplicated) # для отладки
 
     if len(securities_marketdata_df_duplicated) > 0:
         print('Работаю со срезом securities_marketdata_df , содержащим дублирующиеся по SECID строки')
-        securities_marketdata_df = securities_marketdata_df_duplicates_processor(columnS_withDateTime,
-                                                                                 securities_marketdata_df,
-                                                                                 securities_marketdata_df_duplicated)
+        securities_marketdata_df = securities_marketdata_df_duplicates_processor(columnS_withDateTime, secidS_duplicated, securities_marketdata_df)
+        # print(len(securities_marketdata_df_duplicated) + len(securities_marketdata_df_notDuplicated) == len(securities_marketdata_df)) # для отладки
+
 
     columnsDescriptionS.to_excel(path_columnsDescriptions, index=False)
     securities_marketdata_df.to_excel(path_securities_marketdata, index=False)
@@ -361,7 +351,7 @@ f'''Комплект файлов:
 # в market == 'forts' : url = 'https://iss.moex.com/iss/engines/futures/markets/' + market
 
 # url + '.json' -- тут boards и columnsDescriptionS остальных sectionOfJson
-# columnS_forComparisom = ['id'] # столбцы, по которым сравниваются df_additional_previous и df_additional
+# columnS_forComparison = ['id'] # столбцы, по которым сравниваются df_additional_previous и df_additional
 
 # url + '/boards/{board}/securities.json' -- тут securities и финансовые столбцы..
 
@@ -369,14 +359,14 @@ f'''Комплект файлов:
 
     # .. в market == 'forts' | market == 'shares' в marketdata
 
-# и там, и там columnS_forComparisom = ['SECID', 'BOARDID'] # столбцы, по которым сравниваются df_additional_previous и df_additional
+# и там, и там columnS_forComparison = ['SECID', 'BOARDID'] # столбцы, по которым сравниваются df_additional_previous и df_additional
 
 # board = 'TQCB'
 # board = 'RFUD'
 # board = 'TQBR'
 
-# columnS_forComparisom = ['id']
-# columnS_forComparisom = ['SECID', 'BOARDID']
+# columnS_forComparison = ['id']
+# columnS_forComparison = ['SECID', 'BOARDID']
 
 # market = 'bonds'
 # market = 'forts'
