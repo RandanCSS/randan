@@ -47,6 +47,8 @@ f'Пакет {module} НЕ прединсталлирован, но он тре�
 
         attempt += 1
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 # 1. Вспомогательные функции..
 # .. выгрузки таблиц -- фрагментов данных формата JSON из БД МосБиржи
 def json2df(columnS_forComparison, headers, pause, sectionOfJson, url):
