@@ -92,26 +92,25 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
     bondS = bondS_in.copy()
     bondS_rowS = []
 
-    # 'https://www.moex.com/ru/issue.aspx?board=TQOD&code=RU000A10DYP0' # для отладки
-
     print('  isin:', isin) # для отладки
 
+    # Новая архитектура URL Мосбиржи (было issue.aspx?code=..., стало /ru/bonds/...)
+    url_by_isin = f'https://www.moex.com/ru/bonds/{isin.lower()}'
+
     try:
-        driver.get(f'https://www.moex.com/ru/issue.aspx?code={isin}')
+        driver.get(url_by_isin)
         print('Страница загрузилась успешно') # для отладки
 
     except (TimeoutError, TimeoutException, WebDriverException):
-        print('Загрузка страницы длится слишком долго; перехожу к timeoutExceptionProcessor') # для отладки
-        driver = timeoutExceptionProcessor(driver, isin, pause, version_main)
+        print('Загрузка страницы длится слишком долго; перехожу к timeoutExceptionProcesser') # для отладки
+        driver = timeoutExceptionProcesser(driver, isin, pause, version_main)
         if driver == None: return bondS, bondS_rowS, driver # выход из функции
 
     # Ожидание, чтобы страница прогрузилась
-    # Архитектура
-    # /html/body/div[3]/div[6]/div/div/div[1]/div/div/div/div/div[3]/div/div[3]/div[2]/div[1]/h2
-
+    # Новая архитектура: ищем заголовок без привязки к старым классам вкладок
     try:
         WebDriverWait(driver, pause).until(expected_conditions.presence_of_element_located(
-            (By.XPATH, f"//div[@class='tab-content']//h2[contains(., 'Параметры инструмента')]")
+            (By.XPATH, "//h2[contains(., 'Параметры инструмента')] | //h3[contains(., 'Параметры инструмента')]")
             ))
         print('  ✅ Облигация найдена по ISIN') # , end='\r'
 
@@ -120,15 +119,15 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
         print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
         print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
-        pageSource = driver.page_source
-        # print(pageSource) # для отладки
-
         print('  ✅ Облигация НЕ найдена по ISIN, ищу по SECID') # , end='\r'
         secidIndex = bondS.loc[bondS['ISIN'] == isin, 'SECID'].index
         secid = bondS.loc[secidIndex[0], 'SECID']
         print('  secid:', secid) # для отладки
 
-        try: driver.get(f'https://www.moex.com/ru/issue.aspx?code={secid}')
+        url_by_secid = f'https://www.moex.com/ru/bonds/{secid.lower()}'
+
+        try: 
+            driver.get(url_by_secid)
 
         except Exception as excptn:
             print('Exception 2 в getRatingFromMoEx')
@@ -140,21 +139,20 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
             return bondS, bondS_rowS, driver # выход из функции
 
         WebDriverWait(driver, pause).until(expected_conditions.presence_of_element_located(
-            (By.XPATH, f"//div[@class='tab-content']//h2[contains(., 'Параметры инструмента')]")
+            (By.XPATH, "//h2[contains(., 'Параметры инструмента')] | //h3[contains(., 'Параметры инструмента')]")
             ))
         print('  ✅ Облигация найдена по SECID') # , end='\r'
 
     body_text = driver.find_element("tag name", "body").text
-    # Не_согласен_pattern = re.compile(rf"\b{re.escape('Не согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
-    Согласен_pattern = re.compile(rf"\b{re.escape('Согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
-    # СогласенНе_согласен_pattern = re.compile(rf"\b{re.escape('СогласенНе согласен')}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
+    Согласен_pattern = re.compile(rf"\b{re.escape('Согласен')}\b", re.IGNORECASE)
 
-    if Согласен_pattern.search(body_text.strip()): # наличие этго слова -- сигнал к проверке предупреждения про Cookie и дисклеймера
+    if Согласен_pattern.search(body_text.strip()): # наличие этого слова -- сигнал к проверке предупреждения про Cookie и дисклеймера
         try:
-            cookieAnchor = WebDriverWait(driver, pause).until(expected_conditions.presence_of_element_located(
-                (By.XPATH, "//div[@class='_usagePolicy']")
+            # В React больше нет класса _usagePolicy. Ищем по типичным классам cookie/policy или просто по кнопке внутри подвала
+            cookieAnchor = WebDriverWait(driver, 3).until(expected_conditions.presence_of_element_located(
+                (By.XPATH, "//div[contains(@class, 'cookie') or contains(@class, 'Cookie') or contains(@class, 'policy')]")
                 ))
-            cookieAnchor.find_element(By.XPATH, ".//p[text()='Согласен']").click()
+            cookieAnchor.find_element(By.XPATH, ".//button[contains(text(), 'Согласен')]").click()
             print('  ✅ Предупреждение про Cookie закрыто') # , end='\r'
         except Exception as excptn:
             print('Exception 3 в getRatingFromMoEx')
@@ -163,10 +161,11 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
             print('  ✅ Предупреждение про Cookie не найдено') # , end='\r'
 
         try:
+            # Вместо jQuery UI (ui-dialog-buttonset) в React используются диалоги через role="dialog" или класси modal/dialog
             disclaimerAnchor = WebDriverWait(driver, pause).until(expected_conditions.presence_of_element_located(
-                (By.XPATH, "//div[@class='ui-dialog-buttonset']")
+                (By.XPATH, "//div[@role='dialog' or contains(@class, 'dialog') or contains(@class, 'modal')]")
                 ))
-            disclaimerAnchor.find_element(By.XPATH, ".//button[text()='Согласен']").click()
+            disclaimerAnchor.find_element(By.XPATH, ".//button[contains(text(), 'Согласен')]").click()
             print('  ✅ Дисклеймер закрыт') # , end='\r'
         except Exception as excptn:
             print('Exception 4 в getRatingFromMoEx')
@@ -174,68 +173,73 @@ def getRatingFromMoEx(bondS_in: pandas.DataFrame,
             print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
             print('  ✅ Дисклеймер не найден') # , end='\r'
 
-    # textTarget = 'Кредитный рейтинг эмитента' # для отладки
-    # textTarget = 'Кредитный рейтинг выпуска облигаций' # для отладки
-
-    textTarget_pattern = re.compile(rf"\b{re.escape(textTarget)}\b", re.IGNORECASE) # чтобы не спутать с похожими формулировками
+    textTarget_pattern = re.compile(rf"\b{re.escape(textTarget)}\b", re.IGNORECASE)
     if textTarget_pattern.search(body_text.strip()):
         print('textTarget:', textTarget) # для отладки
 
         # Поиск таблицы с соответствующим кредитным рейтингом
-        tableWithRating = driver.find_element(By.XPATH, f"//h2[contains(., '{textTarget}')]/following-sibling::div")
-        # print('tableWithRating.text:', tableWithRating.text) # для отладки
-
-        # Извлечь заголовки столбцов
+        # В React компонентах между заголовком и таблицей могут быть лишние div-обертки. 
+        # Поэтому ищем первую таблицу ПОСЛЕ заголовка (following::table[1]), а не соседний элемент (following-sibling::div)
         try:
-            headerElementS = tableWithRating.find_elements(By.XPATH, ".//thead//th")
-        except Exception as excptn: # если нет thead, ищем th в первой строке
-            print('Exception 5 в getRatingFromMoEx')
-            print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
-            print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
-            headerElementS = tableWithRating.find_elements(By.XPATH, ".//tr[1]/th")
+            tableWithRating = driver.find_element(By.XPATH, f"//*[contains(., '{textTarget}') and (self::h2 or self::h3)]/following::table[1]")
+        except Exception as excptn:
+            print('Exception 5 в getRatingFromMoEx: Таблица рейтингов не найдена')
+            print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}")
+            tableWithRating = None
 
-        headerS = []
-        headerS = [th.text.strip() for th in headerElementS if th.text.strip()]
-        print('headerS:', headerS) # для отладки
+        if tableWithRating:
+            # Извлечь заголовки столбцов
+            try:
+                headerElementS = tableWithRating.find_elements(By.XPATH, ".//thead//th")
+            except Exception as excptn: # если нет thead, ищем th в первой строке
+                print('Exception 6 в getRatingFromMoEx')
+                print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
+                print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
+                headerElementS = tableWithRating.find_elements(By.XPATH, ".//tr[1]/th")
 
-        if identifier != isin:
-            # print('identifier != isin') # для отладки
-            bondS_rowS = list(bondS[bondS['Эмитент'] == identifier].index)
-        else:
-            # print('identifier == isin') # для отладки
-            bondS_rowS = list(bondS[bondS['ISIN'] == identifier].index)
+            headerS = []
+            headerS = [th.text.strip() for th in headerElementS if th.text.strip()]
+            print('headerS:', headerS) # для отладки
 
-        if len(headerS) == 0: bondS.loc[bondS_rowS, 'Rating Notation'] = 'Рейтинг не присвоен или неизвестен, или отозван'
-        else:
-            dictS_withRating = []
-            for dataRow in tableWithRating.find_elements(By.XPATH, ".//tbody//tr | .//tr[td]"):
-                dataCellS = dataRow.find_elements(By.TAG_NAME, "td")
-                dataCellTextS = [cell.text.strip() for cell in dataCellS if cell.text.strip()]
+            if identifier != isin:
+                bondS_rowS = list(bondS[bondS['Эмитент'] == identifier].index)
+            else:
+                bondS_rowS = list(bondS[bondS['ISIN'] == identifier].index)
 
-                # отбор строк с содержательными данными (обычно 3+ ячейки)
-                if len(dataCellTextS) >= 3 and any(keyword in ' '.join(dataCellTextS) for keyword in ['АКРА', 'НКР', 'НРА', 'Эксперт']):
-                    # воспроизвести таблицу, сопоставляя данные с заголовками
-                    record = {"Тип рейтинга": textTarget.replace('Кредитный рейтинг ', '').strip()}
+            if len(headerS) == 0: 
+                bondS.loc[bondS_rowS, 'Rating Notation'] = 'Рейтинг не присвоен или неизвестен, или отозван'
+            else:
+                dictS_withRating = []
+                for dataRow in tableWithRating.find_elements(By.XPATH, ".//tbody//tr | .//tr[td]"):
+                    dataCellS = dataRow.find_elements(By.TAG_NAME, "td")
+                    dataCellTextS = [cell.text.strip() for cell in dataCellS if cell.text.strip()]
 
-                    # Заполнить известные поля
-                    for i, header in enumerate(headerS[:len(dataCellTextS)]):
-                        record[header] = dataCellTextS[i]
+                    # отбор строк с содержательными данными (обычно 3+ ячейки)
+                    if len(dataCellTextS) >= 3 and any(keyword in ' '.join(dataCellTextS) for keyword in ['АКРА', 'НКР', 'НРА', 'Эксперт']):
+                        # воспроизвести таблицу, сопоставляя данные с заголовками
+                        record = {"Тип рейтинга": textTarget.replace('Кредитный рейтинг ', '').strip()}
 
-                    # Заполняем оставшиеся данные, если столбцов больше, чем заголовков
-                    for i in range(len(headerS), len(dataCellTextS)):
-                        record[f"Доп. поле {i + 1}"] = dataCellTextS[i]
+                        # Заполнить известные поля
+                        for i, header in enumerate(headerS[:len(dataCellTextS)]):
+                            record[header] = dataCellTextS[i]
 
-                    dictS_withRating.append(record)
-            # print('dictS_withRating:', dictS_withRating) # для отладки
+                        # Заполняем оставшиеся данные, если столбцов больше, чем заголовков
+                        for i in range(len(headerS), len(dataCellTextS)):
+                            record[f"Доп. поле {i + 1}"] = dataCellTextS[i]
 
-            oneBondRating = pandas.DataFrame(dictS_withRating)
-            display('oneBondRating:', oneBondRating) # для отладки
-            oneBondRating = oneBondRating[oneBondRating['Значение кредитного рейтинга'].str.contains('Отозван', case=False) != True] # не интересует, если рейтинг отозван
-            oneBondRating[columnWithRating] = oneBondRating['Значение кредитного рейтинга'].apply(ratingDigitizer, args=('RB',))
-            # display(oneBondRating) # для отладки
+                        dictS_withRating.append(record)
 
-            bondS.loc[bondS_rowS, columnWithRating] = oneBondRating[columnWithRating].mean()
-                # присвоить рейтинг эмитента всем его облигациям в bondS
+                oneBondRating = pandas.DataFrame(dictS_withRating)
+                display('oneBondRating:', oneBondRating) # для отладки
+                
+                if not oneBondRating.empty and 'Значение кредитного рейтинга' in oneBondRating.columns:
+                    oneBondRating = oneBondRating[oneBondRating['Значение кредитного рейтинга'].str.contains('Отозван', case=False) != True] # не интересует, если рейтинг отозван
+                    oneBondRating[columnWithRating] = oneBondRating['Значение кредитного рейтинга'].apply(ratingDigitizer, args=('RB',))
+
+                    bondS.loc[bondS_rowS, columnWithRating] = oneBondRating[columnWithRating].mean()
+                        # присвоить рейтинг эмитента всем его облигациям в bondS
+                else:
+                    bondS.loc[bondS_rowS, 'Rating Notation'] = 'Рейтинг не присвоен или неизвестен, или отозван'
 
     return bondS, bondS_rowS, driver
 
