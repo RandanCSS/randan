@@ -329,7 +329,7 @@ def downloadComments(api_keyS, keyOrder, method, sourceId):
     commentS = pandas.DataFrame()
     pageToken = None
     problemItemId = None
-    youtube = api.build('youtube', 'v3', developerKey = api_keyS[keyOrder])
+    youtube = api.build('youtube', 'v3', developerKey=api_keyS[keyOrder])
     while True: # прерывается командой break при отсутствии nextPageToken
         goC = True
         while goC: # цикл позволяет возвращяться со следующим keyOrder к прежнему id при истечении квоты текущего ключа
@@ -502,7 +502,7 @@ f'''
                 goC = True
                 while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
                     try:
-                        youtube = api.build('youtube', 'v3', developerKey = api_keyS[keyOrder])
+                        youtube = api.build('youtube', 'v3', developerKey=api_keyS[keyOrder])
                         response = youtube.playlistItems().list(part='snippet', maxResults=50, pageToken=pageToken, playlistId=playlistId).execute()
                         playlistVideoChannelS_additional = pandas.json_normalize(response['items'])
                         playlistVideoChannelS = dfsProcessor(channelIdForSearch,
@@ -580,12 +580,48 @@ def portionsProcessor(api_keyS,
     goS = True
     iteration = 0 # номер итерации применения текущего метода
     portion = 50
+
+    # <Выгрузка плейлистов канала по id канала -- эксклюзивно для метода playlists >
+    # Если пользователь подал id канала (то есть НЕ использовался search) и текущий метод -- playlists ,
+    # то до цикла по bound дополнить список idS id всех плейлистов этого канала.
+    # Вынесено из цикла по bound по двум причинам:
+        #  (а) собрать ВСЕ плейлисты канала (через обход nextPageToken), а не только первую страницу выдачи;
+        #  (б) не повторять этот сбор при каждой итерации цикла (в противном случае idS дублировался бы первыми 50 плейлистами)
+
+    if method == 'playlists' and channelIdForSearch:
+        pageToken = None
+        while True: # прерывается командой break при отсутствии nextPageToken
+            goC = True
+            while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
+                try:
+                    youtube = api.build('youtube', 'v3', developerKey=api_keyS[keyOrder])
+                    response = youtube.playlists().list(part='snippet, contentDetails, localizations, status',
+                                                        channelId=channelIdForSearch,
+                                                        maxResults=50,
+                                                        pageToken=pageToken).execute()
+
+                    goC = False # выход из while goC
+
+                except:
+                    print('\nОшибка внутри авторской функции portionsProcessor при сборе id плейлистов канала') # для отладки
+                    goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(errorDescription=sys.exc_info(),
+                                                                                     keyOrder=keyOrder,
+                                                                                     sourceId=channelIdForSearch)
+
+            idS.extend(pandas.json_normalize(response['items'])['id'].tolist())
+            if 'nextPageToken' in response.keys(): pageToken = response['nextPageToken']
+            else: break
+        idS = list(dict.fromkeys(idS))
+            # так же дедуплицируются channelIdS в channelProcessor и videoIdS в searchByText ;
+            # в частности, снимает возможное дублирование, если uploads-плейлист уже присутствует в idS
+    # </Выгрузка плейлистов канала по id канала -- эксклюзивно для метода playlists >
+
     while bound < len(idS):
     # while bound < 100: # для отладки
         goC = True
         while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
             try:
-                youtube = api.build('youtube', 'v3', developerKey = api_keyS[keyOrder])
+                youtube = api.build('youtube', 'v3', developerKey=api_keyS[keyOrder])
                 if method == 'channels':
                     response = youtube.channels().list(part='snippet, brandingSettings, contentDetails, id, localizations, statistics, status, topicDetails',
                                                        id=idS[bound:bound + portion],
@@ -742,9 +778,9 @@ videoPaidProductPlacement : str
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API YouTube
     channelS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
-    coLabFolder = coLabAdaptor.coLabAdaptor()
     commentReplieS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     fileFormatChoice = '.xlsx' # базовый формат сохраняемых файлов; формат .json добавляется опционально через наличие columnsToJSON
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     folderFile = None
     folderWithTemporal = None
     goS = True
@@ -780,9 +816,8 @@ videoPaidProductPlacement : str
         message =\
 f"В текущей директории '{name_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 6-7 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную"
 
-        if 'Temporal' in name_in_folderCurrent:
-            # print('name_in_folderCurrent:', name_in_folderCurrent) # для отладки
-            if len(os.listdir(name_in_folderCurrent if not coLabFolder else coLabFolder + slash + name_in_folderCurrent)) == 9:
+        if name_in_folderCurrent.endswith('Temporal') and 'YouTube' in name_in_folderCurrent:
+            if len(os.listdir(name_in_folderCurrent)) < 9: print(message) # допустимо 9 или 10 файлов
                 targetCountTemporal = scrapingTools.containerImport('targetCount', int)
                 methodTemporal = scrapingTools.containerImport('method', str)
                 yearTemporal = scrapingTools.containerImport('year', int)
@@ -2052,12 +2087,11 @@ f'''
 
             if returnDfs: return itemS, playlistS, videoS, commentReplieS, channelS
 
-# warnings.filterwarnings('ignore')
-# print('Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть')
-# input()
-# sys.exit()
-
 # Поработать со snippetContentType , возможно, вынести этот аргумент из channelProcessor
 # Добавить возможность подавать множество ключей в accessToken
 # https://stackoverflow.com/questions/30475309/get-youtube-trends-v3-country-wise-in-json -- про тренды
 # Если подавать в скрипт располагаемый файл НЕ search , то в нём не будет столбца id.kind , следовательно, скрипт не поймёт, какие дополнительные характеристики выгружать
+
+# problemItemId в errorProcessor инициализируется sourceId и никогда не сбрасывается при повторных итерациях, поэтому в ветке про «channel/comment/playlist/video» в лог попадёт исходный channelIdForSearch, а не реально проблемный videoId/commentId. В downloadComments это особенно заметно: при обходе videoIdS в цикле все проблемные видео получат один и тот же первый sourceId.
+# Вынести в самодостаточные функции работу с видео, каналами, комментариями, плейлистами
+# chart в https://developers.google.com/youtube/v3/docs/videos/list -- интересно
