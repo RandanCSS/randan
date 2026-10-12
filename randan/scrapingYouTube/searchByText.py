@@ -169,10 +169,11 @@ def channelProcessor(api_keyS,
                      yearsRange,
                      videoS):
 
+    channelS = pandas.DataFrame()
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     if len(df_final) > 0: # если использовался search и успешно, id каналов берутся из него
         channelIdS = df_final[df_final['id.kind'] == f'youtube#{snippetContentType}']
-        if channelIdS:
+        if len(channelIdS) > 0:
             channelIdS =\
                 channelIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in channelIdS.columns else channelIdS['id'].to_list()
 
@@ -216,7 +217,7 @@ f'''В скрипте используются следующие аргумен
                 channelIdS.extend(videoS['snippet.channelId'].to_list())
                 channelIdS = list(dict.fromkeys(channelIdS))
 
-    if channelIdS:
+    if len(channelIdS) > 0:
 
         print(f'''Проход по каналам{' порциями по 50 штук' if len(channelIdS) > 50 else ''} для выгрузки их характеристик''')
         if len(df_final) > 0 and 'kind' in df_final.columns:
@@ -270,6 +271,7 @@ def dfsProcessor(channelIdForSearch,
                  year,
                  yearsRange):
 
+    df = pandas.DataFrame()
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     if len(df_additional) > 0 or len(df_in) > 0: # оба df пусты -- в случае применения функции dfsProcessor при завершении исполнения скрипта пользователем
@@ -442,7 +444,8 @@ def playListProcessor(api_keyS,
 
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     method = 'playlists'
-
+    playlistS = pandas.DataFrame()
+    playlistVideoChannelS = pandas.DataFrame()
     print(
 f'''В скрипте используются следующие аргументы метода {method} API YouTube: part=['snippet', 'contentDetails', 'localizations', 'status'], id, maxResults .
 Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.
@@ -743,6 +746,7 @@ videoPaidProductPlacement : str
     commentReplieS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     fileFormatChoice = '.xlsx' # базовый формат сохраняемых файлов; формат .json добавляется опционально через наличие columnsToJSON
     folderFile = None
+    folderWithTemporal = None
     goS = True
     goToPlayList = False
     itemS = pandas.DataFrame(columns=['id.kind']) # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
@@ -765,7 +769,7 @@ videoPaidProductPlacement : str
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     nameS_in_folderCurrent = os.listdir(folder)
-    api_keyS = scrapingTools.credentialsProcessor(access_token, 'VK', 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', nameS_in_folderCurrent)
+    api_keyS = scrapingTools.credentialsProcessor(access_token, 'YT', 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', nameS_in_folderCurrent)
 
 # 2.0.2 Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
@@ -1055,9 +1059,9 @@ f'''В скрипте используются следующие аргумен
                                                                                                iteration,
                                                                                                keyOrder,
                                                                                                order=None,
+                                                                                               pageToken=None,
                                                                                                publishedAfter=publishedAfter,
                                                                                                publishedBefore=publishedBefore,
-                                                                                               pageToken=None,
                                                                                                q=q,
                                                                                                eventType=eventType,
                                                                                                location=location,
@@ -1127,9 +1131,9 @@ f'''В скрипте используются следующие аргумен
                                                                                                        order=None,
                                                                                                        location=location,
                                                                                                        locationRadius=locationRadius,
+                                                                                                       pageToken=pageToken,
                                                                                                        publishedAfter=publishedAfter,
                                                                                                        publishedBefore=publishedBefore,
-                                                                                                       pageToken=pageToken,
                                                                                                        q=q,
                                                                                                        regionCode=regionCode,
                                                                                                        relevanceLanguage=relevanceLanguage,
@@ -1186,9 +1190,9 @@ f'''В скрипте используются следующие аргумен
                                                                                                        location,
                                                                                                        locationRadius,
                                                                                                        order,
-                                                                                                       publishedAfter,
-                                                                                                       publishedBefore,
                                                                                                        pageToken=None,
+                                                                                                       publishedAfter=publishedAfter,
+                                                                                                       publishedBefore=publishedBefore,
                                                                                                        q=q,
                                                                                                        regionCode=regionCode,
                                                                                                        relevanceLanguage=relevanceLanguage,
@@ -1243,9 +1247,9 @@ f'''В скрипте используются следующие аргумен
                                                                                                            location,
                                                                                                            locationRadius,
                                                                                                            order,
+                                                                                                           pageToken,
                                                                                                            publishedAfter,
                                                                                                            publishedBefore,
-                                                                                                           pageToken,
                                                                                                            q,
                                                                                                            regionCode,
                                                                                                            relevanceLanguage,
@@ -1312,9 +1316,9 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                                                                                                            location,
                                                                                                            locationRadius,
                                                                                                            order=None,
+                                                                                                           pageToken=None,
                                                                                                            publishedAfter=f'{year}-01-01T00:00:00Z',
                                                                                                            publishedBefore=f'{year + 1}-01-01T00:00:00Z',
-                                                                                                           pageToken=None,
                                                                                                            q=q,
                                                                                                            regionCode=regionCode,
                                                                                                            relevanceLanguage=relevanceLanguage,
@@ -1372,9 +1376,9 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                                                                                                                location,
                                                                                                                locationRadius,
                                                                                                                order=None,
+                                                                                                               pageToken=pageToken,
                                                                                                                publishedAfter=f'{year}-01-01T00:00:00Z',
                                                                                                                publishedBefore=f'{year + 1}-01-01T00:00:00Z',
-                                                                                                               pageToken=pageToken,
                                                                                                                q=q,
                                                                                                                regionCode=regionCode,
                                                                                                                relevanceLanguage=relevanceLanguage,
@@ -1427,9 +1431,9 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                                                                                                                    location,
                                                                                                                    locationRadius,
                                                                                                                    order,
+                                                                                                                   pageToken=None,
                                                                                                                    publishedAfter=f'{year}-01-01T00:00:00Z',
                                                                                                                    publishedBefore=f'{year + 1}-01-01T00:00:00Z',
-                                                                                                                   pageToken=None,
                                                                                                                    q=q,
                                                                                                                    regionCode=regionCode,
                                                                                                                    relevanceLanguage=relevanceLanguage,
@@ -1473,34 +1477,34 @@ f'    Для года {year} проход по всем следующим ст�
                                     while 'nextPageToken' in response.keys() and len(itemS) < targetCount and len(response['items']) > 0 and goS:
                                         pageToken = response['nextPageToken']
                                         itemS_additional, goS, goToPlayList, iteration, keyOrder, response = bigSearch(api_keyS,
-                                                                                                                   channelIdForSearch,
-                                                                                                                   channelType,
-                                                                                                                   contentType,
-                                                                                                                   eventType,
-                                                                                                                   iteration,
-                                                                                                                   keyOrder,
-                                                                                                                   location,
-                                                                                                                   locationRadius,
-                                                                                                                   order,
-                                                                                                                   publishedAfter=f'{year}-01-01T00:00:00Z',
-                                                                                                                   publishedBefore=f'{year + 1}-01-01T00:00:00Z',
-                                                                                                                   pageToken=pageToken,
-                                                                                                                   q=q,
-                                                                                                                   regionCode=regionCode,
-                                                                                                                   relevanceLanguage=relevanceLanguage,
-                                                                                                                   safeSearch=safeSearch,
-                                                                                                                   topicId=topicId,
-                                                                                                                   videoCaption=videoCaption,
-                                                                                                                   videoCategoryId=videoCategoryId,
-                                                                                                                   videoDefinition=videoDefinition,
-                                                                                                                   videoDimension=videoDimension,
-                                                                                                                   videoDuration=videoDuration,
-                                                                                                                   videoEmbeddable=videoEmbeddable,
-                                                                                                                   videoLicense=videoLicense,
-                                                                                                                   videoPaidProductPlacement=videoPaidProductPlacement,
-                                                                                                                   videoType=videoType,
-                                                                                                                   videoSyndicated=videoSyndicated,
-                                                                                                                   year=year)
+                                                                                                                       channelIdForSearch,
+                                                                                                                       channelType,
+                                                                                                                       contentType,
+                                                                                                                       eventType,
+                                                                                                                       iteration,
+                                                                                                                       keyOrder,
+                                                                                                                       location,
+                                                                                                                       locationRadius,
+                                                                                                                       order,
+                                                                                                                       pageToken,
+                                                                                                                       publishedAfter=f'{year}-01-01T00:00:00Z',
+                                                                                                                       publishedBefore=f'{year + 1}-01-01T00:00:00Z',
+                                                                                                                       q=q,
+                                                                                                                       regionCode=regionCode,
+                                                                                                                       relevanceLanguage=relevanceLanguage,
+                                                                                                                       safeSearch=safeSearch,
+                                                                                                                       topicId=topicId,
+                                                                                                                       videoCaption=videoCaption,
+                                                                                                                       videoCategoryId=videoCategoryId,
+                                                                                                                       videoDefinition=videoDefinition,
+                                                                                                                       videoDimension=videoDimension,
+                                                                                                                       videoDuration=videoDuration,
+                                                                                                                       videoEmbeddable=videoEmbeddable,
+                                                                                                                       videoLicense=videoLicense,
+                                                                                                                       videoPaidProductPlacement=videoPaidProductPlacement,
+                                                                                                                       videoType=videoType,
+                                                                                                                       videoSyndicated=videoSyndicated,
+                                                                                                                       year=year)
 
                                         itemS = dfsProcessor(channelIdForSearch,
                                                              complicatedNamePart,
@@ -1851,17 +1855,18 @@ f'''В скрипте используются следующие аргумен
                     print('Проход по строкам всех родительских (topLevel) комментариев, имеющих ответы')
                     replieS = pandas.DataFrame()
                     for row in tqdm(commentS_replied_index):
-                        try: addReplieS = pandas.json_normalize(commentS['replies.comments'][row])
+                        replieS_additional = pandas.DataFrame()
+                        try: replieS_additional = pandas.json_normalize(commentS['replies.comments'][row])
                         except Exception as excptn:
                             print('Exception 2 в searchByText') # для отладки
                             print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
                             print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
                             print("commentS['replies.comments'][row]:", commentS['replies.comments'][row]) # для отладки !!!
 
-                        commentS.loc[row, 'Недостача_ответов'] = commentS['snippet.totalReplyCount'][row] - len(addReplieS)
+                        commentS.loc[row, 'Недостача_ответов'] = commentS['snippet.totalReplyCount'][row] - len(replieS_additional)
                             # записать разницу между ожданиями и реальностью в новый столбец `Недостача_ответов`
 
-                        replieS = pandas.concat([replieS, addReplieS]).reset_index(drop=True)
+                        replieS = pandas.concat([replieS, replieS_additional]).reset_index(drop=True)
 
                     replieS = replieS.reset_index(drop=True)
                     replieS.loc[:, 'snippet.totalReplyCount'] = 0
@@ -2045,7 +2050,7 @@ f'''
                          year=year,
                          yearsRange=yearsRange)
 
-            if returnDfs: return itemS, playlistS, videoS, commentReplieS, channelS, playlistS
+            if returnDfs: return itemS, playlistS, videoS, commentReplieS, channelS
 
 # warnings.filterwarnings('ignore')
 # print('Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть')
