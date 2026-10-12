@@ -70,12 +70,8 @@ def dfsProcessor(complicatedNamePart,
     if df_in is None: df_in = pandas.DataFrame()
     df = pandas.concat([df_in, df_additional])
     columnsForCheck = []
-
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if not folder: folder = ''
-    # if folder is None) | (folder == ''): folder = ''
-    else: folder += slash
-
     for column in df.columns: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
         if column == 'id' or column.endswith('_id') or column.startswith('id_'): columnsForCheck.append(column)
 
@@ -84,6 +80,7 @@ def dfsProcessor(complicatedNamePart,
     if columnsForCheck: df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
         # при дублировании записей из itemS из Temporal и от пользователя и новых записей, оставить новые
 
+# Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
     if not goS:
         print(
 f'''Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"'''
@@ -96,7 +93,6 @@ f'''Поскольку исполнение скрипта натолкнуло�
         # else:
             # print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" существует''')
 
-# Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
         scrapingTools.containerExport(temporal_exportPath + slash + 'domain.txt', domain if domain else '')
 
         if not fields: fields = []
@@ -174,13 +170,14 @@ def wallGetCore(api_keyS,
     return df_additional, goS, iteration, keyOrder, pause
 
 # 2. Основная функция
-def wallGet(access_token=None,
-            count=None,
-            domain=None,
-            fields=None,
-            filter=None,
-            offset=None,
-            params=None,
+def wallGet(access_token,
+            count,
+            domain,
+            fields,
+            filter,
+            folder,
+            offset,
+            params,
             returnDfs=False):
 
     method = 'wall.get'
@@ -198,12 +195,14 @@ def wallGet(access_token=None,
           domain : str
           fields : list
           filter : str
+          folder : str
           offset : int
           params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.get ,
           чтобы не подавать эти аргументы по отдельности
 
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
     '''
+
     if not params and not access_token and not count and not domain and not fields and not filter and not offset and not returnDfs:
         print('Пользователь не подал аргументы') # для отладки
         experiencedMode = False
@@ -259,29 +258,23 @@ f'''    Скрипт нацелен на выгрузку характерист
 
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API ВК
-
-    # Блок, поскольку folder многократно используется внутри функции в формулах
-    coLabFolder = coLabAdaptor.coLabAdaptor() # либо '/content/drive/MyDrive/Colab Notebooks' , либо None
-    folder = coLabFolder
-    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if not folder: folder = ''
-    # if folder is None) | (folder == ''): folder = ''
-    else: folder += slash
-
     fileFormatChoice = '.xlsx' # базовый формат сохраняемых файлов; формат .json добавляется опционально через наличие columnsToJSON
     folderFile = None
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     goS = True
     itemS = pandas.DataFrame()
     itemS_additional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
     keyOrder = 0
+    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     temporalName = None
 
     momentCurrent = datetime.now() # запрос текущего момента
     print('\nТекущий момент:', momentCurrent.strftime('%Y%m%d_%H%M'), '-- он будет использован для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
-    nameS_in_folderCurrent = os.listdir()
+    nameS_in_folderCurrent = os.listdir(folder)
     api_keyS = scrapingTools.credentialsProcessor(access_token, 'VK', 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', nameS_in_folderCurrent)
+
 # Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
     print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
@@ -331,8 +324,10 @@ f"В текущей директории '{name_in_folderCurrent}' есть ди
                         temporalName = None # флаг, что данные, сохранённые при прошлом запуске скрипта, не найдены
                         print(message)
 
-                elif decision == 'R': shutil.rmtree(folderWithTemporal, ignore_errors=True)
-            
+                elif decision.lower() == 'r':
+                    shutil.rmtree(folderWithTemporal, ignore_errors=True)
+                    print('')
+           
 # Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
     if not temporalName: # если itemsTemporal, в т.ч. пустой, не существует
             # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
