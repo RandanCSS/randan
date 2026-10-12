@@ -30,7 +30,7 @@ while True:
             # (е) предобработки неформализованного текста
 
         from tqdm import tqdm
-        import os, pandas, re, shutil, time, warnings
+        import os, pandas, re, shutil, time, traceback, warnings
         import googleapiclient.discovery as api
         break # выход из цикла while True
 
@@ -140,10 +140,7 @@ def bigSearch(api_keyS,
             goC = False
 
         except:
-            print('Exception 1 в bigSearch') # для отладки
-            print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
-            print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
-
+            print('Exception в bigSearch') # для отладки
             goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(errorDescription=sys.exc_info(),
                                                                              keyOrder=keyOrder,
                                                                              sourceId=channelIdForSearch)
@@ -172,10 +169,10 @@ def channelProcessor(api_keyS,
                      yearsRange,
                      videoS):
 
-    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)    
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     if len(df_final) > 0: # если использовался search и успешно, id каналов берутся из него
         channelIdS = df_final[df_final['id.kind'] == f'youtube#{snippetContentType}']
-        if len(channelIdS) > 0:
+        if channelIdS:
             channelIdS =\
                 channelIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in channelIdS.columns else channelIdS['id'].to_list()
 
@@ -219,10 +216,10 @@ f'''В скрипте используются следующие аргумен
                 channelIdS.extend(videoS['snippet.channelId'].to_list())
                 channelIdS = list(dict.fromkeys(channelIdS))
 
-    if channelIdS > 0:
+    if channelIdS:
 
-        print(f'''Проход по каналам{' порциями по 50 штук' if 90 > 50 else ''} для выгрузки их характеристик''')
-        if len(df_final) > 0:
+        print(f'''Проход по каналам{' порциями по 50 штук' if len(channelIdS) > 50 else ''} для выгрузки их характеристик''')
+        if len(df_final) > 0 and 'kind' in df_final.columns:
             if 'search' in df_final['kind'].drop_duplicates().iloc[0]: # другими словами, если search использовался, потому что мог не search , а channels сформировать df_final
                 print('-- дополнительных к выруженным методом search')
 
@@ -246,7 +243,7 @@ f'''В скрипте используются следующие аргумен
 
         if len(channelS) > 0:
             df2file.df2fileShell(complicatedNamePart,
-                                 currentMoment=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                 currentMoment=momentCurrent.strftime('%Y%m%d_%H%M') # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                  df_in=channelS,
                                  fileFormatChoice=fileFormatChoice,
                                  folder=folder,
@@ -267,8 +264,7 @@ def dfsProcessor(channelIdForSearch,
                  method,
                  q,
                  name_in_folderCurrent,
-                 slash,
-                 stageTarget,
+                 stage,
                  targetCount,
                  momentCurrent,
                  year,
@@ -345,7 +341,7 @@ def downloadComments(api_keyS, keyOrder, method, sourceId):
                 goC = False
 
             except:
-                print('\nОшибка внутри авторской функции downloadComments') # для отладки
+                print('Exception в downloadComments') # для отладки
                 goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(errorDescription=sys.exc_info(), keyOrder=keyOrder, sourceId=sourceId)
 
         commentS = pandas.concat([commentS, pandas.json_normalize(response['items'])])
@@ -369,50 +365,59 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
         print('!!! Похоже, подан id не канала, а плейлиста, поэтому текстовый запрос-фильтр и временнОй диапазон (если таковые были поданы) будут проигнорированы; пробую перейти к методам playlistitems и playlists')
         goC = False # нет смысла в новых итерациях цикла (вовне этой функции)
         goToPlayList = True
+
     elif ('exceeded' in str(errorDescription[1]).lower()) & ('quota' in str(errorDescription[1]).lower()):
         print('!!! Похоже, квота текущего ключа закончилась; пробую перейти к следующему ключу')
         # print('  keyOrder ДО смены ключа', keyOrder) # для отладки
         keyOrder += 1 # смена ключа
         # print('  keyOrder ПОСЛЕ смены ключа', keyOrder) # для отладки
+
     elif ('disabled' in str(errorDescription[1]).lower()) & ('key' in str(errorDescription[1]).lower()):
         print('!!! Похоже, текущий ключ деактивирован владельцем или Гуглом; пробую перейти к следующему ключу')
         # print('  keyOrder ДО смены ключа', keyOrder) # для отладки
         keyOrder += 1 # смена ключа
         # print('  keyOrder ПОСЛЕ смены ключа', keyOrder) # для отладки
+
     elif ('not valid' in str(errorDescription[1]).lower()) & ('key' in str(errorDescription[1]).lower()):
         print('!!! Похоже, текущий ключ не валиден; пробую перейти к следующему ключу')
         # print('  keyOrder ДО смены ключа', keyOrder) # для отладки
         keyOrder += 1 # смена ключа
         # print('  keyOrder ПОСЛЕ смены ключа', keyOrder) # для отладки
+
     elif 'index out of range' in str(errorDescription[1]):
         print('!!! Похоже, ключи закончились. Что делать? (а) Подождите сутки для восстановления ключей или',
               '(б) подготовьте новый ключ, найдите и удадите файл credentialsYouTube.txt -- и запустите скрипт с начала')
         goS = False # нет смысла продолжать исполнение скрипта
         goC = False # и, следовательно, нет смысла в новых итерациях цикла (вовне этой функции)
+
     elif ('channel' in str(errorDescription[1]).lower()) | ('comment' in str(errorDescription[1]).lower()) | ('playlist' in str(errorDescription[1]).lower()) | ('video' in str(errorDescription[1]).lower()):
         print('  Проблема может быть связана с ограничением доступа к обрабатываемому объекту, поэтому фиксирую его id:', problemItemId)
         # print('problemItemId:', problemItemId) # для отладки
+
     elif 'TimeoutError' in str(errorDescription[0]):
-        print('!!! Похоже, проблема в слишком высокой частоте запросов к удалённому серверу; засыпаю на 10 миллисекунд')
+        print('!!! Похоже, проблема в слишком высокой частоте запросов к удалённому серверу; засыпаю на 10 секунд')
         time.sleep(10)
+
     elif 'KeyboardInterrupt' in str(errorDescription):
         print(sys.exc_info()[1]) # для отладки
         goS = False # нет смысла продолжать исполнение скрипта
         goC = False # и, следовательно, нет смысла в новых итерациях цикла (вовне этой функции)
+
     else:
         print('!!! Похоже, проблема не в ограничении доступа к обрабатываемому объекту и не в истечении квоты текущего ключа((')
         goC = False # нет смысла повторного обращения к API ни с этим id, ни пока не ясна суть ошибки
+
     return goC, goS, goToPlayList, keyOrder, problemItemId
 
 # 1.5 для визуализации процесса через итерации
 def iterationVisualization(idS, iteration, portion, response):
-    if idS: iterationUpperBound = int(str(len(idS) / portion).split('.')[0]) + 1 # дробная часть после деления числа idS должна увеличить iterationUpperBound на единицу
+    if len(idS) > 0: iterationUpperBound = int(str(len(idS) / portion).split('.')[0]) + 1 # дробная часть после деления числа idS должна увеличить iterationUpperBound на единицу
     if 'items' not in response.keys():
         print("!!! Похоже, подан id не канала, а плейлиста, поэтому подаю пустой список в качестве значения словарного ключа 'items'")
         response['items'] = []
-    
+
     print(
-f'''  Порция № {iteration + 1}{f' из {iterationUpperBound}' if idS  else ''}.{f" Сколько в порции наблюдений? {len(response['items'])}" if portion > 1 else ''}          ''', end='\r'
+f'''  Порция № {iteration + 1}{f' из {iterationUpperBound}' if len(idS) > 0 else ''}.{f" Сколько в порции наблюдений? {len(response['items'])}" if len(idS) > 0 else ''}          ''', end='\r'
           )
 
 # 1.6 для обработки выдачи методов playlists и playlistItems, помогающая работе с ключами
@@ -446,11 +451,11 @@ f'''В скрипте используются следующие аргумен
 
     if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
     print('') # для отступа
-    
+
     if playlistIdS:
-        # print('playlistIdS:', playlistIdS) # для отладки        
+        # print('playlistIdS:', playlistIdS) # для отладки
         print(f'''Проход по плейлистам{' порциями по 50 штук' if len(playlistIdS) > 50 else ''} для выгрузки их характеристик''')
-        if len(df_final) > 0:
+        if len(df_final) > 0 and 'kind' in df_final.columns:
             if 'search' in df_final['kind'].drop_duplicates().iloc[0]: # другими словами, если search использовался, потому что мог не search , а channels сформировать df_final
                 print('-- дополнительных к выруженным методом search')
 
@@ -483,10 +488,10 @@ f'''
 
         if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
         print('') # для отступа
-    
+
         iteration = 0 # номер итерации применения текущего метода
         playlistVideoChannelS = pandas.DataFrame() # хотя датафреймы и глобальны как переменные, пусть и тут инициализируется
-        portion = 50
+        # portion = 50
         print('Проход по плейлистам для выгрузки id видео, составляющих плейлисты, и каналов, к которым они принадлежат')
         for playlistId in playlistIdS:
             pageToken = None
@@ -509,19 +514,18 @@ f'''
                                                              method=method,
                                                              q=q,
                                                              name_in_folderCurrent=name_in_folderCurrent,
-                                                             stageTarget=stage,
+                                                             stage=stage,
                                                              targetCount=targetCount,
                                                              momentCurrent=momentCurrent,
                                                              year=year,
                                                              yearsRange=yearsRange)
 
                         goC = False # если try успешно исполнился, то цикл прекращается
-                    except: goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(
-                                                                                             errorDescription=sys.exc_info(),
+                    except: goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(errorDescription=sys.exc_info(),
                                                                                              keyOrder=keyOrder,
-                                                                                             sourceId=None
-                                                                                             )
-                iterationVisualization(idS=None, iteration=iteration, portion=portion, response=response) # для визуализации процесса через итерации
+                                                                                             sourceId=None)
+
+                iterationVisualization(idS=None, iteration=iteration, portion=1, response=response) # для визуализации процесса через итерации; =portion
                 iteration += 1
                 if 'nextPageToken' in response.keys(): pageToken = response['nextPageToken']
                 else: break
@@ -538,14 +542,13 @@ f'''
         # display(playlistS)
 
         if len(playlistS) > 0:
-            df2file.df2fileShell(
-                                 complicatedNamePart=complicatedNamePart,
+            df2file.df2fileShell(complicatedNamePart,
+                                 currentMoment=momentCurrent.strftime('%Y%m%d_%H%M'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                  df_in=playlistS,
                                  fileFormatChoice=fileFormatChoice,
-                                 method='playlists',
-                                 coLabFolder=coLabFolder,
-                                 currentMoment=momentCurrent.strftime('%Y%m%d_%H%M') # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                                 )
+                                 folder=folder,
+                                 method='playlists')
+
     return playlistS, playlistVideoChannelS
 
 # 1.7 для порционной выгрузки, когда метод предполагает подачу ему id порциями
@@ -617,7 +620,7 @@ def portionsProcessor(api_keyS,
                                        momentCurrent=momentCurrent,
                                        q=q,
                                        name_in_folderCurrent=name_in_folderCurrent,
-                                       stageTarget=stage,
+                                       stage=stage,
                                        targetCount=targetCount,
                                        year=year,
                                        yearsRange=yearsRange)
@@ -640,13 +643,13 @@ def portionsProcessor(api_keyS,
 
 # 1.6 чтобы избавиться от префиксов в названиях столбцов датафрейма с комментариями
 def prefixDropper(df):
-        dfNewColumnS = []
-        for column in df.columns:
-            if 'snippet.topLevelComment.' in column: column = column.replace('snippet.topLevelComment.', '')
-            dfNewColumnS.append(column)
+    dfNewColumnS = []
+    for column in df.columns:
+        if 'snippet.topLevelComment.' in column: column = column.replace('snippet.topLevelComment.', '')
+        dfNewColumnS.append(column)
 
-        df.columns = dfNewColumnS # перезаписать названия столбцов
-        return df
+    df.columns = dfNewColumnS # перезаписать названия столбцов
+    return df
 
 # 2 Авторская функция исполнения скрипта
 def searchByText(access_token,
@@ -724,7 +727,7 @@ videoPaidProductPlacement : str
 '''    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API YouTube по ключу (см. примерную видео-инструкцию: https://www.youtube.com/watch?v=EXysYgWeapI&t=490s ). Для получения API key следует создать проект, авторизовать его, подключить к нему API нужного сервиса Google. Проект -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому сервисов Google и применения на этой основе API разных сервисов Google в рамках установленных Гуглом ограничений (the units of quota). Разные уровни авторизации -- это авторизация ключом (представляющим собой код) и полная авторизация (ключ + протокол Google OAuth 2.0, реализующийся в формате файла JSON). Авторизация ключом нужна, чтобы использовать любой метод любого API. Её достаточно, если выполнять действия, которые были бы доступны Вам как пользователю сервисов Google без Вашего входа в аккаунт: посмотреть видео, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления видео, то Вам придётся пройти полную авторизацию. Далее разные API как бы подключаются к проектам (кнопка Enable APIs and servises), используются, затем отключаются (кнопка Disable APIs).
     Квоты одного ключа может не хватить (quota is exceeded) для выгрузки всего предоставляемого ЮТьюбом по запросу пользователя контента. К счастью, использованный ключ ежесуточно восстанавливается ЮТьюбом. скрипт позволяет сохранить промежуточную выгрузку и после восстановления ключа автоматически продолжит её дополнять с момента остановки. В момент остановки появится надпись: 'Поскольку ключи закончились, исполнение скрипта завершаю. Подождите сутки для восстановления ключей или подготовьте новый ключ -- и запустите скрипт с начала', а исполнение скрипта прервётся. Не пугайтесь, нажмите OK и следуйте этой инструкции.'''
         )
-        
+
     print(
 '''    Скрипт нацелен на выгрузку характеристик контента YouTube семью методами его API: search, videos, commentThreads и comments, channels, playlists и playlistItems. Причём количество объектов выгрузки максимизируется путём её пересортировки и сегментирования по годам.
     Для корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.
@@ -739,7 +742,6 @@ videoPaidProductPlacement : str
     coLabFolder = coLabAdaptor.coLabAdaptor()
     commentReplieS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     fileFormatChoice = '.xlsx' # базовый формат сохраняемых файлов; формат .json добавляется опционально через наличие columnsToJSON
-    folder = None
     folderFile = None
     goS = True
     goToPlayList = False
@@ -771,6 +773,9 @@ videoPaidProductPlacement : str
 'Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку'
           )
     for name_in_folderCurrent in nameS_in_folderCurrent:
+        message =\
+f"В текущей директории '{name_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 6-7 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную"
+
         if 'Temporal' in name_in_folderCurrent:
             # print('name_in_folderCurrent:', name_in_folderCurrent) # для отладки
             if len(os.listdir(name_in_folderCurrent if not coLabFolder else coLabFolder + slash + name_in_folderCurrent)) == 9:
@@ -780,24 +785,25 @@ videoPaidProductPlacement : str
 
                 contentTypeTemporal = scrapingTools.containerImport('contentType', str)
                 if contentTypeTemporal == '': contentTypeTemporal = None # для единообразия
-    
+
                 channelIdForSearchTemporal = scrapingTools.containerImport('channelIdForSearch', str)
                 if channelIdForSearchTemporal == '': channelIdForSearchTemporal = None # для единообразия
-    
+
                 try: qTemporal = scrapingTools.containerImport('q', str)
-                except:               
-                    errorDescription = sys.exc_info()
-                    # print(errorDescription) # для отладки
+                except Exception as excptn:
+                    print('Exception в searchByText') # для отладки
+                    print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
+                    print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
                     qTemporal = scrapingTools.containerImport('q', str)
 
                 if qTemporal == '': qTemporal = None # для единообразия
-    
+
                 yearsRangeTemporal = scrapingTools.containerImport('yearsRange', str)
                 if yearsRangeTemporal == '': yearsRangeTemporal = None # для единообразия
-    
+
                 stageTargetTemporal = scrapingTools.containerImport('stageTarget', int)
                 stageTargetTemporal = int(stageTargetTemporal)
-    
+
                 print(f'Нашёл директорию '{name_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:',
                       '\n- было выявлено целевое число записей (totalResults)', targetCountTemporal,
                       '\n- скрипт остановился на методе', methodTemporal)
@@ -827,7 +833,7 @@ videoPaidProductPlacement : str
                     q = qTemporal
                     yearsRange = yearsRangeTemporal
                     stageTarget = stageTargetTemporal
-    
+
                     temporalNameS = os.listdir(name_in_folderCurrent)
                     itemS_json = None
                     itemS_xlsx = None
@@ -838,7 +844,7 @@ videoPaidProductPlacement : str
                             itemS = itemS_json.merge(itemS_xlsx, how='outer', on='id')
 # Данные, сохранённые при прошлом запуске скрипта, загружены
                             break # выход из for temporalName in temporalNameS
-    
+
                     if itemS_xlsx is not None and itemS_json is None: itemS = itemS_xlsx.copy() # for temporalName in temporalNameS завершился, но файл itemS_json не импортировался
                     elif itemS_xlsx is None and itemS_json is None:
                         temporalName = None # флаг, что данные, сохранённые при прошлом запуске скрипта, не найдены
@@ -1008,7 +1014,7 @@ videoPaidProductPlacement : str
         # print('yearMaxByUser', yearMaxByUser) # для отладки
 
         if not publishedAfter and yearMinByUser: publishedAfter = datetime(yearMinByUser, 1, 1).isoformat() + 'Z'
-        if not publishedBeforeand yearMaxByUser: publishedBefore = datetime(yearMaxByUser, 12, 31).isoformat() + 'Z'
+        if not publishedBefore and yearMaxByUser: publishedBefore = datetime(yearMaxByUser, 12, 31).isoformat() + 'Z'
 
         if yearsRange: print('') # чтобы был отступ, если пользователь подал этот аргумент
 
@@ -1022,13 +1028,13 @@ videoPaidProductPlacement : str
 
 # 2.1 Первичный сбор контента методом search
 # 2.1.0 Первый заход БЕЗ аргумента order (этап stage = 0)
+    method = 'search'
+    stage = 0
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
-        stage = 0
         if not channelIdForSearch or yearsRange or (channelIdForSearch and q): # в противном случае используется не search , а channels + playlists
                 # Если поданы вместе channelIdForSearch и q , то search, но если внутри channelIdForSearch подан id плейлиста, то search выдаст ошибку 'Request contains an invalid argument' и следует перейти к playListProcessor в else, причём q будет проигнорирован
                 # yearsRange предполагает search , поскольку прочие методы не предполагают сегментирование по временнЫм периодам 
             iteration = 0 # номер итерации применения текущего метода
-            method = 'search'
 
             print(
 f'''В скрипте используются следующие аргументы метода {method} API YouTube: channelId, maxResults, order, pageToken, part, publishedAfter, publishedBefore, q, type .
@@ -1100,14 +1106,14 @@ f'''В скрипте используются следующие аргумен
                                          method=method,
                                          q=q,
                                          name_in_folderCurrent=name_in_folderCurrent,
-                                         stageTarget=stage,
+                                         stage=stage,
                                          targetCount=targetCount,
                                          momentCurrent=momentCurrent,
                                          year=year,
                                          yearsRange=yearsRange)
 
                     # display('itemS', itemS) # для отладки
-    
+
                     print('  Проход по всем следующим страницам с выдачей          ')
                     while 'nextPageToken' in response.keys() and goS:
                         pageToken = response['nextPageToken']
@@ -1153,7 +1159,7 @@ f'''В скрипте используются следующие аргумен
                                              method=method,
                                              q=q,
                                              name_in_folderCurrent=name_in_folderCurrent,
-                                             stageTarget=stage,
+                                             stage=stage,
                                              targetCount=targetCount,
                                              momentCurrent=momentCurrent,
                                              year=year,
@@ -1213,18 +1219,18 @@ f'''В скрипте используются следующие аргумен
                                              method=method,
                                              q=q,
                                              name_in_folderCurrent=name_in_folderCurrent,
-                                             stageTarget=stage,
+                                             stage=stage,
                                              targetCount=targetCount,
                                              momentCurrent=momentCurrent,
                                              year=year,
                                              yearsRange=yearsRange)
-    
+
                         print('  Проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order, '          ')
                         while 'nextPageToken' in response.keys() and len(itemS) < targetCount and len(response['items']) > 0 and goS:
                         # -- второе условие -- для остановки алгоритма, если все искомые объекты найдены
                             # БЕЗ какой-то из следующих страниц (в т.ч. вообще БЕЗ них)
                             # третье условие -- для остановки алгоритма, если предыдущая страница выдачи содержит 0 объектов
-    
+
                             pageToken = response['nextPageToken']
                             # print('pageToken', pageToken)
                             itemS_additional, goS, goToPlayList, iteration, keyOrder, response = bigSearch(api_keyS,
@@ -1269,7 +1275,7 @@ f'''В скрипте используются следующие аргумен
                                                  method=method,
                                                  q=q,
                                                  name_in_folderCurrent=name_in_folderCurrent,
-                                                 stageTarget=stage,
+                                                 stage=stage,
                                                  targetCount=targetCount,
                                                  momentCurrent=momentCurrent,
                                                  year=year,
@@ -1278,7 +1284,7 @@ f'''В скрипте используются следующие аргумен
                     print('  Искомых объектов', targetCount, ', а найденных С включением аргумента order:', len(itemS))
                 else: print('Все искомые объекты найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
             elif stage < stageTarget: print(f"Этап {stage} пропускаю согласно настройкам из файла stage.txt в директории '{name_in_folderCurrent}'\n")
-    
+
 # 2.1.2 Этап сегментирования по годам (stage = 2)
             stage = 2
             if stage >= stageTarget and not goToPlayList: # eсли НЕТ временного файла stage.txt с указанием пропустить этап и нет указания перейти к методам playlistitems и playlists
@@ -1347,7 +1353,7 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                                                  method=method,
                                                  q=q,
                                                  name_in_folderCurrent=name_in_folderCurrent,
-                                                 stageTarget=stage,
+                                                 stage=stage,
                                                  targetCount=targetCount,
                                                  momentCurrent=momentCurrent,
                                                  year=year,
@@ -1399,7 +1405,7 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                                                      method=method,
                                                      q=q,
                                                      name_in_folderCurrent=name_in_folderCurrent,
-                                                     stageTarget=stage,
+                                                     stage=stage,
                                                      targetCount=targetCount,
                                                      momentCurrent=momentCurrent,
                                                      year=year,
@@ -1454,7 +1460,7 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                                                          method=method,
                                                          q=q,
                                                          name_in_folderCurrent=name_in_folderCurrent,
-                                                         stageTarget=stage,
+                                                         stage=stage,
                                                          targetCount=targetCount,
                                                          momentCurrent=momentCurrent,
                                                          year=year,
@@ -1508,7 +1514,7 @@ f'    Для года {year} проход по всем следующим ст�
                                                              method=method,
                                                              q=q,
                                                              name_in_folderCurrent=name_in_folderCurrent,
-                                                             stageTarget=stage,
+                                                             stage=stage,
                                                              targetCount=targetCount,
                                                              momentCurrent=momentCurrent,
                                                              year=year,
@@ -1527,7 +1533,7 @@ f'''    Искомых объектов {targetCount}, а найденных с 
                                     print(f'Завершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser} (с точностью до года)\n')
 
 # 2.1.3 Экспорт выгрузки метода search и опциональное завершение скрипта
-                df2file.df2fileShell(complicatedNamePart=complicatedNamePart,
+                df2file.df2fileShell(complicatedNamePart,
                                      currentMoment=momentCurrent.strftime('%Y%m%d_%H%M'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                      df_in=itemS,
                                      fileFormatChoice=fileFormatChoice,
@@ -1547,7 +1553,7 @@ f'''
 --- Если хотите выгрузить дополнительные характеристики (ссылки для ознакомления с ними появятся ниже), нажмите Enter
 --- Если НЕ хотите их выгрузить, нажмите пробел и затем Enter. Тогда исполнение скрипта завершится'''
                 )
-    
+
                 if len(input()) > 0:
                     print('Скрипт исполнен')
                     if folderWithTemporal:
@@ -1557,7 +1563,7 @@ f'''
             '''Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, можно удалить её во избежание путаницы при следующих запусках скрипта
             --- Если хотите их удалить, введите 'R' и нажмите Enter'''
                             )
-            
+
                             decision = input()
                             if decision == 'R': shutil.rmtree(folderWithTemporal, ignore_errors=True)
 
@@ -1624,8 +1630,8 @@ f'''
                                                                      year=year,
                                                                      yearsRange=yearsRange)
 
-                # print('playlistIdS:', playlistIdS) # для отладки       
-        
+                # print('playlistIdS:', playlistIdS) # для отладки   
+
         else: # в противном случае используется не search, а channels + playlists
                 # то есть пользователь подал id канала или плейлиста и, следоватлеьно, НЕ использовался search
             channelS = channelProcessor(api_keyS=api_keyS,
@@ -1718,7 +1724,7 @@ f'''В скрипте используются следующие аргумен
 
         # print(videoIdS) # для отладки
 
-        if len(videoIdS) > 0:
+        if videoIdS:
             print(f'''Проход по видео{' порциями по 50 штук' if len(videoIdS) > 50 else ''} для выгрузки их характеристик''')
             if len(itemS) > 0: print('-- дополнительных к выруженным методом search')
 
@@ -1760,7 +1766,7 @@ f'''В скрипте используются следующие аргумен
             for row in categoryNameS.index: # добавить расшифровки категорий в новый столбец categoryName датафрейма с видео
                 videoS.loc[videoS['snippet.categoryId'] == row, 'categoryName'] = categoryNameS['snippet.title'][row]
 
-            df2file.df2fileShell(complicatedNamePart=complicatedNamePart,
+            df2file.df2fileShell(complicatedNamePart,
                                  currentMoment=momentCurrent.strftime('%Y%m%d_%H%M'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                  df_in=videoS,
                                  fileFormatChoice=fileFormatChoice,
@@ -1823,7 +1829,7 @@ f'''В скрипте используются следующие аргумен
                                             method=method,
                                             q=q,
                                             name_in_folderCurrent=name_in_folderCurrent,
-                                            stageTarget=stage,
+                                            stage=stage,
                                             targetCount=targetCount,
                                             momentCurrent=momentCurrent,
                                             year=year,
@@ -1846,13 +1852,17 @@ f'''В скрипте используются следующие аргумен
                     replieS = pandas.DataFrame()
                     for row in tqdm(commentS_replied_index):
                         try: addReplieS = pandas.json_normalize(commentS['replies.comments'][row])
-                        except: print("commentS['replies.comments'][row]:", commentS['replies.comments'][row]) # для отладки !!!
-    
+                        except Exception as excptn:
+                            print('Exception 2 в searchByText') # для отладки
+                            print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
+                            print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
+                            print("commentS['replies.comments'][row]:", commentS['replies.comments'][row]) # для отладки !!!
+
                         commentS.loc[row, 'Недостача_ответов'] = commentS['snippet.totalReplyCount'][row] - len(addReplieS)
                             # записать разницу между ожданиями и реальностью в новый столбец `Недостача_ответов`
-    
+
                         replieS = pandas.concat([replieS, addReplieS]).reset_index(drop=True)
-    
+
                     replieS = replieS.reset_index(drop=True)
                     replieS.loc[:, 'snippet.totalReplyCount'] = 0
                     replieS.loc[:, 'Недостача_ответов'] = 0
@@ -1871,7 +1881,7 @@ f'''В скрипте используются следующие аргумен
                     for column in commentReplieS.columns:
                         if column in replieS.columns:
                             mutualColumns.append(column)
-    
+
     # ********** commentReplieS
                     # Оставить только совпадающие столбцы датафреймов с родительскими (topLevel) комментариями и с комментариями-ответами
                     commentReplieS = commentReplieS[mutualColumns]
@@ -1888,7 +1898,7 @@ f'''В скрипте используются следующие аргумен
                                                   method=method,
                                                   q=q,
                                                   name_in_folderCurrent=name_in_folderCurrent,
-                                                  stageTarget=stage,
+                                                  stage=stage,
                                                   targetCount=targetCount,
                                                   momentCurrent=momentCurrent,
                                                   year=year,
@@ -1911,7 +1921,7 @@ f'''
                     print('') # для отступа
                     commentIdS = commentReplieS['id'][commentReplieS['Недостача_ответов'] > 0]
                     # print('commentIdS:', commentIdS) # для отладки
-                    if len(commentIdS) > 0: # блок 'если нет недостачи'
+                    if commentIdS: # блок 'если нет недостачи'
                         print('Проход по id всех родительских (topLevel) комментариев с недостачей ответов для выгрузки этих ответов')
                         for commentId in tqdm(commentIdS):
                             page = 0 # номер страницы выдачи
@@ -1930,25 +1940,22 @@ f'''
                                                    method=method,
                                                    q=q,
                                                    name_in_folderCurrent=name_in_folderCurrent,
-                                                   stageTarget=stage,
+                                                   stage=stage,
                                                    targetCount=targetCount,
                                                    momentCurrent=momentCurrent,
                                                    year=year,
                                                    yearsRange=yearsRange)
 
                         print(
-'Ответов выгружено', len(replieS), '; проблемные родительские (topLevel) комментарии:', problemCommentIdS if len(problemCommentIdS) > 0  else 'отсутствуют\n'
+'Ответов выгружено', len(replieS), '; проблемные родительские (topLevel) комментарии:', problemCommentIdS if problemCommentIdS else 'отсутствуют\n'
                         )
-    
+
                         # Для совместимости датафреймов добавить столбцы`snippet.totalReplyCount` и `Недостача_ответов`
                         # display('replieS:', replieS) # для отладки
                         # print('replieS.columns:', replieS.columns) # для отладки
                         replieS.loc[:, 'snippet.totalReplyCount'] = 0
                         replieS.loc[:, 'Недостача_ответов'] = 0
-    
-                        # Удалить столбец `snippet.parentId`, т.к. и из столбца `id` всё ясно
-                        replieS = replieS.drop('snippet.parentId', axis=1)
-    
+                        replieS = replieS.drop('snippet.parentId', axis=1) # удалить столбец `snippet.parentId`, т.к. и из столбца `id` всё ясно
                         commentReplieS = dfsProcessor(channelIdForSearch,
                                                       complicatedNamePart,
                                                       contentType,
@@ -1961,7 +1968,7 @@ f'''
                                                       method=method,
                                                       q=q,
                                                       name_in_folderCurrent=name_in_folderCurrent,
-                                                      stageTarget=stage,
+                                                      stage=stage,
                                                       targetCount=targetCount,
                                                       momentCurrent=momentCurrent,
                                                       year=year,
@@ -2032,7 +2039,7 @@ f'''
                          method=method,
                          q=q,
                          name_in_folderCurrent=name_in_folderCurrent,
-                         stageTarget=stage,
+                         stage=stage,
                          targetCount=targetCount,
                          momentCurrent=momentCurrent,
                          year=year,
@@ -2048,4 +2055,4 @@ f'''
 # Поработать со snippetContentType , возможно, вынести этот аргумент из channelProcessor
 # Добавить возможность подавать множество ключей в accessToken
 # https://stackoverflow.com/questions/30475309/get-youtube-trends-v3-country-wise-in-json -- про тренды
-# Если подавать в скрипт располагаемый файл НЕ search , то в нём не будет столбца id.kind , следовательно, скрипт не поймёт, какие дополнительные характеристки выгружать
+# Если подавать в скрипт располагаемый файл НЕ search , то в нём не будет столбца id.kind , следовательно, скрипт не поймёт, какие дополнительные характеристики выгружать
