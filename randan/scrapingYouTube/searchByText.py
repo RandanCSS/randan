@@ -244,11 +244,11 @@ f'''В скрипте используются следующие аргумен
 
         if len(channelS) > 0:
             df2file.df2fileShell(complicatedNamePart,
-                                 currentMoment=momentCurrent.strftime('%Y%m%d_%H%M') # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                 currentMoment=momentCurrent.strftime('%Y%m%d_%H%M'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                  df_in=channelS,
                                  fileFormatChoice=fileFormatChoice,
                                  folder=folder,
-                                 method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                                 method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method) # чтобы избавиться от лишней точки в имени файла
 
     return channelS
 
@@ -808,7 +808,7 @@ f"В текущей директории '{name_in_folderCurrent}' есть ди
                 stageTargetTemporal = scrapingTools.containerImport('stageTarget', int)
                 stageTargetTemporal = int(stageTargetTemporal)
 
-                print(f'Нашёл директорию '{name_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:',
+                print(f"Нашёл директорию '{name_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:",
                       '\n- было выявлено целевое число записей (totalResults)', targetCountTemporal,
                       '\n- скрипт остановился на методе', methodTemporal)
 
@@ -1421,7 +1421,7 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                                 print(f'  Для года {year} проход по значениям аргумента order,'
                                       , 'внутри которых проход по всем страницам выдачи')
                                 for order in orderS:
-                                    itemS_additional, goS, goToPlayList, iteration, keyOrder, response = bigSearch(api_keyS=api_keyS,
+                                    itemS_additional, goS, goToPlayList, iteration, keyOrder, response = bigSearch(api_keyS,
                                                                                                                    channelIdForSearch,
                                                                                                                    channelType,
                                                                                                                    contentType,
@@ -1638,7 +1638,7 @@ f'''
 
         else: # в противном случае используется не search, а channels + playlists
                 # то есть пользователь подал id канала или плейлиста и, следоватлеьно, НЕ использовался search
-            channelS = channelProcessor(api_keyS=api_keyS,
+            channelS = channelProcessor(api_keyS,
                                         channelIdForSearch,
                                         complicatedNamePart,
                                         contentType,
