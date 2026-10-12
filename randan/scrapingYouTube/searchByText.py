@@ -95,6 +95,8 @@ def bigSearch(api_keyS,
                 'pageInfo': {'totalResults': 0, 'resultsPerPage': 0},
                 'items': []} # принудительная выдача на случай неуспеха request.execute()
 
+    MAX_ATTEMPTS = 3
+    attempt_network = 0
     while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
         try:
             youtube = api.build('youtube', 'v3', developerKey=api_keyS[keyOrder])
@@ -136,14 +138,22 @@ def bigSearch(api_keyS,
 '      Итерация №', iteration, ', number of items', len(response['items']), '' if not year else f', year {year}', '' if not order else f', order {order}', '          ', end='\r'
             )
 
+            attempt_network = 0 # сброс при успех
             iteration += 1
             goC = False
 
-        except:
+        except Exception:
             print('Exception в bigSearch') # для отладки
             goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(errorDescription=sys.exc_info(),
                                                                              keyOrder=keyOrder,
                                                                              sourceId=channelIdForSearch)
+
+            if goC:
+                attempt_network += 1
+                if attempt_network > MAX_ATTEMPTS:
+                    print('!!! Превышено число сетевых попыток')
+                    goC = False
+                    goS = False
 
     return itemS_additional, goS, goToPlayList, iteration, keyOrder, response # от response отказаться нельзя, т.к. в нём много важных ключей, даже если их значения нули
 
@@ -395,15 +405,23 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
     elif ('channel' in str(errorDescription[1]).lower()) | ('comment' in str(errorDescription[1]).lower()) | ('playlist' in str(errorDescription[1]).lower()) | ('video' in str(errorDescription[1]).lower()):
         print('  Проблема может быть связана с ограничением доступа к обрабатываемому объекту, поэтому фиксирую его id:', problemItemId)
         # print('problemItemId:', problemItemId) # для отладки
+        goC = False # и, следовательно, нет смысла в новых итерациях цикла (вовне этой функции)        
 
-    elif 'TimeoutError' in str(errorDescription[0]):
-        print('!!! Похоже, проблема в слишком высокой частоте запросов к удалённому серверу; засыпаю на 10 секунд')
-        time.sleep(10)
+    # elif 'TimeoutError' in str(errorDescription[0]):
+    #     print('!!! Похоже, проблема в слишком высокой частоте запросов к удалённому серверу; засыпаю на 10 секунд')
+    #     time.sleep(10)
 
     elif 'KeyboardInterrupt' in str(errorDescription):
         print(sys.exc_info()[1]) # для отладки
         goS = False # нет смысла продолжать исполнение скрипта
         goC = False # и, следовательно, нет смысла в новых итерациях цикла (вовне этой функции)
+
+    elif isinstance(errorDescription[1], (ConnectionResetError, ConnectionAbortedError, TimeoutError)) \
+        or 'WinError 10054' in str(errorDescription[1]) \
+        or 'Connection reset' in str(errorDescription[1]) \
+        or 'TimeoutError' in str(errorDescription[0]):
+        print('!!! Похоже, проблема с сетью или слишком высокая частота запросов; засыпаю на 10 секунд')
+        time.sleep(10)
 
     else:
         print('!!! Похоже, проблема не в ограничении доступа к обрабатываемому объекту и не в истечении квоты текущего ключа((')
@@ -1118,6 +1136,36 @@ f'''В скрипте используются следующие аргумен
                                                                                                videoSyndicated=videoSyndicated,
                                                                                                year=None)
 
+                if not goS:
+                    itemS = dfsProcessor(channelIdForSearch,
+                                         complicatedNamePart,
+                                         contentType,
+                                         fileFormatChoice,
+                                         df_additional=itemS_additional,
+                                         df_final=itemS,
+                                         df_in=itemS,
+                                         folder=folder,
+                                         goS=goS,
+                                         method=method,
+                                         q=q,
+                                         name_in_folderCurrent=name_in_folderCurrent,
+                                         stage=stage,
+                                         targetCount=targetCount,
+                                         momentCurrent=momentCurrent,
+                                         year=year,
+                                         yearsRange=yearsRange)
+
+                    # display('itemS', itemS) # для отладки
+                    if returnDfs: return itemS, playlistS, videoS, commentReplieS, channelS
+                    with warnings.catch_warnings():
+                        warnings.simplefilter('ignore')
+                        print(
+'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
+Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
+                        )
+
+                        sys.exit()
+
                 targetCount = response['pageInfo']['totalResults']
                 if not goToPlayList:
                     if targetCount == 0:
@@ -1607,6 +1655,7 @@ f'''
                             decision = input()
                             if decision == 'R': shutil.rmtree(folderWithTemporal, ignore_errors=True)
 
+                    if returnDfs: return itemS, playlistS, videoS, commentReplieS, channelS
                     with warnings.catch_warnings():
                         warnings.simplefilter('ignore')
                         print(
@@ -2096,3 +2145,14 @@ f'''
 # problemItemId в errorProcessor инициализируется sourceId и никогда не сбрасывается при повторных итерациях, поэтому в ветке про «channel/comment/playlist/video» в лог попадёт исходный channelIdForSearch, а не реально проблемный videoId/commentId. В downloadComments это особенно заметно: при обходе videoIdS в цикле все проблемные видео получат один и тот же первый sourceId.
 # Вынести в самодостаточные функции работу с видео, каналами, комментариями, плейлистами
 # chart в https://developers.google.com/youtube/v3/docs/videos/list -- интересно
+
+# Вы добавили:
+# python
+#     elif ('channel' in str(errorDescription[1]).lower()) | ...:
+#         print('  Проблема может быть связана с ограничением доступа...')
+#         goC = False
+# Это останавливает цикл повторных попыток. Но в downloadComments после выхода из внутреннего while goC сразу идёт:
+
+# python
+#         commentS = pandas.concat([commentS, pandas.json_normalize(response['items'])])
+# Если ошибка произошла на первом же запросе, переменная response может быть не определена. Это приведёт к UnboundLocalError. Раньше при такой ошибке цикл зацикливался, что тоже плохо. Правильнее было бы при goC == False не пытаться использовать response, а прервать внешний цикл или пропустить текущий sourceId. Но это отдельная доработка.
