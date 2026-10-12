@@ -818,6 +818,7 @@ f"В текущей директории '{name_in_folderCurrent}' есть ди
 
         if name_in_folderCurrent.endswith('Temporal') and 'YouTube' in name_in_folderCurrent:
             if len(os.listdir(name_in_folderCurrent)) < 9: print(message) # допустимо 9 или 10 файлов
+            else:
                 targetCountTemporal = scrapingTools.containerImport('targetCount', int)
                 methodTemporal = scrapingTools.containerImport('method', str)
                 yearTemporal = scrapingTools.containerImport('year', int)
