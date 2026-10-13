@@ -327,7 +327,7 @@ def dfsProcessor(channelIdForSearch,
                              fileFormatChoice=fileFormatChoice,
                              folder=temporal_exportPath,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла  
-                             momentCurrent=momentCurrent.strftime('%Y%m%d'))
+                             momentCurrent=momentCurrent)
 
 
         print('Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
