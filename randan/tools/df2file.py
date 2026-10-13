@@ -168,5 +168,5 @@ def df2fileShell(complicatedNamePart, df_in, fileFormatChoice, folder, method, m
 
         print('folder:', folder) # для отладки
         print('fileName:', f'{folder}_{method}_Other_varS.{fileFormatChoice}') # для отладки        
-        df2file(df_in.drop(columnsToJSON, axis=1), f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal_{method}_Other_varS.{fileFormatChoice}", folder)
-    else: df2file(df_in, f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal_{method}.{fileFormatChoice}", folder)
+        df2file(df_in.drop(columnsToJSON, axis=1), f"{momentCurrent}{complicatedNamePart}_Temporal_{method}_Other_varS.{fileFormatChoice}", folder)
+    else: df2file(df_in, f"{momentCurrent}{complicatedNamePart}_Temporal_{method}.{fileFormatChoice}", folder)
