@@ -354,7 +354,7 @@ def downloadComments(api_keyS, keyOrder, method, sourceId):
 
             except:
                 print('Exception в downloadComments') # для отладки
-                goC, goS, goToPlayList, keyOrder, problemItemId = (errorDescription=sys.exc_info(), keyOrder=keyOrder, sourceId=sourceId)
+                goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(errorDescription=sys.exc_info(), keyOrder=keyOrder, sourceId=sourceId)
 
         commentS = pandas.concat([commentS, pandas.json_normalize(response['items'])])
         if 'nextPageToken' in response.keys():
