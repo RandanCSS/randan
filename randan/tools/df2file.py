@@ -14,7 +14,7 @@ from subprocess import check_call
 for attempt in range(1, 4):
     try:
         from randan.tools import textPreprocessor, varPreprocessor
-        import os, pandas
+        import os, pandas, xlsxwriter
         break # выход из цикла for attempt in range(3)
 
     except ModuleNotFoundError:
