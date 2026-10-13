@@ -18,6 +18,7 @@ attempt = 1
 
 while True:
     try:
+        from randan.tools import colorizer # модуль для раскрашивания вывода на экран
         import os
         break # выход из цикла while True
 
@@ -57,6 +58,7 @@ def coLabAdaptor():
 
     return folderCoLab
 
+@colorizer.red_prints
 def folderCoLab_folderIn_comparison(folder):
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     if not folder:
