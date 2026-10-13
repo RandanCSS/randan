@@ -315,7 +315,10 @@ def dfsProcessor(channelIdForSearch,
         scrapingTools.containerExport(temporal_exportPath + slash + 'contentType.txt', contentType if contentType else '')
         scrapingTools.containerExport(temporal_exportPath + slash + 'method.txt', method)
         scrapingTools.containerExport(temporal_exportPath + slash + 'q.txt', q if q else '')
+
+        if stage > 1: stage -= 1 # чтобы не пропускать неполностью пройденный stage
         scrapingTools.containerExport(temporal_exportPath + slash + 'stageTarget.txt', str(stage)) # stage и stageTarget принимает значения [0; 3]
+
         scrapingTools.containerExport(temporal_exportPath + slash + 'targetCount.txt', str(targetCount) if targetCount else '0')
         scrapingTools.containerExport(temporal_exportPath + slash + 'year.txt', str(year)) # год, на котором остановилось исполнение скрипта
         scrapingTools.containerExport(temporal_exportPath + slash + 'yearsRange.txt', yearsRange if yearsRange else '')
@@ -910,7 +913,7 @@ f"Директорию '{name_in_folderCurrent}' пропустил, продо�
                     itemS_json = None
                     itemS_xlsx = None
                     for temporalName in temporalNameS:
-                        print('temporalName:', temporalName) # для отладки
+                        # print('temporalName:', temporalName) # для отладки
                         if temporalName.endswith('.json') and 'YouTube' in temporalName: itemS_json = pandas.read_json(f'{name_in_folderCurrent}{slash}{temporalName}')
                         if temporalName.endswith('.xlsx') and 'YouTube' in temporalName: itemS_xlsx = pandas.read_excel(f'{name_in_folderCurrent}{slash}{temporalName}', index_col=0)
 
@@ -1294,6 +1297,7 @@ f'''В скрипте используются следующие аргумен
                                              yearsRange=yearsRange)
 
                         print('  Проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order, '          ')
+                        print('goS:',goS) # для отладки
                         while 'nextPageToken' in response.keys() and len(itemS) < targetCount and len(response['items']) > 0 and goS:
                         # -- второе условие -- для остановки алгоритма, если все искомые объекты найдены
                             # БЕЗ какой-то из следующих страниц (в т.ч. вообще БЕЗ них)
