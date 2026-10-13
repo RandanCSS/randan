@@ -828,9 +828,7 @@ videoPaidProductPlacement : str
 
 # 2.0.2 Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
-    print(
-'Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку'
-          )
+    print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
     for name_in_folderCurrent in nameS_in_folderCurrent:
         message =\
 f"В текущей директории '{name_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 6-7 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную"
@@ -838,29 +836,29 @@ f"В текущей директории '{name_in_folderCurrent}' есть ди
         if name_in_folderCurrent.endswith('Temporal') and 'YouTube' in name_in_folderCurrent:
             if len(os.listdir(name_in_folderCurrent)) < 9: print(message) # допустимо 9 или 10 файлов
             else:
-                targetCountTemporal = scrapingTools.containerImport('targetCount', int)
-                methodTemporal = scrapingTools.containerImport('method', str)
-                yearTemporal = scrapingTools.containerImport('year', int)
+                targetCountTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'targetCount', int)
+                methodTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'method', str)
+                yearTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'year', int)
 
-                contentTypeTemporal = scrapingTools.containerImport('contentType', str)
+                contentTypeTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'contentType', str)
                 if contentTypeTemporal == '': contentTypeTemporal = None # для единообразия
 
-                channelIdForSearchTemporal = scrapingTools.containerImport('channelIdForSearch', str)
+                channelIdForSearchTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'channelIdForSearch', str)
                 if channelIdForSearchTemporal == '': channelIdForSearchTemporal = None # для единообразия
 
-                try: qTemporal = scrapingTools.containerImport('q', str)
+                try: qTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'q', str)
                 except Exception as excptn:
                     print('Exception в searchByText') # для отладки
                     print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
                     print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
-                    qTemporal = scrapingTools.containerImport('q', str)
+                    qTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'q', str)
 
                 if qTemporal == '': qTemporal = None # для единообразия
 
-                yearsRangeTemporal = scrapingTools.containerImport('yearsRange', str)
+                yearsRangeTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'yearsRange', str)
                 if yearsRangeTemporal == '': yearsRangeTemporal = None # для единообразия
 
-                stageTargetTemporal = scrapingTools.containerImport('stageTarget', int)
+                stageTargetTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'stageTarget', int)
                 stageTargetTemporal = int(stageTargetTemporal)
 
                 print(f"Нашёл директорию '{name_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:",
