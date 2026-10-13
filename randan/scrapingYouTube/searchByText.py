@@ -95,7 +95,7 @@ def bigSearch(api_keyS,
                 'items': []} # принудительная выдача на случай неуспеха request.execute()
 
     attempt_network = 1
-    goS = True
+    goC = True
     MAX_ATTEMPTS = 3
     while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
         try:
