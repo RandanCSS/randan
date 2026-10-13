@@ -255,11 +255,11 @@ f'''В скрипте используются следующие аргумен
 
         if len(channelS) > 0:
             df2file.df2fileShell(complicatedNamePart,
-                                 currentMoment=momentCurrent.strftime('%Y%m%d_%H%M'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                  df_in=channelS,
                                  fileFormatChoice=fileFormatChoice,
                                  folder=folder,
-                                 method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method) # чтобы избавиться от лишней точки в имени файла
+                                 method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                                 momentCurrent=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
 
     return channelS
 
@@ -323,12 +323,12 @@ def dfsProcessor(channelIdForSearch,
 
         # print('method:', method) # для отладки
         df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
-                             currentMoment=momentCurrent.strftime('%Y%m%d'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              df_in=df_final,
                              fileFormatChoice=fileFormatChoice,
                              folder=temporal_exportPath,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method)
-                                 # чтобы избавиться от лишней точки в имени файла  
+                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла  
+                             momentCurrent=momentCurrent.strftime('%Y%m%d')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+
 
         print('Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
 
@@ -565,11 +565,11 @@ f'''
 
         if len(playlistS) > 0:
             df2file.df2fileShell(complicatedNamePart,
-                                 currentMoment=momentCurrent.strftime('%Y%m%d_%H%M'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                  df_in=playlistS,
                                  fileFormatChoice=fileFormatChoice,
                                  folder=folder,
-                                 method='playlists')
+                                 method='playlists',
+                                 momentCurrent=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
 
     return playlistS, playlistVideoChannelS
 
@@ -1623,11 +1623,11 @@ f'''    Искомых объектов {targetCount}, а найденных с 
 
 # 2.1.3 Экспорт выгрузки метода search и опциональное завершение скрипта
                 df2file.df2fileShell(complicatedNamePart,
-                                     currentMoment=momentCurrent.strftime('%Y%m%d_%H%M'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                      df_in=itemS,
                                      fileFormatChoice=fileFormatChoice,
                                      folder=folder,
-                                     method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method) # чтобы избавиться от лишней точки в имени файла
+                                     method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                                     momentCurrent=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
 
             elif stage < stageTarget:
                 print(
@@ -1857,11 +1857,11 @@ f'''В скрипте используются следующие аргумен
                 videoS.loc[videoS['snippet.categoryId'] == row, 'categoryName'] = categoryNameS['snippet.title'][row]
 
             df2file.df2fileShell(complicatedNamePart,
-                                 currentMoment=momentCurrent.strftime('%Y%m%d_%H%M'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                  df_in=videoS,
                                  fileFormatChoice=fileFormatChoice,
                                  folder=folder,
-                                 method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method) # чтобы избавиться от лишней точки в имени файла
+                                 method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                                 momentCurrent=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
 
             commentS = pandas.DataFrame() # не в следующем ченке, чтобы иметь возможность перезапускать его, не затирая промежуточный результат выгрузки
 
@@ -1928,11 +1928,11 @@ f'''В скрипте используются следующие аргумен
                 commentS = commentS.drop(['kind', 'etag', 'id', 'snippet.channelId', 'snippet.videoId'], axis=1) # т.к. дублируются содержательно
                 commentS = prefixDropper(commentS)
                 df2file.df2fileShell(complicatedNamePart,
-                                     currentMoment=momentCurrent.strftime('%Y%m%d_%H%M'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                      df_in=commentS,
                                      fileFormatChoice=fileFormatChoice,
                                      folder=folder,
-                                     method='commentS')
+                                     method='commentS',
+                                     momentCurrent=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
 
 # ********** replieS
                 print('') # для отступа
@@ -1959,11 +1959,11 @@ f'''В скрипте используются следующие аргумен
                     replieS.loc[:, 'Недостача_ответов'] = 0
                     replieS = prefixDropper(replieS)
                     df2file.df2fileShell(complicatedNamePart,
-                                         currentMoment=momentCurrent.strftime('%Y%m%d_%H%M'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                          df_in=replieS,
                                          fileFormatChoice=fileFormatChoice,
                                          folder=folder,
-                                         method='replieS')
+                                         method='replieS',
+                                         momentCurrent=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
 
                     commentReplieS = commentS.copy() # копия датафрейма c родительскими (topLevel) комментариями -- основа будущего общего датафрейма
 
@@ -2066,11 +2066,11 @@ f'''
                                                       yearsRange=yearsRange)
 
                         df2file.df2fileShell(complicatedNamePart,
-                                             currentMoment=momentCurrent.strftime('%Y%m%d_%H%M'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                                              df_in=commentReplieS,
                                              fileFormatChoice=fileFormatChoice,
                                              folder=folder,
-                                             method='commentReplieS')
+                                             method='commentReplieS',
+                                             momentCurrent=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
 
                         # блок 'если нет недостачи' завершён
                         # print('''блок 'если нет недостачи' завершён''') # для отладки
