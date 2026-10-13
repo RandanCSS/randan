@@ -102,13 +102,20 @@ def dfsProcessor(complicatedNamePart,
         scrapingTools.containerExport(temporal_exportPath + slash + 'offset.txt', offset)
 
         df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
-                             currentMoment=momentCurrent.strftime('%Y%m%d'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              df_in=df,
                              fileFormatChoice=fileFormatChoice,
                              folder=temporal_exportPath,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method)
-                                 # чтобы избавиться от лишней точки в имени файла  
+                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла  
+                             momentCurrent=momentCurrent)
 
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            print(
+'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
+Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
+                        )
+
+            sys.exit()
         print('Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
 
     return df
@@ -451,12 +458,11 @@ f'-- можете подать их в скобки функции wallGet пе�
 
 # 2.1.2 Экспорт выгрузки метода get и финальное завершение скрипта
         df2file.df2fileShell(complicatedNamePart=complicatedNamePart,
-                             currentMoment=momentCurrent.strftime('%Y%m%d_%H%M'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              df_in=itemS,
                              fileFormatChoice=fileFormatChoice,
                              folder=folder,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method)
-                                # чтобы избавиться от лишней точки в имени файла
+                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                             momentCurrent=momentCurrent)
 
         print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
         if folderWithTemporal:
