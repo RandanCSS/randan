@@ -284,6 +284,8 @@ def dfsProcessor(channelIdForSearch,
 
     df = pandas.DataFrame()
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
+    print('folder:', folder) # для отладки
+
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     if len(df_additional) > 0 or len(df_in) > 0: # оба df пусты -- в случае применения функции dfsProcessor при завершении исполнения скрипта пользователем
         df = pandas.concat([df_in, df_additional])
