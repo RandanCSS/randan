@@ -910,9 +910,9 @@ f"Директорию '{name_in_folderCurrent}' пропустил, продо�
                     itemS_json = None
                     itemS_xlsx = None
                     for temporalName in temporalNameS:
-                        # print('temporalName:', temporalName) # для отладки
-                        if temporalName.endswith('.json') and 'VK' in temporalName: itemS_json = pandas.read_json(f'{name_in_folderCurrent}{slash}{temporalName}')
-                        if temporalName.endswith('.xlsx') and 'VK' in temporalName: itemS_xlsx = pandas.read_excel(f'{name_in_folderCurrent}{slash}{temporalName}', index_col=0)
+                        print('temporalName:', temporalName) # для отладки
+                        if temporalName.endswith('.json') and 'YouTube' in temporalName: itemS_json = pandas.read_json(f'{name_in_folderCurrent}{slash}{temporalName}')
+                        if temporalName.endswith('.xlsx') and 'YouTube' in temporalName: itemS_xlsx = pandas.read_excel(f'{name_in_folderCurrent}{slash}{temporalName}', index_col=0)
 
                     if itemS_json is not None and itemS_xlsx is not None:
                         itemS = itemS_json.merge(itemS_xlsx, how='outer', on='id')
