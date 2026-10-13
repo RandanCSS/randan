@@ -1,13 +1,14 @@
 from setuptools import setup, find_packages
 import os
 
-name="randan"
-version="1.5.16"
-slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+name = "randan"
+version = "1.5.17"
+slash = '\\' if os.name == 'nt' else '/'  # выбор слэша в зависимости от ОС
 
 folderS = []
 for item in os.listdir(name):
-    if '.' not in item: folderS.append(item)
+    if '.' not in item:
+        folderS.append(item)
 
 folderFileS = []
 for folder in folderS:
@@ -26,51 +27,48 @@ setup(
     long_description=open('README.markdown').read() if os.path.exists("README.markdown") else "",
     download_url=f'https://github.com/RandanCSS/randan/archive/refs/tags/v{version}.tar.gz',
     keywords=["data", "analysis", "spss", "youtube"],
-    
+
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
     install_requires=[
+        # --- языковые и текстовые утилиты ---
         'autocorrect>=2.6.1',
-        'beautifulsoup4>=4.12.3',
-        'factor_analyzer',
-        'google-api-python-client>=2.154.0',
-        'googledrivedownloader>=0.4',
-        'graphviz>=0.14',
-        'matplotlib>=3.1.1',
-        'numpy>=1.18.4',
-        'openpyxl>=3.1.5',
-        'pandas>=1.0.3',
-        'pydot>=1.4.1',
         'pymystem3>=0.2.0',
         'regex>=2024.9.11',
+        'stop-words>=2025.11.4',
+
+        # --- парсинг и веб-автоматизация ---
+        'beautifulsoup4>=4.12.3',
         'requests>=2.32.3',
+        'selenium>=4.27.1',
+        'undetected-chromedriver>=3.5.5',
+        'urllib3>=2.2.0',
+
+        # --- работа с Google API и gRPC ---
+        'google-api-python-client>=2.154.0',
+        'googledrivedownloader>=0.4',
+        'grpcio-tools>=1.80.0',
+        'protobuf>=7.34.0',
+
+        # --- статистика и анализ данных ---
+        'factor_analyzer>=0.5.1',
+        'numpy>=1.18.4',
+        'pandas>=1.0.3',
         'scikit-learn>=0.23.1',
-        'selenium>=4.27.1', # 4.33.0
-        'statsmodels>=0.11.1',
-        'stop-words>=2018.7.23',
+        'statsmodels>=0.15.0',
+
+        # --- визуализация и графики ---
+        'graphviz>=0.21',
+        'matplotlib>=3.1.1',
+        'pydot>=4.0.1',
+
+        # --- Excel и вспомогательные утилиты ---
+        'ipython>=7.0.0',
+        'openpyxl>=3.1.5',
         'tqdm>=4.66.5',
-        'undetected-chromedriver>=3.5.5'
     ],
     python_requires='>=3.6',
 )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
