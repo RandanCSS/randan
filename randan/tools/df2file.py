@@ -151,7 +151,9 @@ def df2fileShell(complicatedNamePart, df_in, fileFormatChoice, folder, method, m
     # Проверка всех столбцов на наличие в их ячейках JSON-формата
     columnsToJSON = varPreprocessor.jsonChecker(df_in)
 
-    # print('folder', folder) # для отладки
+    print('fileName:', f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal_{method}.{fileFormatChoice}") # для отладки        
+    print('complicatedNamePart:', complicatedNamePart) # для отладки        
+    print('folder:', folder) # для отладки
     if len(columnsToJSON) > 0:
         print('В выгрузке метода', method, 'есть столбцы, содержащие внутри своих ячеек JSON-объекты; Excel не поддерживает JSON-формат;'
               , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
@@ -165,8 +167,5 @@ def df2fileShell(complicatedNamePart, df_in, fileFormatChoice, folder, method, m
         columnsToJSON.remove('id')
         if 'from_id' in columnsToJSON: columnsToJSON.remove('from_id')
         if 'owner_id' in columnsToJSON: columnsToJSON.remove('owner_id')
-
-        print('folder:', folder) # для отладки
-        print('fileName:', f'{folder}_{method}_Other_varS.{fileFormatChoice}') # для отладки        
         df2file(df_in.drop(columnsToJSON, axis=1), f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal_{method}_Other_varS.{fileFormatChoice}", folder)
     else: df2file(df_in, f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal_{method}.{fileFormatChoice}", folder)
