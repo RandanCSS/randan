@@ -64,6 +64,6 @@ def folderCoLab_folderIn_comparison(folder):
         if folderCoLab: folder = folderCoLab
         else: folder = os.getcwd()
 
-    if folder: folder += slash
-    print('folder:', folder) # для отладки
+    if folder and not folder.endswith(('\\', '/')): folder += slash
+    # print('folder:', folder) # для отладки
     return folder
