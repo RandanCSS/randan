@@ -21,13 +21,14 @@ while True:
         from datetime import datetime
         from IPython.display import display
 
-        from randan.tools import calendarWithinYear, coLabAdaptor, df2file, files2df, scrapingTools, textPreprocessor # модули для
+        from randan.tools import calendarWithinYear, coLabAdaptor, colorizer, df2file, files2df, scrapingTools, textPreprocessor # модули для
             # (а) работы с календарём конкретного года
             # (б) адаптации текущего скрипта к файловой системе CoLab
-            # (в) сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
-            # (г) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
-            # (д) упрощения скрапинга
-            # (е) предобработки неформализованного текста
+            # (в) раскрашивания вывода на экран
+            # (г) сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
+            # (д) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
+            # (е) упрощения скрапинга
+            # (ё) предобработки неформализованного текста
 
         from tqdm import tqdm
         import os, pandas, re, shutil, time, traceback, warnings
@@ -376,6 +377,7 @@ def downloadComments(api_keyS, keyOrder, method, sourceId):
     return commentS, goS, keyOrder, problemItemId
 
 # 1.4 для обработки ошибок; все функции, кроме основной, в котоых есть errorProcessor , должны отдавать goS
+@colorizer.red_prints
 def errorProcessor(errorDescription, keyOrder, sourceId):
     goC = True # если исполнение дошло до сюда, значит True
     goS = True # если исполнение дошло до сюда, значит True
@@ -385,42 +387,38 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
     print(errorDescription[1]) # для отладки
     if 'Request contains an invalid argument' in str(errorDescription[1]):
         # print('errorDescription:', errorDescription) # для отладки
-        print('!!! Похоже, подан id не канала, а плейлиста, поэтому текстовый запрос-фильтр и временнОй диапазон (если таковые были поданы) будут проигнорированы; пробую перейти к методам playlistitems и playlists')
+        print('!!! Похоже, подан id не канала, а плейлиста, поэтому текстовый запрос-фильтр и временнОй диапазон (если таковые были поданы) будут проигнорированы; пробую перейти к методам playlistitems и playlists\n')
         goC = False # нет смысла в новых итерациях цикла (вовне этой функции)
         goToPlayList = True
 
     elif ('exceeded' in str(errorDescription[1]).lower()) & ('quota' in str(errorDescription[1]).lower()):
-        print('!!! Похоже, квота текущего ключа закончилась; пробую перейти к следующему ключу')
+        print('!!! Похоже, квота текущего ключа закончилась; пробую перейти к следующему ключу\n')
         # print('  keyOrder ДО смены ключа', keyOrder) # для отладки
         keyOrder += 1 # смена ключа
         # print('  keyOrder ПОСЛЕ смены ключа', keyOrder) # для отладки
 
     elif ('disabled' in str(errorDescription[1]).lower()) & ('key' in str(errorDescription[1]).lower()):
-        print('!!! Похоже, текущий ключ деактивирован владельцем или Гуглом; пробую перейти к следующему ключу')
+        print('!!! Похоже, текущий ключ деактивирован владельцем или Гуглом; пробую перейти к следующему ключу\n')
         # print('  keyOrder ДО смены ключа', keyOrder) # для отладки
         keyOrder += 1 # смена ключа
         # print('  keyOrder ПОСЛЕ смены ключа', keyOrder) # для отладки
 
     elif ('not valid' in str(errorDescription[1]).lower()) & ('key' in str(errorDescription[1]).lower()):
-        print('!!! Похоже, текущий ключ не валиден; пробую перейти к следующему ключу')
+        print('!!! Похоже, текущий ключ не валиден; пробую перейти к следующему ключу\n')
         # print('  keyOrder ДО смены ключа', keyOrder) # для отладки
         keyOrder += 1 # смена ключа
         # print('  keyOrder ПОСЛЕ смены ключа', keyOrder) # для отладки
 
     elif 'index out of range' in str(errorDescription[1]):
         print('!!! Похоже, ключи закончились. Что делать? (а) Подождите сутки для восстановления ключей или',
-              '(б) подготовьте новый ключ, найдите и удалите файл credentialsYouTube.txt -- и запустите скрипт с начала')
+              '(б) подготовьте новый ключ, найдите и удалите файл credentialsYouTube.txt -- и запустите скрипт с начала\n')
         goS = False # нет смысла продолжать исполнение скрипта
         goC = False # и, следовательно, нет смысла в новых итерациях цикла (вовне этой функции)
 
     elif ('channel' in str(errorDescription[1]).lower()) | ('comment' in str(errorDescription[1]).lower()) | ('playlist' in str(errorDescription[1]).lower()) | ('video' in str(errorDescription[1]).lower()):
-        print('  Проблема может быть связана с ограничением доступа к обрабатываемому объекту, поэтому фиксирую его id:', problemItemId)
+        print('  Проблема может быть связана с ограничением доступа к обрабатываемому объекту, поэтому фиксирую его id:', problemItemId, '\n')
         # print('problemItemId:', problemItemId) # для отладки
         goC = False # и, следовательно, нет смысла в новых итерациях цикла (вовне этой функции)        
-
-    # elif 'TimeoutError' in str(errorDescription[0]):
-    #     print('!!! Похоже, проблема в слишком высокой частоте запросов к удалённому серверу; засыпаю на 10 секунд')
-    #     time.sleep(10)
 
     elif 'KeyboardInterrupt' in str(errorDescription):
         print(sys.exc_info()[1]) # для отладки
@@ -431,11 +429,12 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
         or 'WinError 10054' in str(errorDescription[1]) \
         or 'Connection reset' in str(errorDescription[1]) \
         or 'TimeoutError' in str(errorDescription[0]):
-        print('!!! Похоже, проблема с сетью или слишком высокая частота запросов; засыпаю на 10 секунд')
+
+        print('!!! Похоже, проблема с сетью или слишком высокая частота запросов; засыпаю на 10 секунд\n')
         time.sleep(10)
 
     else:
-        print('!!! Похоже, проблема не в ограничении доступа к обрабатываемому объекту и не в истечении квоты текущего ключа((')
+        print('!!! Похоже, проблема не в ограничении доступа к обрабатываемому объекту и не в истечении квоты текущего ключа((\n')
         goC = False # нет смысла повторного обращения к API ни с этим id, ни пока не ясна суть ошибки
 
     return goC, goS, goToPlayList, keyOrder, problemItemId
@@ -1186,7 +1185,7 @@ f'''В скрипте используются следующие аргумен
                     # display('itemS', itemS) # для отладки
 
                     print('  Проход по всем следующим страницам с выдачей          ')
-                    while 'nextPageToken' in response.keys() and goS:
+                    while 'nextPageToken' in response.keys():
                         pageToken = response['nextPageToken']
                         itemS_additional, goS, goToPlayList, iteration, keyOrder, response = bigSearch(api_keyS,
                                                                                                        channelIdForSearch,
@@ -1277,7 +1276,6 @@ f'''В скрипте используются следующие аргумен
                                                                                                        videoSyndicated=videoSyndicated,
                                                                                                        year=None)
 
-                        if not goS: break # на случай сигнала прерывания
                         itemS = dfsProcessor(channelIdForSearch,
                                              complicatedNamePart,
                                              contentType,
@@ -1297,8 +1295,7 @@ f'''В скрипте используются следующие аргумен
                                              yearsRange=yearsRange)
 
                         print('  Проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order, '          ')
-                        print('goS:',goS) # для отладки
-                        while 'nextPageToken' in response.keys() and len(itemS) < targetCount and len(response['items']) > 0 and goS:
+                        while 'nextPageToken' in response.keys() and len(itemS) < targetCount and len(response['items']) > 0:
                         # -- второе условие -- для остановки алгоритма, если все искомые объекты найдены
                             # БЕЗ какой-то из следующих страниц (в т.ч. вообще БЕЗ них)
                             # третье условие -- для остановки алгоритма, если предыдущая страница выдачи содержит 0 объектов
@@ -1372,7 +1369,7 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                         print('Внутри каждого года прохожу по значениям аргумента order, внутри которых прохожу по всем страницам выдачи')
                         goC = True
 # ********** из фрагмента 2.1.0 + условие для goC
-                        while len(itemS) < targetCount and goC and goS:
+                        while len(itemS) < targetCount and goC:
                             print(f'  Для года {year} заход на первую страницу выдачи БЕЗ аргумента order')
                             itemS_additional, goS, goToPlayList, iteration, keyOrder, response = bigSearch(api_keyS,
                                                                                                            channelIdForSearch,
@@ -1542,7 +1539,7 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
 f'    Для года {year} проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order
                                     )
 
-                                    while 'nextPageToken' in response.keys() and len(itemS) < targetCount and len(response['items']) > 0 and goS:
+                                    while 'nextPageToken' in response.keys() and len(itemS) < targetCount and len(response['items']) > 0:
                                         pageToken = response['nextPageToken']
                                         itemS_additional, goS, goToPlayList, iteration, keyOrder, response = bigSearch(api_keyS,
                                                                                                                        channelIdForSearch,
