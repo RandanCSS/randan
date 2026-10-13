@@ -58,7 +58,7 @@ def coLabAdaptor():
     return folderCoLab
 
 def folderCoLab_folderIn_comparison(folder):
-    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+    slash = '\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     if not folder:
         folderCoLab = coLabAdaptor() # либо '/content/drive/MyDrive/Colab Notebooks' , либо None
         if folderCoLab: folder = folderCoLab
