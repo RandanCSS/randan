@@ -259,7 +259,7 @@ f'''В скрипте используются следующие аргумен
                                  fileFormatChoice=fileFormatChoice,
                                  folder=folder,
                                  method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                                 momentCurrent=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                 momentCurrent=momentCurrent)
 
     return channelS
 
@@ -327,7 +327,7 @@ def dfsProcessor(channelIdForSearch,
                              fileFormatChoice=fileFormatChoice,
                              folder=temporal_exportPath,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла  
-                             momentCurrent=momentCurrent.strftime('%Y%m%d')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                             momentCurrent=momentCurrent.strftime('%Y%m%d'))
 
 
         print('Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
@@ -569,7 +569,7 @@ f'''
                                  fileFormatChoice=fileFormatChoice,
                                  folder=folder,
                                  method='playlists',
-                                 momentCurrent=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                 momentCurrent=momentCurrent)
 
     return playlistS, playlistVideoChannelS
 
@@ -1627,7 +1627,7 @@ f'''    Искомых объектов {targetCount}, а найденных с 
                                      fileFormatChoice=fileFormatChoice,
                                      folder=folder,
                                      method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                                     momentCurrent=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                     momentCurrent=momentCurrent)
 
             elif stage < stageTarget:
                 print(
@@ -1861,7 +1861,7 @@ f'''В скрипте используются следующие аргумен
                                  fileFormatChoice=fileFormatChoice,
                                  folder=folder,
                                  method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                                 momentCurrent=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                 momentCurrent=momentCurrent)
 
             commentS = pandas.DataFrame() # не в следующем ченке, чтобы иметь возможность перезапускать его, не затирая промежуточный результат выгрузки
 
@@ -1932,7 +1932,7 @@ f'''В скрипте используются следующие аргумен
                                      fileFormatChoice=fileFormatChoice,
                                      folder=folder,
                                      method='commentS',
-                                     momentCurrent=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                     momentCurrent=momentCurrent)
 
 # ********** replieS
                 print('') # для отступа
@@ -1963,7 +1963,7 @@ f'''В скрипте используются следующие аргумен
                                          fileFormatChoice=fileFormatChoice,
                                          folder=folder,
                                          method='replieS',
-                                         momentCurrent=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                         momentCurrent=momentCurrent)
 
                     commentReplieS = commentS.copy() # копия датафрейма c родительскими (topLevel) комментариями -- основа будущего общего датафрейма
 
@@ -2070,7 +2070,7 @@ f'''
                                              fileFormatChoice=fileFormatChoice,
                                              folder=folder,
                                              method='commentReplieS',
-                                             momentCurrent=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                                             momentCurrent=momentCurrent)
 
                         # блок 'если нет недостачи' завершён
                         # print('''блок 'если нет недостачи' завершён''') # для отладки
