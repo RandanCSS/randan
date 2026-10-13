@@ -126,7 +126,7 @@ f'''Пакет {module} НЕ удалось импортировать за {att
 
     if fileFormatChoice == 'json': df.to_json(folder + fileName, force_ascii=False, indent=4, orient='records')
 
-def df2fileShell(complicatedNamePart, currentMoment, dfIn, fileFormatChoice, folder, method):
+def df2fileShell(complicatedNamePart, currentMoment, df_in, fileFormatChoice, folder, method):
     # slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     # folder = currentMoment + complicatedNamePart
     # if coLabFolder == None:
@@ -145,7 +145,7 @@ def df2fileShell(complicatedNamePart, currentMoment, dfIn, fileFormatChoice, fol
     #         # print('Эта директория существует')
 
     # Проверка всех столбцов на наличие в их ячейках JSON-формата
-    columnsToJSON = varPreprocessor.jsonChecker(dfIn)
+    columnsToJSON = varPreprocessor.jsonChecker(df_in)
 
     print('folder', folder) # для отладки
     if len(columnsToJSON) > 0:
@@ -153,14 +153,14 @@ def df2fileShell(complicatedNamePart, currentMoment, dfIn, fileFormatChoice, fol
               , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
 
         columnsToJSON.append('id')
-        if 'from_id' in dfIn.columns: columnsToJSON.append('from_id')
-        if 'owner_id' in dfIn.columns: columnsToJSON.append('owner_id')
+        if 'from_id' in df_in.columns: columnsToJSON.append('from_id')
+        if 'owner_id' in df_in.columns: columnsToJSON.append('owner_id')
 
         print('columnsToJSON:', columnsToJSON) # для отладки
-        df2file(dfIn[columnsToJSON], f'{folder}_{method}_JSON_varS.json', folder)
+        df2file(df_in[columnsToJSON], f'{folder}_{method}_JSON_varS.json', folder)
         columnsToJSON.remove('id')
         if 'from_id' in columnsToJSON: columnsToJSON.remove('from_id')
         if 'owner_id' in columnsToJSON: columnsToJSON.remove('owner_id')
 
-        df2file(dfIn.drop(columnsToJSON, axis=1), f'{folder}_{method}_Other_varS.{fileFormatChoice}', folder)
-    else: df2file(dfIn, f'{folder}_{method}.{fileFormatChoice}', folder)
+        df2file(df_in.drop(columnsToJSON, axis=1), f'{folder}_{method}_Other_varS.{fileFormatChoice}', folder)
+    else: df2file(df_in, f'{folder}_{method}.{fileFormatChoice}', folder)
