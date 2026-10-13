@@ -96,7 +96,7 @@ def bigSearch(api_keyS,
                 'items': []} # принудительная выдача на случай неуспеха request.execute()
 
     MAX_ATTEMPTS = 3
-    attempt_network = 0
+    attempt_network = 1
     while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
         try:
             youtube = api.build('youtube', 'v3', developerKey=api_keyS[keyOrder])
@@ -801,7 +801,7 @@ videoPaidProductPlacement : str
 # 2.0.0 Некоторые базовые настройки запроса к API YouTube
     channelS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     commentReplieS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
-    fileFormatChoice = '.xlsx' # базовый формат сохраняемых файлов; формат .json добавляется опционально через наличие columnsToJSON
+    fileFormatChoice = 'xlsx' # базовый формат сохраняемых файлов; формат json добавляется опционально через наличие columnsToJSON
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     folderFile = None
     folderWithTemporal = None
