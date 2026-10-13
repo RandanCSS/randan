@@ -131,8 +131,8 @@ f'''Пакет {module} НЕ удалось импортировать за {att
     if fileFormatChoice == 'json': df.to_json(folder + fileName, force_ascii=False, indent=4, orient='records')
 
 def df2fileShell(complicatedNamePart, currentMoment, df_in, fileFormatChoice, folder, method):
-    folder += currentMoment + complicatedNamePart
     # slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+    # folder = currentMoment + complicatedNamePart
     # if coLabFolder == None:
     #     print('Сохраняю выгрузку метода', method, '                              ') #, f'в директорию "{folder}"'
     #     if os.path.exists(folder) == False:
@@ -168,5 +168,5 @@ def df2fileShell(complicatedNamePart, currentMoment, df_in, fileFormatChoice, fo
 
         print('folder:', folder) # для отладки
         print('fileName:', f'{folder}_{method}_Other_varS.{fileFormatChoice}') # для отладки        
-        df2file(df_in.drop(columnsToJSON, axis=1), f'{folder}_{method}_Other_varS.{fileFormatChoice}') # , folder
-    else: df2file(df_in, f'{folder}_{method}.{fileFormatChoice}') # , folder
+        df2file(df_in.drop(columnsToJSON, axis=1), f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal_{method}_Other_varS.{fileFormatChoice}", folder)
+    else: df2file(df_in, f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal_{method}.{fileFormatChoice}", folder)
