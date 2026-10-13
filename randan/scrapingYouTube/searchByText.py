@@ -167,11 +167,11 @@ def channelProcessor(api_keyS,
                      experiencedMode,
                      fileFormatChoice,
                      folder,
+                     folderWithTemporal,
                      keyOrder,
                      momentCurrent,
                      playlistS,
                      q,
-                     name_in_folderCurrent,
                      snippetContentType,
                      stage,
                      targetCount,
@@ -242,12 +242,12 @@ f'''В скрипте используются следующие аргумен
                                           df_final,
                                           fileFormatChoice,
                                           folder,
+                                          folderWithTemporal=folderWithTemporal,
                                           idS=channelIdS,
                                           keyOrder=keyOrder,
                                           method=method,
                                           momentCurrent=momentCurrent,
                                           q=q,
-                                          name_in_folderCurrent=name_in_folderCurrent,
                                           stage=stage,
                                           targetCount=targetCount,
                                           year=year,
@@ -272,10 +272,10 @@ def dfsProcessor(channelIdForSearch,
                  df_final, # на обработке какой бы ни было выгрузки не возникла бы непреодолима ошибка, сохранить следует выгрузку метода search
                  df_in,
                  folder,
+                 folderWithTemporal,
                  goS, # единственная из функций, принимающая этот аргумент
                  method,
                  q,
-                 name_in_folderCurrent,
                  stage,
                  targetCount,
                  momentCurrent,
@@ -457,11 +457,11 @@ def playListProcessor(api_keyS,
                       experiencedMode,
                       fileFormatChoice,
                       folder,
+                      folderWithTemporal,
                       keyOrder,
                       momentCurrent,
                       playlistIdS,
                       q,
-                      name_in_folderCurrent,
                       stage,
                       targetCount,
                       year,
@@ -495,12 +495,12 @@ f'''В скрипте используются следующие аргумен
                                            df_final,
                                            fileFormatChoice,
                                            folder,
+                                           folderWithTemporal=folderWithTemporal,
                                            idS=playlistIdS,
                                            keyOrder=keyOrder,
                                            method=method,
                                            momentCurrent=momentCurrent,
                                            q=q,
-                                           name_in_folderCurrent=name_in_folderCurrent,
                                            stage=stage,
                                            targetCount=targetCount,
                                            year=year,
@@ -539,10 +539,10 @@ f'''
                                                              df_final=df_final,
                                                              df_in=playlistVideoChannelS,
                                                              folder=folder,
+                                                             folderWithTemporal=folderWithTemporal,
                                                              goS=goS,
                                                              method=method,
                                                              q=q,
-                                                             name_in_folderCurrent=name_in_folderCurrent,
                                                              stage=stage,
                                                              targetCount=targetCount,
                                                              momentCurrent=momentCurrent,
@@ -588,12 +588,12 @@ def portionsProcessor(api_keyS,
                       df_final,
                       fileFormatChoice,
                       folder,
+                      folderWithTemporal,
                       idS,
                       keyOrder,
                       method,
                       momentCurrent,
                       q,
-                      name_in_folderCurrent,
                       stage,
                       targetCount,
                       year,
@@ -681,11 +681,11 @@ def portionsProcessor(api_keyS,
                                        df_final=df_final, # itemS или channelS подаются как значение аргумента оборачивающей функции
                                        df_in=chplviS,
                                        folder=folder,
+                                       folderWithTemporal=folderWithTemporal,
                                        goS=goS,
                                        method=method,
                                        momentCurrent=momentCurrent,
                                        q=q,
-                                       name_in_folderCurrent=name_in_folderCurrent,
                                        stage=stage,
                                        targetCount=targetCount,
                                        year=year,
@@ -837,14 +837,10 @@ videoPaidProductPlacement : str
 # 2.0.2 Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
     print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
-    goC = True
     for name_in_folderCurrent in nameS_in_folderCurrent:
-        if not goC: break
-        message =\
-f"В текущей директории '{name_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 9-10 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную"
-
         if name_in_folderCurrent.endswith('Temporal') and 'YouTube' in name_in_folderCurrent:
-            if len(os.listdir(name_in_folderCurrent)) < 9: print(message) # допустимо 9 или 10 файлов
+            if len(os.listdir(name_in_folderCurrent)) < 9: print(
+f"В текущей директории '{name_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 9-10 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 9 или 10 файлов
             else:
                 targetCountTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'targetCount.txt', int)
                 methodTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'method.txt', str)
@@ -883,62 +879,65 @@ f"В текущей директории '{name_in_folderCurrent}' есть ди
                 print(f"- пользователь сформулировал запрос-фильтр как '{qTemporal}'" if qTemporal else '- пользователь НЕ сформулировал запрос-фильтр')
                 print(f'- пользователь ограничил временнОй диапазон границами {yearsRangeTemporal}' if yearsRangeTemporal else '- пользователь НЕ ограничил временнОй диапазон')
 
-                folderWithTemporal = name_in_folderCurrent
                 print(
 '''--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
 --- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите 'R' и нажмите Enter
---- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter'''
-                     )
+--- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter''')
 
                 decision = input()
-                if not decision: # Temporal-значения обретают статус постоянных
+                if decision.lower() == 'r':
+                    shutil.rmtree(folderWithTemporal, ignore_errors=True)
+                    print(
+f"Директорию '{name_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
+
+                elif decision: print(
+f"Директорию '{name_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
+
+                elif not decision: # Temporal-значения обретают статус постоянных и будут использоваться при исполнении скрипта
                     targetCount = targetCountTemporal
                     method = methodTemporal
                     year = yearTemporal
                     contentType = contentTypeTemporal
                     channelIdForSearch = channelIdForSearchTemporal
                     q = qTemporal
-                    yearsRange = yearsRangeTemporal
                     stageTarget = stageTargetTemporal
+                    yearsRange = yearsRangeTemporal
+                    if yearsRange:
+                        yearsRange = yearsRange.split('-')
+                        yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
 
                     temporalNameS = os.listdir(name_in_folderCurrent)
                     itemS_json = None
                     itemS_xlsx = None
                     for temporalName in temporalNameS:
                         # print('temporalName:', temporalName) # для отладки
-
                         if temporalName.endswith('.json') and 'VK' in temporalName: itemS_json = pandas.read_json(f'{name_in_folderCurrent}{slash}{temporalName}')
                         if temporalName.endswith('.xlsx') and 'VK' in temporalName: itemS_xlsx = pandas.read_excel(f'{name_in_folderCurrent}{slash}{temporalName}', index_col=0)
-                        if itemS_json is not None and itemS_xlsx is not None:
-                            itemS = itemS_json.merge(itemS_xlsx, how='outer', on='id')
-# Данные, сохранённые при прошлом запуске скрипта, загружены
-                            goC = False # выход из for name_in_folderCurrent in nameS_in_folderCurrent
 
-                    if itemS_xlsx is not None and itemS_json is None: itemS = itemS_xlsx.copy() # for temporalName in temporalNameS завершился, но файл itemS_json не импортировался
+                    if itemS_json is not None and itemS_xlsx is not None:
+                        itemS = itemS_json.merge(itemS_xlsx, how='outer', on='id')
+                        folderWithTemporal = name_in_folderCurrent
+                        break # выход из for name_in_folderCurrent in nameS_in_folderCurrent
+
+                    elif itemS_json is None and itemS_xlsx is not None:
+                        itemS = itemS_xlsx.copy() # for temporalName in temporalNameS завершился, но файл itemS_json не импортировался
+                        folderWithTemporal = name_in_folderCurrent
+                        break # выход из for name_in_folderCurrent in nameS_in_folderCurrent
+
+                    # -- данные, сохранённые при прошлом запуске скрипта, загружены и цикл for name_in_folderCurrent in nameS_in_folderCurrent завершн
+
                     elif itemS_xlsx is None and itemS_json is None:
-                        name_in_folderCurrent = None # флаг, что файл с данными, сохранёнными при прошлом запуске скрипта, не найдены
-                        print(message)
+                        print(
+f"СТРАННО: хотя директория '{name_in_folderCurrent}' похожа на искомую Temporal , но в ней ни одного файла с данными, сохранёнными при прошлом запуске скрипта, не найдено; рекомендую Вам удалить её вручную, а я продолжаю поиск")
 
-                    if yearsRange:
-                        yearsRange = yearsRange.split('-')
-                        yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
-# Метаданные этих данных (q, contentType, yearsRange, stageTarget) будут использоваться при исполнении скрипта
-
-                elif decision.lower() == 'r':
-                    shutil.rmtree(folderWithTemporal, ignore_errors=True)
-                    print('')
+    if not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
+        print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
 
 # 2.0.3 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
-    if not name_in_folderCurrent: # если itemsTemporal, в т.ч. пустой, не существует
-            # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
-        name_in_folderCurrent = 'No folder'
-        print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
-        print(
-'''
+        print('''
 Возможно, Вы располагаете файлом, в котором есть, как минимум, столбец id, и который хотели бы дополнить? Или планируете первичный сбор контента?
 --- Если планируете первичный сбор, нажмите Enter
---- Если располагаете файлом, укажите полный путь, включая название файла, и нажмите Enter'''
-              )
+--- Если располагаете файлом, укажите полный путь, включая название файла, и нажмите Enter''')
 
         while True:
             folderFile = input()
@@ -1171,10 +1170,10 @@ f'''В скрипте используются следующие аргумен
                                          df_final=itemS,
                                          df_in=itemS,
                                          folder=folder,
+                                         folderWithTemporal=folderWithTemporal,
                                          goS=goS,
                                          method=method,
                                          q=q,
-                                         name_in_folderCurrent=name_in_folderCurrent,
                                          stage=stage,
                                          targetCount=targetCount,
                                          momentCurrent=momentCurrent,
@@ -1224,10 +1223,10 @@ f'''В скрипте используются следующие аргумен
                                              df_final=itemS,
                                              df_in=itemS,
                                              folder=folder,
+                                             folderWithTemporal=folderWithTemporal,
                                              goS=goS,
                                              method=method,
                                              q=q,
-                                             name_in_folderCurrent=name_in_folderCurrent,
                                              stage=stage,
                                              targetCount=targetCount,
                                              momentCurrent=momentCurrent,
@@ -1284,10 +1283,10 @@ f'''В скрипте используются следующие аргумен
                                              df_final=itemS,
                                              df_in=itemS,
                                              folder=folder,
+                                             folderWithTemporal=folderWithTemporal,
                                              goS=goS,
                                              method=method,
                                              q=q,
-                                             name_in_folderCurrent=name_in_folderCurrent,
                                              stage=stage,
                                              targetCount=targetCount,
                                              momentCurrent=momentCurrent,
@@ -1340,10 +1339,10 @@ f'''В скрипте используются следующие аргумен
                                                  df_final=itemS,
                                                  df_in=itemS,
                                                  folder=folder,
+                                                 folderWithTemporal=folderWithTemporal,
                                                  goS=goS,
                                                  method=method,
                                                  q=q,
-                                                 name_in_folderCurrent=name_in_folderCurrent,
                                                  stage=stage,
                                                  targetCount=targetCount,
                                                  momentCurrent=momentCurrent,
@@ -1418,10 +1417,10 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                                                  df_final=itemS,
                                                  df_in=itemS,
                                                  folder=folder,
+                                                 folderWithTemporal=folderWithTemporal,
                                                  goS=goS,
                                                  method=method,
                                                  q=q,
-                                                 name_in_folderCurrent=name_in_folderCurrent,
                                                  stage=stage,
                                                  targetCount=targetCount,
                                                  momentCurrent=momentCurrent,
@@ -1470,10 +1469,10 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                                                      df_final=itemS,
                                                      df_in=itemS,
                                                      folder=folder,
+                                                     folderWithTemporal=folderWithTemporal,
                                                      goS=goS,
                                                      method=method,
                                                      q=q,
-                                                     name_in_folderCurrent=name_in_folderCurrent,
                                                      stage=stage,
                                                      targetCount=targetCount,
                                                      momentCurrent=momentCurrent,
@@ -1525,10 +1524,10 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                                                          df_final=itemS,
                                                          df_in=itemS,
                                                          folder=folder,
+                                                         folderWithTemporal=folderWithTemporal,
                                                          goS=goS,
                                                          method=method,
                                                          q=q,
-                                                         name_in_folderCurrent=name_in_folderCurrent,
                                                          stage=stage,
                                                          targetCount=targetCount,
                                                          momentCurrent=momentCurrent,
@@ -1579,10 +1578,10 @@ f'    Для года {year} проход по всем следующим ст�
                                                              df_final=itemS,
                                                              df_in=itemS,
                                                              folder=folder,
+                                                             folderWithTemporal=folderWithTemporal,
                                                              goS=goS,
                                                              method=method,
                                                              q=q,
-                                                             name_in_folderCurrent=name_in_folderCurrent,
                                                              stage=stage,
                                                              targetCount=targetCount,
                                                              momentCurrent=momentCurrent,
@@ -1667,11 +1666,11 @@ f'''
                                                                               experiencedMode=experiencedMode,
                                                                               fileFormatChoice=fileFormatChoice,
                                                                               folder=folder,
+                                                                              folderWithTemporal=folderWithTemporal,
                                                                               keyOrder=keyOrder,
                                                                               momentCurrent=momentCurrent,
                                                                               playlistIdS=playlistIdS,
                                                                               q=q,
-                                                                              name_in_folderCurrent=name_in_folderCurrent,
                                                                               stage=stage,
                                                                               targetCount=targetCount,
                                                                               year=year,
@@ -1688,11 +1687,11 @@ f'''
                                                                           experiencedMode=experiencedMode,
                                                                           fileFormatChoice=fileFormatChoice,
                                                                           folder=folder,
+                                                                          folderWithTemporal=folderWithTemporal,
                                                                           keyOrder=keyOrder,
                                                                           momentCurrent=momentCurrent,
                                                                           playlistIdS=playlistIdS,
                                                                           q=q,
-                                                                          name_in_folderCurrent=name_in_folderCurrent,
                                                                           stage=stage,
                                                                           targetCount=targetCount,
                                                                           year=year,
@@ -1710,11 +1709,11 @@ f'''
                                              experiencedMode=experiencedMode,
                                              fileFormatChoice=fileFormatChoice,
                                              folder=folder,
+                                             folderWithTemporal=folderWithTemporal,
                                              keyOrder=keyOrder,
                                              momentCurrent=momentCurrent,
                                              playlistS=playlistS,
                                              q=q,
-                                             name_in_folderCurrent=name_in_folderCurrent,
                                              snippetContentType='channel',
                                              stage=stage,
                                              targetCount=targetCount,
@@ -1737,11 +1736,11 @@ f'''
                                                                       experiencedMode=experiencedMode,
                                                                       fileFormatChoice=fileFormatChoice,
                                                                       folder=folder,
+                                                                      folderWithTemporal=folderWithTemporal,
                                                                       keyOrder=keyOrder,
                                                                       momentCurrent=momentCurrent,
                                                                       playlistIdS=playlistIdS,
                                                                       q=q,
-                                                                      name_in_folderCurrent=name_in_folderCurrent,
                                                                       stage=stage,
                                                                       targetCount=targetCount,
                                                                       year=year,
@@ -1801,12 +1800,12 @@ f'''В скрипте используются следующие аргумен
                                             df_final=itemS,
                                             fileFormatChoice=fileFormatChoice,
                                             folder=folder,
+                                            folderWithTemporal=folderWithTemporal,
                                             idS=videoIdS,
                                             keyOrder=keyOrder,
                                             method=method,
                                             momentCurrent=momentCurrent,
                                             q=q,
-                                            name_in_folderCurrent=name_in_folderCurrent,
                                             stage=stage,
                                             targetCount=targetCount,
                                             year=year,
@@ -1891,10 +1890,10 @@ f'''В скрипте используются следующие аргумен
                                             df_final=itemS,
                                             df_in=commentS,
                                             folder=folder,
+                                            folderWithTemporal=folderWithTemporal,
                                             goS=goS,
                                             method=method,
                                             q=q,
-                                            name_in_folderCurrent=name_in_folderCurrent,
                                             stage=stage,
                                             targetCount=targetCount,
                                             momentCurrent=momentCurrent,
@@ -1961,10 +1960,10 @@ f'''В скрипте используются следующие аргумен
                                                   df_final=itemS,
                                                   df_in=commentReplieS,
                                                   folder=folder,
+                                                  folderWithTemporal=folderWithTemporal,
                                                   goS=goS,
                                                   method=method,
                                                   q=q,
-                                                  name_in_folderCurrent=name_in_folderCurrent,
                                                   stage=stage,
                                                   targetCount=targetCount,
                                                   momentCurrent=momentCurrent,
@@ -2003,10 +2002,10 @@ f'''
                                                    df_final=itemS,
                                                    df_in=replieS,
                                                    folder=folder,
+                                                   folderWithTemporal=folderWithTemporal,
                                                    goS=goS,
                                                    method=method,
                                                    q=q,
-                                                   name_in_folderCurrent=name_in_folderCurrent,
                                                    stage=stage,
                                                    targetCount=targetCount,
                                                    momentCurrent=momentCurrent,
@@ -2031,10 +2030,10 @@ f'''
                                                       df_final=itemS,
                                                       df_in=commentReplieS,
                                                       folder=folder,
+                                                      folderWithTemporal=folderWithTemporal,
                                                       goS=goS,
                                                       method=method,
                                                       q=q,
-                                                      name_in_folderCurrent=name_in_folderCurrent,
                                                       stage=stage,
                                                       targetCount=targetCount,
                                                       momentCurrent=momentCurrent,
@@ -2064,11 +2063,11 @@ f'''
                                                  experiencedMode=experiencedMode,
                                                  fileFormatChoice=fileFormatChoice,
                                                  folder=folder,
+                                                 folderWithTemporal=folderWithTemporal,
                                                  keyOrder=keyOrder,
                                                  momentCurrent=momentCurrent,
                                                  playlistS=playlistS,
                                                  q=q,
-                                                 name_in_folderCurrent=name_in_folderCurrent,
                                                  snippetContentType='channel',
                                                  stage=stage,
                                                  targetCount=targetCount,
@@ -2101,10 +2100,10 @@ f'''
                          df_final=itemS,
                          df_in=pandas.DataFrame(), # внутри функции dfsProcessor в данном случае отработает только блок goS = False , а df_in обрабатывается над этим блоком
                          folder=folder,
+                         folderWithTemporal=folderWithTemporal,
                          goS=False,
                          method=method,
                          q=q,
-                         name_in_folderCurrent=name_in_folderCurrent,
                          stage=stage,
                          targetCount=targetCount,
                          momentCurrent=momentCurrent,
