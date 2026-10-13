@@ -874,12 +874,12 @@ f"В текущей директории '{name_in_folderCurrent}' есть ди
                       '\n- скрипт остановился на методе', methodTemporal)
 
                 if yearTemporal: print('- и на годе (при сегментировани по годам)', yearTemporal)
-                print('- пользователь НЕ определил тип контента' if not contentTypeTemporal else  f"- пользователь определил тип контента как '{contentTypeTemporal}'")
+                print(f"- пользователь определил тип контента как '{contentTypeTemporal}'" if contentTypeTemporal else '- пользователь НЕ определил тип контента')
                 if contentTypeTemporal == 'video':
-                    print('- пользователь НЕ выбрал конкретный канал для выгрузки видео' if not channelIdForSearchTemporal else  f"- пользователь выбрал канал с id '{channelIdForSearchTemporal}' для выгрузки видео")
+                    print(f"- пользователь выбрал канал с id '{channelIdForSearchTemporal}' для выгрузки видео" if channelIdForSearchTemporal else '- пользователь НЕ выбрал конкретный канал для выгрузки видео')
 
-                print('- пользователь НЕ сформулировал запрос-фильтр' if not qTemporal else  f"- пользователь сформулировал запрос-фильтр как '{qTemporal}'")
-                print('- пользователь НЕ ограничил временнОй диапазон' if yearsRangeTemporal == '' else  f'- пользователь ограничил временнОй диапазон границами {yearsRangeTemporal}')
+                print(f"- пользователь сформулировал запрос-фильтр как '{qTemporal}'" if qTemporal else '- пользователь НЕ сформулировал запрос-фильтр')
+                print(f'- пользователь ограничил временнОй диапазон границами {yearsRangeTemporal}' if yearsRangeTemporal else '- пользователь НЕ ограничил временнОй диапазон')
 
                 folderWithTemporal = name_in_folderCurrent
                 print(
@@ -903,6 +903,7 @@ f"В текущей директории '{name_in_folderCurrent}' есть ди
                     itemS_json = None
                     itemS_xlsx = None
                     for temporalName in temporalNameS:
+                        print('temporalName:', temporalName) # для отладки                        
                         if temporalName.endswith('.json') and 'VK' in temporalName: itemS_json = pandas.read_json(f'{name_in_folderCurrent}{slash}{temporalName}')
                         if temporalName.endswith('.xlsx') and 'VK' in temporalName: itemS_xlsx = pandas.read_excel(f'{name_in_folderCurrent}{slash}{temporalName}', index_col=0)
                         if itemS_json is not None and itemS_xlsx is not None:
