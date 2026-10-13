@@ -50,18 +50,22 @@ def df2file(df, *arg): # арки: fileName и folder
         # print('len(arg) == 2')
         fileName = arg[0]
         folder = arg[1]
-        folder += slash
+        if not folder.endswith(('\\', '/')): folder += slash
 
-    if fileName == '':
+    print('fileName:', f'{folder}_{method}_Other_varS.{fileFormatChoice}') # для отладки        
+    print('folder:', folder) # для отладки
+
+    if not fileName:
         fileName = input('--- Впишите имя сохраняемого файла (с расширением) и нажмите Enter:')
     
-    if folder != '':
-        print(f"Директория, в которую сохраняю файл '{fileName}':", os.getcwd() + slash + folder)
+    if folder:
+        print(f"Директория, в которую сохраняю файл '{fileName}':", folder)
 
     elif slash in fileName: # если директория содерджится в fileName
         folder = slash.join(fileName.split(slash)[:-1])
         fileName = fileName.split(slash)[-1]
         print(f"Директория, в которую сохраняю файл '{fileName}':", os.getcwd() + slash + folder)
+
     else:
         folder = input('--- Впишите директорию, в которую сохранить файл (если имя файла уже содержит путь к нему, то не вписывайте ничего) и нажмите Enter:')
 
