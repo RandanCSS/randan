@@ -92,8 +92,8 @@ def df2file(df, *arg): # арки: fileName и folder
 
 # ********** В зависимости от расширения сохраняемого файла выполнить сохранение
     # print('Расширение файла:', fileFormatChoice)
-    # print('folder', folder) # для отладки
-    # print('fileName', fileName) # для отладки
+    # print('folder:', folder) # для отладки
+    # print('fileName:', fileName) # для отладки
     if fileFormatChoice == 'xlsx':
         textColS = df.select_dtypes(include=['object', 'string']).columns
         for column in textColS: df[column] = df[column].apply(textPreprocessor.dropControlCharacters)
@@ -127,8 +127,8 @@ f'''Пакет {module} НЕ удалось импортировать за {att
     if fileFormatChoice == 'json': df.to_json(folder + fileName, force_ascii=False, indent=4, orient='records')
 
 def df2fileShell(complicatedNamePart, currentMoment, df_in, fileFormatChoice, folder, method):
+    folder = currentMoment + complicatedNamePart
     # slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    # folder = currentMoment + complicatedNamePart
     # if coLabFolder == None:
     #     print('Сохраняю выгрузку метода', method, '                              ') #, f'в директорию "{folder}"'
     #     if os.path.exists(folder) == False:
@@ -147,7 +147,7 @@ def df2fileShell(complicatedNamePart, currentMoment, df_in, fileFormatChoice, fo
     # Проверка всех столбцов на наличие в их ячейках JSON-формата
     columnsToJSON = varPreprocessor.jsonChecker(df_in)
 
-    print('folder', folder) # для отладки
+    # print('folder', folder) # для отладки
     if len(columnsToJSON) > 0:
         print('В выгрузке метода', method, 'есть столбцы, содержащие внутри своих ячеек JSON-объекты; Excel не поддерживает JSON-формат;'
               , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
@@ -162,5 +162,7 @@ def df2fileShell(complicatedNamePart, currentMoment, df_in, fileFormatChoice, fo
         if 'from_id' in columnsToJSON: columnsToJSON.remove('from_id')
         if 'owner_id' in columnsToJSON: columnsToJSON.remove('owner_id')
 
-        df2file(df_in.drop(columnsToJSON, axis=1), f'{folder}_{method}_Other_varS.{fileFormatChoice}', folder)
-    else: df2file(df_in, f'{folder}_{method}.{fileFormatChoice}', folder)
+        print('folder:', folder) # для отладки
+        print('fileName:', f'{folder}_{method}_Other_varS.{fileFormatChoice}') # для отладки        
+        df2file(df_in.drop(columnsToJSON, axis=1), f'{folder}_{method}_Other_varS.{fileFormatChoice}') # , folder
+    else: df2file(df_in, f'{folder}_{method}.{fileFormatChoice}') # , folder
