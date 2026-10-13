@@ -836,29 +836,29 @@ f"В текущей директории '{name_in_folderCurrent}' есть ди
         if name_in_folderCurrent.endswith('Temporal') and 'YouTube' in name_in_folderCurrent:
             if len(os.listdir(name_in_folderCurrent)) < 9: print(message) # допустимо 9 или 10 файлов
             else:
-                targetCountTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'targetCount', int)
-                methodTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'method', str)
-                yearTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'year', int)
+                targetCountTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'targetCount.txt', int)
+                methodTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'method.txt', str)
+                yearTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'year.txt', int)
 
-                contentTypeTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'contentType', str)
+                contentTypeTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'contentType.txt', str)
                 if contentTypeTemporal == '': contentTypeTemporal = None # для единообразия
 
-                channelIdForSearchTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'channelIdForSearch', str)
+                channelIdForSearchTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'channelIdForSearch.txt', str)
                 if channelIdForSearchTemporal == '': channelIdForSearchTemporal = None # для единообразия
 
-                try: qTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'q', str)
+                try: qTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'q.txt', str)
                 except Exception as excptn:
                     print('Exception в searchByText') # для отладки
                     print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
                     print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
-                    qTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'q', str)
+                    qTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'q.txt', str)
 
                 if qTemporal == '': qTemporal = None # для единообразия
 
-                yearsRangeTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'yearsRange', str)
+                yearsRangeTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'yearsRange.txt', str)
                 if yearsRangeTemporal == '': yearsRangeTemporal = None # для единообразия
 
-                stageTargetTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'stageTarget', int)
+                stageTargetTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'stageTarget.txt', int)
                 stageTargetTemporal = int(stageTargetTemporal)
 
                 print(f"Нашёл директорию '{name_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:",
