@@ -131,7 +131,7 @@ f'''Пакет {module} НЕ удалось импортировать за {att
     if fileFormatChoice == 'json': df.to_json(folder + fileName, force_ascii=False, indent=4, orient='records')
 
 def df2fileShell(complicatedNamePart, currentMoment, df_in, fileFormatChoice, folder, method):
-    folder = currentMoment + complicatedNamePart
+    folder += currentMoment + complicatedNamePart
     # slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     # if coLabFolder == None:
     #     print('Сохраняю выгрузку метода', method, '                              ') #, f'в директорию "{folder}"'
