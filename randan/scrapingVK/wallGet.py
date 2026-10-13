@@ -117,7 +117,6 @@ def dfsProcessor(complicatedNamePart,
 
             sys.exit()
         print('Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
-
     return df
 
 def wallGetCore(api_keyS,
