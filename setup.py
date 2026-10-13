@@ -34,18 +34,17 @@ setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        # --- языковые и текстовые утилиты ---
-        'autocorrect>=2.6.1',
-        'pymystem3>=0.2.0',
-        'regex>=2024.9.11',
-        'stop-words>=2025.11.4',
-
-        # --- парсинг и веб-автоматизация ---
+        # --- веб-автоматизация и парсинг ---
         'beautifulsoup4>=4.12.3',
         'requests>=2.32.3',
         'selenium>=4.27.1',
         'undetected-chromedriver>=3.5.5',
         'urllib3>=2.2.0',
+
+        # --- визуализация и графики ---
+        'graphviz>=0.21',
+        'matplotlib>=3.1.1',
+        'pydot>=4.0.1',
 
         # --- работа с Google API и gRPC ---
         'google-api-python-client>=2.154.0',
@@ -60,15 +59,17 @@ setup(
         'scikit-learn>=0.23.1',
         'statsmodels>=0.15.0',
 
-        # --- визуализация и графики ---
-        'graphviz>=0.21',
-        'matplotlib>=3.1.1',
-        'pydot>=4.0.1',
+        # --- текстовые и языковые утилиты ---
+        'autocorrect>=2.6.1',
+        'pymystem3>=0.2.0',
+        'regex>=2024.9.11',
+        'stop-words>=2025.11.4',
 
         # --- Excel и вспомогательные утилиты ---
         'ipython>=7.0.0',
         'openpyxl>=3.1.5',
         'tqdm>=4.66.5',
+        'xlsxwriter>=3.2.9'
     ],
     python_requires='>=3.6',
 )
