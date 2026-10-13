@@ -87,9 +87,8 @@ def dfsProcessor(complicatedNamePart,
         # print('temporal_exportPath:', temporal_exportPath) # для отладки
         if not os.path.exists(temporal_exportPath):
             os.makedirs(temporal_exportPath)
-            print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" создана''')
-        # else:
-            # print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" существует''')
+            print(f"Директория '{temporal_exportPath}' создана")
+        # else: print(ff"Директория '{temporal_exportPath}' существует")
 
         scrapingTools.containerExport(temporal_exportPath + slash + 'domain.txt', domain if domain else '')
 
@@ -269,8 +268,8 @@ f'''    Скрипт нацелен на выгрузку характерист
     itemS = pandas.DataFrame()
     itemS_additional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
     keyOrder = 0
+    name_in_folderCurrent = None
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    temporalName = None
 
     momentCurrent = datetime.now() # запрос текущего момента
     print('\nТекущий момент:', momentCurrent.strftime('%Y%m%d_%H%M'), '-- он будет использован для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
@@ -282,6 +281,7 @@ f'''    Скрипт нацелен на выгрузку характерист
 # Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
     print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
+    goC = True
     for name_in_folderCurrent in nameS_in_folderCurrent:
         message =\
 f"В текущей директории '{name_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 6-7 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную"
@@ -316,16 +316,19 @@ f"В текущей директории '{name_in_folderCurrent}' есть ди
                     itemS_json = None
                     itemS_xlsx = None
                     for temporalName in temporalNameS:
+                        # print('temporalName:', temporalName) # для отладки
+
                         if temporalName.endswith('.json') and 'VK' in temporalName: itemS_json = pandas.read_json(f'{name_in_folderCurrent}{slash}{temporalName}')
                         if temporalName.endswith('.xlsx') and 'VK' in temporalName: itemS_xlsx = pandas.read_excel(f'{name_in_folderCurrent}{slash}{temporalName}', index_col=0)
                         if itemS_json is not None and itemS_xlsx is not None:
                             itemS = itemS_json.merge(itemS_xlsx, how='outer', on='id')
 # Данные, сохранённые при прошлом запуске скрипта, загружены
+                            goC = False # выход из for name_in_folderCurrent in nameS_in_folderCurrent
                             break # выход из for temporalName in temporalNameS
 
                     if itemS_xlsx is not None and itemS_json is None: itemS = itemS_xlsx.copy() # for temporalName in temporalNameS завершился, но файл itemS_json не импортировался
                     elif itemS_xlsx is None and itemS_json is None:
-                        temporalName = None # флаг, что данные, сохранённые при прошлом запуске скрипта, не найдены
+                        name_in_folderCurrent = None # флаг, что файл с данными, сохранёнными при прошлом запуске скрипта, не найдены
                         print(message)
 
                 elif decision.lower() == 'r':
@@ -333,7 +336,7 @@ f"В текущей директории '{name_in_folderCurrent}' есть ди
                     print('')
            
 # Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
-    if not temporalName: # если itemsTemporal, в т.ч. пустой, не существует
+    if not name_in_folderCurrent: # если itemsTemporal, в т.ч. пустой, не существует
             # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
 
         name_in_folderCurrent = 'No folder'
