@@ -317,8 +317,8 @@ f'''Поскольку исполнение скрипта натолкнуло�
         scrapingTools.containerExport(temporal_exportPath + slash + 'contentType.txt', contentType if contentType else '')
         scrapingTools.containerExport(temporal_exportPath + slash + 'method.txt', method)
         scrapingTools.containerExport(temporal_exportPath + slash + 'q.txt', q if q else '')
-        scrapingTools.containerExport(temporal_exportPath + slash + 'stageTarget.txt', stage) # stage и stageTarget принимает значения [0; 3]
-        scrapingTools.containerExport(temporal_exportPath + slash + 'targetCount.txt', targetCount if targetCount else '0')
+        scrapingTools.containerExport(temporal_exportPath + slash + 'stageTarget.txt', str(stage)) # stage и stageTarget принимает значения [0; 3]
+        scrapingTools.containerExport(temporal_exportPath + slash + 'targetCount.txt', str(targetCount) if targetCount else '0')
         scrapingTools.containerExport(temporal_exportPath + slash + 'year.txt', str(year)) # год, на котором остановилось исполнение скрипта
         scrapingTools.containerExport(temporal_exportPath + slash + 'yearsRange.txt', yearsRange if yearsRange else '')
 
