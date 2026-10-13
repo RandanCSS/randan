@@ -131,29 +131,12 @@ f'''Пакет {module} НЕ удалось импортировать за {att
     if fileFormatChoice == 'json': df.to_json(folder + fileName, force_ascii=False, indent=4, orient='records')
 
 def df2fileShell(complicatedNamePart, df_in, fileFormatChoice, folder, method, momentCurrent):
-    # slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    # folder = momentCurrent + complicatedNamePart
-    # if coLabFolder == None:
-    #     print('Сохраняю выгрузку метода', method, '                              ') #, f'в директорию "{folder}"'
-    #     if os.path.exists(folder) == False:
-    #         print('Такой директории не существовало, поэтому она создана')
-    #         os.makedirs(folder)
-    #     # else:
-    #         # print('Эта директория существует')
-    # else:
-    #     print('Сохраняю выгрузку метода', method, '                              ') #, f'в директорию "{os.getcwd() + slash + coLabFolder + slash + folder}"'
-    #     if os.path.exists(os.getcwd() + slash + coLabFolder + slash + folder) == False:
-    #         print('Такой директории не существовало, поэтому она создана')
-    #         os.makedirs(os.getcwd() + slash + coLabFolder + slash + folder)
-    #     # else:
-    #         # print('Эта директория существует')
-
     # Проверка всех столбцов на наличие в их ячейках JSON-формата
     columnsToJSON = varPreprocessor.jsonChecker(df_in)
+    # print('fileName:', f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal_{method}.{fileFormatChoice}") # для отладки        
+    # print('complicatedNamePart:', complicatedNamePart) # для отладки        
+    # print('folder:', folder) # для отладки
 
-    print('fileName:', f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal_{method}.{fileFormatChoice}") # для отладки        
-    print('complicatedNamePart:', complicatedNamePart) # для отладки        
-    print('folder:', folder) # для отладки
     if len(columnsToJSON) > 0:
         print('В выгрузке метода', method, 'есть столбцы, содержащие внутри своих ячеек JSON-объекты; Excel не поддерживает JSON-формат;'
               , 'чтобы формат JSON не потерялся, сохраняю эти столбцы в файл формата НЕ XLSX, а JSON. Остальные же столбцы сохраняю в файл формата XLSX')
@@ -162,7 +145,7 @@ def df2fileShell(complicatedNamePart, df_in, fileFormatChoice, folder, method, m
         if 'from_id' in df_in.columns: columnsToJSON.append('from_id')
         if 'owner_id' in df_in.columns: columnsToJSON.append('owner_id')
 
-        print('columnsToJSON:', columnsToJSON) # для отладки
+        # print('columnsToJSON:', columnsToJSON) # для отладки
         df2file(df_in[columnsToJSON], f'{folder}_{method}_JSON_varS.json', folder)
         columnsToJSON.remove('id')
         if 'from_id' in columnsToJSON: columnsToJSON.remove('from_id')
