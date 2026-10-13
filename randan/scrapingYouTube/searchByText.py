@@ -149,9 +149,10 @@ def bigSearch(api_keyS,
                                                                              sourceId=channelIdForSearch)
 
             if goC:
+                print(f'Попытка сетевого соединения {attempt_network} из {MAX_ATTEMPTS} НЕуспешна')                
                 attempt_network += 1
                 if attempt_network > MAX_ATTEMPTS:
-                    print('!!! Превышено число сетевых попыток')
+                    print('!!! Превышено число попыток сетевого соединения')
                     goC = False
                     goS = False
 
