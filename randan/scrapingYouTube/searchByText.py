@@ -54,7 +54,7 @@ f'Пакет {module} НЕ прединсталлирован, но он тре�
 
         attempt += 1
 
-# 1 Авторские функции
+# 1 Вспомогательные функции
 # 1.0 для метода search из API YouTube, помогающая работе с ключами
 def bigSearch(api_keyS,
               channelIdForSearch, # согласно документации API YouTube, подать можно лишь один channelId
@@ -86,8 +86,7 @@ def bigSearch(api_keyS,
               videoSyndicated,
               year):
 
-    goC = True
-    goS = True
+    goS = True # чтобы отдать goS
     goToPlayList = False
     itemS_additional = pandas.DataFrame() # принудительная выдача на случай неуспеха request.execute()
 
@@ -167,7 +166,6 @@ def channelProcessor(api_keyS,
                      experiencedMode,
                      fileFormatChoice,
                      folder,
-                     goS,
                      keyOrder,
                      momentCurrent,
                      playlistS,
@@ -182,6 +180,7 @@ def channelProcessor(api_keyS,
 
     channelS = pandas.DataFrame()
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
+    goS = True # чтобы отдать goS
     if len(df_final) > 0: # если использовался search и успешно, id каналов берутся из него
         channelIdS = df_final[df_final['id.kind'] == f'youtube#{snippetContentType}']
         if len(channelIdS) > 0:
@@ -235,23 +234,23 @@ f'''В скрипте используются следующие аргумен
             if 'search' in df_final['kind'].drop_duplicates().iloc[0]: # другими словами, если search использовался, потому что мог не search , а channels сформировать df_final
                 print('-- дополнительных к выруженным методом search')
 
-        channelS = portionsProcessor(api_keyS,
-                                     channelIdForSearch,
-                                     complicatedNamePart,
-                                     contentType, # snippetContentType -- не то же самое, что contentType , т.к. contentType исходно подаётся пользователем
-                                     df_final,
-                                     fileFormatChoice,
-                                     folder,
-                                     idS=channelIdS,
-                                     keyOrder=keyOrder,
-                                     method=method,
-                                     momentCurrent=momentCurrent,
-                                     q=q,
-                                     name_in_folderCurrent=name_in_folderCurrent,
-                                     stage=stage,
-                                     targetCount=targetCount,
-                                     year=year,
-                                     yearsRange=yearsRange)
+        channelS, goS = portionsProcessor(api_keyS,
+                                          channelIdForSearch,
+                                          complicatedNamePart,
+                                          contentType, # snippetContentType -- не то же самое, что contentType , т.к. contentType исходно подаётся пользователем
+                                          df_final,
+                                          fileFormatChoice,
+                                          folder,
+                                          idS=channelIdS,
+                                          keyOrder=keyOrder,
+                                          method=method,
+                                          momentCurrent=momentCurrent,
+                                          q=q,
+                                          name_in_folderCurrent=name_in_folderCurrent,
+                                          stage=stage,
+                                          targetCount=targetCount,
+                                          year=year,
+                                          yearsRange=yearsRange)
 
         if len(channelS) > 0:
             df2file.df2fileShell(complicatedNamePart,
@@ -261,7 +260,7 @@ f'''В скрипте используются следующие аргумен
                                  method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
                                  momentCurrent=momentCurrent)
 
-    return channelS
+    return channelS, goS
 
 # 1.2 для обработки выдачи любого из методов, помогающая работе с ключами
 def dfsProcessor(channelIdForSearch,
@@ -329,14 +328,20 @@ def dfsProcessor(channelIdForSearch,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла  
                              momentCurrent=momentCurrent)
 
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            print(
+'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
+Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
+                        )
 
+            sys.exit()
         print('Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
-
     return df
 
 # 1.3 для выгрузки комментариев
 def downloadComments(api_keyS, keyOrder, method, sourceId):
-    goS = True
+    goS = True # чтобы отдать goS
     commentS = pandas.DataFrame()
     pageToken = None
     problemItemId = None
@@ -365,10 +370,10 @@ def downloadComments(api_keyS, keyOrder, method, sourceId):
 
     return commentS, goS, keyOrder, problemItemId
 
-# 1.4 для обработки ошибок
+# 1.4 для обработки ошибок; все функции, кроме основной, в котоых есть errorProcessor , должны отдавать goS
 def errorProcessor(errorDescription, keyOrder, sourceId):
-    goC = True
-    goS = True
+    goC = True # если исполнение дошло до сюда, значит True
+    goS = True # если исполнение дошло до сюда, значит True
     goToPlayList = False
     problemItemId = sourceId
     # print(errorDescription) # для отладки
@@ -450,7 +455,6 @@ def playListProcessor(api_keyS,
                       experiencedMode,
                       fileFormatChoice,
                       folder,
-                      goS,
                       keyOrder,
                       momentCurrent,
                       playlistIdS,
@@ -462,6 +466,7 @@ def playListProcessor(api_keyS,
                       yearsRange):
 
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
+    goS = True # чтобы отдать goS
     method = 'playlists'
     playlistS = pandas.DataFrame()
     playlistVideoChannelS = pandas.DataFrame()
@@ -481,23 +486,23 @@ f'''В скрипте используются следующие аргумен
             if 'search' in df_final['kind'].drop_duplicates().iloc[0]: # другими словами, если search использовался, потому что мог не search , а channels сформировать df_final
                 print('-- дополнительных к выруженным методом search')
 
-        playlistS = portionsProcessor(api_keyS,
-                                      channelIdForSearch,
-                                      complicatedNamePart,
-                                      contentType,
-                                      df_final,
-                                      fileFormatChoice,
-                                      folder,
-                                      idS=playlistIdS,
-                                      keyOrder=keyOrder,
-                                      method=method,
-                                      momentCurrent=momentCurrent,
-                                      q=q,
-                                      name_in_folderCurrent=name_in_folderCurrent,
-                                      stage=stage,
-                                      targetCount=targetCount,
-                                      year=year,
-                                      yearsRange=yearsRange)
+        playlistS, goS = portionsProcessor(api_keyS,
+                                           channelIdForSearch,
+                                           complicatedNamePart,
+                                           contentType,
+                                           df_final,
+                                           fileFormatChoice,
+                                           folder,
+                                           idS=playlistIdS,
+                                           keyOrder=keyOrder,
+                                           method=method,
+                                           momentCurrent=momentCurrent,
+                                           q=q,
+                                           name_in_folderCurrent=name_in_folderCurrent,
+                                           stage=stage,
+                                           targetCount=targetCount,
+                                           year=year,
+                                           yearsRange=yearsRange)
 
         method = 'playlistItems'
 
@@ -571,7 +576,7 @@ f'''
                                  method='playlists',
                                  momentCurrent=momentCurrent)
 
-    return playlistS, playlistVideoChannelS
+    return goS, playlistS, playlistVideoChannelS
 
 # 1.7 для порционной выгрузки, когда метод предполагает подачу ему id порциями
 def portionsProcessor(api_keyS,
@@ -593,10 +598,11 @@ def portionsProcessor(api_keyS,
                       yearsRange):
 
     # print('method', method) # для отладки
+
     bound = 0
     chplviS = pandas.DataFrame()
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
-    goS = True
+    goS = True # чтобы отдать goS
     iteration = 0 # номер итерации применения текущего метода
     portion = 50
 
@@ -622,7 +628,7 @@ def portionsProcessor(api_keyS,
                     goC = False # выход из while goC
 
                 except:
-                    print('\nОшибка внутри авторской функции portionsProcessor при сборе id плейлистов канала') # для отладки
+                    print('\nОшибка внутри функции portionsProcessor при сборе id плейлистов канала') # для отладки
                     goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(errorDescription=sys.exc_info(),
                                                                                      keyOrder=keyOrder,
                                                                                      sourceId=channelIdForSearch)
@@ -686,7 +692,7 @@ def portionsProcessor(api_keyS,
                 goC = False # если try успешно исполнился, то цикл прекращается
 
             except:
-                print('\nОшибка внутри авторской функции portionsProcessor') # для отладки
+                print('\nОшибка внутри функции portionsProcessor') # для отладки
                 goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(errorDescription=sys.exc_info(),
                                                                                  keyOrder=keyOrder,
                                                                                  sourceId=None)
@@ -697,7 +703,7 @@ def portionsProcessor(api_keyS,
         bound += portion
         # display('chplviS:', chplviS) # для отладки
     print('                                                                                                              ') # затираю последнюю визуализацию
-    return chplviS
+    return chplviS, goS
 
 # 1.6 чтобы избавиться от префиксов в названиях столбцов датафрейма с комментариями
 def prefixDropper(df):
@@ -709,7 +715,7 @@ def prefixDropper(df):
     df.columns = dfNewColumnS # перезаписать названия столбцов
     return df
 
-# 2 Авторская функция исполнения скрипта
+# 2 Основаня функция
 def searchByText(access_token=None,
                  channelIdForSearch=None,
                  contentType=None,
@@ -1134,36 +1140,6 @@ f'''В скрипте используются следующие аргумен
                                                                                                videoType=videoType,
                                                                                                videoSyndicated=videoSyndicated,
                                                                                                year=None)
-
-                if not goS:
-                    itemS = dfsProcessor(channelIdForSearch,
-                                         complicatedNamePart,
-                                         contentType,
-                                         fileFormatChoice,
-                                         df_additional=itemS_additional,
-                                         df_final=itemS,
-                                         df_in=itemS,
-                                         folder=folder,
-                                         goS=goS,
-                                         method=method,
-                                         q=q,
-                                         name_in_folderCurrent=name_in_folderCurrent,
-                                         stage=stage,
-                                         targetCount=targetCount,
-                                         momentCurrent=momentCurrent,
-                                         year=year,
-                                         yearsRange=yearsRange)
-
-                    # display('itemS', itemS) # для отладки
-                    if returnDfs: return itemS, playlistS, videoS, commentReplieS, channelS
-                    with warnings.catch_warnings():
-                        warnings.simplefilter('ignore')
-                        print(
-'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
-Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
-                        )
-
-                        sys.exit()
 
                 targetCount = response['pageInfo']['totalResults']
                 if not goToPlayList:
@@ -1677,71 +1653,68 @@ f'''
                     playlistIdS =\
                         playlistIdS[f'id.{snippetContentType}Id'].to_list() if f'id.{snippetContentType}Id' in playlistIdS.columns else playlistIdS['id'].to_list()
 
-                    playlistS, playlistVideoChannelS = playListProcessor(api_keyS,
-                                                                         channelIdForSearch,
-                                                                         complicatedNamePart,
-                                                                         contentType,
-                                                                         df_final=itemS,
-                                                                         experiencedMode=experiencedMode,
-                                                                         fileFormatChoice=fileFormatChoice,
-                                                                         folder=folder,
-                                                                         goS=goS,
-                                                                         keyOrder=keyOrder,
-                                                                         momentCurrent=momentCurrent,
-                                                                         playlistIdS=playlistIdS,
-                                                                         q=q,
-                                                                         name_in_folderCurrent=name_in_folderCurrent,
-                                                                         stage=stage,
-                                                                         targetCount=targetCount,
-                                                                         year=year,
-                                                                         yearsRange=yearsRange)
+                    goS, playlistS, playlistVideoChannelS = playListProcessor(api_keyS,
+                                                                              channelIdForSearch,
+                                                                              complicatedNamePart,
+                                                                              contentType,
+                                                                              df_final=itemS,
+                                                                              experiencedMode=experiencedMode,
+                                                                              fileFormatChoice=fileFormatChoice,
+                                                                              folder=folder,
+                                                                              keyOrder=keyOrder,
+                                                                              momentCurrent=momentCurrent,
+                                                                              playlistIdS=playlistIdS,
+                                                                              q=q,
+                                                                              name_in_folderCurrent=name_in_folderCurrent,
+                                                                              stage=stage,
+                                                                              targetCount=targetCount,
+                                                                              year=year,
+                                                                              yearsRange=yearsRange)
 
             elif goToPlayList:
                 playlistIdS = [channelIdForSearch] # поскольку подан id не канала, а плейлиста, этот id передатся из одного контейнера в другой
                 channelIdForSearch = None
-                playlistS, playlistVideoChannelS = playListProcessor(api_keyS,
-                                                                     channelIdForSearch,
-                                                                     complicatedNamePart=complicatedNamePart,
-                                                                     contentType=contentType,
-                                                                     df_final=channelS, # т.к. в отсутствие itemS channelS становится базовым датафреймом
-                                                                     experiencedMode=experiencedMode,
-                                                                     fileFormatChoice=fileFormatChoice,
-                                                                     folder=folder,
-                                                                     goS=goS,
-                                                                     keyOrder=keyOrder,
-                                                                     momentCurrent=momentCurrent,
-                                                                     playlistIdS=playlistIdS,
-                                                                     q=q,
-                                                                     name_in_folderCurrent=name_in_folderCurrent,
-                                                                     stage=stage,
-                                                                     targetCount=targetCount,
-                                                                     year=year,
-                                                                     yearsRange=yearsRange)
+                goS, playlistS, playlistVideoChannelS = playListProcessor(api_keyS,
+                                                                          channelIdForSearch,
+                                                                          complicatedNamePart=complicatedNamePart,
+                                                                          contentType=contentType,
+                                                                          df_final=channelS, # т.к. в отсутствие itemS channelS становится базовым датафреймом
+                                                                          experiencedMode=experiencedMode,
+                                                                          fileFormatChoice=fileFormatChoice,
+                                                                          folder=folder,
+                                                                          keyOrder=keyOrder,
+                                                                          momentCurrent=momentCurrent,
+                                                                          playlistIdS=playlistIdS,
+                                                                          q=q,
+                                                                          name_in_folderCurrent=name_in_folderCurrent,
+                                                                          stage=stage,
+                                                                          targetCount=targetCount,
+                                                                          year=year,
+                                                                          yearsRange=yearsRange)
 
                 # print('playlistIdS:', playlistIdS) # для отладки   
 
         else: # в противном случае используется не search, а channels + playlists
                 # то есть пользователь подал id канала или плейлиста и, следоватлеьно, НЕ использовался search
-            channelS = channelProcessor(api_keyS,
-                                        channelIdForSearch,
-                                        complicatedNamePart,
-                                        contentType,
-                                        df_final=itemS,
-                                        experiencedMode=experiencedMode,
-                                        fileFormatChoice=fileFormatChoice,
-                                        folder=folder,
-                                        goS=goS,
-                                        keyOrder=keyOrder,
-                                        momentCurrent=momentCurrent,
-                                        playlistS=playlistS,
-                                        q=q,
-                                        name_in_folderCurrent=name_in_folderCurrent,
-                                        snippetContentType='channel',
-                                        stage=stage,
-                                        targetCount=targetCount,
-                                        year=year,
-                                        yearsRange=yearsRange,
-                                        videoS=videoS)
+            channelS, goS = channelProcessor(api_keyS,
+                                             channelIdForSearch,
+                                             complicatedNamePart,
+                                             contentType,
+                                             df_final=itemS,
+                                             experiencedMode=experiencedMode,
+                                             fileFormatChoice=fileFormatChoice,
+                                             folder=folder,
+                                             keyOrder=keyOrder,
+                                             momentCurrent=momentCurrent,
+                                             playlistS=playlistS,
+                                             q=q,
+                                             name_in_folderCurrent=name_in_folderCurrent,
+                                             snippetContentType='channel',
+                                             stage=stage,
+                                             targetCount=targetCount,
+                                             year=year,
+                                             yearsRange=yearsRange,
+                                             videoS=videoS)
 
             # display('channelS:', channelS) # для отладки
 
@@ -1750,24 +1723,23 @@ f'''
                 playlistIdS = [channelIdForSearch]
                 channelIdForSearch = None
 
-            playlistS, playlistVideoChannelS = playListProcessor(api_keyS,
-                                                                 channelIdForSearch,
-                                                                 complicatedNamePart,
-                                                                 contentType,
-                                                                 df_final=channelS, # т.к. в отсутствие itemS channelS становится базовым датафреймом !!!
-                                                                 experiencedMode=experiencedMode,
-                                                                 fileFormatChoice=fileFormatChoice,
-                                                                 folder=folder,
-                                                                 goS=goS,
-                                                                 keyOrder=keyOrder,
-                                                                 momentCurrent=momentCurrent,
-                                                                 playlistIdS=playlistIdS,
-                                                                 q=q,
-                                                                 name_in_folderCurrent=name_in_folderCurrent,
-                                                                 stage=stage,
-                                                                 targetCount=targetCount,
-                                                                 year=year,
-                                                                 yearsRange=yearsRange)
+            goS, playlistS, playlistVideoChannelS = playListProcessor(api_keyS,
+                                                                      channelIdForSearch,
+                                                                      complicatedNamePart,
+                                                                      contentType,
+                                                                      df_final=channelS, # т.к. в отсутствие itemS channelS становится базовым датафреймом !!!
+                                                                      experiencedMode=experiencedMode,
+                                                                      fileFormatChoice=fileFormatChoice,
+                                                                      folder=folder,
+                                                                      keyOrder=keyOrder,
+                                                                      momentCurrent=momentCurrent,
+                                                                      playlistIdS=playlistIdS,
+                                                                      q=q,
+                                                                      name_in_folderCurrent=name_in_folderCurrent,
+                                                                      stage=stage,
+                                                                      targetCount=targetCount,
+                                                                      year=year,
+                                                                      yearsRange=yearsRange)
 
         # print('playlistIdS:', playlistIdS) # для отладки
 
@@ -1816,23 +1788,23 @@ f'''В скрипте используются следующие аргумен
             print(f'''Проход по видео{' порциями по 50 штук' if len(videoIdS) > 50 else ''} для выгрузки их характеристик''')
             if len(itemS) > 0: print('-- дополнительных к выруженным методом search')
 
-            videoS = portionsProcessor(api_keyS,
-                                       channelIdForSearch,
-                                       complicatedNamePart,
-                                       contentType,
-                                       df_final=itemS,
-                                       fileFormatChoice=fileFormatChoice,
-                                       folder=folder,
-                                       idS=videoIdS,
-                                       keyOrder=keyOrder,
-                                       method=method,
-                                       momentCurrent=momentCurrent,
-                                       q=q,
-                                       name_in_folderCurrent=name_in_folderCurrent,
-                                       stage=stage,
-                                       targetCount=targetCount,
-                                       year=year,
-                                       yearsRange=yearsRange)
+            videoS, goS = portionsProcessor(api_keyS,
+                                            channelIdForSearch,
+                                            complicatedNamePart,
+                                            contentType,
+                                            df_final=itemS,
+                                            fileFormatChoice=fileFormatChoice,
+                                            folder=folder,
+                                            idS=videoIdS,
+                                            keyOrder=keyOrder,
+                                            method=method,
+                                            momentCurrent=momentCurrent,
+                                            q=q,
+                                            name_in_folderCurrent=name_in_folderCurrent,
+                                            stage=stage,
+                                            targetCount=targetCount,
+                                            year=year,
+                                            yearsRange=yearsRange)
 
 # ********** categoryId
             # Взять столбец snippet.categoryId, удалить из него дубликаты кодов категорий и помеcтить уникальные коды в список
@@ -2078,26 +2050,25 @@ f'''
         if len(itemS) > 0: # если использовался search..
             snippetContentType = 'channel'
             if sum(itemS['id.kind'].str.split('#').str[-1] == snippetContentType) > 0: # .. и в его выдаче есть каналы
-                channelS = channelProcessor(api_keyS,
-                                            channelIdForSearch,
-                                            complicatedNamePart,
-                                            contentType,
-                                            df_final=itemS,
-                                            experiencedMode=experiencedMode,
-                                            fileFormatChoice=fileFormatChoice,
-                                            folder=folder,
-                                            goS=goS,
-                                            keyOrder=keyOrder,
-                                            momentCurrent=momentCurrent,
-                                            playlistS=playlistS,
-                                            q=q,
-                                            name_in_folderCurrent=name_in_folderCurrent,
-                                            snippetContentType='channel',
-                                            stage=stage,
-                                            targetCount=targetCount,
-                                            year=year,
-                                            yearsRange=yearsRange,
-                                            videoS=videoS)
+                channelS, goS = channelProcessor(api_keyS,
+                                                 channelIdForSearch,
+                                                 complicatedNamePart,
+                                                 contentType,
+                                                 df_final=itemS,
+                                                 experiencedMode=experiencedMode,
+                                                 fileFormatChoice=fileFormatChoice,
+                                                 folder=folder,
+                                                 keyOrder=keyOrder,
+                                                 momentCurrent=momentCurrent,
+                                                 playlistS=playlistS,
+                                                 q=q,
+                                                 name_in_folderCurrent=name_in_folderCurrent,
+                                                 snippetContentType='channel',
+                                                 stage=stage,
+                                                 targetCount=targetCount,
+                                                 year=year,
+                                                 yearsRange=yearsRange,
+                                                 videoS=videoS)
 
 # 2.2.5 Экспорт выгрузки метода search и финальное завершение скрипта
         print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
