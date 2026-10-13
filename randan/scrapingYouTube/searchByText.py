@@ -307,9 +307,10 @@ f'''Поскольку исполнение скрипта натолкнуло�
               )
 
         temporal_exportPath = folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"
+        print('temporal_exportPath:', temporal_exportPath) # для отладки
         if not os.path.exists(temporal_exportPath):
             os.makedirs(temporal_exportPath)
-            print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" создана''')
+            print(f"Директория '{temporal_exportPath}' создана")
         # else:
             # print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" существует''')
 
@@ -399,7 +400,7 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
 
     elif 'index out of range' in str(errorDescription[1]):
         print('!!! Похоже, ключи закончились. Что делать? (а) Подождите сутки для восстановления ключей или',
-              '(б) подготовьте новый ключ, найдите и удадите файл credentialsYouTube.txt -- и запустите скрипт с начала')
+              '(б) подготовьте новый ключ, найдите и удалите файл credentialsYouTube.txt -- и запустите скрипт с начала')
         goS = False # нет смысла продолжать исполнение скрипта
         goC = False # и, следовательно, нет смысла в новых итерациях цикла (вовне этой функции)
 
@@ -1822,8 +1823,8 @@ f'''В скрипте используются следующие аргумен
                                        channelIdForSearch,
                                        complicatedNamePart,
                                        contentType,
-                                       fileFormatChoice,
                                        df_final=itemS,
+                                       fileFormatChoice=fileFormatChoice,
                                        folder=folder,
                                        idS=videoIdS,
                                        keyOrder=keyOrder,
