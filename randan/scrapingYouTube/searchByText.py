@@ -94,8 +94,9 @@ def bigSearch(api_keyS,
                 'pageInfo': {'totalResults': 0, 'resultsPerPage': 0},
                 'items': []} # принудительная выдача на случай неуспеха request.execute()
 
-    MAX_ATTEMPTS = 3
     attempt_network = 1
+    goS = True
+    MAX_ATTEMPTS = 3
     while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
         try:
             youtube = api.build('youtube', 'v3', developerKey=api_keyS[keyOrder])
