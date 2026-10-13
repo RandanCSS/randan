@@ -309,8 +309,7 @@ def dfsProcessor(channelIdForSearch,
         if not os.path.exists(temporal_exportPath):
             os.makedirs(temporal_exportPath)
             print(f"Директория '{temporal_exportPath}' создана")
-        # else:
-            # print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" существует''')
+        # else: print(ff"Директория '{temporal_exportPath}' существует")
 
         scrapingTools.containerExport(temporal_exportPath + slash + 'channelIdForSearch.txt', channelIdForSearch if channelIdForSearch else '')
         scrapingTools.containerExport(temporal_exportPath + slash + 'contentType.txt', contentType if contentType else '')
@@ -322,7 +321,9 @@ def dfsProcessor(channelIdForSearch,
         scrapingTools.containerExport(temporal_exportPath + slash + 'yearsRange.txt', yearsRange if yearsRange else '')
 
         # print('method:', method) # для отладки
-        df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
+        df2file.df2fileShell(complicatedNamePart=complicatedNamePart if complicatedNamePart.endswith('_Temporal') else complicatedNamePart + '_Temporal',
+                                 # если импортирован файл с данными из _Temporal , то не надо ещё раз добавлять этот постфикс
+
                              df_in=df_final,
                              fileFormatChoice=fileFormatChoice,
                              folder=temporal_exportPath,
