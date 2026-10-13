@@ -814,12 +814,12 @@ videoPaidProductPlacement : str
     goToPlayList = False
     itemS = pandas.DataFrame(columns=['id.kind']) # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     keyOrder = 0
+    name_in_folderCurrent = None
     playlistVideoChannelS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     playlistS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     stageTarget = 0 # stageTarget принимает значения [0; 3] и относится к стадиям скрипта
     targetCount = 0
-    temporalName = None
     videoS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     yearsRange = None
 
@@ -837,9 +837,11 @@ videoPaidProductPlacement : str
 # 2.0.2 Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
     print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
+    goC = True
     for name_in_folderCurrent in nameS_in_folderCurrent:
+        if not goC: break
         message =\
-f"В текущей директории '{name_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 6-7 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную"
+f"В текущей директории '{name_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 9-10 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную"
 
         if name_in_folderCurrent.endswith('Temporal') and 'YouTube' in name_in_folderCurrent:
             if len(os.listdir(name_in_folderCurrent)) < 9: print(message) # допустимо 9 или 10 файлов
@@ -903,17 +905,18 @@ f"В текущей директории '{name_in_folderCurrent}' есть ди
                     itemS_json = None
                     itemS_xlsx = None
                     for temporalName in temporalNameS:
-                        print('temporalName:', temporalName) # для отладки                        
+                        # print('temporalName:', temporalName) # для отладки
+
                         if temporalName.endswith('.json') and 'VK' in temporalName: itemS_json = pandas.read_json(f'{name_in_folderCurrent}{slash}{temporalName}')
                         if temporalName.endswith('.xlsx') and 'VK' in temporalName: itemS_xlsx = pandas.read_excel(f'{name_in_folderCurrent}{slash}{temporalName}', index_col=0)
                         if itemS_json is not None and itemS_xlsx is not None:
                             itemS = itemS_json.merge(itemS_xlsx, how='outer', on='id')
 # Данные, сохранённые при прошлом запуске скрипта, загружены
-                            break # выход из for temporalName in temporalNameS
+                            goC = False # выход из for name_in_folderCurrent in nameS_in_folderCurrent
 
                     if itemS_xlsx is not None and itemS_json is None: itemS = itemS_xlsx.copy() # for temporalName in temporalNameS завершился, но файл itemS_json не импортировался
                     elif itemS_xlsx is None and itemS_json is None:
-                        temporalName = None # флаг, что данные, сохранённые при прошлом запуске скрипта, не найдены
+                        name_in_folderCurrent = None # флаг, что файл с данными, сохранёнными при прошлом запуске скрипта, не найдены
                         print(message)
 
                     if yearsRange:
@@ -926,7 +929,7 @@ f"В текущей директории '{name_in_folderCurrent}' есть ди
                     print('')
 
 # 2.0.3 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
-    if not temporalName: # если itemsTemporal, в т.ч. пустой, не существует
+    if not name_in_folderCurrent: # если itemsTemporal, в т.ч. пустой, не существует
             # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
         name_in_folderCurrent = 'No folder'
         print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
