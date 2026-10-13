@@ -52,7 +52,7 @@ def df2file(df, *arg): # арки: fileName и folder
         folder = arg[1]
         if not folder.endswith(('\\', '/')): folder += slash
 
-    print('fileName:', f'{folder}_{method}_Other_varS.{fileFormatChoice}') # для отладки        
+    print('fileName:', fileName) # для отладки        
     print('folder:', folder) # для отладки
 
     if not fileName:
