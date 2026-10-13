@@ -58,7 +58,7 @@ def coLabAdaptor():
 
     return folderCoLab
 
-@colorizer.red_prints
+@colorizer.gray_prints
 def folderCoLab_folderIn_comparison(folder):
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     if not folder:
