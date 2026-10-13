@@ -321,6 +321,7 @@ def dfsProcessor(channelIdForSearch,
         scrapingTools.containerExport(temporal_exportPath + slash + 'year.txt', str(year)) # год, на котором остановилось исполнение скрипта
         scrapingTools.containerExport(temporal_exportPath + slash + 'yearsRange.txt', yearsRange if yearsRange else '')
 
+        print('method:', method) # для отладки
         df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
                              currentMoment=momentCurrent.strftime('%Y%m%d'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
                              df_in=df_final,
