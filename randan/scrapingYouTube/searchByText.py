@@ -848,8 +848,9 @@ videoPaidProductPlacement : str
     print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
     for name_in_folderCurrent in nameS_in_folderCurrent:
         if name_in_folderCurrent.endswith('Temporal') and 'YouTube' in name_in_folderCurrent:
-            if len(os.listdir(folder + name_in_folderCurrent)) < 9: print(
-f"В директории '{older + name_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 9-10 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 9 или 10 файлов
+            name_in_folderCurrent = folder + name_in_folderCurrent # имя файла достраивается до абсолютного пути
+            if len(os.listdir(name_in_folderCurrent)) < 9: print(
+f"В директории '{name_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 9-10 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 9 или 10 файлов
             else:
                 targetCountTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'targetCount.txt', int)
                 methodTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'method.txt', str)
@@ -915,7 +916,7 @@ f"Директорию '{name_in_folderCurrent}' пропустил, продо�
                         yearsRange = yearsRange.split('-')
                         yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
 
-                    temporalNameS = os.listdir(older + name_in_folderCurrent)
+                    temporalNameS = os.listdir(folder + name_in_folderCurrent)
                     itemS_json = None
                     itemS_xlsx = None
                     for temporalName in temporalNameS:
@@ -925,12 +926,12 @@ f"Директорию '{name_in_folderCurrent}' пропустил, продо�
 
                     if itemS_json is not None and itemS_xlsx is not None:
                         itemS = itemS_json.merge(itemS_xlsx, how='outer', on='id')
-                        folderWithTemporal = folder + name_in_folderCurrent
+                        folderWithTemporal = name_in_folderCurrent
                         break # выход из for name_in_folderCurrent in nameS_in_folderCurrent
 
                     elif itemS_json is None and itemS_xlsx is not None:
                         itemS = itemS_xlsx.copy() # for temporalName in temporalNameS завершился, но файл itemS_json не импортировался
-                        folderWithTemporal = folder + name_in_folderCurrent
+                        folderWithTemporal = name_in_folderCurrent
                         break # выход из for name_in_folderCurrent in nameS_in_folderCurrent
 
                     # -- данные, сохранённые при прошлом запуске скрипта, загружены и цикл for name_in_folderCurrent in nameS_in_folderCurrent завершн
