@@ -5,7 +5,7 @@ name = "randan"
 version = "1.5.18"
 slash = '\\' if os.name == 'nt' else '/'  # выбор слэша в зависимости от ОС
 
-folderS = []
+if not os.path.isdir(name): folderS = []
 for item in os.listdir(name):
     if '.' not in item:
         folderS.append(item)
@@ -16,17 +16,18 @@ for folder in folderS:
         folderFileS.append(folder + '/' + file)
 
 setup(
-    name=name,
-    version=version,
     author="Aleksei Rotmistrov, Svetlana Zhuchkova",
     author_email="alexey.n.rotmistrov@gmail.com, lana_lob@mail.ru",
-    package_data={'randan': folderFileS},
-    url="https://github.com/RandanCSS/randan",
-    license="MIT",
     description="A python package for gaining social and financial data and their analysis",
-    long_description=open('README.markdown').read() if os.path.exists("README.markdown") else "",
     download_url=f'https://github.com/RandanCSS/randan/archive/refs/tags/v{version}.tar.gz',
     keywords=["data", "analysis", "spss", "youtube"],
+    license="MIT",
+    long_description=open('README.markdown').read() if os.path.exists("README.markdown") else "",
+    name=name,
+    package_data={'randan': folderFileS},
+    packages=find_packages(include=[name, f'{name}.*']),
+    url="https://github.com/RandanCSS/randan",
+    version=version,
 
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -50,7 +51,7 @@ setup(
         'google-api-python-client>=2.154.0',
         'googledrivedownloader>=0.4',
         'grpcio-tools>=1.80.0',
-        'protobuf>=7.34.0',
+        'protobuf>=5.29.1',
 
         # --- статистика и анализ данных ---
         'factor_analyzer>=0.5.1',
@@ -71,5 +72,5 @@ setup(
         'tqdm>=4.66.5',
         'xlsxwriter>=3.2.9'
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.9',
 )
