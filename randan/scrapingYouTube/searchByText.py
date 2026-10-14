@@ -432,7 +432,7 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
         or 'Connection reset' in str(errorDescription[1]) \
         or 'TimeoutError' in str(errorDescription[0]):
 
-        print('!!! Похоже, проблема с сетью или слишком высокая частота запросов; засыпаю на 10 секунд\n')
+        print("!!! Похоже, проблема с сетью (в т.ч. из-за региональных ограничений; 'КВН') или слишком высокая частота запросов; засыпаю на 10 секунд\n")
         time.sleep(10)
 
     else:
@@ -2152,3 +2152,23 @@ f'''
 # python
 #         commentS = pandas.concat([commentS, pandas.json_normalize(response['items'])])
 # Если ошибка произошла на первом же запросе, переменная response может быть не определена. Это приведёт к UnboundLocalError. Раньше при такой ошибке цикл зацикливался, что тоже плохо. Правильнее было бы при goC == False не пытаться использовать response, а прервать внешний цикл или пропустить текущий sourceId. Но это отдельная доработка.
+
+# --- Тест в CoLab ---
+# # 1. Скопировать пакет в /content
+# !cp -r /usr/local/lib/python3.13/dist-packages/randan /content/randan
+
+# # 2. Удалить установленную версию, чтобы не перебивала
+# !pip uninstall -y randan
+
+# # 3. Перезапустить рантайм (важно!), потом:
+# import sys
+# sys.path.insert(0, '/content')
+
+# import randan
+# print(randan.__file__)   # → /content/randan/__init__.py
+
+# # !pip install randan
+# from randan.scrapingYouTube import searchByText
+
+# # Launches a step-by-step dialog. Press Enter to proceed with default values.
+# itemS, playlistS, videoS, commentReplieS, channelS = searchByText.searchByText(returnDfs=True)
