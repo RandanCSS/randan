@@ -302,7 +302,8 @@ def dfsProcessor(channelIdForSearch,
 
         # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck) # для отладки
 
-        df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True) # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
+        if columnsForCheck: # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
+            df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
 
 # Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
     if not goS:
@@ -348,15 +349,19 @@ def dfsProcessor(channelIdForSearch,
     return df
 
 # 1.3 для выгрузки комментариев
-def downloadComments(api_keyS, keyOrder, method, sourceId, version_api):
+def downloadComments(api_keyS, keyOrder, method, sourceId, textFormat, version_api):
     goS = True # чтобы отдать goS
     commentS = pandas.DataFrame()
     pageToken = None
     problemItemId = None
-    youtube = api.build('youtube', version_api, developerKey=api_keyS[keyOrder])
     while True: # прерывается командой break при отсутствии nextPageToken
         goC = True
+        response = {'kind': 'youtube#searchListResponse',
+            'pageInfo': {'totalResults': 0, 'resultsPerPage': 0},
+            'items': []} # принудительная выдача на случай неуспеха request.execute()
+
         while goC: # цикл позволяет возвращяться со следующим keyOrder к прежнему id при истечении квоты текущего ключа
+            youtube = api.build('youtube', version_api, developerKey=api_keyS[keyOrder], textFormat=textFormat)
             try:
                 if method == 'comments':
                     response = youtube.comments().list(part='id, snippet', parentId=sourceId, maxResults=100, pageToken=pageToken).execute()
@@ -370,11 +375,12 @@ def downloadComments(api_keyS, keyOrder, method, sourceId, version_api):
                 print('Exception в downloadComments') # для отладки
                 goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(errorDescription=sys.exc_info(), keyOrder=keyOrder, sourceId=sourceId)
 
+        if not goC: break # выход из while True
         commentS = pandas.concat([commentS, pandas.json_normalize(response['items'])])
         if 'nextPageToken' in response.keys():
             pageToken = response['nextPageToken']
             # print('nextPageToken', pageToken) # для отладки
-        else: break
+        else: break # выход из while True
 
     return commentS, goS, keyOrder, problemItemId
 
@@ -443,13 +449,13 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
 
 # 1.5 для визуализации процесса через итерации
 def iterationVisualization(idS, iteration, portion, response):
-    if len(idS) > 0: iterationUpperBound = int(str(len(idS) / portion).split('.')[0]) + 1 # дробная часть после деления числа idS должна увеличить iterationUpperBound на единицу
+    if idS is not None and len(idS) > 0: iterationUpperBound = int(str(len(idS) / portion).split('.')[0]) + 1 # дробная часть после деления числа idS должна увеличить iterationUpperBound на единицу
     if 'items' not in response.keys():
         print("!!! Похоже, подан id не канала, а плейлиста, поэтому подаю пустой список в качестве значения словарного ключа 'items'")
         response['items'] = []
 
     print(
-f'''  Порция № {iteration + 1}{f' из {iterationUpperBound}' if len(idS) > 0 else ''}.{f" Сколько в порции наблюдений? {len(response['items'])}" if len(idS) > 0 else ''}          ''', end='\r'
+f'''  Порция № {iteration + 1}{f' из {iterationUpperBound}' if idS is not None and len(idS) > 0 else ''}.{f" Сколько в порции наблюдений? {len(response['items'])}" if idS is not None and len(idS) > 0 else ''}          ''', end='\r'
           )
 
 # 1.6 для обработки выдачи методов playlists и playlistItems, помогающая работе с ключами
@@ -570,7 +576,7 @@ f'''
         for playlistId in playlistIdS:
             for column in ['snippet.resourceId.videoId', 'snippet.videoOwnerChannelId']:
                 playlistVideoChannelS_snippet = playlistVideoChannelS[playlistVideoChannelS[column].notna()]
-                playlistS.loc[playlistS[playlistS['id'] == playlistId].index[0], column] =\
+                if playlistId in playlistS['id'].values: playlistS.loc[playlistS[playlistS['id'] == playlistId].index[0], column] =\
                     ', '.join(playlistVideoChannelS_snippet[playlistVideoChannelS_snippet['snippet.playlistId'] == playlistId][column].to_list())
         # display(playlistS)
 
@@ -660,14 +666,14 @@ def portionsProcessor(api_keyS,
                                                        maxResults=50).execute()
 
                 if method == 'playlists':
-                    if channelIdForSearch: # если НЕ использовался search (то есть пользователь подал id канала)
-                        response = youtube.playlists().list(part='snippet, contentDetails, localizations, status',
-                                                            channelId=channelIdForSearch,
-                                                            maxResults=50).execute()
+                    # if channelIdForSearch: # если НЕ использовался search (то есть пользователь подал id канала)
+                    #     response = youtube.playlists().list(part='snippet, contentDetails, localizations, status',
+                    #                                         channelId=channelIdForSearch,
+                    #                                         maxResults=50).execute()
 
-                        idS.extend(pandas.json_normalize(response['items'])['id'].tolist())
+                    #     idS.extend(pandas.json_normalize(response['items'])['id'].tolist())
 
-                    # print('playlistIdS:', idS) # для отладки
+                    # # print('playlistIdS:', idS) # для отладки
                     response = youtube.playlists().list(part='snippet, contentDetails, localizations, status',
                                                         id=idS[bound:bound + portion],
                                                         maxResults=50).execute()
@@ -702,7 +708,7 @@ def portionsProcessor(api_keyS,
                 print('\nОшибка внутри функции portionsProcessor') # для отладки
                 goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(errorDescription=sys.exc_info(),
                                                                                  keyOrder=keyOrder,
-                                                                                 sourceId=None)
+                                                                                 sourceId=idS[bound])
 
         # print('len(idS):', len(idS)) # для отладки
         iterationVisualization(idS, iteration, portion, response) # для визуализации процесса через итерации
@@ -817,12 +823,13 @@ videoPaidProductPlacement : str
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     # print('folder:', folder) # для отладки
     folderFile = None
+    folder_in_folderCurrent = None
     folderWithTemporal = None
     goS = True
     goToPlayList = False
     itemS = pandas.DataFrame(columns=['id.kind']) # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     keyOrder = 0
-    name_in_folderCurrent = None
+    # name_in_folderCurrent = None
     playlistVideoChannelS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     playlistS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
@@ -848,36 +855,36 @@ videoPaidProductPlacement : str
     print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
     for name_in_folderCurrent in nameS_in_folderCurrent:
         if name_in_folderCurrent.endswith('Temporal') and 'YouTube' in name_in_folderCurrent:
-            name_in_folderCurrent = folder + name_in_folderCurrent # имя файла достраивается до абсолютного пути
-            if len(os.listdir(name_in_folderCurrent)) < 9: print(
-f"В директории '{name_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 9-10 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 9 или 10 файлов
+            folder_in_folderCurrent = folder + name_in_folderCurrent # имя файла достраивается до абсолютного пути
+            if len(os.listdir(folder_in_folderCurrent)) < 9: print(
+f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 9-10 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 9 или 10 файлов
             else:
-                targetCountTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'targetCount.txt', int)
-                methodTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'method.txt', str)
-                yearTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'year.txt', int)
+                targetCountTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'targetCount.txt', int)
+                methodTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'method.txt', str)
+                yearTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'year.txt', int)
 
-                contentTypeTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'contentType.txt', str)
+                contentTypeTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'contentType.txt', str)
                 if contentTypeTemporal == '': contentTypeTemporal = None # для единообразия
 
-                channelIdForSearchTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'channelIdForSearch.txt', str)
+                channelIdForSearchTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'channelIdForSearch.txt', str)
                 if channelIdForSearchTemporal == '': channelIdForSearchTemporal = None # для единообразия
 
-                try: qTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'q.txt', str)
+                try: qTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'q.txt', str)
                 except Exception as excptn:
                     print('Exception в searchByText') # для отладки
                     print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
                     print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
-                    qTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'q.txt', str)
+                    qTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'q.txt', str)
 
                 if qTemporal == '': qTemporal = None # для единообразия
 
-                yearsRangeTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'yearsRange.txt', str)
+                yearsRangeTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'yearsRange.txt', str)
                 if yearsRangeTemporal == '': yearsRangeTemporal = None # для единообразия
 
-                stageTargetTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'stageTarget.txt', int)
+                stageTargetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'stageTarget.txt', int)
                 stageTargetTemporal = int(stageTargetTemporal)
 
-                print(f"Нашёл директорию '{name_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:",
+                print(f"Нашёл директорию '{folder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:",
                       '\n- было выявлено целевое число записей (totalResults)', targetCountTemporal,
                       '\n- скрипт остановился на методе', methodTemporal)
 
@@ -896,12 +903,12 @@ f"В директории '{name_in_folderCurrent}' есть директори�
 
                 decision = input()
                 if decision.lower() == 'r':
-                    shutil.rmtree(folderWithTemporal, ignore_errors=True)
+                    shutil.rmtree(folder_in_folderCurrent, ignore_errors=True)
                     print(
-f"Директорию '{name_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
+f"Директорию '{folder_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
                 elif decision: print(
-f"Директорию '{name_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
+f"Директорию '{folder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
                 elif not decision: # Temporal-значения обретают статус постоянных и будут использоваться при исполнении скрипта
                     targetCount = targetCountTemporal
@@ -916,29 +923,29 @@ f"Директорию '{name_in_folderCurrent}' пропустил, продо�
                         yearsRange = yearsRange.split('-')
                         yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
 
-                    temporalNameS = os.listdir(name_in_folderCurrent)
+                    temporalNameS = os.listdir(folder_in_folderCurrent)
                     itemS_json = None
                     itemS_xlsx = None
                     for temporalName in temporalNameS:
                         # print('temporalName:', temporalName) # для отладки
-                        if temporalName.endswith('.json') and 'YouTube' in temporalName: itemS_json = pandas.read_json(f'{name_in_folderCurrent}{slash}{temporalName}')
-                        if temporalName.endswith('.xlsx') and 'YouTube' in temporalName: itemS_xlsx = pandas.read_excel(f'{name_in_folderCurrent}{slash}{temporalName}', index_col=0)
+                        if temporalName.endswith('.json') and 'YouTube' in temporalName: itemS_json = pandas.read_json(f'{folder_in_folderCurrent}{slash}{temporalName}')
+                        if temporalName.endswith('.xlsx') and 'YouTube' in temporalName: itemS_xlsx = pandas.read_excel(f'{folder_in_folderCurrent}{slash}{temporalName}', index_col=0)
 
                     if itemS_json is not None and itemS_xlsx is not None:
                         itemS = itemS_json.merge(itemS_xlsx, how='outer', on='id')
-                        folderWithTemporal = name_in_folderCurrent
-                        break # выход из for name_in_folderCurrent in nameS_in_folderCurrent
+                        folderWithTemporal = folder_in_folderCurrent
+                        break # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
 
                     elif itemS_json is None and itemS_xlsx is not None:
                         itemS = itemS_xlsx.copy() # for temporalName in temporalNameS завершился, но файл itemS_json не импортировался
-                        folderWithTemporal = name_in_folderCurrent
-                        break # выход из for name_in_folderCurrent in nameS_in_folderCurrent
+                        folderWithTemporal = folder_in_folderCurrent
+                        break # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
 
                     # -- данные, сохранённые при прошлом запуске скрипта, загружены и цикл for name_in_folderCurrent in nameS_in_folderCurrent завершн
 
                     elif itemS_xlsx is None and itemS_json is None:
                         print(
-f"СТРАННО: хотя директория '{name_in_folderCurrent}' похожа на искомую Temporal , но в ней ни одного файла с данными, сохранёнными при прошлом запуске скрипта, не найдено; рекомендую Вам удалить её вручную, а я продолжаю поиск")
+f"СТРАННО: хотя директория '{folder_in_folderCurrent}' похожа на искомую Temporal , но в ней ни одного файла с данными, сохранёнными при прошлом запуске скрипта, не найдено; рекомендую Вам удалить её вручную, а я продолжаю поиск")
 
     if not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
         print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
@@ -1086,7 +1093,7 @@ f"СТРАННО: хотя директория '{name_in_folderCurrent}' пох
             year = yearMaxByUser
 
         if yearMinByUser and not yearMaxByUser: yearMaxByUser = int(momentCurrent.strftime('%Y')) # в случае отсутствия пользовательской верхней временнОй границы при наличии нижней
-        elif not yearMinByUser and yearMaxByUser: yearMaxByUser = 1970 # в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
+        elif not yearMinByUser and yearMaxByUser: yearMinByUser = 1970 # в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
 
         # print('yearMinByUser', yearMinByUser) # для отладки
         # print('yearMaxByUser', yearMaxByUser) # для отладки
@@ -1246,7 +1253,7 @@ f'''В скрипте используются следующие аргумен
                                              yearsRange=yearsRange)
 
                     print('  Искомых объектов', targetCount, ', а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
-            elif stage < stageTarget: print(f"Этап {stage} пропускаю согласно настройкам из файла stage.txt в директории '{name_in_folderCurrent}'\n")
+            elif stage < stageTarget: print(f"Этап {stage} пропускаю согласно настройкам из файла stage.txt в директории '{folderWithTemporal}'\n")
 
 # 2.1.1 Цикл для прохода по значениям аргумента order, внутри которых проход по всем страницам выдачи (этап stage = 1)
             stage = 1
@@ -1364,7 +1371,7 @@ f'''В скрипте используются следующие аргумен
 
                     print('  Искомых объектов', targetCount, ', а найденных С включением аргумента order:', len(itemS))
                 else: print('Все искомые объекты найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
-            elif stage < stageTarget: print(f"Этап {stage} пропускаю согласно настройкам из файла stage.txt в директории '{name_in_folderCurrent}'\n")
+            elif stage < stageTarget: print(f"Этап {stage} пропускаю согласно настройкам из файла stage.txt в директории '{folderWithTemporal}'\n")
 
 # 2.1.2 Этап сегментирования по годам (stage = 2)
             stage = 2
@@ -1839,6 +1846,10 @@ f'''В скрипте используются следующие аргумен
             # print('videoS.columns:', videoS.columns) # для отладки
             uniqueCategorieS = videoS['snippet.categoryId'].drop_duplicates().to_list()
             # print('\nУникальные коды категорий в базе:', uniqueCategorieS, '\nЧисло уникальных категорий в базе:', len(uniqueCategorieS))
+            response = {'kind': 'youtube#searchListResponse',
+                'pageInfo': {'totalResults': 0, 'resultsPerPage': 0},
+                'items': []} # принудительная выдача на случай неуспеха request.execute()
+
             try:
                 youtube = api.build('youtube', version_api, developerKey=api_keyS[keyOrder])
                 response = youtube.videoCategories().list(part='snippet', id=uniqueCategorieS).execute()
@@ -1900,7 +1911,7 @@ f'''В скрипте используются следующие аргумен
                 for videoId in tqdm(videoIdS):
                 # for videoId in videoS['id'][4576:]: # для отладки
                     # print('videoId:', videoId) # для отладки
-                    commentS_additional, goS, keyOrder, problemVideoId = downloadComments(api_keyS, keyOrder, method, sourceId=videoId, version_api=version_api)
+                    commentS_additional, goS, keyOrder, problemVideoId = downloadComments(api_keyS, keyOrder, method, sourceId=videoId, textFormat=textFormat, version_api=version_api)
                     if not goS: break # на случай сигнала прерывания
                     if problemVideoId: problemVideoIdS.append(problemVideoId)
                     commentS = dfsProcessor(channelIdForSearch,
@@ -1921,7 +1932,9 @@ f'''В скрипте используются следующие аргумен
                                             year=year,
                                             yearsRange=yearsRange)
 
-                commentS = commentS.drop(['kind', 'etag', 'id', 'snippet.channelId', 'snippet.videoId'], axis=1) # т.к. дублируются содержательно
+                columnS_toDrop = ['kind', 'etag', 'id', 'snippet.channelId', 'snippet.videoId']
+                columnS_toDrop = [column for column in columnS_toDrop if column in commentS.columns]
+                if columnS_toDrop: commentS = commentS.drop(columns=columnS_toDrop) # т.к. дублируются содержательно
                 commentS = prefixDropper(commentS)
                 df2file.df2fileShell(complicatedNamePart,
                                      df_in=commentS,
@@ -1932,7 +1945,9 @@ f'''В скрипте используются следующие аргумен
 
 # ********** replieS
                 print('') # для отступа
-                commentS_replied_index = commentS[(commentS['replies.comments'].notna()) & commentS['snippet.totalReplyCount'] > 0].index
+                if 'replies.comments' in commentS.columns and 'snippet.totalReplyCount' in commentS.columns:
+                    commentS_replied_index = commentS[(commentS['replies.comments'].notna()) & commentS['snippet.totalReplyCount'] > 0].index
+
                 if len(commentS_replied_index) > 0: # есть ли хотя бы один отвеченный родительский (topLevel) комментарий?
                     print('Проход по строкам всех родительских (topLevel) комментариев, имеющих ответы')
                     replieS = pandas.DataFrame()
@@ -2011,7 +2026,7 @@ f'''
                         print('Проход по id всех родительских (topLevel) комментариев с недостачей ответов для выгрузки этих ответов')
                         for commentId in tqdm(commentIdS):
                             page = 0 # номер страницы выдачи
-                            replieS_additional, goS, keyOrder, problemCommentId = downloadComments(api_keyS, keyOrder, method, sourceId, version_api=version_api)
+                            replieS_additional, goS, keyOrder, problemCommentId = downloadComments(api_keyS, keyOrder, method, commentId, textFormat=textFormat, version_api=version_api)
                             if not goS: break # на случай сигнала прерывания
                             if problemCommentId: problemCommentIdS.append(problemCommentId)
                             replieS = dfsProcessor(channelIdForSearch,
