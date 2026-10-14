@@ -916,7 +916,7 @@ f"Директорию '{name_in_folderCurrent}' пропустил, продо�
                         yearsRange = yearsRange.split('-')
                         yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
 
-                    temporalNameS = os.listdir(folder + name_in_folderCurrent)
+                    temporalNameS = os.listdir(name_in_folderCurrent)
                     itemS_json = None
                     itemS_xlsx = None
                     for temporalName in temporalNameS:
