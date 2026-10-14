@@ -18,7 +18,10 @@ attempt = 1
 
 while True:
     try:
-        from randan.tools import textPreprocessor # модуль для предобработки нестандартизированного текста
+        from randan.tools import coLabAdaptor, textPreprocessor # модуи для
+            # (а) адаптации текущего скрипта к файловой системе CoLab
+            # (б) предобработки неформализованного текста
+
         break # выход из цикла while True
 
     except ModuleNotFoundError as excptn_1:
@@ -62,10 +65,11 @@ def containerImport(folder_file, containerType): # containerType: float, int, st
     return container
 
 # .. работы с ключами
-def credentialsProcessor(access_token, api_name, instruction_url, nameS_in_folderCurrent):
+def credentialsProcessor(access_token, api_name, folder, instruction_url, nameS_in_folderCurrent):
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     if not access_token:
         if f'credentials{api_name}.txt' in nameS_in_folderCurrent:
-            with open(f'credentials{api_name}.txt', encoding='utf-8') as file: api_keyS = file.read().strip()
+            with open(folder + f'credentials{api_name}.txt', encoding='utf-8') as file: api_keyS = file.read().strip()
             print(f"Проверяю наличие файла credentials{api_name}.txt с ключ{'ами' if ',' in api_keyS else 'ом'}, гипотетически сохранённым{'и' if ',' in api_keyS else ''} при первом запуске скрипта")
             print(f"Нашёл файл credentials{api_name}.txt; далее буду использовать ключ{'и' if ',' in api_keyS else ''} из него:", api_keyS)
 
