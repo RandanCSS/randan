@@ -75,6 +75,7 @@ def bigSearch(api_keyS,
               relevanceLanguage,
               safeSearch,
               topicId,
+              version_api,
               videoCaption,
               videoCategoryId,
               videoDefinition,
@@ -100,7 +101,7 @@ def bigSearch(api_keyS,
     MAX_ATTEMPTS = 3
     while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
         try:
-            youtube = api.build('youtube', 'v3', developerKey=api_keyS[keyOrder])
+            youtube = api.build('youtube', version_api, developerKey=api_keyS[keyOrder])
             # print('contentType:', contentType) # для отладки
 
             request = youtube.search().list(channelId=channelIdForSearch,
@@ -178,6 +179,7 @@ def channelProcessor(api_keyS,
                      targetCount,
                      year,
                      yearsRange,
+                     version_api,
                      videoS):
 
     channelS = pandas.DataFrame()
@@ -198,8 +200,7 @@ def channelProcessor(api_keyS,
     print(
 f'''В скрипте используются следующие аргументы метода {method} API YouTube: part=['snippet', 'brandingSettings', 'contentDetails', 'id', 'localizations', 'statistics', 'status', 'topicDetails'], id, maxResults .
 Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.
-Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/channels'''
-          )
+Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/{version_api}/docs/channels''')
 
     if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
     print('') # для отступа
@@ -251,6 +252,7 @@ f'''В скрипте используются следующие аргумен
                                           q=q,
                                           stage=stage,
                                           targetCount=targetCount,
+                                          version_api=version_api,
                                           year=year,
                                           yearsRange=yearsRange)
 
@@ -346,12 +348,12 @@ def dfsProcessor(channelIdForSearch,
     return df
 
 # 1.3 для выгрузки комментариев
-def downloadComments(api_keyS, keyOrder, method, sourceId):
+def downloadComments(api_keyS, keyOrder, method, sourceId, version_api):
     goS = True # чтобы отдать goS
     commentS = pandas.DataFrame()
     pageToken = None
     problemItemId = None
-    youtube = api.build('youtube', 'v3', developerKey=api_keyS[keyOrder])
+    youtube = api.build('youtube', version_api, developerKey=api_keyS[keyOrder])
     while True: # прерывается командой break при отсутствии nextPageToken
         goC = True
         while goC: # цикл позволяет возвращяться со следующим keyOrder к прежнему id при истечении квоты текущего ключа
@@ -466,6 +468,7 @@ def playListProcessor(api_keyS,
                       q,
                       stage,
                       targetCount,
+                      version_api,
                       year,
                       yearsRange):
 
@@ -477,8 +480,7 @@ def playListProcessor(api_keyS,
     print(
 f'''В скрипте используются следующие аргументы метода {method} API YouTube: part=['snippet', 'contentDetails', 'localizations', 'status'], id, maxResults .
 Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.
-Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/playlists'''
-          )
+Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/{version_api}/docs/playlists''')
 
     if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
     print('') # для отступа
@@ -505,6 +507,7 @@ f'''В скрипте используются следующие аргумен
                                            q=q,
                                            stage=stage,
                                            targetCount=targetCount,
+                                           version_api=version_api,
                                            year=year,
                                            yearsRange=yearsRange)
 
@@ -514,8 +517,7 @@ f'''В скрипте используются следующие аргумен
 f'''
 В скрипте используются следующие аргументы метода {method} API YouTube: part=['snippet'], playlistId, maxResults .
 Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.
-Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/playlistitems'''
-              )
+Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/{version_api}/docs/playlistitems''')
 
         if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
         print('') # для отступа
@@ -530,7 +532,7 @@ f'''
                 goC = True
                 while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
                     try:
-                        youtube = api.build('youtube', 'v3', developerKey=api_keyS[keyOrder])
+                        youtube = api.build('youtube', version_api, developerKey=api_keyS[keyOrder])
                         response = youtube.playlistItems().list(part='snippet', maxResults=50, pageToken=pageToken, playlistId=playlistId).execute()
                         playlistVideoChannelS_additional = pandas.json_normalize(response['items'])
                         playlistVideoChannelS = dfsProcessor(channelIdForSearch,
@@ -598,6 +600,7 @@ def portionsProcessor(api_keyS,
                       q,
                       stage,
                       targetCount,
+                      version_api,
                       year,
                       yearsRange):
 
@@ -623,7 +626,7 @@ def portionsProcessor(api_keyS,
             goC = True
             while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
                 try:
-                    youtube = api.build('youtube', 'v3', developerKey=api_keyS[keyOrder])
+                    youtube = api.build('youtube', version_api, developerKey=api_keyS[keyOrder])
                     response = youtube.playlists().list(part='snippet, contentDetails, localizations, status',
                                                         channelId=channelIdForSearch,
                                                         maxResults=50,
@@ -650,7 +653,7 @@ def portionsProcessor(api_keyS,
         goC = True
         while goC: # цикл на случай истечения ключа: повторяет запрос после смены ключа
             try:
-                youtube = api.build('youtube', 'v3', developerKey=api_keyS[keyOrder])
+                youtube = api.build('youtube', version_api, developerKey=api_keyS[keyOrder])
                 if method == 'channels':
                     response = youtube.channels().list(part='snippet, brandingSettings, contentDetails, id, localizations, statistics, status, topicDetails',
                                                        id=idS[bound:bound + portion],
@@ -736,6 +739,7 @@ def searchByText(access_token=None,
                  returnDfs=False,
                  safeSearch=None,
                  topicId=None,
+                 version_api='v3',
                  videoCaption=None,
                  videoCategoryId=None,
                  videoDefinition=None,
@@ -769,6 +773,7 @@ def searchByText(access_token=None,
                 returnDfs : bool -- в случае True функция возвращает пять итоговых датафреймов с выдачей методов (1) search, (2) playlists, (3) videos, (4) commentThreads и comments (общий датафрейм), (5) channels
                safeSearch : str
                   topicId : str
+              version_api : str
              videoCaption : str
           videoCategoryId : str
           videoDefinition : str
@@ -810,6 +815,7 @@ videoPaidProductPlacement : str
     commentReplieS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     fileFormatChoice = 'xlsx' # базовый формат сохраняемых файлов; формат json добавляется опционально через наличие columnsToJSON
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
+    # print('folder:', folder) # для отладки
     folderFile = None
     folderWithTemporal = None
     goS = True
@@ -834,15 +840,16 @@ videoPaidProductPlacement : str
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     nameS_in_folderCurrent = os.listdir(folder)
-    api_keyS = scrapingTools.credentialsProcessor(access_token, 'YouTube', 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', nameS_in_folderCurrent)
+    # print('nameS_in_folderCurrent:', nameS_in_folderCurrent) # для отладки
+    api_keyS = scrapingTools.credentialsProcessor(access_token, 'YouTube', folder, 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', nameS_in_folderCurrent)
 
 # 2.0.2 Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
     print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
     for name_in_folderCurrent in nameS_in_folderCurrent:
         if name_in_folderCurrent.endswith('Temporal') and 'YouTube' in name_in_folderCurrent:
-            if len(os.listdir(name_in_folderCurrent)) < 9: print(
-f"В текущей директории '{name_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 9-10 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 9 или 10 файлов
+            if len(os.listdir(folder + name_in_folderCurrent)) < 9: print(
+f"В директории '{older + name_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 9-10 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 9 или 10 файлов
             else:
                 targetCountTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'targetCount.txt', int)
                 methodTemporal = scrapingTools.containerImport(name_in_folderCurrent + slash + 'method.txt', str)
@@ -908,7 +915,7 @@ f"Директорию '{name_in_folderCurrent}' пропустил, продо�
                         yearsRange = yearsRange.split('-')
                         yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
 
-                    temporalNameS = os.listdir(name_in_folderCurrent)
+                    temporalNameS = os.listdir(older + name_in_folderCurrent)
                     itemS_json = None
                     itemS_xlsx = None
                     for temporalName in temporalNameS:
@@ -918,12 +925,12 @@ f"Директорию '{name_in_folderCurrent}' пропустил, продо�
 
                     if itemS_json is not None and itemS_xlsx is not None:
                         itemS = itemS_json.merge(itemS_xlsx, how='outer', on='id')
-                        folderWithTemporal = name_in_folderCurrent
+                        folderWithTemporal = folder + name_in_folderCurrent
                         break # выход из for name_in_folderCurrent in nameS_in_folderCurrent
 
                     elif itemS_json is None and itemS_xlsx is not None:
                         itemS = itemS_xlsx.copy() # for temporalName in temporalNameS завершился, но файл itemS_json не импортировался
-                        folderWithTemporal = name_in_folderCurrent
+                        folderWithTemporal = folder + name_in_folderCurrent
                         break # выход из for name_in_folderCurrent in nameS_in_folderCurrent
 
                     # -- данные, сохранённые при прошлом запуске скрипта, загружены и цикл for name_in_folderCurrent in nameS_in_folderCurrent завершн
@@ -1109,7 +1116,7 @@ f"СТРАННО: хотя директория '{name_in_folderCurrent}' пох
             print(
 f'''В скрипте используются следующие аргументы метода {method} API YouTube: channelId, maxResults, order, pageToken, part, publishedAfter, publishedBefore, q, type .
 Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.
-Если хотите добавить другие аргументы метода {method} API YouTube, доступные по ссылке https://developers.google.com/youtube/v3/docs/search , -- можете сделать это внутри метода {method} в разделе 2 исполняемого сейчас скрипта'''
+Если хотите добавить другие аргументы метода {method} API YouTube, доступные по ссылке https://developers.google.com/youtube/{version_api}/docs/search , -- можете сделать это внутри метода {method} в разделе 2 исполняемого сейчас скрипта'''
             )
 
             if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
@@ -1136,6 +1143,7 @@ f'''В скрипте используются следующие аргумен
                                                                                                relevanceLanguage=relevanceLanguage,
                                                                                                safeSearch=safeSearch,
                                                                                                topicId=topicId,
+                                                                                               version_api=version_api,
                                                                                                videoCaption=videoCaption,
                                                                                                videoCategoryId=videoCategoryId,
                                                                                                videoDefinition=videoDefinition,
@@ -1205,6 +1213,7 @@ f'''В скрипте используются следующие аргумен
                                                                                                        relevanceLanguage=relevanceLanguage,
                                                                                                        safeSearch=safeSearch,
                                                                                                        topicId=topicId,
+                                                                                                       version_api=version_api,
                                                                                                        videoCaption=videoCaption,
                                                                                                        videoCategoryId=videoCategoryId,
                                                                                                        videoDefinition=videoDefinition,
@@ -1264,6 +1273,7 @@ f'''В скрипте используются следующие аргумен
                                                                                                        relevanceLanguage=relevanceLanguage,
                                                                                                        safeSearch=safeSearch,
                                                                                                        topicId=topicId,
+                                                                                                       version_api=version_api,
                                                                                                        videoCaption=videoCaption,
                                                                                                        videoCategoryId=videoCategoryId,
                                                                                                        videoDefinition=videoDefinition,
@@ -1320,6 +1330,7 @@ f'''В скрипте используются следующие аргумен
                                                                                                            relevanceLanguage,
                                                                                                            safeSearch,
                                                                                                            topicId,
+                                                                                                           version_api,
                                                                                                            videoCaption,
                                                                                                            videoCategoryId,
                                                                                                            videoDefinition,
@@ -1389,6 +1400,7 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                                                                                                            relevanceLanguage=relevanceLanguage,
                                                                                                            safeSearch=safeSearch,
                                                                                                            topicId=topicId,
+                                                                                                           version_api=version_api,
                                                                                                            videoCaption=videoCaption,
                                                                                                            videoCategoryId=videoCategoryId,
                                                                                                            videoDefinition=videoDefinition,
@@ -1449,6 +1461,7 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                                                                                                                relevanceLanguage=relevanceLanguage,
                                                                                                                safeSearch=safeSearch,
                                                                                                                topicId=topicId,
+                                                                                                               version_api=version_api,
                                                                                                                videoCaption=videoCaption,
                                                                                                                videoCategoryId=videoCategoryId,
                                                                                                                videoDefinition=videoDefinition,
@@ -1504,6 +1517,7 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                                                                                                                    relevanceLanguage=relevanceLanguage,
                                                                                                                    safeSearch=safeSearch,
                                                                                                                    topicId=topicId,
+                                                                                                                   version_api=version_api,
                                                                                                                    videoCaption=videoCaption,
                                                                                                                    videoCategoryId=videoCategoryId,
                                                                                                                    videoDefinition=videoDefinition,
@@ -1559,6 +1573,7 @@ f'    Для года {year} проход по всем следующим ст�
                                                                                                                        relevanceLanguage=relevanceLanguage,
                                                                                                                        safeSearch=safeSearch,
                                                                                                                        topicId=topicId,
+                                                                                                                       version_api=version_api,
                                                                                                                        videoCaption=videoCaption,
                                                                                                                        videoCategoryId=videoCategoryId,
                                                                                                                        videoDefinition=videoDefinition,
@@ -1674,6 +1689,7 @@ f'''
                                                                               q=q,
                                                                               stage=stage,
                                                                               targetCount=targetCount,
+                                                                              version_api=version_api,
                                                                               year=year,
                                                                               yearsRange=yearsRange)
 
@@ -1695,6 +1711,7 @@ f'''
                                                                           q=q,
                                                                           stage=stage,
                                                                           targetCount=targetCount,
+                                                                          version_api=version_api,
                                                                           year=year,
                                                                           yearsRange=yearsRange)
 
@@ -1720,6 +1737,7 @@ f'''
                                              targetCount=targetCount,
                                              year=year,
                                              yearsRange=yearsRange,
+                                             version_api=version_api,
                                              videoS=videoS)
 
             # display('channelS:', channelS) # для отладки
@@ -1744,6 +1762,7 @@ f'''
                                                                       q=q,
                                                                       stage=stage,
                                                                       targetCount=targetCount,
+                                                                      version_api=version_api,
                                                                       year=year,
                                                                       yearsRange=yearsRange)
 
@@ -1759,7 +1778,7 @@ f'''
                 print(
 f'''В скрипте используются следующие аргументы метода {method} API YouTube: part=['snippet', 'contentDetails', 'localizations', 'statistics', 'status', 'topicDetails'], id, maxResults .
 Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.
-Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/videos'''
+Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/{version_api}/docs/videos'''
                 )
 
                 if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
@@ -1809,6 +1828,7 @@ f'''В скрипте используются следующие аргумен
                                             q=q,
                                             stage=stage,
                                             targetCount=targetCount,
+                                            version_api=version_api,
                                             year=year,
                                             yearsRange=yearsRange)
 
@@ -1819,7 +1839,7 @@ f'''В скрипте используются следующие аргумен
             uniqueCategorieS = videoS['snippet.categoryId'].drop_duplicates().to_list()
             # print('\nУникальные коды категорий в базе:', uniqueCategorieS, '\nЧисло уникальных категорий в базе:', len(uniqueCategorieS))
             try:
-                youtube = api.build('youtube', 'v3', developerKey=api_keyS[keyOrder])
+                youtube = api.build('youtube', version_api, developerKey=api_keyS[keyOrder])
                 response = youtube.videoCategories().list(part='snippet', id=uniqueCategorieS).execute()
 
             except: goC, goS, goToPlayList, keyOrder, problemItemId = errorProcessor(errorDescription=sys.exc_info(), keyOrder=keyOrder, sourceId=None)
@@ -1862,8 +1882,7 @@ f'содержащимся в файле "{momentCurrent.strftime('%Y%m%d')}{com
                 print(
 f'''В скрипте используются следующие аргументы метода {method} API YouTube: part=['snippet', 'id', 'replies'], maxResults, videoId .
 Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.
-Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/commentThreads'''
-                )
+Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/{version_api}/docs/commentThreads''')
 
                 if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
                 print('') # для отступа
@@ -1880,7 +1899,7 @@ f'''В скрипте используются следующие аргумен
                 for videoId in tqdm(videoIdS):
                 # for videoId in videoS['id'][4576:]: # для отладки
                     # print('videoId:', videoId) # для отладки
-                    commentS_additional, goS, keyOrder, problemVideoId = downloadComments(api_keyS, keyOrder, method, sourceId=videoId)
+                    commentS_additional, goS, keyOrder, problemVideoId = downloadComments(api_keyS, keyOrder, method, sourceId=videoId, version_api=version_api)
                     if not goS: break # на случай сигнала прерывания
                     if problemVideoId: problemVideoIdS.append(problemVideoId)
                     commentS = dfsProcessor(channelIdForSearch,
@@ -1981,8 +2000,7 @@ f'''В скрипте используются следующие аргумен
 f'''
 В скрипте используются следующие аргументы метода {method} API YouTube: part=['snippet', 'id'], maxResults, parentId, textFormat .
 Эти аргументы, кроме part, пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.
-Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/v3/docs/commentThreads'''
-                    )
+Если хотите добавить другие аргументы метода {method} API YouTube, можете ознакомиться с ними по ссылке: https://developers.google.com/youtube/{version_api}/docs/commentThreads''')
 
                     if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
                     print('') # для отступа
@@ -1992,7 +2010,7 @@ f'''
                         print('Проход по id всех родительских (topLevel) комментариев с недостачей ответов для выгрузки этих ответов')
                         for commentId in tqdm(commentIdS):
                             page = 0 # номер страницы выдачи
-                            replieS_additional, goS, keyOrder, problemCommentId = downloadComments(api_keyS, keyOrder, method, sourceId)
+                            replieS_additional, goS, keyOrder, problemCommentId = downloadComments(api_keyS, keyOrder, method, sourceId, version_api=version_api)
                             if not goS: break # на случай сигнала прерывания
                             if problemCommentId: problemCommentIdS.append(problemCommentId)
                             replieS = dfsProcessor(channelIdForSearch,
@@ -2074,6 +2092,7 @@ f'''
                                                  targetCount=targetCount,
                                                  year=year,
                                                  yearsRange=yearsRange,
+                                                 version_api=version_api,
                                                  videoS=videoS)
 
 # 2.2.5 Экспорт выгрузки метода search и финальное завершение скрипта
