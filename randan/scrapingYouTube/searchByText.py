@@ -828,6 +828,7 @@ videoPaidProductPlacement : str
     goS = True
     goToPlayList = False
     itemS = pandas.DataFrame(columns=['id.kind']) # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
+    itemS_additional = pandas.DataFrame() # на случай, если сигнал прерывания поступит до dfsProcessor
     keyOrder = 0
     # name_in_folderCurrent = None
     playlistVideoChannelS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
@@ -848,7 +849,8 @@ videoPaidProductPlacement : str
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     nameS_in_folderCurrent = os.listdir(folder)
     # print('nameS_in_folderCurrent:', nameS_in_folderCurrent) # для отладки
-    api_keyS = scrapingTools.credentialsProcessor(access_token, 'YouTube', folder, 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', nameS_in_folderCurrent)
+
+    api_keyS = scrapingTools.credentialsProcessor(access_token, 'YouTube', folder, 'https://www.youtube.com/watch?v=EXysYgWeapI&t=490s', nameS_in_folderCurrent)
 
 # 2.0.2 Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
