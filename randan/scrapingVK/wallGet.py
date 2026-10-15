@@ -22,13 +22,14 @@ while True:
         from IPython.display import display
         from randan.scrapingVK import scrapingVK_tools # модуль для упрощения скрапинга VK
 
-        from randan.tools import coLabAdaptor, df2file, files2df, scrapingTools # модули для
+        from randan.tools import coLabAdaptor, colorizer, df2file, files2df, scrapingTools # модули для
             # (а) адаптации текущего скрипта к файловой системе CoLab
-            # (б) сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
-            # (в) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
-            # (г) упрощения скрапинга
+            # (б) раскрашивания вывода на экран
+            # (в) сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
+            # (г) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
+            # (д) упрощения скрапинга
 
-        import json, os, pandas, shutil, requests, time, warnings
+        import json, os, pandas, requests, shutil, time, warnings
         break # выход из цикла while True
 
     except ModuleNotFoundError as excptn_1:
@@ -111,11 +112,9 @@ def dfsProcessor(complicatedNamePart,
             warnings.simplefilter('ignore')
             print(
 '''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
-Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
-                        )
+Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
 
             sys.exit()
-        print('Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
     return df
 
 def wallGetCore(api_keyS,
@@ -126,7 +125,8 @@ def wallGetCore(api_keyS,
                 iteration,
                 keyOrder,
                 offset,
-                pause):
+                pause,
+                version_api):
 
     df_additional = pandas.DataFrame()
     goS = True
@@ -138,7 +138,7 @@ def wallGetCore(api_keyS,
                       'fields': fields, # опциональный параметр
                       'filter': filter, # опциональный параметр
                       'offset': offset, # опциональный параметр
-                      'v': '5.199'} # обязательный параметр
+                      'v': version_api} # обязательный параметр
 
     params = {key: value for key, value in params_initial.items() if value not in (None, '', [])}
     goC = True
@@ -181,7 +181,8 @@ def wallGet(access_token,
             folder,
             offset,
             params,
-            returnDfs=False):
+            returnDfs=False,
+            version_api='5.199'):
 
     method = 'wall.get'
 
@@ -200,10 +201,10 @@ def wallGet(access_token,
           filter : str
           folder : str
           offset : int
-          params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.get ,
-          чтобы не подавать эти аргументы по отдельности
+          params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.get , чтобы не подавать эти аргументы по отдельности
 
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
+     version_api : str
     '''
 
     if not params and not access_token and not count and not domain and not fields and not filter and not offset and not returnDfs:
@@ -261,14 +262,16 @@ f'''    Скрипт нацелен на выгрузку характерист
 
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API ВК
-    fileFormatChoice = '.xlsx' # базовый формат сохраняемых файлов; формат .json добавляется опционально через наличие columnsToJSON
+    fileFormatChoice = 'xlsx' # базовый формат сохраняемых файлов; формат json добавляется опционально через наличие columnsToJSON
     folderFile = None
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
+    folder_in_folderCurrent = None
+    folderWithTemporal = None
     goS = True
     itemS = pandas.DataFrame()
-    itemS_additional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
+    itemS_additional = pandas.DataFrame() # на случай, если сигнал прерывания поступит до dfsProcessor
     keyOrder = 0
-    name_in_folderCurrent = None
+    # name_in_folderCurrent = None
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
 
     momentCurrent = datetime.now() # запрос текущего момента
@@ -276,40 +279,38 @@ f'''    Скрипт нацелен на выгрузку характерист
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     nameS_in_folderCurrent = os.listdir(folder)
-    api_keyS = scrapingTools.credentialsProcessor(access_token, 'VK', 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', nameS_in_folderCurrent)
+    # print('nameS_in_folderCurrent:', nameS_in_folderCurrent) # для отладки
+
+    api_keyS = scrapingTools.credentialsProcessor(access_token, 'VK', folder, 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', nameS_in_folderCurrent)
 
 # Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
     print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
-    goC = True
     for name_in_folderCurrent in nameS_in_folderCurrent:
-        message =\
-f"В текущей директории '{name_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 6-7 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную"
-
         if name_in_folderCurrent.endswith('Temporal') and 'VK' in name_in_folderCurrent:
-            if len(os.listdir(name_in_folderCurrent)) < 5: print(message) # допустимо 6 или 7 файлов
+            folder_in_folderCurrent = folder + name_in_folderCurrent # имя файла достраивается до абсолютного пути
+            if len(os.listdir(folder_in_folderCurrent)) < 5:  print(
+f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 6-7 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
             else:
-                domain = scrapingTools.containerImport(name_in_folderCurrent + slash + 'domain.txt', str)
+                domain = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'domain.txt', str)
 
-                with open(f'{name_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file:
+                with open(f'{folder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file:
                     fields = json.load(file)
 
-                filter = scrapingTools.containerImport(name_in_folderCurrent + slash + 'filter.txt', str)
-                offset = scrapingTools.containerImport(name_in_folderCurrent + slash + 'offset.txt', int)
+                filter = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'filter.txt', str)
+                offset = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'offset.txt', int)
 
-                print(f"Нашёл директорию '{name_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
+                print(f"Нашёл директорию '{folder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
                       , '\n- скрипт остановился на offset', offset)
-                print('- пользователь НЕ определил страницу' if not domain else f"- пользователь определил страницу: '{domain}'")
-                print('- пользователь НЕ определил поля' if not fields else f"- пользователь определил поля: '{fields}'")
-                print('- пользователь НЕ определил фильтр' if not filter else f"- пользователь определил фильтр: '{filter}'")
+                print(f"- пользователь определил страницу: '{domain}'" if domain else '- пользователь НЕ определил страницу')
+                print(f"- пользователь определил поля: '{fields}'" if fields else '- пользователь НЕ определил поля')
+                print(f"- пользователь определил фильтр: '{filter}'" if filter else '- пользователь НЕ определил фильтр')
 
-                folderWithTemporal = name_in_folderCurrent
                 print(
 '''--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
 --- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите 'R' и нажмите Enter
---- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter'''
-                )
-
+--- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter''')
+!!!
                 decision = input()
                 if len(decision) == 0:
                     temporalNameS = os.listdir(name_in_folderCurrent)
@@ -390,7 +391,6 @@ f"В текущей директории '{name_in_folderCurrent}' есть ди
 
 # 2.1 Первичный сбор контента методом get
 # 2.1.0 Первое обращение к API
-    itemS_additional = pandas.DataFrame() # на случай, если сигнал прерывания поступит до dfsProcessor
     iteration = 1 # номер итерации применения текущего метода
     method = 'wall.get'
     pause = 0.25
@@ -410,14 +410,15 @@ f'-- можете подать их в скобки функции wallGet пе�
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         while True:
             itemS_additional, goS, iteration, keyOrder, pause = wallGetCore(api_keyS,
-                                                                           count,
-                                                                           domain,
-                                                                           fields,
-                                                                           filter,
-                                                                           iteration,
-                                                                           keyOrder,
-                                                                           offset,
-                                                                           pause)
+                                                                            count,
+                                                                            domain,
+                                                                            fields,
+                                                                            filter,
+                                                                            iteration,
+                                                                            keyOrder,
+                                                                            offset,
+                                                                            pause,
+                                                                            version_api)
 
             # print('goS:', goS) # для отладки
             if len(itemS_additional) == 0: #ничего нового не выгружено независимо от сигнала остановиться
