@@ -5,7 +5,7 @@ name = "randan"
 version = "1.5.19"
 slash = '\\' if os.name == 'nt' else '/'  # выбор слэша в зависимости от ОС
 
-if not os.path.isdir(name): folderS = []
+folderS = []
 for item in os.listdir(name):
     if '.' not in item:
         folderS.append(item)
