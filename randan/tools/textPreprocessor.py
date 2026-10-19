@@ -236,11 +236,12 @@ def stopwordsDropper(text, userStopWordsToAdd=None, userStopWordsToRemove=None, 
 
     Parameters
     --------------------
-                 text : str
-   userStopWordsToAdd : list -- слова, добавляемые пользователем в список стоп-слов (будут удалены из обрабатываемого текста)
-userStopWordsToRemove : list -- слова, исключаемые пользователем из списка стоп-слов (будут сохранены в обрабатываемом тексте)
-             language : str
+                     text : str
+       userStopWordsToAdd : list -- слова, добавляемые пользователем в список стоп-слов (будут удалены из обрабатываемого текста)
+    userStopWordsToRemove : list -- слова, исключаемые пользователем из списка стоп-слов (будут сохранены в обрабатываемом тексте)
+                 language : str
     """
+
     stopWordS = stop_words.get_stop_words(language)
     if userStopWordsToAdd != None: stopWordS.extend(userStopWordsToAdd)
     if userStopWordsToRemove != None:
@@ -256,7 +257,16 @@ userStopWordsToRemove : list -- слова, исключаемые пользо�
     textCleaned = textCleaned.strip()
     return textCleaned
 
-def textPreprocessor(text_column, df_in, autocorrect=False):
+def textPreprocessor(df_in, text_column, autocorrect=False):
+    """
+    Функция-конвейер предобработки текста
+    Parameters
+    --------------------
+          df_in : DataFrame -- режим упрощённой автокоррекции и, как следствие, ускоренной
+    autocorrect : bool -- режим автокоррекции
+    text_column : str -- столбец с текстом на предобработку
+    """
+
     df = df_in.copy()
     df_none = df[df[text_column].isna()]
     df_notNone = df[df[text_column].notna()]
