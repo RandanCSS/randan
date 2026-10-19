@@ -255,3 +255,17 @@ userStopWordsToRemove : list -- слова, исключаемые пользо�
             textCleaned += ' ' + word
     textCleaned = textCleaned.strip()
     return textCleaned
+
+def textPreprocessor(text_column, df_in, autocorrect=False):
+    df = df_in.copy()
+    df_none = df[df[text_column].isna()]
+    df_notNone = df[df[text_column].notna()]
+    df_notNone['textFull_simbolsCleaned'] = df_notNone[text_column].progress_apply(lambda text: simbolsCleaner(text))
+        # очистка предобрабатываемого текста от "мусорных" символов
+
+    df_notNone['textFull_lemmatized'] = pymystemLemmatizer(df_notNone, 'textFull_simbolsCleaned') # лемматизоция текста
+    df_notNone['textFull_stopwordsDropped'] = df_notNone['textFull_lemmatized'].progress_apply(
+        lambda text: stopwordsDropper(text)) # удаление стоп-слов
+
+    df = pandas.concat([df_notNone, df_none])
+    return df
