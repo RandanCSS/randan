@@ -20,7 +20,7 @@ while True:
     try:
         from autocorrect import Speller
         import itertools, numpy, os, pandas, pymystem3, re, stop_words, time, warnings
-       break # выход из цикла while True
+        break # выход из цикла while True
 
     except ModuleNotFoundError as excptn_1:
         module = excptn_1.name.split('.')[0]
