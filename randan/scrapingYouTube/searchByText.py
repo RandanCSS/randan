@@ -439,7 +439,7 @@ def errorProcessor(errorDescription, keyOrder, sourceId):
         or 'TimeoutError' in str(errorDescription[0]):
 
         print("!!! Похоже, проблема с сетью (в т.ч. из-за региональных ограничений; 'КВН') или слишком высокая частота запросов; засыпаю на 10 секунд\n")
-        time.sleep(10)
+        time.sleep(0.25)
 
     else:
         print('!!! Похоже, проблема не в ограничении доступа к обрабатываемому объекту и не в истечении квоты текущего ключа((\n')
@@ -822,7 +822,7 @@ videoPaidProductPlacement : str
     fileFormatChoice = 'xlsx' # базовый формат сохраняемых файлов; формат json добавляется опционально через наличие columnsToJSON
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     # print('folder:', folder) # для отладки
-    folderFile = None
+    folder_file = None
     folder_in_folderCurrent = None
     folderWithTemporal = None
     goS = True
@@ -830,6 +830,7 @@ videoPaidProductPlacement : str
     itemS = pandas.DataFrame(columns=['id.kind']) # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     itemS_additional = pandas.DataFrame() # на случай, если сигнал прерывания поступит до dfsProcessor
     keyOrder = 0
+    method = 'search'
     # name_in_folderCurrent = None
     playlistVideoChannelS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     playlistS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
@@ -959,18 +960,18 @@ f"СТРАННО: хотя директория '{folder_in_folderCurrent}' по
 --- Если располагаете файлом, укажите полный путь, включая название файла, и нажмите Enter''')
 
         while True:
-            folderFile = input()
-            if not folderFile:
-                folderFile = None # для унификации
+            folder_file = input()
+            if not folder_file:
+                folder_file = None # для унификации
                 break
             else:
-                itemS, error, fileName, folder, slash = files2df.excel2df(folderFile)
+                itemS, error, fileName, folder, slash = files2df.excel2df(folder_file)
                 if error:
                     if 'No such file or directory' in error:
                         print('Файл:', folder + slash + fileName, '-- не существует; попробуйте, пожалуйста, ещё раз..')
                 else: break
             # display(itemS)
-# Теперь определены объекты: folder и folderFile (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
+# Теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
 
 # 2.0.4 Пользовательские настройки запроса к API YouTube
     # Контент: канал или видео? Или вообще плейлист?
@@ -1005,8 +1006,7 @@ f"СТРАННО: хотя директория '{folder_in_folderCurrent}' по
             print(
 '''--- Вы выбрали тип контента video
 --- Если НЕ предполагается поиск видео в пределах конкретного канала или плейлиста, нажмите Enter
---- Если предполагается такой поиск, введите id канала или плейлиста, после чего нажмите Enter. Этот id можете найти либо внутри ссылки интересующего канала или плейлиста, либо -- если прежде выгружали контент из YouTube -- в столбце с соответствующим id'''
-            )
+--- Если предполагается такой поиск, введите id канала или плейлиста, после чего нажмите Enter. Этот id можете найти либо внутри ссылки интересующего канала или плейлиста, либо -- если прежде выгружали контент из YouTube -- в столбце с соответствующим id''')
 
             while True:
                 channelIdForSearch = input()
@@ -1050,8 +1050,8 @@ f"СТРАННО: хотя директория '{folder_in_folderCurrent}' по
 (описание, название, теги, категории и т.п.) релевантного YouTube-контента, после чего нажмите Enter'''
             )
 
-            if folderFile: print(
-'ВАЖНО! В результате исполнения текущего скрипта данные из указанного Вами файла', folderFile,
+            if folder_file: print(
+'ВАЖНО! В результате исполнения текущего скрипта данные из указанного Вами файла', folder_file,
 'будут дополнены актуальными данными из выдачи скрипта (возможно появление новых записей и новых столбцов, а также актуализация содержимого столбцов),',
 'поэтому, вероятно, следует ввести тот же запрос-фильтр, что и при формировании указанного Вами файла'
             )
@@ -1115,7 +1115,6 @@ f"СТРАННО: хотя директория '{folder_in_folderCurrent}' по
 
 # 2.1 Первичный сбор контента методом search
 # 2.1.0 Первый заход БЕЗ аргумента order (этап stage = 0)
-    method = 'search'
     stage = 0
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         if not channelIdForSearch or yearsRange or (channelIdForSearch and q): # в противном случае используется не search , а channels + playlists
@@ -1170,15 +1169,13 @@ f'''В скрипте используются следующие аргумен
                 if not goToPlayList:
                     if targetCount == 0:
                         print(
-'''Искомых объектов на серверах YouTube по Вашему запросу, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта. Что делать? Поменяйте настройки запроса и запустите скрипт с начала'''
-                        )
+'''Искомых объектов на серверах YouTube по Вашему запросу, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта. Что делать? Поменяйте настройки запроса и запустите скрипт с начала''')
 
                         with warnings.catch_warnings():
                             warnings.simplefilter('ignore')
                             print(
 '''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
-Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
-                            )
+Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
 
                             sys.exit()
 
