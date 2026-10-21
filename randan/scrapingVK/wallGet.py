@@ -183,9 +183,6 @@ def wallGet(access_token,
             params,
             returnDfs=False,
             version_api='5.199'):
-
-    method = 'wall.get'
-
     '''
     Функция для выгрузки характеристик контента ВК методом его API wall.get . Причём количество объектов выгрузки максимизируется посредством offset
 
@@ -252,6 +249,7 @@ def wallGet(access_token,
     ВК может ограничить действие Вашего ключа или вовсе заблокировать его, если сочтёт, что Вы злоупотребляете автоматизированным доступом.'''
         )
 
+    method = 'wall.get'
     print(
 f'''    Скрипт нацелен на выгрузку характеристик контента ВК методом его API {method} . Причём количество объектов выгрузки максимизируется посредством offset .
     Для корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.
@@ -263,7 +261,7 @@ f'''    Скрипт нацелен на выгрузку характерист
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API ВК
     fileFormatChoice = 'xlsx' # базовый формат сохраняемых файлов; формат json добавляется опционально через наличие columnsToJSON
-    folderFile = None
+    folder_file = None
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     folder_in_folderCurrent = None
     folderWithTemporal = None
@@ -363,34 +361,32 @@ f'''
 Затем при необходимости сможете добавить к нему другие располагаемые файлы''')
 
         while True:
-            folderFile = input()
-            if len(folderFile) == 0:
-                folderFile = None # для унификации
+            folder_file = input()
+            if len(folder_file) == 0:
+                folder_file = None # для унификации
                 break
 
             else:
-                itemS, error, folder = files2df.files2df(folderFile)
+                itemS, error, folder = files2df.files2df(folder_file)
                 if error:
                     if 'No such file or directory' in error:
-                        print('Путь:', folderFile, '-- не существует; попробуйте, пожалуйста, ещё раз..')
+                        print('Путь:', folder_file, '-- не существует; попробуйте, пожалуйста, ещё раз..')
 
                 else: break
             # display('itemS:', itemS)
-# Теперь определены объекты: folder и folderFile (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
+# Теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
 
 # 2.0.2 Пользовательские настройки запроса к API ВК
         if not domain: # если пользователь не подал этот аргумент в рамках experiencedMode
             print(
 '''Скрипт умеет искать посты открытых страниц
---- Введите название интересующей страницы (персональной и группы), после чего нажмите Enter'''
-            )
+--- Введите название интересующей страницы (персональной и группы), после чего нажмите Enter''')
 
-            if folderFile:
+            if folder_file:
                 print(
-'ВАЖНО! В результате исполнения текущего скрипта данные из указанного Вами файла', folderFile, 'будут дополнены актуальными данными из выдачи скрипта',
+'ВАЖНО! В результате исполнения текущего скрипта данные из указанного Вами файла', folder_file, 'будут дополнены актуальными данными из выдачи скрипта',
 '(возможно появление новых объектов и новых столбцов, а также актуализация содержимого столбцов),',
-'поэтому, вероятно, следует ввести название той же страницы, что и при формировании указанного Вами файла'
-                )
+'поэтому, вероятно, следует ввести название той же страницы, что и при формировании указанного Вами файла')
 
             domain = input()
             if not domain: domain = '80054288' # моя страница
@@ -403,15 +399,13 @@ f'''
 # 2.1 Первичный сбор контента методом get
 # 2.1.0 Первое обращение к API
     iteration = 1 # номер итерации применения текущего метода
-    method = 'wall.get'
     pause = 0.25
 
     print(
 f'В скрипте используются следующие аргументы метода {method} API ВК: count, domain, fields, filter, offset .',
 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
 f'Если хотите добавить другие аргументы метода {method} API ВК, доступные по ссылке https://dev.vk.com/ru/method/{method} ,',
-f'-- можете подать их в скобки функции wallGet перед её запуском или скопировать код исполняемого сейчас скрипта и сделать это внутри кода внутри метода {method} в разделе 2'
-    )
+f'-- можете подать их в скобки функции wallGet перед её запуском или скопировать код исполняемого сейчас скрипта и сделать это внутри кода внутри метода {method} в разделе 2')
 
     # print('experiencedMode:', experiencedMode) # для отладки
     if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
@@ -433,45 +427,34 @@ f'-- можете подать их в скобки функции wallGet пе�
 
             # print('goS:', goS) # для отладки
             if len(itemS_additional) == 0: #ничего нового не выгружено независимо от сигнала остановиться
-                print('Ни один дополнительный пост НЕ выгружен')
-                break
+                print(
+'''Искомых объектов на серверах ВК по Вашему запросу, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта. Что делать? Поменяйте настройки запроса и запустите скрипт с начала''')
+                with warnings.catch_warnings():
+                    warnings.simplefilter('ignore')
+                    print(
+'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
+Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
 
-            elif goS and len(itemS_additional) > 0: # нет сигнала остановиться и новые записи выгружены
-                itemS = dfsProcessor(complicatedNamePart,
-                                     itemS_additional,
-                                     itemS,
-                                     domain,
-                                     fields,
-                                     fileFormatChoice,
-                                     filter,
-                                     folder,
-                                     goS, # единственная из функций, принимающая этот аргумент
-                                     method,
-                                     momentCurrent,
-                                     offset)
+                sys.exit()
 
-                offset += len(itemS_additional)
-                time.sleep(pause)
+            itemS = dfsProcessor(complicatedNamePart,
+                                 itemS_additional,
+                                 itemS,
+                                 domain,
+                                 fields,
+                                 fileFormatChoice,
+                                 filter,
+                                 folder,
+                                 goS, # единственная из функций, принимающая этот аргумент
+                                 method,
+                                 momentCurrent,
+                                 offset)
 
-            elif not goS and len(itemS_additional) > 0: # есть сигнал остановиться, при этом новые записи выгружены
-                itemS = dfsProcessor(complicatedNamePart,
-                                     itemS_additional,
-                                     itemS,
-                                     domain,
-                                     fields,
-                                     fileFormatChoice,
-                                     filter,
-                                     folder,
-                                     goS, # единственная из функций, принимающая этот аргумент
-                                     method,
-                                     momentCurrent,
-                                     offset)
-
-                offset += len(itemS_additional)
-                break
+            offset += len(itemS_additional)
+            time.sleep(pause)
 
 # 2.1.2 Экспорт выгрузки метода get и финальное завершение скрипта
-        df2file.df2fileShell(complicatedNamePart=complicatedNamePart,
+        df2file.df2fileShell(complicatedNamePart,
                              df_in=itemS,
                              fileFormatChoice=fileFormatChoice,
                              folder=folder,
@@ -489,7 +472,6 @@ f'-- можете подать их в скобки функции wallGet пе�
 
                 decision = input()
                 if decision == 'R': shutil.rmtree(folderWithTemporal, ignore_errors=True)
-
         if fields: print(
 f'''
 Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
@@ -499,8 +481,7 @@ JSONS = []
 for cellContent in Исходный_датафрейм[column].dropna():
     JSONS.extend(cellContent)
 Новый_датафрейм = pandas.json_normalize(JSONS).drop_duplicates('id').reset_index(drop=True)
-'''
-        )
+''')
 
         if returnDfs: return itemS
 
