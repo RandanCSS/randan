@@ -1656,7 +1656,7 @@ f'''
                             )
 
                             decision = input()
-                            if decision == 'R': shutil.rmtree(folderWithTemporal, ignore_errors=True)
+                            if decision.lower() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True)
 
                     if returnDfs: return itemS, playlistS, videoS, commentReplieS, channelS
                     with warnings.catch_warnings():
@@ -2121,7 +2121,7 @@ f'''
                 )
 
                 decision = input()
-                if decision == 'R': shutil.rmtree(folderWithTemporal, ignore_errors=True)
+                if decision.lower() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True)
         if returnDfs: return itemS, playlistS, videoS, commentReplieS, channelS
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
