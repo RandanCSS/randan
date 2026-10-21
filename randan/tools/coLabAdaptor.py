@@ -59,7 +59,7 @@ def coLabAdaptor():
     return folderCoLab
 
 @colorizer.gray_prints
-def folderCoLab_folderIn_comparison(folder):
+def folderCoLab_folderIn_comparison(folder=None):
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     if not folder:
         folderCoLab = coLabAdaptor() # либо '/content/drive/MyDrive/Colab Notebooks' , либо None
