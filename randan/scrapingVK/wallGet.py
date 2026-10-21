@@ -144,31 +144,31 @@ def wallGetCore(api_keyS,
     goC = True
     tryer = 0
     while goC:
-        try: # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
-            response = requests.get('https://api.vk.ru/method/wall.get', params=params).json()
-            # print('response', response) # для отладки
-            if 'response' in response.keys():
-                response = response['response']
-                # print('    response.keys() внутри wallGetCore', response.keys()) # для отладки
+        # try: # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
+        response = requests.get('https://api.vk.ru/method/wall.get', params=params).json()
+        # print('response', response) # для отладки
+        if 'response' in response.keys():
+            response = response['response']
+            # print('    response.keys() в wallGetCore', response.keys()) # для отладки
 
-                df_additional = pandas.json_normalize(response['items'])
-                break # нет смысла в новых итерациях цикла while goC
+            df_additional = pandas.json_normalize(response['items'])
 
-            else: goC, goS, keyOrder, pause, response, tryer = scrapingVK_tools.errorProcessor(api_keyS, keyOrder, pause, response, tryer)
+            # Для визуализации процесса
+            print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
 
-        except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
-            response = {'items': [], 'total_count': 0} # принудительная выдача для response
-            goS = False # нет смысла продолжать исполнение скрипта
-            # print('goS wallGetCore:', goS) # для отладки
+            iteration += 1
+            if len(df_additional) > 0: df_additional = scrapingVK_tools.dfColumnsProcessor(df_additional, fields, response)
+            
+            break # нет смысла в новых итерациях цикла while goC
 
-            break # и, следовательно, нет смысла в новых итерациях цикла while goC
+        else: goC, goS, keyOrder, pause, response, tryer = scrapingVK_tools.errorProcessor(api_keyS, keyOrder, pause, response, tryer)
 
-    if goS:
-        # Для визуализации процесса
-        print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
+        # except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
+        #     response = {'items': [], 'total_count': 0} # принудительная выдача для response
+        #     goS = False # нет смысла продолжать исполнение скрипта
+        #     # print('goS wallGetCore:', goS) # для отладки
 
-        iteration += 1
-        if len(df_additional) > 0: df_additional = scrapingVK_tools.dfColumnsProcessor(df_additional, fields, response)
+        #     break # и, следовательно, нет смысла в новых итерациях цикла while goC
 
     return df_additional, goS, iteration, keyOrder, pause
 
@@ -212,21 +212,27 @@ def wallGet(access_token,
         experiencedMode = True
         if params:
             if access_token: access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
+            elif 'access_token' in params.keys(): access_token = params['access_token']
             # print('access_token:', access_token) # для отладки
 
             if count: count = scrapingTools.argument_key_comparison(count, 'count', params)
+            elif 'count' in params.keys(): count = params['count']
             # print('count:', count) # для отладки
 
             if domain: domain = scrapingTools.argument_key_comparison(domain, 'domain', params)
+            elif 'domain' in params.keys(): domain = params['domain']
             # print('domain:', domain) # для отладки
 
             if fields: fields = scrapingTools.argument_key_comparison(fields, 'fields', params)
+            elif 'fields' in params.keys(): fields = params['fields']
             # print('fields:', fields) # для отладки
 
             if filter: filter = scrapingTools.argument_key_comparison(filter, 'filter', params)
+            elif 'filter' in params.keys(): filter = params['filter']
             # print('filter:', filter) # для отладки
 
             if offset is not None: offset = scrapingTools.argument_key_comparison(offset, 'offset', params)
+            elif 'offset' in params.keys(): offset = offset['filter']
             # print('offset:', offset) # для отладки
 
         if count:
@@ -299,10 +305,10 @@ f"В директории '{folder_in_folderCurrent}' есть директор�
                 offsetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'offset.txt', int)
 
                 print(f"Нашёл директорию '{folder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
-                      , '\n- скрипт остановился на offset', offset)
-                print(f"- пользователь определил страницу: '{domain}'" if domain else '- пользователь НЕ определил страницу')
-                print(f"- пользователь определил поля: '{fields}'" if fields else '- пользователь НЕ определил поля')
-                print(f"- пользователь определил фильтр: '{filter}'" if filter else '- пользователь НЕ определил фильтр')
+                      , '\n- скрипт остановился на offset', offsetTemporal)
+                print(f"- пользователь определил страницу: '{domainTemporal}'" if domainTemporal else '- пользователь НЕ определил страницу')
+                print(f"- пользователь определил поля: '{fieldsTemporal}'" if fieldsTemporal else '- пользователь НЕ определил поля')
+                print(f"- пользователь определил фильтр: '{filterTemporal}'" if filterTemporal else '- пользователь НЕ определил фильтр')
 
                 print(
 '''--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
@@ -329,8 +335,8 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
                     itemS_xlsx = None
                     for temporalName in temporalNameS:
                         # print('temporalName:', temporalName) # для отладки
-                        if temporalName.endswith('.json') and 'YouTube' in temporalName: itemS_json = pandas.read_json(f'{folder_in_folderCurrent}{slash}{temporalName}')
-                        if temporalName.endswith('.xlsx') and 'YouTube' in temporalName: itemS_xlsx = pandas.read_excel(f'{folder_in_folderCurrent}{slash}{temporalName}', index_col=0)
+                        if temporalName.endswith('.json') and 'VK' in temporalName: itemS_json = pandas.read_json(f'{folder_in_folderCurrent}{slash}{temporalName}')
+                        if temporalName.endswith('.xlsx') and 'VK' in temporalName: itemS_xlsx = pandas.read_excel(f'{folder_in_folderCurrent}{slash}{temporalName}', index_col=0)
 
                     if itemS_json is not None and itemS_xlsx is not None:
                         itemS = itemS_json.merge(itemS_xlsx, how='outer', on='id')
@@ -426,53 +432,47 @@ f'-- можете подать их в скобки функции wallGet пе�
                                                                             version_api)
 
             # print('goS:', goS) # для отладки
-            if len(itemS_additional) == 0: #ничего нового не выгружено независимо от сигнала остановиться
+            if not goS or goS and len(itemS_additional) > 0: # сигнал остановиться; число выгруженных постов не важно ИЛИ сигнала остановиться нет, а выгруженные посты есть
+                # в первом случае dfsProcessor завешит скрипт и создаст Temporal-снимок, во втором -- объединит свежевыгруженные посты с ранее выгруженными
+                itemS = dfsProcessor(complicatedNamePart,
+                                     itemS_additional,
+                                     itemS,
+                                     domain,
+                                     fields,
+                                     fileFormatChoice,
+                                     filter,
+                                     folder,
+                                     goS, # единственная из функций, принимающая этот аргумент
+                                     method,
+                                     momentCurrent,
+                                     offset)
+
+                offset += len(itemS_additional)
+                time.sleep(pause)
+
+            if goS and len(itemS_additional) == 0: # сигнала остановиться нет, но и выгруженных постов нет
                 print(
-'''Искомых объектов на серверах ВК по Вашему запросу, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта. Что делать? Поменяйте настройки запроса и запустите скрипт с начала''')
-                with warnings.catch_warnings():
-                    warnings.simplefilter('ignore')
-                    print(
-'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
-Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
-
-                sys.exit()
-
-            itemS = dfsProcessor(complicatedNamePart,
-                                 itemS_additional,
-                                 itemS,
-                                 domain,
-                                 fields,
-                                 fileFormatChoice,
-                                 filter,
-                                 folder,
-                                 goS, # единственная из функций, принимающая этот аргумент
-                                 method,
-                                 momentCurrent,
-                                 offset)
-
-            offset += len(itemS_additional)
-            time.sleep(pause)
-
+f'''{'Дополнительных' if iteration > 1 else 'Искомых') постов на странице из Вашего запроса, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта{'' if iteration > 1 else '. Что можно сделать для выгрузки постов? Поменяйте настройки запроса и запустите скрипт с начала'}''')
+                if iteration > 1:
 # 2.1.2 Экспорт выгрузки метода get и финальное завершение скрипта
-        df2file.df2fileShell(complicatedNamePart,
-                             df_in=itemS,
-                             fileFormatChoice=fileFormatChoice,
-                             folder=folder,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
-                             momentCurrent=momentCurrent)
+                    df2file.df2fileShell(complicatedNamePart,
+                                         df_in=itemS,
+                                         fileFormatChoice=fileFormatChoice,
+                                         folder=folder,
+                                         method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                                         momentCurrent=momentCurrent)
 
-        print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
-        if folderWithTemporal:
-            if os.path.exists(folderWithTemporal):
-                # print('folderWithTemporal:', folderWithTemporal) # для отладки
-                print(
+                    print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+                    if folderWithTemporal:
+                        if os.path.exists(folderWithTemporal):
+                            # print('folderWithTemporal:', folderWithTemporal) # для отладки
+                            print(
 '''Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, можно удалить её во избежание путаницы при следующих запусках скрипта
---- Если хотите их удалить, введите 'R' и нажмите Enter'''
-                )
+--- Если хотите их удалить, введите 'R' и нажмите Enter''')
 
-                decision = input()
-                if decision == 'R': shutil.rmtree(folderWithTemporal, ignore_errors=True)
-        if fields: print(
+                        decision = input()
+                        if decision.lower() == 'r':: shutil.rmtree(folderWithTemporal, ignore_errors=True)
+                if fields: print(
 f'''
 Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
 import pandas
@@ -483,7 +483,7 @@ for cellContent in Исходный_датафрейм[column].dropna():
 Новый_датафрейм = pandas.json_normalize(JSONS).drop_duplicates('id').reset_index(drop=True)
 ''')
 
-        if returnDfs: return itemS
+                if returnDfs: return itemS
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         # display(itemS)
