@@ -500,9 +500,9 @@ for cellContent in Исходный_датафрейм[column].dropna():
                      fileFormatChoice,
                      filter,
                      folder,
-                     goS, # единственная из функций, принимающая аргумент goS
+                     False, # единственная из функций, принимающая аргумент goS
                      method,
                      momentCurrent,
                      offset)
 
-        if returnDfs: return itemS
+        # if returnDfs: return itemS
