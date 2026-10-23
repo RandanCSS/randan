@@ -22,7 +22,7 @@ while True:
         import os
         break # выход из цикла while True
 
-    except ModuleNotFoundError as excptn_1:
+    except (ImportError, ModuleNotFoundError) as excptn_1:
         module = excptn_1.name.split('.')[0]
         if attempt > MAX_ATTEMPTS:
             print(
