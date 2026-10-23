@@ -26,8 +26,7 @@ while True:
         module = excptn_1.name.split('.')[0]
         if attempt > MAX_ATTEMPTS:
             print(
-f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт'
-            )
+f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт')
 
             raise
 
@@ -54,7 +53,9 @@ def coLabAdaptor():
             print('Похоже, я исполняюсь в CoLab, поэтому сейчас появится окно с просьбой открыть доступ для сохранения результатов работы на Ваш Google Drive\n')
             break
 
-        except ModuleNotFoundError: if attempt == MAX_ATTEMPTS: print('Похоже, я исполняюсь не в CoLab\n')
+        except ModuleNotFoundError:
+            if attempt == MAX_ATTEMPTS: print('Похоже, я исполняюсь не в CoLab\n')
+
     return folderCoLab
 
 @colorizer.gray_prints
