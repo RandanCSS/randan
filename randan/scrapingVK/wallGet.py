@@ -67,7 +67,7 @@ def dfsProcessor(complicatedNamePart,
                  offset):
 
     if df_additional is None: df_additional = pandas.DataFrame()
-    if df_in is None: df_in = pandas.DataFrame()
+    # if df_in is None: df_in = pandas.DataFrame()
     df = pandas.concat([df_in, df_additional])
     columnsForCheck = []
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
@@ -441,6 +441,7 @@ f'-- можете подать их в скобки функции wallGet пе�
             # print('goS:', goS) # для отладки
             if not goS or goS and len(itemS_additional) > 0: # сигнал остановиться; число выгруженных постов не важно ИЛИ сигнала остановиться нет, а выгруженные посты есть
                 # в первом случае dfsProcessor завешит скрипт и создаст Temporal-снимок, во втором -- объединит свежевыгруженные посты с ранее выгруженными
+
                 itemS = dfsProcessor(complicatedNamePart,
                                      itemS_additional,
                                      itemS,
@@ -493,9 +494,8 @@ for cellContent in Исходный_датафрейм[column].dropna():
                 if returnDfs: return itemS
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
-        # display(itemS)
-        if itemS is None or itemS.empty: itemS = pandas.DataFrame()
-
+        # # display(itemS)
+        # if itemS is None or itemS.empty: itemS = pandas.DataFrame()
         dfsProcessor(complicatedNamePart,
                      itemS_additional,
                      itemS,
