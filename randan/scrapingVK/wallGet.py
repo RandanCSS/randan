@@ -141,10 +141,9 @@ def wallGetCore(api_keyS,
 
     params = {key: value for key, value in params_initial.items() if value not in (None, '', [])}
 
-    if isinstance(params['fields'], (list, tuple)): # requests сериализует list как повторяющийся ключ (fields=a&fields=b), а wall.get ожидает fields=a,b. 
-        # Склеить список в строку только для запроса; исходный fields остаётся нетронутым для dfColumnsProcessor
-
-        params['fields'] = ','.join(map(str, params['fields']))
+    if 'fields' in params:
+        if isinstance(params['fields'], (list, tuple)): # requests сериализует list как повторяющийся ключ (fields=a&fields=b), а wall.get ожидает fields=a,b.
+            params['fields'] = ','.join(map(str, params['fields'])) # склеить список в строку только для запроса; исходный fields остаётся нетронутым для dfColumnsProcessor
 
     goC = True
     tryer = 0
@@ -205,7 +204,7 @@ def wallGet(access_token,
           offset : int
           params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.get , чтобы не подавать эти аргументы по отдельности
 
-       returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
+       returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными, если исполнение скрипта не прервано пользователем или из-за ошибки
      version_api : str
     '''
 
@@ -237,7 +236,7 @@ def wallGet(access_token,
             # print('filter:', filter) # для отладки
 
             if offset is not None: offset = scrapingTools.argument_key_comparison(offset, 'offset', params)
-            elif 'offset' in params.keys(): offset = offset['filter']
+            elif 'offset' in params.keys(): offset = params['offset']
             # print('offset:', offset) # для отладки
 
         if count:
@@ -298,7 +297,7 @@ f'''    Скрипт нацелен на выгрузку характерист
     for name_in_folderCurrent in nameS_in_folderCurrent:
         if name_in_folderCurrent.endswith('Temporal') and 'VK' in name_in_folderCurrent:
             folder_in_folderCurrent = folder + name_in_folderCurrent # имя файла достраивается до абсолютного пути
-            if len(os.listdir(folder_in_folderCurrent)) < 5:  print(
+            if len(os.listdir(folder_in_folderCurrent)) < 6:  print(
 f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 6-7 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
             else:
                 domainTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'domain.txt', str)
