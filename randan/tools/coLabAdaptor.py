@@ -42,6 +42,7 @@ f'Пакет {module} НЕ прединсталлирован, но он тре�
 
         attempt += 1
     
+@colorizer.gray_prints
 def coLabAdaptor():
     MAX_ATTEMPTS = 3
     folderCoLab = None
@@ -53,9 +54,7 @@ def coLabAdaptor():
             print('Похоже, я исполняюсь в CoLab, поэтому сейчас появится окно с просьбой открыть доступ для сохранения результатов работы на Ваш Google Drive\n')
             break
 
-        except ModuleNotFoundError:
-            if attempt == MAX_ATTEMPTS: print('Похоже, я исполняюсь не в CoLab\n')
-
+        except ModuleNotFoundError: if attempt == MAX_ATTEMPTS: print('Похоже, я исполняюсь не в CoLab\n')
     return folderCoLab
 
 @colorizer.gray_prints
