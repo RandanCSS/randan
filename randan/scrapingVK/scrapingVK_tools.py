@@ -72,6 +72,7 @@ def dfColumnsProcessor(df_in, fields, response):
 
     return df
 
+@colorizer.red_prints
 def errorProcessor(API_keyS, keyOrder, pause, response, tryer):
     goC = True
     goS = True
