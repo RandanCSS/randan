@@ -1,43 +1,49 @@
+#!/usr/bin/env python
 # coding: utf-8
 
 '''
 A module for formatting to a dataframe files of the formats: CSV, Excel and JSON. It facilitates working with data from social media
-Авторский модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
+Модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
 '''
 
-# sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+# Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
+# В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
+# subprocess & sys -- эти пакеты обычно предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+from subprocess import check_call, CalledProcessError
 import sys
-from subprocess import check_call
 
 # --- остальные модули и пакеты
-attempt = 0
+MAX_ATTEMPTS = 3
+attempt = 1
+
 while True:
     try:
         # from google_drive_downloader import GoogleDriveDownloader
         import os, pandas, warnings
-        break
-    except ModuleNotFoundError:
-        errorDescription = sys.exc_info()
-        module = str(errorDescription[1]).replace("No module named '", '').replace("'", '').replace('_', '')
-        if '.' in module: module = module.split('.')[1]
-        # if 'google_drive_downloader' in module: module = 'googledrivedownloader'
-        print(
-f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка № {attempt} из 10
-'''
-              )
-        check_call([sys.executable, "-m", "pip", "install", module])
-        attempt += 1
-        if  attempt == 10:
-            print(
-f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
-поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
-'''
-                  )
-            break
+        break # выход из цикла while True
 
-# Авторские функции..
-    # импорта наиболее свежего файла (в т.ч. словаря эмитентов, в т.ч. с рейтингами)
+    except ModuleNotFoundError as excptn_1:
+        module = excptn_1.name.split('.')[0]
+        if attempt > MAX_ATTEMPTS:
+            print(
+f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт'
+            )
+
+            raise
+
+        print(
+f'Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас. Попытка № {attempt} из {MAX_ATTEMPTS}'
+        )
+
+        try: check_call([sys.executable, '-m', 'pip', 'install', module, '--quiet', '--disable-pip-version-check'])
+        except CalledProcessError as excptn_2:
+            print(f"Не удалось установить {module}. {type(excptn_2).__name__}: {str(excptn_2).split('Stacktrace:')[0].strip()}")
+            raise
+
+        attempt += 1
+
+# Функции..
+# .. импорта наиболее свежего файла (в т.ч. словаря эмитентов, в т.ч. с рейтингами)
 def getFileUptodateName(fileNameMask, fileS_toDrop, path):
     # print("Работаю с fileNameMask:", fileNameMask) # для отладки
     if os.path.exists(path):
@@ -51,6 +57,7 @@ def getFileUptodateName(fileNameMask, fileS_toDrop, path):
                 print("Найден файл с названием:", fileName) # для отладки
                 return fileName
                 break
+
         # fileUptodate = pandas.read_excel('Замеры рейтингов' + slash + fileName)
         # # display('fileUptodate:', fileUptodate) # для отладки
     else:
@@ -172,17 +179,18 @@ def files2df(*arg):
                             if 'csv' in fileName: df = df.merge(pandas.read_csv(f'{folder}{fileName}'), on='id', how='outer')
                             if 'json' in fileName: df = df.merge(pandas.read_json(f'{folder}{fileName}'), on='id', how='outer')
                             # if 'json' in fileName: df = pandas.concat([df, pandas.read_json(f'{folder}{fileName}')], axis=1)
+
                     except:
                         errorDescription = sys.exc_info()
                         error = str(errorDescription[1])
                         print('error:', error)
-                else:
-                    print('Файлы форматов', formatS, 'не найдены в директории\n')
-        if error == None:
+
+                else: print('Файлы форматов', formatS, 'не найдены в директории\n')
+        if not error:
             display(df.head())
             print('Число столбцов:', df.shape[1], ', число строк', df.shape[0], '\n')
-        else:
-            df = None
+
+        else: df = None
     return df, error, folder
 
 # def googleDriver2local(file_id, dest_path):
