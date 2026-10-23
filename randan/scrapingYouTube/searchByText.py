@@ -35,12 +35,11 @@ while True:
         import googleapiclient.discovery as api
         break # выход из цикла while True
 
-    except ModuleNotFoundError as excptn_1:
+    except (ImportError, ModuleNotFoundError) as excptn_1:
         module = excptn_1.name.split('.')[0]
         if attempt > MAX_ATTEMPTS:
             print(
-f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт'
-            )
+f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт')
 
             raise
 
