@@ -31,12 +31,11 @@ while True:
         import json, os, pandas, requests, shutil, time, warnings
         break # выход из цикла while True
 
-    except ModuleNotFoundError as excptn_1:
+    except (ImportError, ModuleNotFoundError) as excptn_1:
         module = excptn_1.name.split('.')[0]
         if attempt > MAX_ATTEMPTS:
             print(
-f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт'
-            )
+f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт')
 
             raise
 
@@ -161,10 +160,8 @@ def wallGetCore(api_keyS,
             print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
 
             iteration += 1
-            if len(df_additional) > 0: df_additional = scrapingVK_tools.dfColumnsProcessor(df_additional, fields, response)
-            
+            if len(df_additional) > 0: df_additional = scrapingVK_tools.dfColumnsProcessor(df_additional, fields, response)            
             break # нет смысла в новых итерациях цикла while goC
-
         else: goC, goS, keyOrder, pause, response, tryer = scrapingVK_tools.errorProcessor(api_keyS, keyOrder, pause, response, tryer)
 
         # except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
@@ -240,8 +237,9 @@ def wallGet(access_token,
             # print('offset:', offset) # для отладки
 
         if count:
-            if not isinstance(count, int): count = min(abs(int(count)), 100) # VK API wall.get принимает count не более 100. Если пользователь подаст больше, offset += count начнёт перепрыгивать посты
-
+            if not isinstance(count, int): count = int(count)
+            count = min(abs(count), 100)
+        
         else: count = 100
         # print('count:', count) # для отладки
 
@@ -423,7 +421,7 @@ f'-- можете подать их в скобки функции wallGet пе�
     if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
     print('') # для отступа
 
-    if not offset: offset = 0 # если offset ни подан пользователем, ни сохранён при прошлом запуске
+    if offset is None: offset = 0 # если offset ни подан пользователем, ни сохранён при прошлом запуске
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         while True:
             itemS_additional, goS, iteration, keyOrder, pause = wallGetCore(api_keyS,
@@ -459,8 +457,8 @@ f'-- можете подать их в скобки функции wallGet пе�
 
             if goS and len(itemS_additional) == 0: # сигнала остановиться нет, но и выгруженных постов нет
                 print(
-f'''{'Дополнительных' if iteration > 1 else 'Искомых'} постов на странице из Вашего запроса, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта{'' if iteration > 1 else '. Что можно сделать для выгрузки постов? Поменяйте настройки запроса и запустите скрипт с начала'}''')
-                if iteration > 1:
+f'''{'Дополнительных' if iteration > 2 else 'Искомых'} постов на странице из Вашего запроса, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта{'' if iteration > 2 else '. Что можно сделать для выгрузки постов? Поменяйте настройки запроса и запустите скрипт с начала'}''')
+                if iteration > 2:
 # 2.1.2 Экспорт выгрузки метода get и финальное завершение скрипта
                     df2file.df2fileShell(complicatedNamePart,
                                          df_in=itemS,
@@ -503,7 +501,7 @@ for cellContent in Исходный_датафрейм[column].dropna():
                      fileFormatChoice,
                      filter,
                      folder,
-                     False, # единственная из функций, принимающая аргумент goS
+                     goS, # единственная из функций, принимающая аргумент goS
                      method,
                      momentCurrent,
                      offset)
