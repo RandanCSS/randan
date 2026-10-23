@@ -22,12 +22,11 @@ while True:
         from IPython.display import display
         from randan.scrapingVK import scrapingVK_tools # модуль для упрощения скрапинга VK
 
-        from randan.tools import coLabAdaptor, colorizer, df2file, files2df, scrapingTools # модули для
+        from randan.tools import coLabAdaptor, df2file, files2df, scrapingTools # модули для
             # (а) адаптации текущего скрипта к файловой системе CoLab
-            # (б) раскрашивания вывода на экран
-            # (в) сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
-            # (г) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
-            # (д) упрощения скрапинга
+            # (б) сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
+            # (в) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
+            # (г) упрощения скрапинга
 
         import json, os, pandas, requests, shutil, time, warnings
         break # выход из цикла while True
@@ -141,6 +140,12 @@ def wallGetCore(api_keyS,
                       'v': version_api} # обязательный параметр
 
     params = {key: value for key, value in params_initial.items() if value not in (None, '', [])}
+
+    if isinstance(params['fields'], (list, tuple)): # requests сериализует list как повторяющийся ключ (fields=a&fields=b), а wall.get ожидает fields=a,b. 
+        # Склеить список в строку только для запроса; исходный fields остаётся нетронутым для dfColumnsProcessor
+
+        params['fields'] = ','.join(map(str, params['fields']))
+
     goC = True
     tryer = 0
     while goC:
@@ -375,9 +380,10 @@ f'''
             else:
                 itemS, error, folder = files2df.files2df(folder_file)
                 if error:
-                    if 'No such file or directory' in error:
-                        print('Путь:', folder_file, '-- не существует; попробуйте, пожалуйста, ещё раз..')
-
+                    if 'No such file or directory' in error: print('Путь:', folder_file, '-- не существует; попробуйте, пожалуйста, ещё раз..')
+                    else:
+                        print('error из files2df:', error)
+                        break
                 else: break
             # display('itemS:', itemS)
 # Теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
@@ -395,8 +401,9 @@ f'''
 'поэтому, вероятно, следует ввести название той же страницы, что и при формировании указанного Вами файла')
 
             domain = input()
-            if not domain: domain = '80054288' # моя страница
-            else: print('')
+
+    if not domain: domain = '80054288' # моя страница
+    else: print('')
 
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_VK'
