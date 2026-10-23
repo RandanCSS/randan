@@ -19,7 +19,10 @@ attempt = 1
 while True:
     try:
         from datetime import datetime, timezone
-        from randan.tools import varPreprocessor # модуль для предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
+        from randan.tools import colorizer, varPreprocessor # модули для
+            # (а) раскрашивания вывода на экран
+            # (б) предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
+
         import numpy, pandas, traceback
         break # выход из цикла for attempt in range(3)
 
