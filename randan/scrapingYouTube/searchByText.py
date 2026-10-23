@@ -776,7 +776,7 @@ def searchByText(access_token=None,
            locationRadius : str
                regionCode : str
         relevanceLanguage : str
-                returnDfs : bool -- в случае True функция возвращает пять итоговых датафреймов с выдачей методов (1) search, (2) playlists, (3) videos, (4) commentThreads и comments (общий датафрейм), (5) channels
+                returnDfs : bool -- в случае True функция возвращает пять итоговых датафреймов с выдачей методов (1) search, (2) playlists, (3) videos, (4) commentThreads и comments (общий датафрейм), (5) channels, если исполнение скрипта не прервано пользователем или из-за ошибки
                safeSearch : str
                   topicId : str
               version_api : str
