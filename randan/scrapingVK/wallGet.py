@@ -232,6 +232,8 @@ def wallGet(access_token,
 
     else:
         experiencedMode = True
+        KEYS_BASIC = {'access_token', 'count', 'end_time', 'fields', 'latitude', 'longitude', 'q', 'start_time', 'v'}
+        params_extra = {}
         if params:
             if access_token: access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
             elif 'access_token' in params.keys(): access_token = params['access_token']
@@ -256,6 +258,11 @@ def wallGet(access_token,
             if offset is not None: offset = scrapingTools.argument_key_comparison(offset, 'offset', params)
             elif 'offset' in params.keys(): offset = params['offset']
             # print('offset:', offset) # для отладки
+
+            params_extra = {key: value for key, value in params.items() if key not in KEYS_BASIC}
+                # всё, что осталось -- пользовательские аргументы метода
+
+            params_extra = {key: value for key, value in params_extra.items() if value is not None}
 
         if count:
             if not isinstance(count, int): count = int(count)
@@ -457,6 +464,7 @@ f'-- можете подать их в скобки функции wallGet пе�
                                                                             pause,
                                                                             version_api)
 
+            # после самого первого исполнения wallGetCore iteration == 2
             # print('goS:', goS) # для отладки
             if not goS or goS and len(itemS_additional) > 0: # сигнал остановиться; число выгруженных постов не важно ИЛИ сигнала остановиться нет, а выгруженные посты есть
                 # в первом случае dfsProcessor завешит скрипт и создаст Temporal-снимок, во втором -- объединит свежевыгруженные посты с ранее выгруженными
