@@ -6,14 +6,17 @@
 (RU) Модуль для упрощения выгрузки контента ВК методом его API newsfeed.search и максимизации размера этой выгрузки
 '''
 
-# 0. Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
+# Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
 # В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
-# sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+# subprocess & sys -- эти пакеты обычно предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+from subprocess import check_call, CalledProcessError
 import sys
-from subprocess import check_call
 
 # --- остальные модули и пакеты
-for attempt in range(1, 4):
+MAX_ATTEMPTS = 3
+attempt = 1
+
+while True:
     try:
         from datetime import datetime
         from IPython.display import display
@@ -28,106 +31,105 @@ for attempt in range(1, 4):
             # (е) предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
 
         import json, numpy, os, pandas, re, shutil, time, requests, warnings
-        break # выход из цикла for attempt in range(3)
+        break # выход из цикла while True
 
-    except ModuleNotFoundError:
-        errorDescription = sys.exc_info()
-        module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
-        if '.' in module: module = module.split('.')[0]
+    except (ImportError, ModuleNotFoundError) as excptn_1:
+        module = excptn_1.name.split('.')[0]
+        if attempt > MAX_ATTEMPTS:
+            print(
+f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт')
+
+            raise
 
         print(
-f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка № {attempt} из 3
-'''
-        )
+f'Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас. Попытка № {attempt} из {MAX_ATTEMPTS}')
 
-        check_call([sys.executable, '-m', 'pip', 'install', module])
-        if attempt == 3: print(
-f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
-'''
-        )
+        try: check_call([sys.executable, '-m', 'pip', 'install', module, '--quiet', '--disable-pip-version-check'])
+        except CalledProcessError as excptn_2:
+            print(f"Не удалось установить {module}. {type(excptn_2).__name__}: {str(excptn_2).split('Stacktrace:')[0].strip()}")
+            raise
 
-# 1. Вспомогательные функции для..
+        attempt += 1
+
+# 1. Вспомогательные функции..
 # .. метода search из API ВК, помогающая работе с ключами
-def bigSearch(API_keyS,
-              count,
-              end_time,
-              extraParams,
-              fields,
-              iteration,
-              keyOrder,
-              latitude,
-              longitude,
-              pause,
-              q,
-              start_from,
-              start_time):
+def newsfeedSearchCore(api_keyS,
+                       count,
+                       end_time,
+                       fields,
+                       iteration,
+                       keyOrder,
+                       latitude,
+                       longitude,
+                       params_extra,
+                       pause,
+                       q,
+                       start_from,
+                       start_time,
+                       version_api):
 
     # print('    start_from', start_from) # для отладки
-
-    dfAdd = pandas.DataFrame()
+    df_additional = pandas.DataFrame()
     goS = True
-    if isinstance(fields, list): fields = ','.join(fields)
 
-    params = {'access_token': API_keyS[keyOrder], # обязательный параметр
-              'count': count, # опциональный параметр
-              'end_time': end_time, # опциональный параметр
-              'extended': 1, # опциональный параметр
-              'fields': fields, # опциональный параметр
-              'latitude': latitude, # опциональный параметр
-              'longitude': longitude, # опциональный параметр
-              'q': q, # опциональный параметр
-              'start_from': start_from, # опциональный параметр
-              'start_time': start_time, # опциональный параметр
-              'v': '5.199'} # обязательный параметр
+    params_basic = {'access_token': api_keyS[keyOrder], # обязательный параметр
+                    'count': count, # опциональный параметр
+                    'end_time': end_time, # опциональный параметр
+                    'extended': 1, # опциональный параметр
+                    'fields': fields, # опциональный параметр
+                    'latitude': latitude, # опциональный параметр
+                    'longitude': longitude, # опциональный параметр
+                    'q': q, # опциональный параметр
+                    'start_from': start_from, # опциональный параметр
+                    'start_time': start_time, # опциональный параметр
+                    'v': version_api} # обязательный параметр
 
-    PROTECTED = {'access_token', 'v'}
-    if extraParams:
-        for key, value in extraParams.items():
-            if key in PROTECTED: continue
-            if key not in params or params[key] is None: params[key] = value
+    PARAMS_PROTECTED = {'access_token', 'v'}
+    if params_extra:
+        for key, value in params_extra.items():
+            if key in PARAMS_PROTECTED: continue
+            if key not in params_basic or params_basic[key] is None: params_basic[key] = value
 
-    # Все list/tuple в строку через запятую
+    params = {key: value for key, value in params_basic.items() if value not in (None, '', [])}
+
     for key, value in list(params.items()):
-        if isinstance(value, (list, tuple)):
-            params[key] = ','.join(map(str, value))
+        if isinstance(value, (list, tuple)): # requests сериализует list как повторяющийся ключ, например: fields=a&fields=b , а wall.get ожидает fields=a,b
+            params[key] = ','.join(map(str, value)) # склеить список в строку только для запроса; исходный fields остаётся нетронутым для dfColumnsProcessor
 
     tryer = 0
     while True:
-        try: # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
-            params = {key: value for key, value in params.items() if value is not None}
-            response = requests.get('https://api.vk.ru/method/newsfeed.search', params=params)
-            response = response.json() # отобразить выдачу метода get в виде JSON
-            # print('response', response) # для отладки
-            if 'response' in response.keys():
-                response = response['response']
-                # print('    response.keys() внутри bigSearch', response.keys()) # для отладки
+        # try: # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
+        response = requests.get('https://api.vk.ru/method/wall.get', params=params).json()
+        # print('response', response) # для отладки
+        if 'response' in response.keys():
+            response = response['response']
+            # print('    response.keys() внутри newsfeedSearchCore', response.keys()) # для отладки
 
-                dfAdd = pandas.json_normalize(response['items'])
-                break # нет смысла в новых итерациях цикла while goC
+            df_additional = pandas.json_normalize(response['items'])
+            break # нет смысла в новых итерациях цикла while goC
 
-            else:
-                goC, goS, keyOrder, pause, response, tryer = scrapingTools.errorProcessor(API_keyS, keyOrder, pause, response, tryer)
-                if not goS: break
+        else:
+            goC, goS, keyOrder, pause, response, tryer = scrapingTools.errorProcessor(api_keyS, keyOrder, pause, response, tryer)
+            if not goS: break
 
-        except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
-            response = {'items': [], 'total_count': 0} # принудительная выдача для response
-            goS = False # нет смысла продолжать исполнение скрипта
-            # print('goS bigSearch:', goS) # для отладки
-            break # и, следовательно, нет смысла в новых итерациях цикла
+        # except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
+        #     response = {'items': [], 'total_count': 0} # принудительная выдача для response
+        #     goS = False # нет смысла продолжать исполнение скрипта
+        #     # print('goS newsfeedSearchCore:', goS) # для отладки
+        #     break # и, следовательно, нет смысла в новых итерациях цикла
 
     if goS:
         # Для визуализации процесса
         print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
 
         iteration += 1
-        if len(dfAdd) > 0: dfAdd = scrapingTools.dfColumnsProcessor(dfAdd, fields, response)
+        if len(df_additional) > 0: df_additional = scrapingTools.dfColumnsProcessor(df_additional, fields, response)
 
-    return dfAdd, goS, iteration, keyOrder, pause, response
+    return df_additional, goS, iteration, keyOrder, pause, response
 
 # .. обработки выдачи любого из методов, помогающая работе с ключами
 def dfsProcessor(complicatedNamePart,
-                 dfAdd,
+                 df_additional,
                  dfFinal, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода search
                  dfIn,
                  fields,
@@ -143,7 +145,7 @@ def dfsProcessor(complicatedNamePart,
                  year,
                  yearsRange):
 
-    df = pandas.concat([dfIn, dfAdd])
+    df = pandas.concat([dfIn, df_additional])
     columnsForCheck = []
     if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
         for column in df.columns:
@@ -231,7 +233,7 @@ def newsFeedSearch(access_token=None,
     else:
         experiencedMode = True
         KNOWN_KEYS = {'access_token', 'count', 'end_time', 'fields', 'latitude', 'longitude', 'q', 'start_time'}
-        extraParams = {}        
+        params_extra = {}        
         if params:
             access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
             # print('access_token:', access_token) # для отладки
@@ -259,10 +261,10 @@ def newsFeedSearch(access_token=None,
                 if not isinstance(start_time, int): start_time = int(start_time)
             # print('start_time:', start_time) # для отладки
 
-            extraParams = {key: value for key, value in params.items() if key not in KNOWN_KEYS}
+            params_extra = {key: value for key, value in params.items() if key not in KNOWN_KEYS}
                 # всё, что осталось -- пользовательские аргументы метода
 
-            extraParams = {key: value for key, value in extraParams.items() if value is not None}
+            params_extra = {key: value for key, value in params_extra.items() if value is not None}
 
         if count:
             if not isinstance(count, int): count = int(count)
@@ -340,9 +342,9 @@ f'''    Скрипт нацелен на выгрузку характерист
     if not access_token:
         if 'credentialsVK.txt' in rootNameS:
             file = open('credentialsVK.txt')
-            API_keyS = file.read()
-            print("Проверяю наличие файла credentialsVK.txt с ключ{'ами' if ',' in API_keyS else 'ом'}, гипотетически сохранённым{'и' if ',' in API_keyS else ''} при первом запуске скрипта")
-            print("Нашёл файл credentialsVK.txt; далее буду использовать ключ{'и' if ',' in API_keyS else ''} из него:", API_keyS)
+            api_keyS = file.read()
+            print("Проверяю наличие файла credentialsVK.txt с ключ{'ами' if ',' in api_keyS else 'ом'}, гипотетически сохранённым{'и' if ',' in api_keyS else ''} при первом запуске скрипта")
+            print("Нашёл файл credentialsVK.txt; далее буду использовать ключ{'и' if ',' in api_keyS else ''} из него:", api_keyS)
 
         else:
             print(
@@ -351,26 +353,26 @@ f'''    Скрипт нацелен на выгрузку характерист
 --- После ввода нажмите Enter'''
                   )
             while True:
-                API_keyS = input()
-                if len(API_keyS) > 0:
-                    print(f"-- далее буд{'у' if ',' in API_keyS else 'е'}т использован{'ы' if ',' in API_keyS else ''} эт{'и' if ',' in API_keyS else 'от'} ключ{'и' if ',' in API_keyS else ''}")
+                api_keyS = input()
+                if len(api_keyS) > 0:
+                    print(f"-- далее буд{'у' if ',' in api_keyS else 'е'}т использован{'ы' if ',' in api_keyS else ''} эт{'и' if ',' in api_keyS else 'от'} ключ{'и' if ',' in api_keyS else ''}")
 
                     from randan.tools.textPreprocessor import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
-                    API_keyS = multispaceCleaner(API_keyS)
-                    while API_keyS[-1] == ',': API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста
+                    api_keyS = multispaceCleaner(api_keyS)
+                    while api_keyS[-1] == ',': api_keyS = api_keyS[:-1] # избавиться от запятых в конце текста
 
                     file = open('credentialsVK.txt', 'w+') # открыть на запись
-                    file.write(API_keyS)
+                    file.write(api_keyS)
                     file.close()
                     break
 
                 else:
                     print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
 
-        API_keyS = API_keyS.replace(' ', '').replace(',', ', ').split(', ')
+        api_keyS = api_keyS.replace(' ', '').replace(',', ', ').split(', ')
 
-    else: API_keyS = [access_token]
-    print('Количество ключей:', len(API_keyS), '\n')
+    else: api_keyS = [access_token]
+    print('Количество ключей:', len(api_keyS), '\n')
 
 # 2.0.2 Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
@@ -536,21 +538,23 @@ f'''В скрипте используются следующие аргумен
             print('Первое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов')
             # print('    start_from', start_from) # для отладки
 
-            itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS=API_keyS,
-                                                                                   count=count,
-                                                                                   end_time=end_time,
-                                                                                   extraParams=extraParams,
-                                                                                   fields=fields,
-                                                                                   iteration=iteration,
-                                                                                   keyOrder=keyOrder,
-                                                                                   latitude=latitude,
-                                                                                   longitude=longitude,
-                                                                                   pause=pause,
-                                                                                   q=q,
-                                                                                   start_from=None,
-                                                                                   start_time=start_time)
+            itemsAdditional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
+                                                                                            count,
+                                                                                            end_time,
+                                                                                            fields,
+                                                                                            iteration,
+                                                                                            keyOrder,
+                                                                                            latitude,
+                                                                                            longitude,
+                                                                                            params_extra,
+                                                                                            pause,
+                                                                                            q,
+                                                                                            start_from=None,
+                                                                                            start_time=start_time,
+                                                                                            version_api=version_api)
+
             # print('goS 645:', goS) # для отладки
-            if goS: # проверка, что функция bigSearch завершилась успехом; обработка вилки с targetCount == 0
+            if goS: # проверка, что функция newsfeedSearchCore завершилась успехом; обработка вилки с targetCount == 0
                 targetCount = response['total_count']
                 if targetCount == 0:
                     print(
@@ -562,10 +566,10 @@ f'''В скрипте используются следующие аргумен
 Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
                           )
                     sys.exit()
-            else: targetCount = None # проверка, что функция bigSearch завершилась успехом
+            else: targetCount = None # проверка, что функция newsfeedSearchCore завершилась успехом
 
             itemS = dfsProcessor(complicatedNamePart=complicatedNamePart,
-                                 dfAdd=itemsAdditional,
+                                 df_additional=itemsAdditional,
                                  dfFinal=itemS,
                                  dfIn=itemS,
                                  fields=fields,
@@ -587,24 +591,25 @@ f'''В скрипте используются следующие аргумен
                 # print('    start_from', start_from) # для отладки
                 # print('goS 700:', goS) # для отладки
 
-                itemsAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS=API_keyS,
-                                                                                       count=count,
-                                                                                       end_time=end_time,
-                                                                                       extraParams=extraParams,
-                                                                                       fields=fields,
-                                                                                       iteration=iteration,
-                                                                                       keyOrder=keyOrder,
-                                                                                       latitude=latitude,
-                                                                                       longitude=longitude,
-                                                                                       pause=pause,
-                                                                                       q=q,
-                                                                                       start_from=start_from,
-                                                                                       start_time=start_time)
+                itemsAdditional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
+                                                                                                count,
+                                                                                                end_time,
+                                                                                                fields,
+                                                                                                iteration,
+                                                                                                keyOrder,
+                                                                                                latitude,
+                                                                                                longitude,
+                                                                                                params_extra,
+                                                                                                pause,
+                                                                                                q,
+                                                                                                start_from,
+                                                                                                start_time,
+                                                                                                version_api)
 
-                # print('''    response['next_from'] после bigSearch''', response['next_from']) # для отладки
+                # print('''    response['next_from'] после newsfeedSearchCore''', response['next_from']) # для отладки
 
                 itemS = dfsProcessor(complicatedNamePart=complicatedNamePart,
-                                     dfAdd=itemsAdditional,
+                                     df_additional=itemsAdditional,
                                      dfFinal=itemS,
                                      dfIn=itemS,
                                      fields=fields,
@@ -644,25 +649,26 @@ f'''Метод {method} выдаёт ограниченное количеств
                             print('Ищу текст запроса-фильтра в контенте за',  month, 'месяц', year, 'года', '               ') # , end='\r'
                             print('  Заход на первую страницу выдачи', '               ', end='\r')
 
-                            itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS=API_keyS,
-                                                                                                          count=count,
-                                                                                                          end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
-                                                                                                          extraParams=extraParams,
-                                                                                                          fields=fields,
-                                                                                                          iteration=iteration,
-                                                                                                          keyOrder=keyOrder,
-                                                                                                          latitude=latitude,
-                                                                                                          longitude=longitude,
-                                                                                                          pause=pause,
-                                                                                                          q=q,
-                                                                                                          start_from=None,
-                                                                                                          start_time=int(datetime(year, int(month), 1).timestamp()))
+                            itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
+                                                                                                                   count,
+                                                                                                                   end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
+                                                                                                                   fields=fields,
+                                                                                                                   iteration=iteration,
+                                                                                                                   keyOrder=keyOrder,
+                                                                                                                   latitude=latitude,
+                                                                                                                   longitude=longitude,
+                                                                                                                   params_extra=params_extra,
+                                                                                                                   pause=pause,
+                                                                                                                   q=q,
+                                                                                                                   start_from=None,
+                                                                                                                   start_time=int(datetime(year, int(month), 1).timestamp()),
+                                                                                                                   version_api=version_api)
 
                             # print('itemsMonthlyAdditional:') # для отладки
                             # display(itemsMonthlyAdditional.sort_values('date')['date'].drop_duplicates()) # для отладки
 
                             itemsYearlyAdditional = dfsProcessor(complicatedNamePart=complicatedNamePart,
-                                                                 dfAdd=itemsMonthlyAdditional,
+                                                                 df_additional=itemsMonthlyAdditional,
                                                                  dfFinal=itemS,
                                                                  dfIn=itemsYearlyAdditional,
                                                                  fields=fields,
@@ -686,25 +692,26 @@ f'''Метод {method} выдаёт ограниченное количеств
                                 start_from = response['next_from']
                                 # print('    start_from', start_from) # для отладки
 
-                                itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = bigSearch(API_keyS=API_keyS,
-                                                                                                              count=count,
-                                                                                                              end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
-                                                                                                              extraParams=extraParams,
-                                                                                                              fields=fields,
-                                                                                                              iteration=iteration,
-                                                                                                              keyOrder=keyOrder,
-                                                                                                              latitude=latitude,
-                                                                                                              longitude=longitude,
-                                                                                                              pause=pause,
-                                                                                                              q=q,
-                                                                                                              start_from=start_from,
-                                                                                                              start_time=int(datetime(year, int(month), 1).timestamp()))
+                                itemsMonthlyAdditional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
+                                                                                                                       count,
+                                                                                                                       end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
+                                                                                                                       params_extra=params_extra,
+                                                                                                                       fields=fields,
+                                                                                                                       iteration=iteration,
+                                                                                                                       keyOrder=keyOrder,
+                                                                                                                       latitude=latitude,
+                                                                                                                       longitude=longitude,
+                                                                                                                       pause=pause,
+                                                                                                                       q=q,
+                                                                                                                       start_from=start_from,
+                                                                                                                       start_time=int(datetime(year, int(month), 1).timestamp()),
+                                                                                                                       version_api=version_api)
 
                                 # print('itemsMonthlyAdditional:') # для отладки
                                 # display(itemsMonthlyAdditional.sort_values('date')['date'].drop_duplicates()) # для отладки
 
                                 itemsYearlyAdditional = dfsProcessor(complicatedNamePart=complicatedNamePart,
-                                                                     dfAdd=itemsMonthlyAdditional,
+                                                                     df_additional=itemsMonthlyAdditional,
                                                                      dfFinal=itemS,
                                                                      dfIn=itemsYearlyAdditional,
                                                                      fields=fields,
@@ -726,7 +733,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                         # display(itemsYearlyAdditional.sort_values('date')['date'].drop_duplicates()) # для отладки
 
                         itemS = dfsProcessor(complicatedNamePart=complicatedNamePart,
-                                             dfAdd=itemsYearlyAdditional,
+                                             df_additional=itemsYearlyAdditional,
                                              dfFinal=itemS,
                                              dfIn=itemS,
                                              fields=fields,
@@ -805,22 +812,22 @@ for cellContent in Исходный_датафрейм[column].dropna():
         # display(itemS)
         if len(itemS) > 0:
             if itemsYearlyAdditional is not None:
-                dfAdd = itemsYearlyAdditional
+                df_additional = itemsYearlyAdditional
                 dfFinal = itemS
                 dfIn = itemS
 
             elif itemsMonthlyAdditional is not None:
-                dfAdd = itemsMonthlyAdditional
+                df_additional = itemsMonthlyAdditional
                 dfFinal = itemS
                 dfIn = itemsYearlyAdditional
 
             elif itemsAdditional is not None:
-                dfAdd = itemsAdditional
+                df_additional = itemsAdditional
                 dfFinal = itemS
                 dfIn = itemS
 
             dfsProcessor(complicatedNamePart=complicatedNamePart,
-                         dfAdd=dfAdd,
+                         df_additional=df_additional,
                          dfFinal=itemS,
                          dfIn=itemS,
                          fields=fields,
