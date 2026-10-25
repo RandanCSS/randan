@@ -49,7 +49,7 @@ f'Пакет {module} НЕ прединсталлирован, но он тре�
 
         attempt += 1
 
-# 1. Вспомогательные функции для..
+# 1. Вспомогательные функции..
 # .. обработки выдачи, помогающая работе с ключами
 def dfsProcessor(complicatedNamePart,
                  df_additional,
@@ -122,13 +122,14 @@ def wallGetCore(api_keyS,
                 iteration,
                 keyOrder,
                 offset,
+                params_extra,
                 pause,
                 version_api):
 
     df_additional = pandas.DataFrame()
     goS = True
 
-    params_initial = {'access_token': api_keyS[keyOrder], # обязательный параметр
+    params_basic = {'access_token': api_keyS[keyOrder], # обязательный параметр
                       'count': count, # опциональный параметр
                       'domain': domain, # обязательный параметр, но без него не будет результата
                       'extended': 1, # опциональный параметр
@@ -137,11 +138,32 @@ def wallGetCore(api_keyS,
                       'offset': offset, # опциональный параметр
                       'v': version_api} # обязательный параметр
 
-    params = {key: value for key, value in params_initial.items() if value not in (None, '', [])}
+    PARAMS_PROTECTED = {'access_token', 'v'}
+    if params_extra:
+        for key, value in params_extra.items():
+            if key in PARAMS_PROTECTED: continue
+            if key not in params_basic or params_basic[key] is None: params_basic[key] = value
 
-    if 'fields' in params:
-        if isinstance(params['fields'], (list, tuple)): # requests сериализует list как повторяющийся ключ (fields=a&fields=b), а wall.get ожидает fields=a,b.
-            params['fields'] = ','.join(map(str, params['fields'])) # склеить список в строку только для запроса; исходный fields остаётся нетронутым для dfColumnsProcessor
+    params = {key: value for key, value in params_basic.items() if value not in (None, '', [])}
+
+    for key, value in list(params.items()):
+        if isinstance(value, (list, tuple)): # requests сериализует list как повторяющийся ключ, например: fields=a&fields=b , а wall.get ожидает fields=a,b
+            params[key] = ','.join(map(str, value)) # склеить список в строку только для запроса; исходный fields остаётся нетронутым для dfColumnsProcessor
+
+    # params_initial = {'access_token': api_keyS[keyOrder], # обязательный параметр
+    #                   'count': count, # опциональный параметр
+    #                   'domain': domain, # обязательный параметр, но без него не будет результата
+    #                   'extended': 1, # опциональный параметр
+    #                   'fields': fields, # опциональный параметр
+    #                   'filter': filter, # опциональный параметр
+    #                   'offset': offset, # опциональный параметр
+    #                   'v': version_api} # обязательный параметр
+
+    # params = {key: value for key, value in params_initial.items() if value not in (None, '', [])}
+
+    # if 'fields' in params:
+    #     if isinstance(params['fields'], (list, tuple)): # requests сериализует list как повторяющийся ключ (fields=a&fields=b), а wall.get ожидает fields=a,b.
+    #         params['fields'] = ','.join(map(str, params['fields'])) # склеить список в строку только для запроса; исходный fields остаётся нетронутым для dfColumnsProcessor
 
     goC = True
     tryer = 0
@@ -431,6 +453,7 @@ f'-- можете подать их в скобки функции wallGet пе�
                                                                             iteration,
                                                                             keyOrder,
                                                                             offset,
+                                                                            params_extra,
                                                                             pause,
                                                                             version_api)
 
