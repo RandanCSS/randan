@@ -195,14 +195,14 @@ def wallGetCore(api_keyS,
     return df_additional, goS, iteration, keyOrder, pause
 
 # 2. Основная функция
-def wallGet(access_token,
-            count,
-            domain,
-            fields,
-            filter,
-            folder,
-            offset,
-            params,
+def wallGet(access_token=None,
+            count=None,
+            domain=None,
+            fields=None,
+            filter=None,
+            folder=None,
+            offset=None,
+            params=None,
             returnDfs=False,
             version_api='5.199'):
     '''
@@ -226,13 +226,14 @@ def wallGet(access_token,
      version_api : str
     '''
 
+    params_extra = {}
     if not params and not access_token and not count and not domain and not fields and not filter and not offset and not returnDfs:
         print('Пользователь не подал аргументы') # для отладки
         experiencedMode = False
 
     else:
         experiencedMode = True
-        KEYS_BASIC = {'access_token', 'count', 'end_time', 'fields', 'latitude', 'longitude', 'q', 'start_time', 'v'}
+        KEYS_BASIC = {'access_token', 'count', 'domain', 'fields', 'filter', 'offset', 'v'}
         params_extra = {}
         if params:
             if access_token: access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
@@ -258,6 +259,10 @@ def wallGet(access_token,
             if offset is not None: offset = scrapingTools.argument_key_comparison(offset, 'offset', params)
             elif 'offset' in params.keys(): offset = params['offset']
             # print('offset:', offset) # для отладки
+
+            if version_api is not None: version_api = scrapingTools.argument_key_comparison(version_api, 'v', params)
+            elif 'v' in params.keys(): version_api = params['v']
+            # print('v:', v) # для отладки
 
             params_extra = {key: value for key, value in params.items() if key not in KEYS_BASIC}
                 # всё, что осталось -- пользовательские аргументы метода
@@ -468,6 +473,7 @@ f'-- можете подать их в скобки функции wallGet пе�
             # print('goS:', goS) # для отладки
             if not goS or goS and len(itemS_additional) > 0: # сигнал остановиться; число выгруженных постов не важно ИЛИ сигнала остановиться нет, а выгруженные посты есть
                 # в первом случае dfsProcessor завешит скрипт и создаст Temporal-снимок, во втором -- объединит свежевыгруженные посты с ранее выгруженными
+                # Вариантов сигнала в этом и аналогичном скриптах три: len(itemS_additional) > 0 , not goS , 'next_from' is not in response.keys()
 
                 itemS = dfsProcessor(complicatedNamePart,
                                      itemS_additional,
@@ -488,7 +494,7 @@ f'-- можете подать их в скобки функции wallGet пе�
             if goS and len(itemS_additional) == 0: # сигнала остановиться нет, но и выгруженных постов нет
                 print(
 f'''{'Дополнительных' if iteration > 2 else 'Искомых'} постов на странице из Вашего запроса, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта{'' if iteration > 2 else '. Что можно сделать для выгрузки постов? Поменяйте настройки запроса и запустите скрипт с начала'}''')
-                if iteration > 2:
+                if iteration >= 2:
 # 2.1.2 Экспорт выгрузки метода get и финальное завершение скрипта
                     df2file.df2fileShell(complicatedNamePart,
                                          df_in=itemS,
@@ -519,6 +525,15 @@ for cellContent in Исходный_датафрейм[column].dropna():
 ''')
 
                 if returnDfs: return itemS
+                else:
+                    with warnings.catch_warnings():
+                        warnings.simplefilter('ignore')
+                        print(
+'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
+Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
+
+                        sys.exit()
+
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         # # display(itemS)
