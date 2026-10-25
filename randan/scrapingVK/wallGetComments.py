@@ -6,14 +6,17 @@
 (RU) Модуль для упрощения выгрузки контента ВК методом его API wall.getComments и максимизации размера этой выгрузки
 '''
 
-# 0. Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
-# 0.0 В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
-# sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+# Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
+# В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
+# subprocess & sys -- эти пакеты обычно предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+from subprocess import check_call, CalledProcessError
 import sys
-from subprocess import check_call
 
 # --- остальные модули и пакеты
-for attempt in range(1, 4):
+MAX_ATTEMPTS = 3
+attempt = 1
+
+while True:
     try:
         from datetime import datetime
         from IPython.display import display
@@ -27,30 +30,31 @@ for attempt in range(1, 4):
             # (д) упрощения скрапинга
 
         import json, os, pandas, shutil, requests, time, warnings
-        break # выход из цикла for attempt in range(3)
+        break # выход из цикла while True
 
-    except ModuleNotFoundError:
-        errorDescription = sys.exc_info()
-        module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
-        if '.' in module: module = module.split('.')[0]
+    except (ImportError, ModuleNotFoundError) as excptn_1:
+        module = excptn_1.name.split('.')[0]
+        if attempt > MAX_ATTEMPTS:
+            print(
+f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт')
+
+            raise
 
         print(
-f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка № {attempt} из 3
-'''
-        )
+f'Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас. Попытка № {attempt} из {MAX_ATTEMPTS}')
 
-        check_call([sys.executable, '-m', 'pip', 'install', module])
-        if attempt == 3: print(
-f'''Пакет {module} НЕ удалось импортировать за {attempt} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
-'''
-        )
+        try: check_call([sys.executable, '-m', 'pip', 'install', module, '--quiet', '--disable-pip-version-check'])
+        except CalledProcessError as excptn_2:
+            print(f"Не удалось установить {module}. {type(excptn_2).__name__}: {str(excptn_2).split('Stacktrace:')[0].strip()}")
+            raise
 
-# 1. Вспомогательные функции для..
+        attempt += 1
+
+# 1. Вспомогательные функции..
 # .. обработки выдачи, помогающая работе с ключами
 def dfsProcessor(complicatedNamePart,
                  coLabFolder,
-                 dfAdd,
+                 df_additional,
                  dfFinal, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода getComments
                  dfIn,
                  fields,
@@ -62,7 +66,7 @@ def dfsProcessor(complicatedNamePart,
                  owner_id,
                  post_id,
                  slash):
-    df = pandas.concat([dfIn, dfAdd])
+    df = pandas.concat([dfIn, df_additional])
     columnsForCheck = []
     if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся строк возможна по столбцам, содержащим в имени id
         for column in df.columns:
@@ -114,7 +118,7 @@ f'''Поскольку исполнение скрипта натолкнуло�
     return df
 
 # .. метода getComments из API ВК, помогающая работе с ключами
-def wallGetCommentsCore(API_keyS,
+def wallGetCommentsCore(api_keyS,
                         count,
                         fields,
                         iteration,
@@ -122,11 +126,13 @@ def wallGetCommentsCore(API_keyS,
                         offset,
                         owner_id,
                         pause,
-                        post_id):
-    dfAdd = pandas.DataFrame()
+                        post_id,
+                        version_api):
+
+    df_additional = pandas.DataFrame()
     goS = True
 
-    params = {'access_token': API_keyS[keyOrder], # обязательный параметр
+    params = {'access_token': api_keyS[keyOrder], # обязательный параметр
               'count': count, # опциональный параметр
               'extended': 1, # опциональный параметр
               'fields': fields, # опциональный параметр
@@ -147,10 +153,10 @@ def wallGetCommentsCore(API_keyS,
                 response = response['response']
                 # print('    response.keys() внутри wallgetCommentsCore', response.keys()) # для отладки
 
-                dfAdd = pandas.json_normalize(response['items'])
+                df_additional = pandas.json_normalize(response['items'])
                 break # нет смысла в новых итерациях цикла while goC
 
-            else: goC, goS, keyOrder, pause, response, tryer = scrapingVK_tools.errorProcessor(API_keyS, keyOrder, pause, response, tryer)
+            else: goC, goS, keyOrder, pause, response, tryer = scrapingVK_tools.errorProcessor(api_keyS, keyOrder, pause, response, tryer)
 
         except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
             response = {'items': [], 'total_count': 0} # принудительная выдача для response
@@ -164,9 +170,9 @@ def wallGetCommentsCore(API_keyS,
         print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
 
         iteration += 1
-        if len(dfAdd) > 0: dfAdd = scrapingVK_tools.dfColumnsProcessor(dfAdd, fields, response)
+        if len(df_additional) > 0: df_additional = scrapingVK_tools.dfColumnsProcessor(df_additional, fields, response)
 
-    return dfAdd, goS, iteration, keyOrder, pause, response
+    return df_additional, goS, iteration, keyOrder, pause, response
 
 # 2. Основная функция
 def wallGetComments(access_token=None,
@@ -292,10 +298,10 @@ f'''    Скрипт нацелен на выгрузку характерист
     if access_token:
         if 'credentialsVK.txt' in rootNameS:
             file = open('credentialsVK.txt')
-            API_keyS = file.read()
+            api_keyS = file.read()
             if not silentMode: 
-                print("Проверяю наличие файла credentialsVK.txt с ключ{'ами' if ',' in API_keyS else 'ом'}, гипотетически сохранённым{'и' if ',' in API_keyS else ''} при первом запуске скрипта")
-                print("Нашёл файл credentialsVK.txt; далее буду использовать ключ{'и' if ',' in API_keyS else ''} из него:", API_keyS)
+                print("Проверяю наличие файла credentialsVK.txt с ключ{'ами' if ',' in api_keyS else 'ом'}, гипотетически сохранённым{'и' if ',' in api_keyS else ''} при первом запуске скрипта")
+                print("Нашёл файл credentialsVK.txt; далее буду использовать ключ{'и' if ',' in api_keyS else ''} из него:", api_keyS)
 
         else:
             if not silentMode: print(
@@ -304,23 +310,23 @@ f'''    Скрипт нацелен на выгрузку характерист
 --- После ввода нажмите Enter'''
                                      )
             while True:
-                API_keyS = input()
-                if len(API_keyS) > 0:
-                    print(f"-- далее буд{'у' if ',' in API_keyS else 'е'}т использован{'ы' if ',' in API_keyS else ''} эт{'и' if ',' in API_keyS else 'от'} ключ{'и' if ',' in API_keyS else ''}")
+                api_keyS = input()
+                if len(api_keyS) > 0:
+                    print(f"-- далее буд{'у' if ',' in api_keyS else 'е'}т использован{'ы' if ',' in api_keyS else ''} эт{'и' if ',' in api_keyS else 'от'} ключ{'и' if ',' in api_keyS else ''}")
 
                     from randan.tools.textPreprocessor import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
-                    API_keyS = multispaceCleaner(API_keyS)
-                    while API_keyS[-1] == ',': API_keyS = API_keyS[:-1] # избавиться от запятых в конце текста
-                    scrapingTools.containerExport('credentialsVK.txt', API_keyS)
+                    api_keyS = multispaceCleaner(api_keyS)
+                    while api_keyS[-1] == ',': api_keyS = api_keyS[:-1] # избавиться от запятых в конце текста
+                    scrapingTools.containerExport('credentialsVK.txt', api_keyS)
                     break
 
                 else:
                     print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
 
-        API_keyS = API_keyS.replace(' ', '').replace(',', ', ').split(', ')
+        api_keyS = api_keyS.replace(' ', '').replace(',', ', ').split(', ')
 
-    else: API_keyS = [access_token]
-    if not silentMode: print('Количество ключей:', len(API_keyS), '\n')
+    else: api_keyS = [access_token]
+    if not silentMode: print('Количество ключей:', len(api_keyS), '\n')
 
 # 2.0.2 Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
@@ -457,7 +463,7 @@ f'-- можете подать их в скобки функции wallGet пе�
         iteration = 1
         if not offset: offset = 0 # если offset ни подан пользователем, ни сохранён при прошлом запуске
         while True:
-            itemsAdditional, goS, iteration, keyOrder, pause, response = wallGetCommentsCore(API_keyS,
+            itemsAdditional, goS, iteration, keyOrder, pause, response = wallGetCommentsCore(api_keyS,
                                                                                              count,
                                                                                              fields,
                                                                                              iteration,
@@ -465,7 +471,8 @@ f'-- можете подать их в скобки функции wallGet пе�
                                                                                              offset,
                                                                                              owner_id,
                                                                                              pause,
-                                                                                             post_id)
+                                                                                             post_id,
+                                                                                             version_api)
 
             # print('goS:', goS) # для отладки
             if goS & (len(itemsAdditional) == 0):
@@ -533,7 +540,7 @@ df2fileShell('{complicatedNamePart}', Новый_датафрейм, '{fileForma
         if not itemS: itemS = pandas.DataFrame()
         dfsProcessor(complicatedNamePart,
                      coLabFolder,
-                     dfAdd,
+                     df_additional,
                      itemS, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода getComments
                      itemS,
                      fields,
