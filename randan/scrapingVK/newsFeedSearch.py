@@ -232,7 +232,7 @@ def newsFeedSearch(access_token=None,
 
     else:
         experiencedMode = True
-        KNOWN_KEYS = {'access_token', 'count', 'end_time', 'fields', 'latitude', 'longitude', 'q', 'start_time'}
+        KEYS_BASIC = {'access_token', 'count', 'end_time', 'fields', 'latitude', 'longitude', 'q', 'start_time', 'v'}
         params_extra = {}        
         if params:
             access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
@@ -261,16 +261,16 @@ def newsFeedSearch(access_token=None,
                 if not isinstance(start_time, int): start_time = int(start_time)
             # print('start_time:', start_time) # для отладки
 
-            params_extra = {key: value for key, value in params.items() if key not in KNOWN_KEYS}
+            params_extra = {key: value for key, value in params.items() if key not in KEYS_BASIC}
                 # всё, что осталось -- пользовательские аргументы метода
 
             params_extra = {key: value for key, value in params_extra.items() if value is not None}
 
         if count:
             if not isinstance(count, int): count = int(count)
-
+            count = min(abs(count), 200)
+        
         else: count = 200
-
         # print('count:', count) # для отладки
 
         if end_time is not None:
