@@ -166,7 +166,6 @@ def newsfeedSearchCore(api_keyS,
 
     tryer = 0
     while goC:
-        # try: # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
         response = requests.get('https://api.vk.ru/method/wall.get', params=params).json()
         # print('response', response) # для отладки
         if 'response' in response.keys():
@@ -182,13 +181,6 @@ def newsfeedSearchCore(api_keyS,
             if len(df_additional) > 0: df_additional = scrapingVK_tools.dfColumnsProcessor(df_additional, fields, response)            
             break # нет смысла в новых итерациях цикла while goC
         else: goC, goS, keyOrder, pause, response, tryer = scrapingVK_tools.errorProcessor(api_keyS, keyOrder, pause, response, tryer)
-
-        # except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
-        #     response = {'items': [], 'total_count': 0} # принудительная выдача для response
-        #     goS = False # нет смысла продолжать исполнение скрипта
-        #     # print('goS newsfeedSearchCore:', goS) # для отладки
-        #     break # и, следовательно, нет смысла в новых итерациях цикла
-
     return df_additional, goS, iteration, keyOrder, pause, response
 
 # 2. Основная функция
@@ -332,43 +324,11 @@ f'''    Скрипт нацелен на выгрузку характерист
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     nameS_in_folderCurrent = os.listdir()
-    # Поиск ключей
-    if not access_token:
-        if 'credentialsVK.txt' in nameS_in_folderCurrent:
-            file = open('credentialsVK.txt')
-            api_keyS = file.read()
-            print("Проверяю наличие файла credentialsVK.txt с ключ{'ами' if ',' in api_keyS else 'ом'}, гипотетически сохранённым{'и' if ',' in api_keyS else ''} при первом запуске скрипта")
-            print("Нашёл файл credentialsVK.txt; далее буду использовать ключ{'и' if ',' in api_keyS else ''} из него:", api_keyS)
+    # print('nameS_in_folderCurrent:', nameS_in_folderCurrent) # для отладки
+    api_keyS = scrapingTools.credentialsProcessor(access_token, 'VK', folder, 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', nameS_in_folderCurrent, silentMode)
 
-        else:
-            print(
-'''--- НЕ нашёл файл credentialsVK.txt . Введите в окно Ваш API key для авторизации в API ВК 
-(примерная инструкция, как создать API key, доступна по ссылке https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8 ). Для подстраховки от ограничения действия API key желательно создать несколько ключей (три -- отлично) и ввести их без кавычек через запятую с пробелом
---- После ввода нажмите Enter'''
-                  )
-            while True:
-                api_keyS = input()
-                if len(api_keyS) > 0:
-                    print(f"-- далее буд{'у' if ',' in api_keyS else 'е'}т использован{'ы' if ',' in api_keyS else ''} эт{'и' if ',' in api_keyS else 'от'} ключ{'и' if ',' in api_keyS else ''}")
 
-                    from randan.tools.textPreprocessor import multispaceCleaner # авторский модуль для предобработки нестандартизированного текста
-                    api_keyS = multispaceCleaner(api_keyS)
-                    while api_keyS[-1] == ',': api_keyS = api_keyS[:-1] # избавиться от запятых в конце текста
-
-                    file = open('credentialsVK.txt', 'w+') # открыть на запись
-                    file.write(api_keyS)
-                    file.close()
-                    break
-
-                else:
-                    print('--- Вы ничего НЕ ввели. Попробуйте ещё раз..')
-
-        api_keyS = api_keyS.replace(' ', '').replace(',', ', ').split(', ')
-
-    else: api_keyS = [access_token]
-    print('Количество ключей:', len(api_keyS), '\n')
-
-# 2.0.2 Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
+# Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
     if not silentMode: # если основная функция этого модуля явлется частью другой функции, поиск данных не требуется -- они будут переданы
         print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
@@ -431,42 +391,48 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
                         temporalNameS = os.listdir(folder_in_folderCurrent)
                         folderWithTemporal, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
 
-    if not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
-        print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
+        if not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
+            print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
 
 # Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
+    # if not silentMode продолжается
         print(
 f'''
-Возможно, Вы располагаете файлом, в котором есть ранее выгруженные из ВК методом {method} данные, и который хотели бы дополнить? Или планируете первичный сбор контента?
+Возможно, Вы располагаете файлом, в котором есть ранее выгруженные из ВК методом {method} данные, и который хотели бы дополнить?
+Или планируете первичный сбор контента?
 --- Если планируете первичный сбор, нажмите Enter
---- Если располагаете файлом формата XLSX, укажите полный путь, включая название файла, и нажмите Enter. Затем при необходимости сможете добавить к нему другие располагаемые файлы'''
-              )
-        while True:
-            folderFile = input()
-            if len(folderFile) == 0:
-                folderFile = None # для унификации
-                break
-            else:
-                itemS, error, folder = files2df.files2df(folderFile) # смена folder на явно переданную пользователем
-                if error:
-                    if 'No such file or directory' in error:
-                        print('Путь:', folderFile, '-- не существует; попробуйте, пожалуйста, ещё раз..')
-                else: break
-            # display(itemS)
-# Теперь определены объекты: folder и folderFile (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
+--- Если располагаете файлом формата XLSX, укажите полный путь, включая название файла, и нажмите Enter.
+Затем при необходимости сможете добавить к нему другие располагаемые файлы''')
 
-# 2.0.4 Пользовательские настройки запроса к API ВК
+        while True:
+            folder_file = input()
+            if len(folder_file) == 0:
+                folder_file = None # для унификации
+                break
+
+            else:
+                itemS, error, folder = files2df.files2df(folder_file)
+                if error:
+                    if 'No such file or directory' in error: print('Путь:', folder_file, '-- не существует; попробуйте, пожалуйста, ещё раз..')
+                    else:
+                        print('error из files2df:', error)
+                        break
+                else: break
+            # display('itemS:', itemS)
+# Теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
+
+# 2.0.2 Пользовательские настройки запроса к API ВК
+    # if not silentMode продолжается
         if not q: # если пользователь не подал этот аргумент в рамках experiencedMode
             print(
 '''Скрипт умеет искать контент в постах открытых аккаунтов по ТЕКСТОВОМУ ЗАПРОСУ-ФИЛЬТРУ
---- Введите текст запроса-фильтра, который ожидаете найти в постах, после чего нажмите Enter'''
-                  )
-            if folderFile:
-                print(
+--- Введите текст запроса-фильтра, который ожидаете найти в постах, после чего нажмите Enter''')
+
+            if folderFile: print(
 'ВАЖНО! В результате исполнения текущего скрипта данные из указанного Вами файла', folderFile, 'будут дополнены актуальными данными из выдачи скрипта',
 '(возможно появление новых объектов и новых столбцов, а также актуализация содержимого столбцов),',
-'поэтому, вероятно, следует ввести тот же запрос-фильтр, что и при формировании указанного Вами файла'
-                      )
+'поэтому, вероятно, следует ввести тот же запрос-фильтр, что и при формировании указанного Вами файла')
+
             q = input()
             if q == '': q = None # для единообразия
             else: print('')
@@ -476,8 +442,8 @@ f'''
             print(
 f'''Если требуется конкретный временнОй диапазон, то можно использовать его не на текущем этапе выгрузки данных, а на следующем этапе -- предобработки датафрейма с выгруженными данными. Проблема в том, что без назначения временнОго диапазона метод {method} выдаёт ограниченное количество объектов, причём наиболее приближенных к текущему моменту
 --- Поэтому если всё же требуется назначить временнОй диапазон на этапе выгрузки данных, назначьте его годами (а не более мелкими единицами времени). Для назначения диапазона введите без кавычек минимальный год диапазона, тире, максимальный год диапазона (минимум и максимум могут совпадать в такой записи: 'год-тот же год') и нажмите Enter !!! Cледует учесть, что текущая версия API ВК 'не умеет' обращаться к контенту, опубликованному ранее 2020 года
---- Если НЕ требуется назначить временнОй диапазон на этапе выгрузки данных, нажмите Enter'''
-                  )
+--- Если НЕ требуется назначить временнОй диапазон на этапе выгрузки данных, нажмите Enter''')
+
             while True:
                 yearsRange = input()
                 if len(yearsRange) != 0:
@@ -518,8 +484,10 @@ f'''Если требуется конкретный временнОй диап
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_VK'
     if q: complicatedNamePart += '_' + q if len(q) < 50 else '_' + q[:50]
-    complicatedNamePart += '' if not yearMinByUser and not yearMaxByUser else '_' + str(yearMinByUser) + '-' + str(yearMaxByUser)
+    complicatedNamePart += '_' + str(yearMinByUser) + '-' + str(yearMaxByUser) if yearMinByUser or yearMaxByUser else ''
     # print('complicatedNamePart', complicatedNamePart)
+
+    # if not silentMode завершилось
 
 # 2.1 Первичный сбор контента методом search
 # 2.1.0 Первое обращение к API БЕЗ аргументов start_time, end_time (этап stage = 0)
