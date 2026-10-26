@@ -285,21 +285,17 @@ f'''    Скрипт нацелен на выгрузку характерист
 
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API ВК
-
-    # Блок, поскольку folder многократно используется внутри функции в формулах
-    coLabFolder = coLabAdaptor.coLabAdaptor()
-    folder = coLabFolder
-    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if (folder == None) | (folder == ''): folder = ''
-    else: folder += slash
-
-    fileFormatChoice = '.xlsx' # базовый формат сохраняемых файлов; формат .json добавляется опционально через наличие columnsToJSON
-    folderFile = None
+    fileFormatChoice = 'xlsx' # базовый формат сохраняемых файлов; формат json добавляется опционально через наличие columnsToJSON
+    folder_file = None
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
+    folder_in_folderCurrent = None
+    folderWithTemporal = None
     goS = True
     itemS = pandas.DataFrame()
-    itemsAdditional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
+    itemS_additional = pandas.DataFrame() # на случай, если сигнал прерывания поступит до dfsProcessor
     keyOrder = 0
-    temporalName = None
+    # name_in_folderCurrent = None
+    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
 
     momentCurrent = datetime.now() # запрос текущего момента
     if not silentMode:
@@ -389,23 +385,14 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
                         post_id = post_idTemporal
 
                         temporalNameS = os.listdir(folder_in_folderCurrent)
-                        itemS_json = None
-                        itemS_xlsx = None
-                        for temporalName in temporalNameS:
+                        folderWithTemporal, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
 
-                            
-                            if '.json' in temporalName:
-                                itemS = itemS.merge(pandas.read_json(f'{name_in_folderCurrent}{slash}{temporalName}'), on='id', how='outer')
-                                break # выход из for temporalName in temporalNameS
+    if not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
+        print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
 
-# Данные, сохранённые при прошлом запуске скрипта, загружены
-                        break # выход из for name_in_folderCurrent in nameS_in_folderCurrent
-                    elif decision == 'R': shutil.rmtree(name_in_folderCurrent, ignore_errors=True)
-                else: shutil.rmtree(name_in_folderCurrent, ignore_errors=True) # в директории Temporal не 7 файлов => либо она повреждена, либо создалась при безрезультатном запуске
-
-# 2.0.3 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
+# Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
     # if not silentMode продолжается
-        if not temporalName: # если itemsTemporal, в т.ч. пустой, не существует
+        if not temporalName: # если itaemsTemporal, в т.ч. пустой, не существует
                 # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
 
             name_in_folderCurrent = 'No folder'
