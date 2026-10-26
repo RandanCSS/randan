@@ -65,7 +65,7 @@ def containerImport(folder_file, containerType): # containerType: float, int, st
     return container
 
 # .. работы с ключами
-def credentialsProcessor(access_token, api_name, folder, instruction_url, nameS_in_folderCurrent):
+def credentialsProcessor(access_token, api_name, folder, instruction_url, nameS_in_folderCurrent, silentMode=False):
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     if not access_token:
         if f'credentials{api_name}.txt' in nameS_in_folderCurrent:
@@ -97,7 +97,7 @@ f'''--- НЕ нашёл файл credentials{api_name}.txt . Введите в �
         # api_keyS = api_keyS.replace(' ', '').replace(',', ', ').split(', ')
 
     else: api_keyS = [access_token]
-    print('Количество ключей:', len(api_keyS), '\n')
+    if not silentMode: print('Количество ключей:', len(api_keyS), '\n')
     return api_keyS
 
 # .. выгрузки itemS_json itemS_xlsx из temporalNameS
