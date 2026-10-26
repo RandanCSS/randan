@@ -230,7 +230,7 @@ def wallGet(access_token=None,
     complicatedNamePart = None # для silentMode
     params_extra = {}
     if not params and not access_token and not count and not domain and not fields and not filter and not offset and not returnDfs:
-        print('Пользователь не подал аргументы') # для отладки
+        if not silentMode: print('Пользователь не подал аргументы') # для отладки
         experiencedMode = False
 
     else:
@@ -315,7 +315,8 @@ f'''    Скрипт нацелен на выгрузку характерист
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
 
     momentCurrent = datetime.now() # запрос текущего момента
-    print('\nТекущий момент:', momentCurrent.strftime('%Y%m%d_%H%M'), '-- он будет использован для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
+    if not silentMode: 
+        print('\nТекущий момент:', momentCurrent.strftime('%Y%m%d_%H%M'), '-- он будет использован для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     nameS_in_folderCurrent = os.listdir(folder)
@@ -325,69 +326,73 @@ f'''    Скрипт нацелен на выгрузку характерист
 
 # Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
-    print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
-    for name_in_folderCurrent in nameS_in_folderCurrent:
-        if name_in_folderCurrent.endswith('Temporal') and 'VK' in name_in_folderCurrent:
-            folder_in_folderCurrent = folder + name_in_folderCurrent # имя файла достраивается до абсолютного пути
-            if len(os.listdir(folder_in_folderCurrent)) < 6:  print(
-f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 6-7 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
-            else:
-                domainTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'domain.txt', str)
+    if not silentMode: # если основная функция этого модуля явлется частью другой функции, поиск данных не требуется -- они будут переданы
+        print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
+        for name_in_folderCurrent in nameS_in_folderCurrent:
+            if name_in_folderCurrent.endswith('Temporal') and 'VK' in name_in_folderCurrent:
+                folder_in_folderCurrent = folder + name_in_folderCurrent # имя файла достраивается до абсолютного пути
+                if len(os.listdir(folder_in_folderCurrent)) < 5:  print(
+f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 5-6 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
 
-                with open(f'{folder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file:
-                    fieldsTemporal = json.load(file)
+                else:
+                    domainTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'domain.txt', str)
 
-                filterTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'filter.txt', str)
-                offsetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'offset.txt', int)
+                    with open(f'{folder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file:
+                        fieldsTemporal = json.load(file)
 
-                print(f"Нашёл директорию '{folder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
-                      , '\n- скрипт остановился на offset', offsetTemporal)
-                print(f"- пользователь определил страницу: '{domainTemporal}'" if domainTemporal else '- пользователь НЕ определил страницу')
-                print(f"- пользователь определил поля: '{fieldsTemporal}'" if fieldsTemporal else '- пользователь НЕ определил поля')
-                print(f"- пользователь определил фильтр: '{filterTemporal}'" if filterTemporal else '- пользователь НЕ определил фильтр')
+                    filterTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'filter.txt', str)
+                    offsetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'offset.txt', int)
 
-                print(
+                    print(f"Нашёл директорию '{folder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
+                          , '\n- скрипт остановился на offset', offsetTemporal)
+
+                    print(f"- пользователь определил страницу: '{domainTemporal}'" if domainTemporal else '- пользователь НЕ определил страницу')
+                    print(f"- пользователь определил поля: '{fieldsTemporal}'" if fieldsTemporal else '- пользователь НЕ определил поля')
+                    print(f"- пользователь определил фильтр: '{filterTemporal}'" if filterTemporal else '- пользователь НЕ определил фильтр')
+
+                    print(
 '''--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
 --- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите 'R' и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter''')
 
-                decision = input()
-                if decision.lower() == 'r':
-                    shutil.rmtree(folder_in_folderCurrent, ignore_errors=True)
-                    print(
+                    decision = input()
+                    if decision.lower() == 'r':
+                        shutil.rmtree(folder_in_folderCurrent, ignore_errors=True)
+
+                        print(
 f"Директорию '{folder_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-                elif decision: print(
+                    elif decision: print(
 f"Директорию '{folder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-                elif not decision: # Temporal-значения обретают статус постоянных и будут использоваться при исполнении скрипта
-                    domain = domainTemporal
-                    fields = fieldsTemporal
-                    filter = filterTemporal
-                    offset = offsetTemporal
+                    elif not decision: # Temporal-значения обретают статус постоянных и будут использоваться при исполнении скрипта
+                        domain = domainTemporal
+                        fields = fieldsTemporal
+                        filter = filterTemporal
+                        offset = offsetTemporal
 
-                    temporalNameS = os.listdir(folder_in_folderCurrent)
-                    itemS_json = None
-                    itemS_xlsx = None
-                    for temporalName in temporalNameS:
-                        # print('temporalName:', temporalName) # для отладки
-                        if temporalName.endswith('.json') and 'VK' in temporalName: itemS_json = pandas.read_json(f'{folder_in_folderCurrent}{slash}{temporalName}')
-                        if temporalName.endswith('.xlsx') and 'VK' in temporalName: itemS_xlsx = pandas.read_excel(f'{folder_in_folderCurrent}{slash}{temporalName}', index_col=0)
+                        temporalNameS = os.listdir(folder_in_folderCurrent)
+                        itemS_json = None
+                        itemS_xlsx = None
+                        for temporalName in temporalNameS:
+                            # print('temporalName:', temporalName) # для отладки
+                            if temporalName.endswith('.json') and 'VK' in temporalName: itemS_json = pandas.read_json(f'{folder_in_folderCurrent}{slash}{temporalName}')
+                            if temporalName.endswith('.xlsx') and 'VK' in temporalName: itemS_xlsx = pandas.read_excel(f'{folder_in_folderCurrent}{slash}{temporalName}', index_col=0)
 
-                    if itemS_json is not None and itemS_xlsx is not None:
-                        itemS = itemS_json.merge(itemS_xlsx, how='outer', on='id')
-                        folderWithTemporal = folder_in_folderCurrent
-                        break # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
+                        if itemS_json is not None and itemS_xlsx is not None:
+                            itemS = itemS_json.merge(itemS_xlsx, how='outer', on='id')
+                            folderWithTemporal = folder_in_folderCurrent
+                            break # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
 
-                    elif itemS_json is None and itemS_xlsx is not None:
-                        itemS = itemS_xlsx.copy() # for temporalName in temporalNameS завершился, но файл itemS_json не импортировался
-                        folderWithTemporal = folder_in_folderCurrent
-                        break # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
+                        elif itemS_json is None and itemS_xlsx is not None:
+                            itemS = itemS_xlsx.copy() # for temporalName in temporalNameS завершился, но файл itemS_json не импортировался
+                            folderWithTemporal = folder_in_folderCurrent
+                            break # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
 
-                    # -- данные, сохранённые при прошлом запуске скрипта, загружены и цикл for name_in_folderCurrent in nameS_in_folderCurrent завершн
+                        # -- данные, сохранённые при прошлом запуске скрипта, загружены и цикл for name_in_folderCurrent in nameS_in_folderCurrent завершн
 
-                    elif itemS_xlsx is None and itemS_json is None:
-                        print(
+                        elif itemS_xlsx is None and itemS_json is None:
+                            print(
 f"СТРАННО: хотя директория '{folder_in_folderCurrent}' похожа на искомую Temporal , но в ней ни одного файла с данными, сохранёнными при прошлом запуске скрипта, не найдено; рекомендую Вам удалить её вручную, а я продолжаю поиск")
 
     if not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
