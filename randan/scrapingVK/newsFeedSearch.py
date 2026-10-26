@@ -52,6 +52,74 @@ f'Пакет {module} НЕ прединсталлирован, но он тре�
         attempt += 1
 
 # 1. Вспомогательные функции..
+# .. обработки выдачи любого из методов, помогающая работе с ключами
+def dfsProcessor(complicatedNamePart,
+                 df_additional,
+                 dfFinal, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода search
+                 dfIn,
+                 fields,
+                 fileFormatChoice,
+                 folder,
+                 goS, # единственная из функций, принимающая этот аргумент
+                 method,
+                 momentCurrent,
+                 q,
+                 slash,
+                 stage,
+                 targetCount,
+                 year,
+                 yearsRange):
+
+    df = pandas.concat([dfIn, df_additional])
+    columnsForCheck = []
+    if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
+        for column in df.columns:
+            if 'id' in column: columnsForCheck.append(column)
+    # print('Столбцы, по которым проверяю дублирующиеся записи:', columnsForCheck) # для отладки
+
+    if columnsForCheck: df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
+        # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
+
+    if not goS:
+        print(
+f'''Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"'''
+              )
+        if not os.path.exists(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"):
+            os.makedirs(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal")
+            print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" создана''')
+        # else:
+            # print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" существует''')
+
+# Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
+        if not fields: fields = []
+        with open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}fields.json", 'w', encoding='utf-8') as file:
+            json.dump(fields, file, ensure_ascii=False, indent=4)
+
+        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}method.txt", method)
+        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}q.txt", q if q else '')
+        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}stageTarget.txt", stage) # stage и stageTarget принимает значения [0; 3]
+        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}targetCount.txt", targetCount if targetCount else '0')
+        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}year.txt", str(year)) # год, на котором остановилось исполнение скрипта
+        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}yearsRange.txt", yearsRange if yearsRange else '')
+
+        df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
+                             currentMoment=momentCurrent.strftime('%Y%m%d'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+                             dfIn=df,
+                             fileFormatChoice=fileFormatChoice,
+                             folder=folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal",
+                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method) # чтобы избавиться от лишней точки в имени файла
+
+        warnings.filterwarnings('ignore')
+
+        print(
+'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть,
+Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
+              )
+
+        sys.exit()
+
+    return df
+
 # .. метода search из API ВК, помогающая работе с ключами
 def newsfeedSearchCore(api_keyS,
                        count,
@@ -97,7 +165,7 @@ def newsfeedSearchCore(api_keyS,
             params[key] = ','.join(map(str, value)) # склеить список в строку только для запроса; исходный fields остаётся нетронутым для dfColumnsProcessor
 
     tryer = 0
-    while True:
+    while goC:
         # try: # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
         response = requests.get('https://api.vk.ru/method/wall.get', params=params).json()
         # print('response', response) # для отладки
@@ -106,11 +174,14 @@ def newsfeedSearchCore(api_keyS,
             # print('    response.keys() внутри newsfeedSearchCore', response.keys()) # для отладки
 
             df_additional = pandas.json_normalize(response['items'])
-            break # нет смысла в новых итерациях цикла while goC
 
-        else:
-            goC, goS, keyOrder, pause, response, tryer = scrapingTools.errorProcessor(api_keyS, keyOrder, pause, response, tryer)
-            if not goS: break
+            print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
+                # для визуализации процесса
+
+            iteration += 1
+            if len(df_additional) > 0: df_additional = scrapingVK_tools.dfColumnsProcessor(df_additional, fields, response)            
+            break # нет смысла в новых итерациях цикла while goC
+        else: goC, goS, keyOrder, pause, response, tryer = scrapingVK_tools.errorProcessor(api_keyS, keyOrder, pause, response, tryer)
 
         # except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         #     response = {'items': [], 'total_count': 0} # принудительная выдача для response
@@ -118,82 +189,7 @@ def newsfeedSearchCore(api_keyS,
         #     # print('goS newsfeedSearchCore:', goS) # для отладки
         #     break # и, следовательно, нет смысла в новых итерациях цикла
 
-    if goS:
-        # Для визуализации процесса
-        print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
-
-        iteration += 1
-        if len(df_additional) > 0: df_additional = scrapingTools.dfColumnsProcessor(df_additional, fields, response)
-
     return df_additional, goS, iteration, keyOrder, pause, response
-
-# .. обработки выдачи любого из методов, помогающая работе с ключами
-def dfsProcessor(complicatedNamePart,
-                 df_additional,
-                 dfFinal, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода search
-                 dfIn,
-                 fields,
-                 fileFormatChoice,
-                 folder,
-                 goS, # единственная из функций, принимающая этот аргумент
-                 method,
-                 momentCurrent,
-                 q,
-                 slash,
-                 stage,
-                 targetCount,
-                 year,
-                 yearsRange):
-
-    df = pandas.concat([dfIn, df_additional])
-    columnsForCheck = []
-    if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
-        for column in df.columns:
-            if 'id' in column: columnsForCheck.append(column)
-    # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck) # для отладки
-
-    if columnsForCheck: df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
-        # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
-
-    if not goS:
-        print(
-f'''Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"'''
-              )
-        if not os.path.exists(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"):
-            os.makedirs(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal")
-            print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" создана''')
-        # else:
-            # print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" существует''')
-
-# Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
-        if not fields: fields = []
-        with open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}fields.json", 'w', encoding='utf-8') as file:
-            json.dump(fields, file, ensure_ascii=False, indent=4)
-
-        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}method.txt", method)
-        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}q.txt", q if q else '')
-        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}stageTarget.txt", stage) # stage и stageTarget принимает значения [0; 3]
-        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}targetCount.txt", targetCount if targetCount else '0')
-        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}year.txt", str(year)) # год, на котором остановилось исполнение скрипта
-        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}yearsRange.txt", yearsRange if yearsRange else '')
-
-        df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
-                             currentMoment=momentCurrent.strftime('%Y%m%d'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                             dfIn=df,
-                             fileFormatChoice=fileFormatChoice,
-                             folder=folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal",
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method) # чтобы избавиться от лишней точки в имени файла
-
-        warnings.filterwarnings('ignore')
-
-        print(
-'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть,
-Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
-              )
-
-        sys.exit()
-
-    return df
 
 # 2. Основная функция
 def newsFeedSearch(access_token=None,
@@ -205,15 +201,14 @@ def newsFeedSearch(access_token=None,
                    params=None,
                    q=None,
                    returnDfs=False,
-                   start_time=None):
-    method = 'newsfeed.search'
-
-    f'''
-    Функция для выгрузки характеристик контента ВК методом его API {method} . Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам
+                   start_time=None,
+                   version_api='5.199'):
+    '''
+    Функция для выгрузки характеристик контента ВК методом его API newsfeed.search . Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам
 
     Parameters
     ----------
-    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/{method} , за исключением аргументов params и returnDfs
+    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/newsfeed.search , за исключением аргументов params и returnDfs
     Причём они могут быть поданы и в качестве самостоятельных аргументов функции, и в качестве словаря params , который обычно подаётся в метод get пакета requests
     access_token : str
            count : int
@@ -221,11 +216,15 @@ def newsFeedSearch(access_token=None,
           fields : list
         latitude : int
        longitude : int
-          params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/{method} , чтобы не подавать эти аргументы по отдельности
+          params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/newsfeed.search , чтобы не подавать эти аргументы по отдельности
                q : str
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
+      silentMode : bool -- в случае True в функции отключаются CLI-диалоги и экспорт результата исполнения функции для долговременного хранения 
       start_time : int -- формат Unix
+     version_api : str
     '''
+
+    complicatedNamePart = None # для silentMode
     if not params and not access_token and not count and not end_time and not fields and not latitude and not longitude and not q and not start_time and not returnDfs:
         # print('Пользователь не подал аргументы') # для отладки
         experiencedMode = False
@@ -293,6 +292,7 @@ def newsFeedSearch(access_token=None,
             if not isinstance(start_time, int): start_time = int(start_time)
         # print('start_time:', start_time) # для отладки
 
+    method = 'newsfeed.search'
     if not experiencedMode:
         print(
 '''    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию: https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ). Для получения API key следует создать приложение и из него скопировать сервисный ключ. Приложение -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому ВК. Авторизация сервисным ключом позволяет использовать некоторые методы API -- в документации API ВК ( https://dev.vk.com/ru/method ) они помечены серым кружком (одним или в сочетании с кружками другого цвета). Его достаточно, если выполнять действия, которые были бы доступны Вам как обычному пользователю ВК: посмотреть открытые персональные и групповые страницы, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления поста из чужого аккаунта, то Вам потребуется дополнительная авторизация.
