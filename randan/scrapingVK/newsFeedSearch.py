@@ -307,34 +307,28 @@ f'''    Скрипт нацелен на выгрузку характерист
 
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API ВК
-
-    # Блок, поскольку folder многократно используется внутри функции в формулах
-    coLabFolder = coLabAdaptor.coLabAdaptor() # либо '/content/drive/MyDrive/Colab Notebooks' , либо None
-    folder = coLabFolder
-    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-    if not folder: folder = ''
-    # if folder is None) | (folder == ''): folder = ''
-    else: folder += slash
-
-    fileFormatChoice = '.xlsx' # базовый формат сохраняемых файлов; формат .json добавляется опционально через наличие columnsToJSON
-    folderFile = None
+    fileFormatChoice = 'xlsx' # базовый формат сохраняемых файлов; формат json добавляется опционально через наличие columnsToJSON
+    folder_file = None
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
+    folder_in_folderCurrent = None
+    folderWithTemporal = None
     goS = True
     itemS = pandas.DataFrame()
-    itemsAdditional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
+    itemS_additional = pandas.DataFrame() # на случай, если сигнал прерывания поступит до dfsProcessor
     itemsMonthlyAdditional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
     itemsYearlyAdditional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных   
     keyOrder = 0
+    # name_in_folderCurrent = None
+    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     stageTarget = 0 # stageTarget принимает значения [0; 3] и относится к стадиям скрипта
-    temporalName = None
+    yearMinByUser = None # в случае отсутствия пользовательского временнОго диапазона
+    yearMaxByUser = None # в случае отсутствия пользовательского временнОго диапазона
     yearsRange = None
 
     momentCurrent = datetime.now() # запрос текущего момента
     print('\nТекущий момент:', momentCurrent.strftime('%Y%m%d_%H%M'), '-- он будет использован для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
     year = int(momentCurrent.strftime('%Y')) # в случае отсутствия пользовательского временнОго диапазона
         # с этого года возможно сегментирование по годам вглубь веков (пока выдача не пустая)
-
-    yearMinByUser = None # в случае отсутствия пользовательского временнОго диапазона
-    yearMaxByUser = None # в случае отсутствия пользовательского временнОго диапазона
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     nameS_in_folderCurrent = os.listdir()
@@ -435,28 +429,12 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
                         yearsRange = yearsRangeTemporal
 
                         temporalNameS = os.listdir(folder_in_folderCurrent)
-                        itemS_json = None
-                        itemS_xlsx = None
-                        for temporalName in temporalNameS:
+                        folderWithTemporal, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
 
-                            
-                            if '.json' in temporalName:
-                                itemS = itemS.merge(pandas.read_json(f'{name_in_folderCurrent}{slash}{temporalName}'), on='id', how='outer')
-                                break
+    if not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
+        print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
 
-                        if yearsRange:
-                            yearsRange = yearsRange.split('-')
-                            yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
-                        # -- данные, сохранённые при прошлом запуске скрипта, загружены и цикл for name_in_folderCurrent in nameS_in_folderCurrent завершн
-                        break
-                    elif decision == 'R': shutil.rmtree(name_in_folderCurrent, ignore_errors=True)
-                else: shutil.rmtree(name_in_folderCurrent, ignore_errors=True) # в директории Temporal не 7 файлов => либо она повреждена, либо создалась при безрезультатном запуске
-
-# 2.0.3 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
-    if not temporalName: # если itemsTemporal, в т.ч. пустой, не существует
-            # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
-        name_in_folderCurrent = 'No folder'
-        print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку')
+# Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
         print(
 f'''
 Возможно, Вы располагаете файлом, в котором есть ранее выгруженные из ВК методом {method} данные, и который хотели бы дополнить? Или планируете первичный сбор контента?
