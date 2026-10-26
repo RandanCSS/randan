@@ -66,13 +66,14 @@ def dfsProcessor(complicatedNamePart,
                  owner_id,
                  post_id,
                  slash):
+
     df = pandas.concat([dfIn, df_additional])
     columnsForCheck = []
     if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся строк возможна по столбцам, содержащим в имени id
         for column in df.columns:
             if 'id' in column: columnsForCheck.append(column)
 
-    # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck) # для отладки
+    # print('Столбцы, по которым проверяю дублирующиеся записи:', columnsForCheck) # для отладки
 
     df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
         # при дублировании записей из itemS из Temporal и от пользователя и новых записей, оставить новые
@@ -125,6 +126,7 @@ def wallGetCommentsCore(api_keyS,
                         keyOrder,
                         offset,
                         owner_id,
+                        params_extra,
                         pause,
                         post_id,
                         version_api):
@@ -132,45 +134,54 @@ def wallGetCommentsCore(api_keyS,
     df_additional = pandas.DataFrame()
     goS = True
 
-    params = {'access_token': api_keyS[keyOrder], # обязательный параметр
-              'count': count, # опциональный параметр
-              'extended': 1, # опциональный параметр
-              'fields': fields, # опциональный параметр
-              'need_likes': 1, # опциональный параметр
-              'offset': offset, # опциональный параметр
-              'owner_id': owner_id, # опциональный параметр, но без него не будет результата
-              'post_id': post_id, # опциональный параметр, но без него не будет результата
-              'v': '5.199'} # обязательный параметр
+    params_basic = {'access_token': api_keyS[keyOrder], # обязательный параметр
+                    'count': count, # опциональный параметр
+                    'extended': 1, # опциональный параметр
+                    'fields': fields, # опциональный параметр
+                    'need_likes': 1, # опциональный параметр
+                    'offset': offset, # опциональный параметр
+                    'owner_id': owner_id, # опциональный параметр, но без него не будет результата
+                    'post_id': post_id, # опциональный параметр, но без него не будет результата
+                    'v': version_api} # обязательный параметр
+
+    PARAMS_PROTECTED = {'access_token', 'v'}
+    if params_extra:
+        for key, value in params_extra.items():
+            if key in PARAMS_PROTECTED: continue
+            if key not in params_basic or params_basic[key] is None: params_basic[key] = value
+
+    params = {key: value for key, value in params_basic.items() if value not in (None, '', [])}
+
+    for key, value in list(params.items()):
+        if isinstance(value, (list, tuple)): # requests сериализует list как повторяющийся ключ, например: fields=a&fields=b , а wall.get ожидает fields=a,b
+            params[key] = ','.join(map(str, value)) # склеить список в строку только для запроса; исходный fields остаётся нетронутым для dfColumnsProcessor
 
     goC = True
     tryer = 0
     while goC:
-        try: # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
-            response = requests.get('https://api.vk.ru/method/wall.getComments', params=params)
-            response = response.json() # отобразить выдачу метода getComments в виде JSON
-            # print('response', response) # для отладки
-            if 'response' in response.keys():
-                response = response['response']
-                # print('    response.keys() внутри wallgetCommentsCore', response.keys()) # для отладки
+        # try: # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
+        response = requests.get('https://api.vk.ru/method/wall.get', params=params).json()
+        # print('response', response) # для отладки
+        if 'response' in response.keys():
+            response = response['response']
+            # print('    response.keys() внутри wallgetCommentsCore', response.keys()) # для отладки
 
-                df_additional = pandas.json_normalize(response['items'])
-                break # нет смысла в новых итерациях цикла while goC
+            df_additional = pandas.json_normalize(response['items'])
 
-            else: goC, goS, keyOrder, pause, response, tryer = scrapingVK_tools.errorProcessor(api_keyS, keyOrder, pause, response, tryer)
+            print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
+                # для визуализации процесса
 
-        except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
-            response = {'items': [], 'total_count': 0} # принудительная выдача для response
-            goS = False # нет смысла продолжать исполнение скрипта
-            # print('goS wallgetCommentsCore:', goS) # для отладки
+            iteration += 1
+            if len(df_additional) > 0: df_additional = scrapingVK_tools.dfColumnsProcessor(df_additional, fields, response)            
+            break # нет смысла в новых итерациях цикла while goC
+        else: goC, goS, keyOrder, pause, response, tryer = scrapingVK_tools.errorProcessor(api_keyS, keyOrder, pause, response, tryer)
 
-            break # и, следовательно, нет смысла в новых итерациях цикла while goC
+        # except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
+        #     response = {'items': [], 'total_count': 0} # принудительная выдача для response
+        #     goS = False # нет смысла продолжать исполнение скрипта
+        #     # print('goS wallgetCommentsCore:', goS) # для отладки
 
-    if goS:
-        # Для визуализации процесса
-        print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
-
-        iteration += 1
-        if len(df_additional) > 0: df_additional = scrapingVK_tools.dfColumnsProcessor(df_additional, fields, response)
+        #     break # и, следовательно, нет смысла в новых итерациях цикла while goC
 
     return df_additional, goS, iteration, keyOrder, pause, response
 
@@ -183,15 +194,14 @@ def wallGetComments(access_token=None,
                     params=None,
                     post_id=None,
                     returnDfs=False,
-                    silentMode=False):
-    method = 'wall.getComments'
-
-    f'''
-    Функция для выгрузки характеристик контента ВК методом его API {method} . Причём количество объектов выгрузки максимизируется посредством offset
+                    silentMode=False,
+                    version_api='5.199'):
+    '''
+    Функция для выгрузки характеристик контента ВК методом его API wall.getComments . Причём количество объектов выгрузки максимизируется посредством offset
 
     Parameters
     ----------
-    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/{method} , за исключением аргументов params и returnDfs
+    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/wall.getComments , за исключением аргументов params и returnDfs
     Причём они могут быть поданы и в качестве самостоятельных аргументов функции, и в качестве словаря params ,
     который обычно подаётся в метод get пакета requests
     access_token : str
@@ -199,13 +209,15 @@ def wallGetComments(access_token=None,
           fields : list
           offset : int
         owner_id : str
-          params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/{method} ,
+          params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.getComments ,
           чтобы не подавать эти аргументы по отдельности
 
          post_id : str
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
       silentMode : bool -- в случае True в функции отключаются CLI-диалоги и экспорт результата исполнения функции для долговременного хранения 
+     version_api : str
     '''
+
     complicatedNamePart = None # для silentMode
     if not params and not access_token and not count and not fields and not offset and not owner_id and not post_id and not returnDfs:
         print('Пользователь не подал аргументы') # для отладки
@@ -258,16 +270,17 @@ def wallGetComments(access_token=None,
 
         # print('post_id:', post_id) # для отладки
 
+    method = 'wall.getComments'
     if not silentMode:
         if not experiencedMode: print(
 '''    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию: https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ). Для получения API key следует создать приложение и из него скопировать сервисный ключ. Приложение -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому ВК. Авторизация сервисным ключом позволяет использовать некоторые методы API -- в документации API ВК ( https://dev.vk.com/ru/method ) они помечены серым кружком (одним или в сочетании с кружками другого цвета). Его достаточно, если выполнять действия, которые были бы доступны Вам как обычному пользователю ВК: посмотреть открытые персональные и групповые страницы, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления поста из чужого аккаунта, то Вам потребуется дополнительная авторизация.
-    ВК может ограничить действие Вашего ключа или вовсе заблокировать его, если сочтёт, что Вы злоупотребляете автоматизированным доступом.'''
-                                      )
+    ВК может ограничить действие Вашего ключа или вовсе заблокировать его, если сочтёт, что Вы злоупотребляете автоматизированным доступом.''')
+
         print(
 f'''    Скрипт нацелен на выгрузку характеристик контента ВК методом его API {method} . Причём количество объектов выгрузки максимизируется посредством offset .
     Для корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.
-    Преимущества скрипта перед выгрузкой контента из ВК вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API ВК: гораздо быстрее, гораздо большее количество контента, не требуется тщательно изучать обширную и при этом неполную документацию методов API ВК'''
-          )
+    Преимущества скрипта перед выгрузкой контента из ВК вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API ВК: гораздо быстрее, гораздо большее количество контента, не требуется тщательно изучать обширную и при этом неполную документацию методов API ВК''')
+
         if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
 
 # 2.0 Настройки и авторизация
