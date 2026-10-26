@@ -99,3 +99,32 @@ f'''--- НЕ нашёл файл credentials{api_name}.txt . Введите в �
     else: api_keyS = [access_token]
     print('Количество ключей:', len(api_keyS), '\n')
     return api_keyS
+
+# .. выгрузки itemS_json itemS_xlsx из temporalNameS
+def get_itemsTemporal(temporalNameS):
+    itemS_json = None
+    itemS_xlsx = None
+    for temporalName in temporalNameS:
+        # print('temporalName:', temporalName) # для отладки
+        if temporalName.endswith('.json') and 'VK' in temporalName:
+            itemS_json = pandas.read_json(f'{folder_in_folderCurrent}{slash}{temporalName}')
+
+        if temporalName.endswith('.xlsx') and 'VK' in temporalName:
+            itemS_xlsx = pandas.read_excel(f'{folder_in_folderCurrent}{slash}{temporalName}', index_col=0)
+
+    if itemS_json is not None and itemS_xlsx is not None:
+        itemS = itemS_json.merge(itemS_xlsx, how='outer', on='id')
+        folderWithTemporal = folder_in_folderCurrent
+        break # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
+
+    elif itemS_json is None and itemS_xlsx is not None:
+        itemS = itemS_xlsx.copy() # for temporalName in temporalNameS завершился, но файл itemS_json не импортировался
+        folderWithTemporal = folder_in_folderCurrent
+        break # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
+
+    # -- данные, сохранённые при прошлом запуске скрипта, загружены и цикл for name_in_folderCurrent in nameS_in_folderCurrent завершён
+
+    elif itemS_xlsx is None and itemS_json is None:
+        print(
+f"СТРАННО: хотя директория '{folder_in_folderCurrent}' похожа на искомую Temporal , но в ней ни одного файла с данными, сохранёнными при прошлом запуске скрипта, не найдено; рекомендую Вам удалить её вручную, а я продолжаю поиск")
+    return folderWithTemporal, itemS
