@@ -150,25 +150,9 @@ def wallGetCore(api_keyS,
         if isinstance(value, (list, tuple)): # requests сериализует list как повторяющийся ключ, например: fields=a&fields=b , а wall.get ожидает fields=a,b
             params[key] = ','.join(map(str, value)) # склеить список в строку только для запроса; исходный fields остаётся нетронутым для dfColumnsProcessor
 
-    # params_initial = {'access_token': api_keyS[keyOrder], # обязательный параметр
-    #                   'count': count, # опциональный параметр
-    #                   'domain': domain, # обязательный параметр, но без него не будет результата
-    #                   'extended': 1, # опциональный параметр
-    #                   'fields': fields, # опциональный параметр
-    #                   'filter': filter, # опциональный параметр
-    #                   'offset': offset, # опциональный параметр
-    #                   'v': version_api} # обязательный параметр
-
-    # params = {key: value for key, value in params_initial.items() if value not in (None, '', [])}
-
-    # if 'fields' in params:
-    #     if isinstance(params['fields'], (list, tuple)): # requests сериализует list как повторяющийся ключ (fields=a&fields=b), а wall.get ожидает fields=a,b.
-    #         params['fields'] = ','.join(map(str, params['fields'])) # склеить список в строку только для запроса; исходный fields остаётся нетронутым для dfColumnsProcessor
-
     goC = True
     tryer = 0
     while goC:
-        # try: # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
         response = requests.get('https://api.vk.ru/method/wall.get', params=params).json()
         # print('response', response) # для отладки
         if 'response' in response.keys():
@@ -184,14 +168,6 @@ def wallGetCore(api_keyS,
             if len(df_additional) > 0: df_additional = scrapingVK_tools.dfColumnsProcessor(df_additional, fields, response)            
             break # нет смысла в новых итерациях цикла while goC
         else: goC, goS, keyOrder, pause, response, tryer = scrapingVK_tools.errorProcessor(api_keyS, keyOrder, pause, response, tryer)
-
-        # except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
-        #     response = {'items': [], 'total_count': 0} # принудительная выдача для response
-        #     goS = False # нет смысла продолжать исполнение скрипта
-        #     # print('goS wallGetCore:', goS) # для отладки
-
-        #     break # и, следовательно, нет смысла в новых итерациях цикла while goC
-
     return df_additional, goS, iteration, keyOrder, pause
 
 # 2. Основная функция
@@ -321,8 +297,7 @@ f'''    Скрипт нацелен на выгрузку характерист
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     nameS_in_folderCurrent = os.listdir(folder)
     # print('nameS_in_folderCurrent:', nameS_in_folderCurrent) # для отладки
-
-    api_keyS = scrapingTools.credentialsProcessor(access_token, 'VK', folder, 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', nameS_in_folderCurrent)
+    api_keyS = scrapingTools.credentialsProcessor(access_token, 'VK', folder, 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', nameS_in_folderCurrent, silentMode)
 
 # Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
@@ -378,6 +353,7 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
         print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
 
 # Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
+    # if not silentMode продолжается
         print(
 f'''
 Возможно, Вы располагаете файлом, в котором есть ранее выгруженные из ВК методом {method} данные, и который хотели бы дополнить?
@@ -401,28 +377,30 @@ f'''
                         break
                 else: break
             # display('itemS:', itemS)
-# Теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский), slash
+# Теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
 
 # 2.0.2 Пользовательские настройки запроса к API ВК
+    # if not silentMode продолжается
         if not domain: # если пользователь не подал этот аргумент в рамках experiencedMode
             print(
 '''Скрипт умеет искать посты открытых страниц
 --- Введите название интересующей страницы (персональной и группы), после чего нажмите Enter''')
 
-            if folder_file:
-                print(
+            if folder_file: print(
 'ВАЖНО! В результате исполнения текущего скрипта данные из указанного Вами файла', folder_file, 'будут дополнены актуальными данными из выдачи скрипта',
 '(возможно появление новых объектов и новых столбцов, а также актуализация содержимого столбцов),',
 'поэтому, вероятно, следует ввести название той же страницы, что и при формировании указанного Вами файла')
 
             domain = input()
 
-    if not domain: domain = '80054288' # моя страница
-    else: print('')
+        if not domain: domain = '80054288' # моя страница
+        else: print('')
 
 # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_VK'
     if domain: complicatedNamePart += '_' + domain if len(domain) < 50 else '_' + domain[:50]
+
+    # if not silentMode завершилось
 
 # 2.1 Первичный сбор контента методом get
 # 2.1.0 Первое обращение к API
