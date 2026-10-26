@@ -66,7 +66,7 @@ def dfsProcessor(complicatedNamePart,
                  q,
                  slash,
                  stage,
-                 targetCount,
+                 countTarget,
                  year,
                  yearsRange):
 
@@ -98,7 +98,7 @@ f'''Поскольку исполнение скрипта натолкнуло�
         scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}method.txt", method)
         scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}q.txt", q if q else '')
         scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}stageTarget.txt", stage) # stage и stageTarget принимает значения [0; 3]
-        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}targetCount.txt", targetCount if targetCount else '0')
+        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}countTarget.txt", countTarget if countTarget else '0')
         scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}year.txt", str(year)) # год, на котором остановилось исполнение скрипта
         scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}yearsRange.txt", yearsRange if yearsRange else '')
 
@@ -337,10 +337,10 @@ f'''    Скрипт нацелен на выгрузку характерист
     yearMaxByUser = None # в случае отсутствия пользовательского временнОго диапазона
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
-    rootNameS = os.listdir()
+    nameS_in_folderCurrent = os.listdir()
     # Поиск ключей
     if not access_token:
-        if 'credentialsVK.txt' in rootNameS:
+        if 'credentialsVK.txt' in nameS_in_folderCurrent:
             file = open('credentialsVK.txt')
             api_keyS = file.read()
             print("Проверяю наличие файла credentialsVK.txt с ключ{'ами' if ',' in api_keyS else 'ом'}, гипотетически сохранённым{'и' if ',' in api_keyS else ''} при первом запуске скрипта")
@@ -376,60 +376,86 @@ f'''    Скрипт нацелен на выгрузку характерист
 
 # 2.0.2 Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, натолкнувшемся на ошибку
     # Поиск данных
-    print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
-    for rootName in rootNameS:
-        if 'Temporal' in rootName:
-            if len(os.listdir(rootName)) == 7:
-                with open(f'{rootName}{slash}fields.json', 'r', encoding='utf-8') as file:
-                    fields = json.load(file)
+    if not silentMode: # если основная функция этого модуля явлется частью другой функции, поиск данных не требуется -- они будут переданы
+        print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
+        for name_in_folderCurrent in nameS_in_folderCurrent:
+            if name_in_folderCurrent.endswith('Temporal') and 'VK' in name_in_folderCurrent:
+                folder_in_folderCurrent = folder + name_in_folderCurrent # имя файла достраивается до абсолютного пути
+                if len(os.listdir(folder_in_folderCurrent)) < 8:  print(
+f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 8-9 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
+                    countTargetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'countTarget.txt', int)
 
-                method = scrapingTools.containerImport(rootName + slash + 'method.txt', str)
+                    with open(f'{folder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file:
+                        fieldsTemporal = json.load(file)
 
-                q = scrapingTools.containerImport(rootName + slash + 'q.txt', str)
-                if q == '': q = None # для единообразия
+                    methodTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'method.txt', str)
 
-                stageTarget = scrapingTools.containerImport(rootName + slash + 'stageTarget.txt', int)
-                targetCount = scrapingTools.containerImport(rootName + slash + 'targetCount.txt', int)
-                year = scrapingTools.containerImport(rootName + slash + 'year.txt', int)
-                yearsRange = scrapingTools.containerImport(rootName + slash + 'yearsRange.txt', str)
+                    try: qTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'q.txt', str)
+                    except Exception as excptn:
+                        print('Exception в searchByText') # для отладки
+                        print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
+                        print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
+                        qTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'q.txt', str)
 
-                print(f"Нашёл директорию '{rootName}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
-                      # , '\n- было выявлено целевое число объектов (targetCount)', targetCount
-                      , '\n- скрипт остановился на методе', method)
-                if year < int(momentCurrent.strftime('%Y')): print('- и на годе (при сегментировани по годам)', year)
-                print('- пользователь НЕ сформулировал запрос-фильтр' if not q else  f"- пользователь сформулировал запрос-фильтр как '{q}'")
-                print('- пользователь НЕ ограничил временнОй диапазон' if not yearsRange else  f'- пользователь ограничил временнОй диапазон границами {yearsRange}')
+                    stageTargetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'stageTarget.txt', int)
+                    yearTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'year.txt', int)
 
-                print(
+                    yearsRangeTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'yearsRange.txt', str)
+                    if yearsRangeTemporal == '': yearsRangeTemporal = None # для единообразия
+
+                    print(f"Нашёл директорию '{folder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
+                          , '\n- скрипт остановился на методе', methodTemporal)
+
+                    if yearTemporal < int(momentCurrent.strftime('%Y')): print('- и на годе (при сегментировани по годам)', yearTemporal)
+                    print(f"- пользователь сформулировал запрос-фильтр как '{qTemporal}'" if qTemporal else '- пользователь НЕ сформулировал запрос-фильтр')
+                    print(f'- пользователь ограничил временнОй диапазон границами {yearsRangeTemporal}' if yearsRangeTemporal else '- пользователь НЕ ограничил временнОй диапазон')
+
+                    print(
 '''--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
 --- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите 'R' и нажмите Enter
---- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter'''
-                      )
+--- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter''')
 
-                decision = input()
-                if len(decision) == 0:
-                    temporalNameS = os.listdir(rootName)
-                    for temporalName in temporalNameS:
-                        if '.xlsx' in temporalName: break
-                    itemS = pandas.read_excel(f'{rootName}{slash}{temporalName}', index_col=0)
+                    decision = input()
+                    if decision.lower() == 'r':
+                        shutil.rmtree(folder_in_folderCurrent, ignore_errors=True)
 
-                    for temporalName in temporalNameS:
-                        if '.json' in temporalName:
-                            itemS = itemS.merge(pandas.read_json(f'{rootName}{slash}{temporalName}'), on='id', how='outer')
-                            break
+                        print(
+f"Директорию '{folder_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-                    if yearsRange:
-                        yearsRange = yearsRange.split('-')
-                        yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
-# Данные, сохранённые при прошлом запуске скрипта, загружены; их метаданные (q, yearsRange, stageTarget) будут использоваться при исполнении скрипта
-                    break
-                elif decision == 'R': shutil.rmtree(rootName, ignore_errors=True)
-            else: shutil.rmtree(rootName, ignore_errors=True) # в директории Temporal не 7 файлов => либо она повреждена, либо создалась при безрезультатном запуске
+                    elif decision: print(
+f"Директорию '{folder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
+
+                    elif not decision: # Temporal-значения обретают статус постоянных и будут использоваться при исполнении скрипта
+                        countTarget = countTargetTemporal
+                        fields = fieldsTemporal
+                        method = methodTemporal
+                        q = qTemporal
+                        stageTarget = stageTargetTemporal
+                        year = yearTemporal
+                        yearsRange = yearsRangeTemporal
+
+                        temporalNameS = os.listdir(folder_in_folderCurrent)
+                        itemS_json = None
+                        itemS_xlsx = None
+                        for temporalName in temporalNameS:
+
+                            
+                            if '.json' in temporalName:
+                                itemS = itemS.merge(pandas.read_json(f'{name_in_folderCurrent}{slash}{temporalName}'), on='id', how='outer')
+                                break
+
+                        if yearsRange:
+                            yearsRange = yearsRange.split('-')
+                            yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
+                        # -- данные, сохранённые при прошлом запуске скрипта, загружены и цикл for name_in_folderCurrent in nameS_in_folderCurrent завершн
+                        break
+                    elif decision == 'R': shutil.rmtree(name_in_folderCurrent, ignore_errors=True)
+                else: shutil.rmtree(name_in_folderCurrent, ignore_errors=True) # в директории Temporal не 7 файлов => либо она повреждена, либо создалась при безрезультатном запуске
 
 # 2.0.3 Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
     if not temporalName: # если itemsTemporal, в т.ч. пустой, не существует
             # и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
-        rootName = 'No folder'
+        name_in_folderCurrent = 'No folder'
         print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку')
         print(
 f'''
@@ -554,9 +580,9 @@ f'''В скрипте используются следующие аргумен
                                                                                             version_api=version_api)
 
             # print('goS 645:', goS) # для отладки
-            if goS: # проверка, что функция newsfeedSearchCore завершилась успехом; обработка вилки с targetCount == 0
-                targetCount = response['total_count']
-                if targetCount == 0:
+            if goS: # проверка, что функция newsfeedSearchCore завершилась успехом; обработка вилки с countTarget == 0
+                countTarget = response['total_count']
+                if countTarget == 0:
                     print(
 '''  Искомых объектов на серверах ВК по Вашему запросу, ноль, поэтому нет смысла в продолжении исполнения скрипта. Что делать? Поменяйте настройки запроса и запустите скрипт с начала'''
                           )
@@ -566,7 +592,7 @@ f'''В скрипте используются следующие аргумен
 Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
                           )
                     sys.exit()
-            else: targetCount = None # проверка, что функция newsfeedSearchCore завершилась успехом
+            else: countTarget = None # проверка, что функция newsfeedSearchCore завершилась успехом
 
             itemS = dfsProcessor(complicatedNamePart=complicatedNamePart,
                                  df_additional=itemsAdditional,
@@ -581,7 +607,7 @@ f'''В скрипте используются следующие аргумен
                                  q=q,
                                  slash=slash,
                                  stage=stage,
-                                 targetCount=targetCount,
+                                 countTarget=countTarget,
                                  year=year,
                                  yearsRange=yearsRange)
 
@@ -621,16 +647,16 @@ f'''В скрипте используются следующие аргумен
                                      q=q,
                                      slash=slash,
                                      stage=stage,
-                                     targetCount=targetCount,
+                                     countTarget=countTarget,
                                      year=year,
                                      yearsRange=yearsRange)
 
-            print('  Искомых объектов', targetCount, ', а найденных БЕЗ сегментирования по годам и месяцам:', len(itemS))
+            print('  Искомых объектов', countTarget, ', а найденных БЕЗ сегментирования по годам и месяцам:', len(itemS))
 
 # 2.1.1 Этап сегментирования по годам и месяцам (stage = 1) # !!! можно сделать динамическое определение периода, который наиболее приближает размер допустимой выдачи (1000) к бенчмарку
         stage = 1
         if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
-            if len(itemS) < targetCount:
+            if len(itemS) < countTarget:
             # -- для остановки алгоритма, если все искомые объекты найдены БЕЗ сегментирования по годам и месяцам
                 print(
 f'''Метод {method} выдаёт ограниченное количество объектов, причём наиболее приближенных к текущему моменту. Скрипт умеет внутри каждого года помесячно выгружать контент, двигаясь вглубь веков, пока не достигнет заданной пользователем левой границы временнОго диапазона или года с пустой выдачей
@@ -680,7 +706,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                                                  q=q,
                                                                  slash=slash,
                                                                  stage=stage,
-                                                                 targetCount=targetCount,
+                                                                 countTarget=countTarget,
                                                                  year=year,
                                                                  yearsRange=yearsRange)
 
@@ -723,7 +749,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                                                      q=q,
                                                                      slash=slash,
                                                                      stage=stage,
-                                                                     targetCount=targetCount,
+                                                                     countTarget=countTarget,
                                                                      year=year,
                                                                      yearsRange=yearsRange)
 
@@ -745,7 +771,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                              q=q,
                                              slash=slash,
                                              stage=stage,
-                                             targetCount=targetCount,
+                                             countTarget=countTarget,
                                              year=year,
                                              yearsRange=yearsRange)
 
@@ -766,9 +792,9 @@ f'''Метод {method} выдаёт ограниченное количеств
                                 print(f'Завершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser}')
                                 break
 
-                        print('  Искомых объектов', targetCount, ', а найденных после добавления контента', year, 'года:', len(itemS), '                    ')
+                        print('  Искомых объектов', countTarget, ', а найденных после добавления контента', year, 'года:', len(itemS), '                    ')
                         year -= 1
-                    print('Искомых объектов', targetCount, ', а найденных:', len(itemS), '          ')
+                    print('Искомых объектов', countTarget, ', а найденных:', len(itemS), '          ')
 
             # pandas.set_option('display.max_columns', None)
             display(itemS.head())
@@ -789,12 +815,12 @@ f'''
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method) # чтобы избавиться от лишней точки в имени файла
 
         print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
-        if os.path.exists(rootName):
-            print('rootName:', rootName)
+        if os.path.exists(name_in_folderCurrent):
+            print('name_in_folderCurrent:', name_in_folderCurrent)
             print(
     '''Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'''
                   )
-            shutil.rmtree(rootName, ignore_errors=True)
+            shutil.rmtree(name_in_folderCurrent, ignore_errors=True)
         if fields: print(
 f'''
 Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
@@ -839,7 +865,7 @@ for cellContent in Исходный_датафрейм[column].dropna():
                          q=q,
                          slash=slash,
                          stage=stage,
-                         targetCount=targetCount,
+                         countTarget=countTarget,
                          year=year,
                          yearsRange=yearsRange)
 
