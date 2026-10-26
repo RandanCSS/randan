@@ -174,7 +174,7 @@ def channelProcessor(api_keyS,
                      q,
                      snippetContentType,
                      stage,
-                     targetCount,
+                     countTarget,
                      year,
                      yearsRange,
                      version_api,
@@ -249,7 +249,7 @@ f'''В скрипте используются следующие аргумен
                                           momentCurrent=momentCurrent,
                                           q=q,
                                           stage=stage,
-                                          targetCount=targetCount,
+                                          countTarget=countTarget,
                                           version_api=version_api,
                                           year=year,
                                           yearsRange=yearsRange)
@@ -278,7 +278,7 @@ def dfsProcessor(channelIdForSearch,
                  method,
                  q,
                  stage,
-                 targetCount,
+                 countTarget,
                  momentCurrent,
                  year,
                  yearsRange):
@@ -298,7 +298,7 @@ def dfsProcessor(channelIdForSearch,
             for column in df.columns:
                 if 'id.' in column: columnsForCheck.append(column)
 
-        # print('Столбцы, по которым проверяю дублирующиеся строки:', columnsForCheck) # для отладки
+        # print('Столбцы, по которым проверяю дублирующиеся записи:', columnsForCheck) # для отладки
 
         if columnsForCheck: # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
             df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
@@ -321,7 +321,7 @@ def dfsProcessor(channelIdForSearch,
         if stage > 1: stage -= 1 # чтобы не пропускать неполностью пройденный stage
         scrapingTools.containerExport(temporal_exportPath + slash + 'stageTarget.txt', str(stage)) # stage и stageTarget принимает значения [0; 3]
 
-        scrapingTools.containerExport(temporal_exportPath + slash + 'targetCount.txt', str(targetCount) if targetCount else '0')
+        scrapingTools.containerExport(temporal_exportPath + slash + 'countTarget.txt', str(countTarget) if countTarget else '0')
         scrapingTools.containerExport(temporal_exportPath + slash + 'year.txt', str(year)) # год, на котором остановилось исполнение скрипта
         scrapingTools.containerExport(temporal_exportPath + slash + 'yearsRange.txt', yearsRange if yearsRange else '')
 
@@ -471,7 +471,7 @@ def playListProcessor(api_keyS,
                       playlistIdS,
                       q,
                       stage,
-                      targetCount,
+                      countTarget,
                       version_api,
                       year,
                       yearsRange):
@@ -510,7 +510,7 @@ f'''В скрипте используются следующие аргумен
                                            momentCurrent=momentCurrent,
                                            q=q,
                                            stage=stage,
-                                           targetCount=targetCount,
+                                           countTarget=countTarget,
                                            version_api=version_api,
                                            year=year,
                                            yearsRange=yearsRange)
@@ -552,7 +552,7 @@ f'''
                                                              method=method,
                                                              q=q,
                                                              stage=stage,
-                                                             targetCount=targetCount,
+                                                             countTarget=countTarget,
                                                              momentCurrent=momentCurrent,
                                                              year=year,
                                                              yearsRange=yearsRange)
@@ -603,7 +603,7 @@ def portionsProcessor(api_keyS,
                       momentCurrent,
                       q,
                       stage,
-                      targetCount,
+                      countTarget,
                       version_api,
                       year,
                       yearsRange):
@@ -696,7 +696,7 @@ def portionsProcessor(api_keyS,
                                        momentCurrent=momentCurrent,
                                        q=q,
                                        stage=stage,
-                                       targetCount=targetCount,
+                                       countTarget=countTarget,
                                        year=year,
                                        yearsRange=yearsRange)
 
@@ -834,7 +834,7 @@ videoPaidProductPlacement : str
     playlistS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     stageTarget = 0 # stageTarget принимает значения [0; 3] и относится к стадиям скрипта
-    targetCount = 0
+    countTarget = 0
     videoS = pandas.DataFrame() # чтобы обращаться к контейнеру, даже если функция, создающая его, не исполнялась
     yearsRange = None
 
@@ -860,7 +860,7 @@ videoPaidProductPlacement : str
             if len(os.listdir(folder_in_folderCurrent)) < 9: print(
 f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 9-10 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 9 или 10 файлов
             else:
-                targetCountTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'targetCount.txt', int)
+                countTargetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'countTarget.txt', int)
                 methodTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'method.txt', str)
                 yearTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'year.txt', int)
 
@@ -879,14 +879,13 @@ f"В директории '{folder_in_folderCurrent}' есть директор�
 
                 if qTemporal == '': qTemporal = None # для единообразия
 
+                stageTargetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'stageTarget.txt', int)
+
                 yearsRangeTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'yearsRange.txt', str)
                 if yearsRangeTemporal == '': yearsRangeTemporal = None # для единообразия
 
-                stageTargetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'stageTarget.txt', int)
-                stageTargetTemporal = int(stageTargetTemporal)
-
                 print(f"Нашёл директорию '{folder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:",
-                      '\n- было выявлено целевое число записей (totalResults)', targetCountTemporal,
+                      '\n- было выявлено целевое число записей (totalResults)', countTargetTemporal,
                       '\n- скрипт остановился на методе', methodTemporal)
 
                 if yearTemporal: print('- и на годе (при сегментировани по годам)', yearTemporal)
@@ -912,7 +911,7 @@ f"Директорию '{folder_in_folderCurrent}' удалил, продолж�
 f"Директорию '{folder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
                 elif not decision: # Temporal-значения обретают статус постоянных и будут использоваться при исполнении скрипта
-                    targetCount = targetCountTemporal
+                    countTarget = countTargetTemporal
                     method = methodTemporal
                     year = yearTemporal
                     contentType = contentTypeTemporal
@@ -1163,9 +1162,9 @@ f'''В скрипте используются следующие аргумен
                                                                                                videoSyndicated=videoSyndicated,
                                                                                                year=None)
 
-                targetCount = response['pageInfo']['totalResults']
+                countTarget = response['pageInfo']['totalResults']
                 if not goToPlayList:
-                    if targetCount == 0:
+                    if countTarget == 0:
                         print(
 '''Искомых объектов на серверах YouTube по Вашему запросу, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта. Что делать? Поменяйте настройки запроса и запустите скрипт с начала''')
 
@@ -1190,7 +1189,7 @@ f'''В скрипте используются следующие аргумен
                                          method=method,
                                          q=q,
                                          stage=stage,
-                                         targetCount=targetCount,
+                                         countTarget=countTarget,
                                          momentCurrent=momentCurrent,
                                          year=year,
                                          yearsRange=yearsRange)
@@ -1244,19 +1243,19 @@ f'''В скрипте используются следующие аргумен
                                              method=method,
                                              q=q,
                                              stage=stage,
-                                             targetCount=targetCount,
+                                             countTarget=countTarget,
                                              momentCurrent=momentCurrent,
                                              year=year,
                                              yearsRange=yearsRange)
 
-                    print('  Искомых объектов', targetCount, ', а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
+                    print('  Искомых объектов', countTarget, ', а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
             elif stage < stageTarget: print(f"Этап {stage} пропускаю согласно настройкам из файла stage.txt в директории '{folderWithTemporal}'\n")
 
 # 2.1.1 Цикл для прохода по значениям аргумента order, внутри которых проход по всем страницам выдачи (этап stage = 1)
             stage = 1
             orderS = ['date', 'rating', 'title', 'videoCount', 'viewCount']
             if stage >= stageTarget and not goToPlayList: # eсли НЕТ временного файла stage.txt с указанием пропустить этап и нет указания перейти к методам playlistitems и playlists
-                if len(itemS) < targetCount:
+                if len(itemS) < countTarget:
                 # -- для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
                     print('Проход по значениям аргумента order, внутри которых проход по всем страницам выдачи')
                     for order in orderS:
@@ -1304,13 +1303,13 @@ f'''В скрипте используются следующие аргумен
                                              method=method,
                                              q=q,
                                              stage=stage,
-                                             targetCount=targetCount,
+                                             countTarget=countTarget,
                                              momentCurrent=momentCurrent,
                                              year=year,
                                              yearsRange=yearsRange)
 
                         print('  Проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order, '          ')
-                        while 'nextPageToken' in response.keys() and len(itemS) < targetCount and len(response['items']) > 0:
+                        while 'nextPageToken' in response.keys() and len(itemS) < countTarget and len(response['items']) > 0:
                         # -- второе условие -- для остановки алгоритма, если все искомые объекты найдены
                             # БЕЗ какой-то из следующих страниц (в т.ч. вообще БЕЗ них)
                             # третье условие -- для остановки алгоритма, если предыдущая страница выдачи содержит 0 объектов
@@ -1361,22 +1360,22 @@ f'''В скрипте используются следующие аргумен
                                                  method=method,
                                                  q=q,
                                                  stage=stage,
-                                                 targetCount=targetCount,
+                                                 countTarget=countTarget,
                                                  momentCurrent=momentCurrent,
                                                  year=year,
                                                  yearsRange=yearsRange)
 
-                    print('  Искомых объектов', targetCount, ', а найденных С включением аргумента order:', len(itemS))
+                    print('  Искомых объектов', countTarget, ', а найденных С включением аргумента order:', len(itemS))
                 else: print('Все искомые объекты найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
             elif stage < stageTarget: print(f"Этап {stage} пропускаю согласно настройкам из файла stage.txt в директории '{folderWithTemporal}'\n")
 
 # 2.1.2 Этап сегментирования по годам (stage = 2)
             stage = 2
             if stage >= stageTarget and not goToPlayList: # eсли НЕТ временного файла stage.txt с указанием пропустить этап и нет указания перейти к методам playlistitems и playlists
-                if len(itemS) < targetCount:
+                if len(itemS) < countTarget:
                 # для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
                     print(
-f'''Увы, число найденных объектов: {len(itemS)} -- менее числа искомых: {targetCount}
+f'''Увы, число найденных объектов: {len(itemS)} -- менее числа искомых: {countTarget}
 --- Если хотите для поиска дополнительных объектов попробовать сегментирование по годам, просто нажмите Enter. Поиск может занять минуты и даже часы, но Вы СМОЖЕТЕ ПРЕРВАТЬ ИСПОЛНЕНИЕ СКРИПТА КНОПКОЙ и ВЫГРУЖЕННЫЕ ДАННЫЕ СОХРАНЯТСЯ
 --- Если НЕ хотите, нажмите пробел и затем Enter'''
                     )
@@ -1385,7 +1384,7 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                         print('Внутри каждого года прохожу по значениям аргумента order, внутри которых прохожу по всем страницам выдачи')
                         goC = True
 # ********** из фрагмента 2.1.0 + условие для goC
-                        while len(itemS) < targetCount and goC:
+                        while len(itemS) < countTarget and goC:
                             print(f'  Для года {year} заход на первую страницу выдачи БЕЗ аргумента order')
                             itemS_additional, goS, goToPlayList, iteration, keyOrder, response = bigSearch(api_keyS,
                                                                                                            channelIdForSearch,
@@ -1440,7 +1439,7 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                                                  method=method,
                                                  q=q,
                                                  stage=stage,
-                                                 targetCount=targetCount,
+                                                 countTarget=countTarget,
                                                  momentCurrent=momentCurrent,
                                                  year=year,
                                                  yearsRange=yearsRange)
@@ -1493,14 +1492,14 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                                                      method=method,
                                                      q=q,
                                                      stage=stage,
-                                                     targetCount=targetCount,
+                                                     countTarget=countTarget,
                                                      momentCurrent=momentCurrent,
                                                      year=year,
                                                      yearsRange=yearsRange)
 
-                            print(f'    Искомых объектов в году {year}: {targetCount}, а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
+                            print(f'    Искомых объектов в году {year}: {countTarget}, а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
 # ********** из фрагмента 2.1.1
-                            if len(itemS) < targetCount:
+                            if len(itemS) < countTarget:
                                 print(f'  Для года {year} проход по значениям аргумента order,'
                                       , 'внутри которых проход по всем страницам выдачи')
                                 for order in orderS:
@@ -1549,7 +1548,7 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
                                                          method=method,
                                                          q=q,
                                                          stage=stage,
-                                                         targetCount=targetCount,
+                                                         countTarget=countTarget,
                                                          momentCurrent=momentCurrent,
                                                          year=year,
                                                          yearsRange=yearsRange)
@@ -1558,7 +1557,7 @@ f'''Увы, число найденных объектов: {len(itemS)} -- ме
 f'    Для года {year} проход по всем следующим страницам с выдачей с тем же значением аргумента order:', order
                                     )
 
-                                    while 'nextPageToken' in response.keys() and len(itemS) < targetCount and len(response['items']) > 0:
+                                    while 'nextPageToken' in response.keys() and len(itemS) < countTarget and len(response['items']) > 0:
                                         pageToken = response['nextPageToken']
                                         itemS_additional, goS, goToPlayList, iteration, keyOrder, response = bigSearch(api_keyS,
                                                                                                                        channelIdForSearch,
@@ -1604,13 +1603,13 @@ f'    Для года {year} проход по всем следующим ст�
                                                              method=method,
                                                              q=q,
                                                              stage=stage,
-                                                             targetCount=targetCount,
+                                                             countTarget=countTarget,
                                                              momentCurrent=momentCurrent,
                                                              year=year,
                                                              yearsRange=yearsRange)
 
                                 print(
-f'''    Искомых объектов {targetCount}, а найденных с добавлением сегментирования по году (год {year}) и включением аргумента order: {len(itemS)}
+f'''    Искомых объектов {countTarget}, а найденных с добавлением сегментирования по году (год {year}) и включением аргумента order: {len(itemS)}
 '''
                                 )
 
@@ -1693,7 +1692,7 @@ f'''
                                                                               playlistIdS=playlistIdS,
                                                                               q=q,
                                                                               stage=stage,
-                                                                              targetCount=targetCount,
+                                                                              countTarget=countTarget,
                                                                               version_api=version_api,
                                                                               year=year,
                                                                               yearsRange=yearsRange)
@@ -1715,7 +1714,7 @@ f'''
                                                                           playlistIdS=playlistIdS,
                                                                           q=q,
                                                                           stage=stage,
-                                                                          targetCount=targetCount,
+                                                                          countTarget=countTarget,
                                                                           version_api=version_api,
                                                                           year=year,
                                                                           yearsRange=yearsRange)
@@ -1739,7 +1738,7 @@ f'''
                                              q=q,
                                              snippetContentType='channel',
                                              stage=stage,
-                                             targetCount=targetCount,
+                                             countTarget=countTarget,
                                              year=year,
                                              yearsRange=yearsRange,
                                              version_api=version_api,
@@ -1766,7 +1765,7 @@ f'''
                                                                       playlistIdS=playlistIdS,
                                                                       q=q,
                                                                       stage=stage,
-                                                                      targetCount=targetCount,
+                                                                      countTarget=countTarget,
                                                                       version_api=version_api,
                                                                       year=year,
                                                                       yearsRange=yearsRange)
@@ -1832,7 +1831,7 @@ f'''В скрипте используются следующие аргумен
                                             momentCurrent=momentCurrent,
                                             q=q,
                                             stage=stage,
-                                            targetCount=targetCount,
+                                            countTarget=countTarget,
                                             version_api=version_api,
                                             year=year,
                                             yearsRange=yearsRange)
@@ -1924,7 +1923,7 @@ f'''В скрипте используются следующие аргумен
                                             method=method,
                                             q=q,
                                             stage=stage,
-                                            targetCount=targetCount,
+                                            countTarget=countTarget,
                                             momentCurrent=momentCurrent,
                                             year=year,
                                             yearsRange=yearsRange)
@@ -1998,7 +1997,7 @@ f'''В скрипте используются следующие аргумен
                                                   method=method,
                                                   q=q,
                                                   stage=stage,
-                                                  targetCount=targetCount,
+                                                  countTarget=countTarget,
                                                   momentCurrent=momentCurrent,
                                                   year=year,
                                                   yearsRange=yearsRange)
@@ -2039,7 +2038,7 @@ f'''
                                                    method=method,
                                                    q=q,
                                                    stage=stage,
-                                                   targetCount=targetCount,
+                                                   countTarget=countTarget,
                                                    momentCurrent=momentCurrent,
                                                    year=year,
                                                    yearsRange=yearsRange)
@@ -2067,7 +2066,7 @@ f'''
                                                       method=method,
                                                       q=q,
                                                       stage=stage,
-                                                      targetCount=targetCount,
+                                                      countTarget=countTarget,
                                                       momentCurrent=momentCurrent,
                                                       year=year,
                                                       yearsRange=yearsRange)
@@ -2102,7 +2101,7 @@ f'''
                                                  q=q,
                                                  snippetContentType='channel',
                                                  stage=stage,
-                                                 targetCount=targetCount,
+                                                 countTarget=countTarget,
                                                  year=year,
                                                  yearsRange=yearsRange,
                                                  version_api=version_api,
@@ -2138,7 +2137,7 @@ f'''
                          method=method,
                          q=q,
                          stage=stage,
-                         targetCount=targetCount,
+                         countTarget=countTarget,
                          momentCurrent=momentCurrent,
                          year=year,
                          yearsRange=yearsRange)
