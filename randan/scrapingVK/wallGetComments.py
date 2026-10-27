@@ -78,7 +78,7 @@ def dfsProcessor(complicatedNamePart,
     df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
         # при дублировании записей из itemS из Temporal и от пользователя и новых записей, оставить новые
 
-    if not goS and complicatedNamePart:
+    if not goS and complicatedNamePart: # при silentMode complicatedNamePart is None
         temporal_exportPath = folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"
         print(f"Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию '{temporal_exportPath}'")
         # print('temporal_exportPath:', temporal_exportPath) # для отладки
@@ -204,73 +204,9 @@ def wallGetComments(access_token=None,
      version_api : str
     '''
 
-    complicatedNamePart = None # для silentMode
-    if not params and not access_token and not count and not fields and not offset and not owner_id and not post_id and not returnDfs:
-        print('Пользователь не подал аргументы') # для отладки
-        experiencedMode = False
-        
-    else:
-        # print('Пользователь подал аргументы') # для отладки
-        experiencedMode = True
-        if params:
-            access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
-            # print('access_token:', access_token) # для отладки
-
-            count = scrapingTools.argument_key_comparison(count, 'count', params)
-            # print('count:', count) # для отладки
-
-            fields = scrapingTools.argument_key_comparison(fields, 'fields', params)
-            # print('fields:', fields) # для отладки
-
-            offset = scrapingTools.argument_key_comparison(offset, 'offset', params)
-            # print('offset:', offset) # для отладки
-
-            owner_id = scrapingTools.argument_key_comparison(owner_id, 'owner_id', params)
-            # print('owner_id:', owner_id) # для отладки
-
-            post_id = scrapingTools.argument_key_comparison(post_id, 'post_id', params)
-            # print('post_id:', post_id) # для отладки
-
-        if count:
-            if type(count) != int: count = int(count)
-
-        else: count = 100
-
-        # print('count:', count) # для отладки
-
-        if offset:
-            if type(offset) != int: offset = int(offset)
-        # print('offset:', offset) # для отладки
-            
-        if owner_id:
-            if type(owner_id) != str: owner_id = str(owner_id)
-
-        else: owner_id = '80054288' # моя страница
-
-        # print('owner_id:', owner_id) # для отладки
-
-        if post_id:
-            if type(post_id) != str: post_id = str(post_id)
-
-        else: post_id = '1' # первый пост на моей странице
-
-        # print('post_id:', post_id) # для отладки
-
-    method = 'wall.getComments'
-    if not silentMode:
-        if not experiencedMode: print(
-'''    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию: https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ). Для получения API key следует создать приложение и из него скопировать сервисный ключ. Приложение -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому ВК. Авторизация сервисным ключом позволяет использовать некоторые методы API -- в документации API ВК ( https://dev.vk.com/ru/method ) они помечены серым кружком (одним или в сочетании с кружками другого цвета). Его достаточно, если выполнять действия, которые были бы доступны Вам как обычному пользователю ВК: посмотреть открытые персональные и групповые страницы, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления поста из чужого аккаунта, то Вам потребуется дополнительная авторизация.
-    ВК может ограничить действие Вашего ключа или вовсе заблокировать его, если сочтёт, что Вы злоупотребляете автоматизированным доступом.''')
-
-        print(
-f'''    Скрипт нацелен на выгрузку характеристик контента ВК методом его API {method} . Причём количество объектов выгрузки максимизируется посредством offset .
-    Для корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.
-    Преимущества скрипта перед выгрузкой контента из ВК вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API ВК: гораздо быстрее, гораздо большее количество контента, не требуется тщательно изучать обширную и при этом неполную документацию методов API ВК''')
-
-        if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
-
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API ВК
+    complicatedNamePart = None # для silentMode
     fileFormatChoice = 'xlsx' # базовый формат сохраняемых файлов; формат json добавляется опционально через наличие columnsToJSON
     folder_file = None
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
@@ -371,6 +307,73 @@ f'''
                 else: break
             # display('itemS:', itemS)
 # Теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
+
+
+
+    params_extra = {}
+    if not params and not access_token and not count and not fields and not offset and not owner_id and not post_id and not returnDfs:
+        print('Пользователь не подал аргументы') # для отладки
+        experiencedMode = False
+        
+    else:
+        # print('Пользователь подал аргументы') # для отладки
+        experiencedMode = True
+        if params:
+            access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
+            # print('access_token:', access_token) # для отладки
+
+            count = scrapingTools.argument_key_comparison(count, 'count', params)
+            # print('count:', count) # для отладки
+
+            fields = scrapingTools.argument_key_comparison(fields, 'fields', params)
+            # print('fields:', fields) # для отладки
+
+            offset = scrapingTools.argument_key_comparison(offset, 'offset', params)
+            # print('offset:', offset) # для отладки
+
+            owner_id = scrapingTools.argument_key_comparison(owner_id, 'owner_id', params)
+            # print('owner_id:', owner_id) # для отладки
+
+            post_id = scrapingTools.argument_key_comparison(post_id, 'post_id', params)
+            # print('post_id:', post_id) # для отладки
+
+        if count:
+            if type(count) != int: count = int(count)
+
+        else: count = 100
+
+        # print('count:', count) # для отладки
+
+        if offset:
+            if type(offset) != int: offset = int(offset)
+        # print('offset:', offset) # для отладки
+            
+        if owner_id:
+            if type(owner_id) != str: owner_id = str(owner_id)
+
+        else: owner_id = '80054288' # моя страница
+
+        # print('owner_id:', owner_id) # для отладки
+
+        if post_id:
+            if type(post_id) != str: post_id = str(post_id)
+
+        else: post_id = '1' # первый пост на моей странице
+
+        # print('post_id:', post_id) # для отладки
+
+    method = 'wall.getComments'
+    if not silentMode:
+        if not experiencedMode: print(
+'''    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию: https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ). Для получения API key следует создать приложение и из него скопировать сервисный ключ. Приложение -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому ВК. Авторизация сервисным ключом позволяет использовать некоторые методы API -- в документации API ВК ( https://dev.vk.com/ru/method ) они помечены серым кружком (одним или в сочетании с кружками другого цвета). Его достаточно, если выполнять действия, которые были бы доступны Вам как обычному пользователю ВК: посмотреть открытые персональные и групповые страницы, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления поста из чужого аккаунта, то Вам потребуется дополнительная авторизация.
+    ВК может ограничить действие Вашего ключа или вовсе заблокировать его, если сочтёт, что Вы злоупотребляете автоматизированным доступом.''')
+
+        print(
+f'''    Скрипт нацелен на выгрузку характеристик контента ВК методом его API {method} . Причём количество объектов выгрузки максимизируется посредством offset .
+    Для корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.
+    Преимущества скрипта перед выгрузкой контента из ВК вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API ВК: гораздо быстрее, гораздо большее количество контента, не требуется тщательно изучать обширную и при этом неполную документацию методов API ВК''')
+
+        if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
 
 # 2.0.2 Пользовательские настройки запроса к API ВК
     # if not silentMode продолжается
