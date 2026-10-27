@@ -79,7 +79,7 @@ def dfsProcessor(complicatedNamePart,
         # при дублировании записей из itemS из Temporal и от пользователя и новых записей, оставить новые
 
 # Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
-    if not goS:
+    if not goS and complicatedNamePart:
         temporal_exportPath = folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"
         print(f"Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию '{temporal_exportPath}'")
         # print('temporal_exportPath:', temporal_exportPath) # для отладки
@@ -400,22 +400,21 @@ f'''
     complicatedNamePart = '_VK'
     if domain: complicatedNamePart += '_' + domain if len(domain) < 50 else '_' + domain[:50]
 
-    # if not silentMode завершилось
+    # Завершение if not silentMode
 
 # 2.1 Первичный сбор контента методом get
 # 2.1.0 Первое обращение к API
     iteration = 1 # номер итерации применения текущего метода
     pause = 0.25
-
-    print(
+    if not silentMode: print(
 f'В скрипте используются следующие аргументы метода {method} API ВК: count, domain, fields, filter, offset .',
 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
 f'Если хотите добавить другие аргументы метода {method} API ВК, доступные по ссылке https://dev.vk.com/ru/method/{method} ,',
 f'-- можете подать их в скобки функции wallGet перед её запуском или скопировать код исполняемого сейчас скрипта и сделать это внутри кода внутри метода {method} в разделе 2')
 
-    # print('experiencedMode:', experiencedMode) # для отладки
-    if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
-    print('') # для отступа
+        # print('experiencedMode:', experiencedMode) # для отладки
+        if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
+        print('') # для отступа
 
     if offset is None: offset = 0 # если offset ни подан пользователем, ни сохранён при прошлом запуске
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
