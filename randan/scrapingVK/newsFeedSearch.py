@@ -255,8 +255,8 @@ def newsFeedSearch(access_token=None,
         for name_in_folderCurrent in nameS_in_folderCurrent:
             if name_in_folderCurrent.endswith('Temporal') and 'VK' in name_in_folderCurrent:
                 folder_in_folderCurrent = folder + name_in_folderCurrent # имя файла достраивается до абсолютного пути
-                if len(os.listdir(folder_in_folderCurrent)) < 8:  print(
-f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 8-9 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
+                if len(os.listdir(folder_in_folderCurrent)) < 9: print(
+f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 9-10 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
                     countTargetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'countTarget.txt', int)
 
                     with open(f'{folder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file:
@@ -283,10 +283,12 @@ f"В директории '{folder_in_folderCurrent}' есть директор�
                     if yearTemporal < int(momentCurrent.strftime('%Y')): print('- и на годе (при сегментировани по годам)', yearTemporal)
                     print(f"- пользователь сформулировал запрос-фильтр как '{qTemporal}'" if qTemporal else '- пользователь НЕ сформулировал запрос-фильтр')
                     print(f'- пользователь ограничил временнОй диапазон границами {yearsRangeTemporal}' if yearsRangeTemporal else '- пользователь НЕ ограничил временнОй диапазон')
+                    print(f"- пользователь подал дополнительные настройки посредством словаря params: '{params_extraTemporal}'" if params_extraTemporal else '')
 
                     print(
-'''--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
---- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите 'R' и нажмите Enter
+f'''В дальнейшей работе могу опираться на эти промежуточные результаты. При этом случае ПРОТИВОРЕЧИЯ между найденными в директории '{folder_in_folderCurrent}'и поданными Вами при текущем запуске аргументами будут применены ПЕРВЫЕ.
+--- Если следует опираться на промежуточные результаты, нажмите Enter;  
+--- Если эти промежуточные результаты уже не актуальны и хотите, чтобы я удалил их, введите 'R' и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter''')
 
                     decision = input()
