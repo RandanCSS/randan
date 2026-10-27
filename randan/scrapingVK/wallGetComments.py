@@ -199,9 +199,7 @@ def wallGetComments(access_token=None,
           fields : list
           offset : int
         owner_id : str
-          params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.getComments ,
-          чтобы не подавать эти аргументы по отдельности
-
+          params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.getComments , чтобы не подавать эти аргументы по отдельности
          post_id : str
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
       silentMode : bool -- в случае True в функции отключаются CLI-диалоги и экспорт результата исполнения функции для долговременного хранения 
@@ -220,7 +218,7 @@ def wallGetComments(access_token=None,
     itemS = pandas.DataFrame()
     itemS_additional = pandas.DataFrame() # на случай, если сигнал прерывания поступит до dfsProcessor
     keyOrder = 0
-    # name_in_folderCurrent = None
+    params_extra = {}
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
 
     momentCurrent = datetime.now() # запрос текущего момента
@@ -254,9 +252,8 @@ f"В директории '{folder_in_folderCurrent}' есть директор�
 
                     post_idTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'post_id.txt', str)
                     
-                    print(
-f'''Нашёл директорию '{name_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:
-- скрипт остановился на offset''', offset)
+                    print(f"Нашёл директорию '{folder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
+                          , '\n- скрипт остановился на offset', offsetTemporal)
 
                     print(f"- пользователь определил поля: '{fieldsTemporal}'" if fieldsTemporal else '- пользователь НЕ определил поля')
                     print(f"- пользователь определил ID страницы: '{owner_id}'" if owner_idTemporal else '- пользователь НЕ определил ID страницы')
@@ -481,15 +478,17 @@ f'-- можете подать их в скобки функции wallGet пе�
                                  coLabFolder=coLabFolder,
                                  currentMoment=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
 
-            print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
-            if os.path.exists(name_in_folderCurrent):
-                print('name_in_folderCurrent:', name_in_folderCurrent)
-                print(
-    'Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'
-                      )
+                    print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+                    if folderWithTemporal:
+                        if os.path.exists(folderWithTemporal):
+                            # print('folderWithTemporal:', folderWithTemporal) # для отладки
+                            print(
+'''Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, можно удалить её во избежание путаницы при следующих запусках скрипта
+--- Если хотите их удалить, введите 'R' и нажмите Enter''')
 
-                shutil.rmtree(name_in_folderCurrent, ignore_errors=True)
-            if fields: print(
+                        decision = input()
+                        if decision.lower() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True)
+                if fields: print(
 f'''
 Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
 import pandas
@@ -498,15 +497,17 @@ JSONS = []
 for cellContent in Исходный_датафрейм[column].dropna():
     JSONS.extend(cellContent)
 Новый_датафрейм = pandas.json_normalize(JSONS).drop_duplicates('id').reset_index(drop=True)
+''')
 
-Чтобы сохранить результат распаковки в ту же директорию, в которую уже сохранены основные данные, используйте такой код:
-from randan.tools.df2file import df2fileShell
-df2fileShell('{complicatedNamePart}', Новый_датафрейм, '{fileFormatChoice}', column, {'{coLabFolder}' if coLabFolder else None}, '{momentCurrent.strftime('%Y%m%d_%H%M')}')
-'''
-                                     )
+                if returnDfs: return itemS
+                else:
+                    with warnings.catch_warnings():
+                        warnings.simplefilter('ignore')
+                        print(
+'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
+Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
 
-        # if not silentMode завершилось
-        if returnDfs: return itemS
+                        sys.exit()
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         # display(itemS)
