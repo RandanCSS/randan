@@ -217,7 +217,7 @@ def wallGet(access_token=None,
     itemS = pandas.DataFrame()
     itemS_additional = pandas.DataFrame() # на случай, если сигнал прерывания поступит до dfsProcessor
     keyOrder = 0
-    # name_in_folderCurrent = None
+    params_extra = {}
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
 
     momentCurrent = datetime.now() # запрос текущего момента
@@ -316,7 +316,6 @@ f'''
 
 
 
-    params_extra = {}
     if not params and not access_token and not count and not domain and not fields and not filter and not offset and not returnDfs:
         if not silentMode: print('Пользователь не подал аргументы') # для отладки
         experiencedMode = False
@@ -505,7 +504,6 @@ for cellContent in Исходный_датафрейм[column].dropna():
 Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
 
                         sys.exit()
-
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         # # display(itemS)
