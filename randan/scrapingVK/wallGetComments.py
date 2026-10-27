@@ -79,43 +79,38 @@ def dfsProcessor(complicatedNamePart,
         # при дублировании записей из itemS из Temporal и от пользователя и новых записей, оставить новые
 
     if not goS and complicatedNamePart:
-        print(
-f'''Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"'''
-              )
-        if not os.path.exists(f'{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal'):
-            os.makedirs(f'{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal')
-            print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" создана''')
-        # else:
-            # print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" существует''')
+        temporal_exportPath = folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"
+        print(f"Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию '{temporal_exportPath}'")
+        # print('temporal_exportPath:', temporal_exportPath) # для отладки
+        if not os.path.exists(temporal_exportPath):
+            os.makedirs(temporal_exportPath)
+            print(f"Директория '{temporal_exportPath}' создана")
+        # else: print(ff"Директория '{temporal_exportPath}' существует")
 
-# Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
         if not fields: fields = []
-        with open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}fields.json", 'w', encoding='utf-8') as file:
+        with open(temporal_exportPath + slash + 'fields.json', 'w', encoding='utf-8') as file:
             json.dump(fields, file, ensure_ascii=False, indent=4)
 
-        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}filter.txt", filter if filter else '')
-        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}method.txt", method)
-        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}offset.txt", offset)
-        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}owner_id.txt", owner_id if owner_id else '')
-        scrapingTools.containerExport(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}post_id.txt", post_id if post_id else '')
+        scrapingTools.containerExport(temporal_exportPath + slash + 'filter.txt', filter if filter else '')
+        scrapingTools.containerExport(temporal_exportPath + slash + 'method.txt', method)
+        scrapingTools.containerExport(temporal_exportPath + slash + 'offset.txt', offset)
+        scrapingTools.containerExport(temporal_exportPath + slash + 'owner_id.txt', owner_id if owner_id else '')
+        scrapingTools.containerExport(temporal_exportPath + slash + 'post_id.txt', post_id if post_id else '')
 
         df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
-                             dfIn=df,
+                             df_in=df,
                              fileFormatChoice=fileFormatChoice,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method,
-                                 # чтобы избавиться от лишней точки в имени файла
+                             folder=temporal_exportPath,
+                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла  
+                             momentCurrent=momentCurrent)
 
-                             coLabFolder=coLabFolder,
-                             currentMoment=momentCurrent.strftime('%Y%m%d'))
-                                 # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-
-        warnings.filterwarnings('ignore')
-        print(
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            print(
 '''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
-Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
-              )
-        sys.exit()
+Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
 
+            sys.exit()
     return df
 
 # .. метода getComments из API ВК, помогающая работе с ключами
@@ -408,28 +403,24 @@ f'''
         if owner_id: complicatedNamePart += '_' + owner_id if len(owner_id) < 50 else '_' + owner_id[:50]
         if post_id: complicatedNamePart += '_' + post_id if len(post_id) < 50 else '_' + post_id[:50]
     
-    # if not silentMode завершилось
+    # Завершение if not silentMode
 
 # 2.1 Первичный сбор контента методом get
 # 2.1.0 Первое обращение к API
-    try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
-        iteration = 0 # номер итерации применения текущего метода
-        pause = 0.25
-
-        if not silentMode:
-            print(
+    iteration = 1 # номер итерации применения текущего метода
+    pause = 0.25
+    if not silentMode: print(
 f'В скрипте используются следующие аргументы метода {method} API ВК: count, fields, offset, owner_id, post_id .',
 'Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.',
 f'Если хотите добавить другие аргументы метода {method} API ВК, доступные по ссылке https://dev.vk.com/ru/method/{method} ,',
-f'-- можете подать их в скобки функции wallGet перед её запуском или скопировать код исполняемого сейчас скрипта и сделать это внутри кода внутри метода {method} в разделе 2'
-                  )
+f'-- можете подать их в скобки функции wallGet перед её запуском или скопировать код исполняемого сейчас скрипта и сделать это внутри кода внутри метода {method} в разделе 2')
 
-            # print('experiencedMode:', experiencedMode) # для отладки
-            if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
-            print('') # для отступа
+        # print('experiencedMode:', experiencedMode) # для отладки
+        if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
+        print('') # для отступа
 
-        iteration = 1
-        if not offset: offset = 0 # если offset ни подан пользователем, ни сохранён при прошлом запуске
+    if offset is None: offset = 0 # если offset ни подан пользователем, ни сохранён при прошлом запуске
+    try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         while True:
             itemsAdditional, goS, iteration, keyOrder, pause, response = wallGetCommentsCore(api_keyS,
                                                                                              count,
@@ -438,6 +429,7 @@ f'-- можете подать их в скобки функции wallGet пе�
                                                                                              keyOrder,
                                                                                              offset,
                                                                                              owner_id,
+                                                                                             params_extra,
                                                                                              pause,
                                                                                              post_id,
                                                                                              version_api)
