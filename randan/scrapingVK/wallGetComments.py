@@ -235,7 +235,7 @@ def wallGetComments(access_token=None,
         for name_in_folderCurrent in nameS_in_folderCurrent:
             if name_in_folderCurrent.endswith('Temporal') and 'VK' in name_in_folderCurrent:
                 folder_in_folderCurrent = folder + name_in_folderCurrent # имя файла достраивается до абсолютного пути
-                if len(os.listdir(folder_in_folderCurrent)) < 5:  print(
+                if len(os.listdir(folder_in_folderCurrent)) < 5: print(
 f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 5-6 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
 
                 else:
@@ -253,10 +253,12 @@ f'''Нашёл директорию '{name_in_folderCurrent}'. В этой ди�
                     print(f"- пользователь определил поля: '{fieldsTemporal}'" if fieldsTemporal else '- пользователь НЕ определил поля')
                     print(f"- пользователь определил ID страницы: '{owner_id}'" if owner_idTemporal else '- пользователь НЕ определил ID страницы')
                     print(f"- пользователь определил ID поста: '{post_id}'" if post_idTemporal else '- пользователь НЕ определил ID поста')
+                    print(f"- пользователь подал дополнительные настройки посредством словаря params: '{params_extraTemporal}'" if params_extraTemporal else '')
 
                     print(
-'''--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
---- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите 'R' и нажмите Enter
+f'''В дальнейшей работе могу опираться на эти промежуточные результаты. При этом случае ПРОТИВОРЕЧИЯ между найденными в директории '{folder_in_folderCurrent}'и поданными Вами при текущем запуске аргументами будут применены ПЕРВЫЕ.
+--- Если следует опираться на промежуточные результаты, нажмите Enter;  
+--- Если эти промежуточные результаты уже не актуальны и хотите, чтобы я удалил их, введите 'R' и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter''')
 
                     decision = input()
