@@ -80,44 +80,44 @@ def dfsProcessor(complicatedNamePart,
     if columnsForCheck: df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
         # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
 
-    if not goS:
-        print(
-f'''Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"'''
-              )
-        if not os.path.exists(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"):
-            os.makedirs(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal")
-            print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" создана''')
-        # else:
-            # print(f'''Директория "{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" существует''')
+    if not goS and complicatedNamePart:
+        temporal_exportPath = folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"
+        print(f"Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию '{temporal_exportPath}'")
+        # print('temporal_exportPath:', temporal_exportPath) # для отладки
+        if not os.path.exists(temporal_exportPath):
+            os.makedirs(temporal_exportPath)
+            print(f"Директория '{temporal_exportPath}' создана")
+        # else: print(f"Директория '{temporal_exportPath}' существует")
 
 # Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
         if not fields: fields = []
-        with open(f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}fields.json", 'w', encoding='utf-8') as file:
+        with open(temporal_exportPath + slash + 'fields.json', 'w', encoding='utf-8') as file:
             json.dump(fields, file, ensure_ascii=False, indent=4)
 
-        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}method.txt", method)
-        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}q.txt", q if q else '')
-        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}stageTarget.txt", stage) # stage и stageTarget принимает значения [0; 3]
-        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}countTarget.txt", countTarget if countTarget else '0')
-        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}year.txt", str(year)) # год, на котором остановилось исполнение скрипта
-        scrapingTools.containerExport(folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal{slash}yearsRange.txt", yearsRange if yearsRange else '')
+        scrapingTools.containerExport(temporal_exportPath + slash + 'method.txt', method)
+        scrapingTools.containerExport(temporal_exportPath + slash + 'q.txt', q if q else '')
+
+        if stage > 1: stage -= 1 # чтобы не пропускать неполностью пройденный stage
+        scrapingTools.containerExport(temporal_exportPath + slash + 'stageTarget.txt', str(stage)) # stage и stageTarget принимает значения [0; 3]
+
+        scrapingTools.containerExport(temporal_exportPath + slash + 'countTarget.txt', str(countTarget) if countTarget else '0')
+        scrapingTools.containerExport(temporal_exportPath + slash + 'year.txt', str(year)) # год, на котором остановилось исполнение скрипта
+        scrapingTools.containerExport(temporal_exportPath + slash + 'yearsRange.txt', yearsRange if yearsRange else '')
 
         df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
-                             currentMoment=momentCurrent.strftime('%Y%m%d'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-                             dfIn=df,
+                             df_in=df,
                              fileFormatChoice=fileFormatChoice,
-                             folder=folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal",
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method) # чтобы избавиться от лишней точки в имени файла
+                             folder=temporal_exportPath,
+                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла  
+                             momentCurrent=momentCurrent)
 
-        warnings.filterwarnings('ignore')
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            print(
+'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
+Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
 
-        print(
-'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть,
-Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473'''
-              )
-
-        sys.exit()
-
+            sys.exit()
     return df
 
 # .. метода search из API ВК, помогающая работе с ключами
@@ -487,25 +487,24 @@ f'''Если требуется конкретный временнОй диап
     complicatedNamePart += '_' + str(yearMinByUser) + '-' + str(yearMaxByUser) if yearMinByUser or yearMaxByUser else ''
     # print('complicatedNamePart', complicatedNamePart)
 
-    # if not silentMode завершилось
+    # Завершение if not silentMode
 
 # 2.1 Первичный сбор контента методом search
 # 2.1.0 Первое обращение к API БЕЗ аргументов start_time, end_time (этап stage = 0)
-    try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
-        stage = 0
-        iteration = 0 # номер итерации применения текущего метода
-        pause = 0.25
-
-        print(
+    iteration = 1 # номер итерации применения текущего метода
+    pause = 0.25
+    stage = 0
+    if not silentMode: print(
 f'''В скрипте используются следующие аргументы метода {method} API ВК: q, start_from, start_time, end_time, expand .
 Эти аргументы пользователю скрипта лучше не кастомизировать во избежание поломки скрипта.
 Если хотите добавить другие аргументы метода {method} API ВК, доступные по ссылке https://dev.vk.com/ru/method/{method} ,
--- можете подать их в скобки функции newsFeedSearch перед её запуском или скопировать код исполняемого сейчас скрипта и сделать это внутри кода внутри метода {method} в разделе 2'''
-              )
+-- можете подать их в скобки функции newsFeedSearch перед её запуском или скопировать код исполняемого сейчас скрипта и сделать это внутри кода внутри метода {method} в разделе 2''')
+
         # print('experiencedMode:', experiencedMode) # для отладки
         if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
         print('') # для отступа
 
+    try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
             print('Первое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных объектов')
             # print('    start_from', start_from) # для отладки
