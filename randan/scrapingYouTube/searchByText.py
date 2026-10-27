@@ -311,7 +311,7 @@ def dfsProcessor(channelIdForSearch,
         if not os.path.exists(temporal_exportPath):
             os.makedirs(temporal_exportPath)
             print(f"Директория '{temporal_exportPath}' создана")
-        # else: print(ff"Директория '{temporal_exportPath}' существует")
+        # else: print(f"Директория '{temporal_exportPath}' существует")
 
         scrapingTools.containerExport(temporal_exportPath + slash + 'channelIdForSearch.txt', channelIdForSearch if channelIdForSearch else '')
         scrapingTools.containerExport(temporal_exportPath + slash + 'contentType.txt', contentType if contentType else '')
