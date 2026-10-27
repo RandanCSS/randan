@@ -64,6 +64,7 @@ def dfsProcessor(complicatedNamePart,
                  momentCurrent,
                  offset,
                  owner_id,
+                 params_extra,
                  post_id,
                  slash):
 
@@ -316,9 +317,6 @@ f'''
             # display('itemS:', itemS)
 # Теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
 
-
-
-    params_extra = {}
     if not params and not access_token and not count and not fields and not offset and not owner_id and not post_id and not returnDfs:
         # print('Пользователь не подал аргументы') # для отладки
         experiencedMode = False
@@ -453,12 +451,12 @@ f'-- можете подать их в скобки функции wallGet пе�
                                                                                              post_id,
                                                                                              version_api)
 
+            # После самого первого исполнения wallGetCore iteration == 2
             # print('goS:', goS) # для отладки
-            if goS & (len(itemsAdditional) == 0):
-                if not silentMode: print('Все комментарии к посту страницы выгружены')
-                break
+            if not goS or goS and len(itemS_additional) > 0: # сигнал остановиться; число выгруженных постов не важно ИЛИ сигнала остановиться нет, а выгруженные посты есть
+                # в первом случае dfsProcessor завешит скрипт и создаст Temporal-снимок, во втором -- объединит свежевыгруженные посты с ранее выгруженными
+                # Вариантов сигнала в этом и аналогичном скриптах три: len(itemS_additional) > 0 , not goS , 'next_from' is not in response.keys()
 
-            else:
                 itemS = dfsProcessor(complicatedNamePart,
                                      coLabFolder,
                                      itemsAdditional,
@@ -471,33 +469,36 @@ f'-- можете подать их в скобки функции wallGet пе�
                                      momentCurrent,
                                      offset,
                                      owner_id,
+                                     params_extra,
                                      post_id,
                                      slash)
                 offset += count
                 time.sleep(pause)
 
-# 2.1.2 Экспорт выгрузки метода getComments и финальное завершение скрипта
-        if not silentMode:
-            df2file.df2fileShell(complicatedNamePart=complicatedNamePart,
-                                 dfIn=itemS,
-                                 fileFormatChoice=fileFormatChoice,
-                                 method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method,
-                                    # чтобы избавиться от лишней точки в имени файла
+            if goS and len(itemS_additional) == 0: # сигнала остановиться нет, но и выгруженных постов нет
+                if not silentMode: print(
+f'''{'Дополнительных' if iteration > 2 else 'Искомых'} комментариев к посту на странице из Вашего запроса, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта{'' if iteration > 2 else '. Что можно сделать для выгрузки комментариев? Поменяйте настройки запроса и запустите скрипт с начала'}''')
+                if iteration >= 2:
+# 2.1.2 Экспорт выгрузки метода get и финальное завершение скрипта
+                    df2file.df2fileShell(complicatedNamePart,
+                                         df_in=itemS,
+                                         fileFormatChoice=fileFormatChoice,
+                                         folder=folder,
+                                         method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                                         momentCurrent=momentCurrent)
 
-                                 coLabFolder=coLabFolder,
-                                 currentMoment=momentCurrent.strftime('%Y%m%d_%H%M')) # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
-
-                    print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
-                    if folderWithTemporal:
-                        if os.path.exists(folderWithTemporal):
-                            # print('folderWithTemporal:', folderWithTemporal) # для отладки
-                            print(
+                    if not silentMode: 
+                        print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+                        if folderWithTemporal:
+                            if os.path.exists(folderWithTemporal):
+                                # print('folderWithTemporal:', folderWithTemporal) # для отладки
+                                print(
 '''Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, можно удалить её во избежание путаницы при следующих запусках скрипта
 --- Если хотите их удалить, введите 'R' и нажмите Enter''')
 
-                        decision = input()
-                        if decision.lower() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True)
-                if fields: print(
+                            decision = input()
+                            if decision.lower() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True)
+                        if fields: print(
 f'''
 Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
 import pandas
@@ -508,15 +509,15 @@ for cellContent in Исходный_датафрейм[column].dropna():
 Новый_датафрейм = pandas.json_normalize(JSONS).drop_duplicates('id').reset_index(drop=True)
 ''')
 
-                if returnDfs: return itemS
-                else:
-                    with warnings.catch_warnings():
-                        warnings.simplefilter('ignore')
-                        print(
+                    if returnDfs: return itemS
+                    else:
+                        with warnings.catch_warnings():
+                            warnings.simplefilter('ignore')
+                            if not silentMode: print(
 '''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
 Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
 
-                        sys.exit()
+                            sys.exit()
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         # display(itemS)
@@ -533,6 +534,7 @@ for cellContent in Исходный_датафрейм[column].dropna():
                      momentCurrent,
                      offset,
                      owner_id,
+                     params_extra,
                      post_id,
                      slash)
 
