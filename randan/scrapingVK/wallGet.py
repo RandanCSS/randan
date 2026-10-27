@@ -280,6 +280,7 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
                         fields = fieldsTemporal
                         filter = filterTemporal
                         offset = offsetTemporal
+                        params_extra = params_extraTemporal
 
                         temporalNameS = os.listdir(folder_in_folderCurrent)
                         folderWithTemporal, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
@@ -314,10 +315,8 @@ f'''
             # display('itemS:', itemS)
 # Теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
 
-
-
     if not params and not access_token and not count and not domain and not fields and not filter and not offset and not returnDfs:
-        if not silentMode: print('Пользователь не подал аргументы') # для отладки
+        # print('Пользователь не подал аргументы') # для отладки
         experiencedMode = False
 
     else:
@@ -352,10 +351,11 @@ f'''
             elif 'v' in params.keys(): version_api = params['v']
             # print('v:', v) # для отладки
 
-            params_extra = {key: value for key, value in params.items() if key not in KEYS_BASIC}
-                # всё, что осталось -- пользовательские аргументы метода
-
-            params_extra = {key: value for key, value in params_extra.items() if value is not None}
+            if not params_extra: # если params_extra НЕ извлечены из Temporal, то попробовать извлечь их из params
+                params_extra = {key: value for key, value in params.items() if key not in KEYS_BASIC}
+                    # всё, что осталось -- пользовательские аргументы метода
+    
+                params_extra = {key: value for key, value in params_extra.items() if value is not None}
 
         if count:
             if not isinstance(count, int): count = int(count)
@@ -389,7 +389,7 @@ f'''    Скрипт нацелен на выгрузку характерист
         if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
 
 # 2.0.2 Пользовательские настройки запроса к API ВК
-    # if not silentMode продолжается
+    if not silentMode: # если основная функция этого модуля явлется частью другой функции, поиск данных не требуется -- они будут переданы
         if not domain: # если пользователь не подал этот аргумент в рамках experiencedMode
             print(
 '''Скрипт умеет искать посты открытых страниц
