@@ -79,7 +79,7 @@ def dfsProcessor(complicatedNamePart,
         # при дублировании записей из itemS из Temporal и от пользователя и новых записей, оставить новые
 
 # Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
-    if not goS and complicatedNamePart:
+    if not goS and complicatedNamePart: # при silentMode complicatedNamePart is None
         temporal_exportPath = folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"
         print(f"Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию '{temporal_exportPath}'")
         # print('temporal_exportPath:', temporal_exportPath) # для отладки
@@ -203,81 +203,9 @@ def wallGet(access_token=None,
      version_api : str
     '''
 
-    complicatedNamePart = None # для silentMode
-    params_extra = {}
-    if not params and not access_token and not count and not domain and not fields and not filter and not offset and not returnDfs:
-        if not silentMode: print('Пользователь не подал аргументы') # для отладки
-        experiencedMode = False
-
-    else:
-        experiencedMode = True
-        KEYS_BASIC = {'access_token', 'count', 'domain', 'fields', 'filter', 'offset', 'v'}
-        params_extra = {}
-        if params:
-            if access_token: access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
-            elif 'access_token' in params.keys(): access_token = params['access_token']
-            # print('access_token:', access_token) # для отладки
-
-            if count: count = scrapingTools.argument_key_comparison(count, 'count', params)
-            elif 'count' in params.keys(): count = params['count']
-            # print('count:', count) # для отладки
-
-            if domain: domain = scrapingTools.argument_key_comparison(domain, 'domain', params)
-            elif 'domain' in params.keys(): domain = params['domain']
-            # print('domain:', domain) # для отладки
-
-            if fields: fields = scrapingTools.argument_key_comparison(fields, 'fields', params)
-            elif 'fields' in params.keys(): fields = params['fields']
-            # print('fields:', fields) # для отладки
-
-            if filter: filter = scrapingTools.argument_key_comparison(filter, 'filter', params)
-            elif 'filter' in params.keys(): filter = params['filter']
-            # print('filter:', filter) # для отладки
-
-            if offset is not None: offset = scrapingTools.argument_key_comparison(offset, 'offset', params)
-            elif 'offset' in params.keys(): offset = params['offset']
-            # print('offset:', offset) # для отладки
-
-            if version_api is not None: version_api = scrapingTools.argument_key_comparison(version_api, 'v', params)
-            elif 'v' in params.keys(): version_api = params['v']
-            # print('v:', v) # для отладки
-
-            params_extra = {key: value for key, value in params.items() if key not in KEYS_BASIC}
-                # всё, что осталось -- пользовательские аргументы метода
-
-            params_extra = {key: value for key, value in params_extra.items() if value is not None}
-
-        if count:
-            if not isinstance(count, int): count = int(count)
-            count = min(abs(count), 100)
-        
-        else: count = 100
-        # print('count:', count) # для отладки
-
-        if domain:
-            if not isinstance(domain, str): domain = str(domain)
-        # print('domain:', domain) # для отладки
-
-        if offset is not None:
-            if not isinstance(offset, int): offset = int(offset)
-        # print('offset:', offset) # для отладки
-
-    method = 'wall.get'
-    if not silentMode:
-        if not experiencedMode:
-            print(
-'''    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию: https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ). Для получения API key следует создать приложение и из него скопировать сервисный ключ. Приложение -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому ВК. Авторизация сервисным ключом позволяет использовать некоторые методы API -- в документации API ВК ( https://dev.vk.com/ru/method ) они помечены серым кружком (одним или в сочетании с кружками другого цвета). Его достаточно, если выполнять действия, которые были бы доступны Вам как обычному пользователю ВК: посмотреть открытые персональные и групповые страницы, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления поста из чужого аккаунта, то Вам потребуется дополнительная авторизация.
-    ВК может ограничить действие Вашего ключа или вовсе заблокировать его, если сочтёт, что Вы злоупотребляете автоматизированным доступом.''')
-
-        print(
-f'''    Скрипт нацелен на выгрузку характеристик контента ВК методом его API {method} . Причём количество объектов выгрузки максимизируется посредством offset .
-    Для корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.
-    Преимущества скрипта перед выгрузкой контента из ВК вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API ВК: гораздо быстрее, гораздо большее количество контента, не требуется тщательно изучать обширную и при этом неполную документацию методов API ВК''')
-
-        if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
-
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API ВК
+    complicatedNamePart = None # для silentMode
     fileFormatChoice = 'xlsx' # базовый формат сохраняемых файлов; формат json добавляется опционально через наличие columnsToJSON
     folder_file = None
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
@@ -378,6 +306,79 @@ f'''
                 else: break
             # display('itemS:', itemS)
 # Теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
+
+
+
+    params_extra = {}
+    if not params and not access_token and not count and not domain and not fields and not filter and not offset and not returnDfs:
+        if not silentMode: print('Пользователь не подал аргументы') # для отладки
+        experiencedMode = False
+
+    else:
+        experiencedMode = True
+        KEYS_BASIC = {'access_token', 'count', 'domain', 'fields', 'filter', 'offset', 'v'}
+        if params:
+            if access_token: access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
+            elif 'access_token' in params.keys(): access_token = params['access_token']
+            # print('access_token:', access_token) # для отладки
+
+            if count: count = scrapingTools.argument_key_comparison(count, 'count', params)
+            elif 'count' in params.keys(): count = params['count']
+            # print('count:', count) # для отладки
+
+            if domain: domain = scrapingTools.argument_key_comparison(domain, 'domain', params)
+            elif 'domain' in params.keys(): domain = params['domain']
+            # print('domain:', domain) # для отладки
+
+            if fields: fields = scrapingTools.argument_key_comparison(fields, 'fields', params)
+            elif 'fields' in params.keys(): fields = params['fields']
+            # print('fields:', fields) # для отладки
+
+            if filter: filter = scrapingTools.argument_key_comparison(filter, 'filter', params)
+            elif 'filter' in params.keys(): filter = params['filter']
+            # print('filter:', filter) # для отладки
+
+            if offset is not None: offset = scrapingTools.argument_key_comparison(offset, 'offset', params)
+            elif 'offset' in params.keys(): offset = params['offset']
+            # print('offset:', offset) # для отладки
+
+            if version_api is not None: version_api = scrapingTools.argument_key_comparison(version_api, 'v', params)
+            elif 'v' in params.keys(): version_api = params['v']
+            # print('v:', v) # для отладки
+
+            params_extra = {key: value for key, value in params.items() if key not in KEYS_BASIC}
+                # всё, что осталось -- пользовательские аргументы метода
+
+            params_extra = {key: value for key, value in params_extra.items() if value is not None}
+
+        if count:
+            if not isinstance(count, int): count = int(count)
+            count = min(abs(count), 100)
+        
+        else: count = 100
+        # print('count:', count) # для отладки
+
+        if domain:
+            if not isinstance(domain, str): domain = str(domain)
+        # print('domain:', domain) # для отладки
+
+        if offset is not None:
+            if not isinstance(offset, int): offset = int(offset)
+        # print('offset:', offset) # для отладки
+
+    method = 'wall.get'
+    if not silentMode:
+        if not experiencedMode:
+            print(
+'''    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию: https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ). Для получения API key следует создать приложение и из него скопировать сервисный ключ. Приложение -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому ВК. Авторизация сервисным ключом позволяет использовать некоторые методы API -- в документации API ВК ( https://dev.vk.com/ru/method ) они помечены серым кружком (одним или в сочетании с кружками другого цвета). Его достаточно, если выполнять действия, которые были бы доступны Вам как обычному пользователю ВК: посмотреть открытые персональные и групповые страницы, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления поста из чужого аккаунта, то Вам потребуется дополнительная авторизация.
+    ВК может ограничить действие Вашего ключа или вовсе заблокировать его, если сочтёт, что Вы злоупотребляете автоматизированным доступом.''')
+
+        print(
+f'''    Скрипт нацелен на выгрузку характеристик контента ВК методом его API {method} . Причём количество объектов выгрузки максимизируется посредством offset .
+    Для корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.
+    Преимущества скрипта перед выгрузкой контента из ВК вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API ВК: гораздо быстрее, гораздо большее количество контента, не требуется тщательно изучать обширную и при этом неполную документацию методов API ВК''')
+
+        if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
 
 # 2.0.2 Пользовательские настройки запроса к API ВК
     # if not silentMode продолжается
