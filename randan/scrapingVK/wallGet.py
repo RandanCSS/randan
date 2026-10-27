@@ -98,6 +98,9 @@ def dfsProcessor(complicatedNamePart,
         scrapingTools.containerExport(temporal_exportPath + slash + 'method.txt', method)
         scrapingTools.containerExport(temporal_exportPath + slash + 'offset.txt', offset)
 
+        with open(temporal_exportPath + slash + 'params_extra.json', 'w', encoding='utf-8') as file:
+            json.dump(params_extra, file, ensure_ascii=False, indent=4)
+
         df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
                              df_in=df,
                              fileFormatChoice=fileFormatChoice,
