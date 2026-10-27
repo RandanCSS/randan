@@ -197,7 +197,6 @@ def wallGet(access_token=None,
           folder : str
           offset : int
           params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.get , чтобы не подавать эти аргументы по отдельности
-
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными, если исполнение скрипта не прервано пользователем или из-за ошибки
       silentMode : bool -- в случае True в функции отключаются CLI-диалоги и экспорт результата исполнения функции для долговременного хранения 
      version_api : str
@@ -234,8 +233,8 @@ def wallGet(access_token=None,
         for name_in_folderCurrent in nameS_in_folderCurrent:
             if name_in_folderCurrent.endswith('Temporal') and 'VK' in name_in_folderCurrent:
                 folder_in_folderCurrent = folder + name_in_folderCurrent # имя файла достраивается до абсолютного пути
-                if len(os.listdir(folder_in_folderCurrent)) < 5:  print(
-f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 5-6 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
+                if len(os.listdir(folder_in_folderCurrent)) < 6: print(
+f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 6-7 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
 
                 else:
                     domainTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'domain.txt', str)
@@ -246,16 +245,21 @@ f"В директории '{folder_in_folderCurrent}' есть директор�
                     filterTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'filter.txt', str)
                     offsetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'offset.txt', int)
 
+                    with open(f'{folder_in_folderCurrent}{slash}params_extra.json', 'r', encoding='utf-8') as file:
+                        params_extraTemporal = json.load(file)
+
                     print(f"Нашёл директорию '{folder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
                           , '\n- скрипт остановился на offset', offsetTemporal)
 
                     print(f"- пользователь определил страницу: '{domainTemporal}'" if domainTemporal else '- пользователь НЕ определил страницу')
                     print(f"- пользователь определил поля: '{fieldsTemporal}'" if fieldsTemporal else '- пользователь НЕ определил поля')
                     print(f"- пользователь определил фильтр: '{filterTemporal}'" if filterTemporal else '- пользователь НЕ определил фильтр')
+                    print(f"- пользователь подал дополнительные настройки посредством словаря params: '{params_extraTemporal}'" if params_extraTemporal else '')
 
                     print(
-'''--- Если хотите продолжить дополнять эти промежуточные результаты, нажмите Enter
---- Если эти промежуточные результаты уже не актуальны и хотите их удалить, введите 'R' и нажмите Enter
+f'''В дальнейшей работе могу опираться на эти промежуточные результаты. При этом случае ПРОТИВОРЕЧИЯ между найденными в директории '{folder_in_folderCurrent}'и поданными Вами при текущем запуске аргументами будут применены ПЕРВЫЕ.
+--- Если следует опираться на промежуточные результаты, нажмите Enter;  
+--- Если эти промежуточные результаты уже не актуальны и хотите, чтобы я удалил их, введите 'R' и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter''')
 
                     decision = input()
@@ -318,7 +322,7 @@ f'''
         experiencedMode = True
         KEYS_BASIC = {'access_token', 'count', 'domain', 'fields', 'filter', 'offset', 'v'}
         if params:
-            if access_token: access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
+            if access_token: access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params) # здесь и ниже приоритет аргумента над ключом словаря params
             elif 'access_token' in params.keys(): access_token = params['access_token']
             # print('access_token:', access_token) # для отладки
 
@@ -365,6 +369,8 @@ f'''
         if offset is not None:
             if not isinstance(offset, int): offset = int(offset)
         # print('offset:', offset) # для отладки
+
+# На выходе аргументы + params_extra . Приоритет определён при первой подаче аргументов и словаря params, этот приоритет транслируется через в Temporal, следовательно, при извлечении из Temporal перепроверять приоритет не требуется
 
     method = 'wall.get'
     if not silentMode:
