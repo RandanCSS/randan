@@ -280,6 +280,7 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
                         fields = fieldsTemporal
                         offset = offsetTemporal
                         owner_id = owner_idTemporal
+                        params_extra = params_extraTemporal
                         post_id = post_idTemporal
 
                         temporalNameS = os.listdir(folder_in_folderCurrent)
@@ -319,7 +320,7 @@ f'''
 
     params_extra = {}
     if not params and not access_token and not count and not fields and not offset and not owner_id and not post_id and not returnDfs:
-        print('Пользователь не подал аргументы') # для отладки
+        # print('Пользователь не подал аргументы') # для отладки
         experiencedMode = False
         
     else:
@@ -343,6 +344,12 @@ f'''
 
             post_id = scrapingTools.argument_key_comparison(post_id, 'post_id', params)
             # print('post_id:', post_id) # для отладки
+
+            if not params_extra: # если params_extra НЕ извлечены из Temporal, то попробовать извлечь их из params
+                params_extra = {key: value for key, value in params.items() if key not in KEYS_BASIC}
+                    # всё, что осталось -- пользовательские аргументы метода
+    
+                params_extra = {key: value for key, value in params_extra.items() if value is not None}
 
         if count:
             if type(count) != int: count = int(count)
@@ -369,6 +376,8 @@ f'''
 
         # print('post_id:', post_id) # для отладки
 
+# На выходе аргументы + params_extra . Приоритет определён при первой подаче аргументов и словаря params, этот приоритет транслируется через в Temporal, следовательно, при извлечении из Temporal перепроверять приоритет не требуется
+
     method = 'wall.getComments'
     if not silentMode:
         if not experiencedMode: print(
@@ -383,7 +392,7 @@ f'''    Скрипт нацелен на выгрузку характерист
         if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
 
 # 2.0.2 Пользовательские настройки запроса к API ВК
-    # if not silentMode продолжается
+    if not silentMode: # если основная функция этого модуля явлется частью другой функции, поиск данных не требуется -- они будут переданы
         if not owner_id or not post_id: # если пользователь не подал эти аргументы в рамках experiencedMode
             if not owner_id:
                 print(
