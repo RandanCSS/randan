@@ -95,6 +95,10 @@ def dfsProcessor(complicatedNamePart,
             json.dump(fields, file, ensure_ascii=False, indent=4)
 
         scrapingTools.containerExport(temporal_exportPath + slash + 'method.txt', method)
+
+        with open(temporal_exportPath + slash + 'params_extra.json', 'w', encoding='utf-8') as file:
+            json.dump(params_extra, file, ensure_ascii=False, indent=4)
+
         scrapingTools.containerExport(temporal_exportPath + slash + 'q.txt', q if q else '')
 
         if stage > 1: stage -= 1 # чтобы не пропускать неполностью пройденный stage
