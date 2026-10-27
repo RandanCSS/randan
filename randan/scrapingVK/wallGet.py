@@ -62,7 +62,8 @@ def dfsProcessor(complicatedNamePart,
                  goS, # единственная из функций, принимающая этот аргумент
                  method,
                  momentCurrent,
-                 offset):
+                 offset,
+                 params_extra):
 
     if df_additional is None: df_additional = pandas.DataFrame()
     # if df_in is None: df_in = pandas.DataFrame()
@@ -440,7 +441,7 @@ f'-- можете подать их в скобки функции wallGet пе�
                                                                             pause,
                                                                             version_api)
 
-            # после самого первого исполнения wallGetCore iteration == 2
+            # После самого первого исполнения wallGetCore iteration == 2
             # print('goS:', goS) # для отладки
             if not goS or goS and len(itemS_additional) > 0: # сигнал остановиться; число выгруженных постов не важно ИЛИ сигнала остановиться нет, а выгруженные посты есть
                 # в первом случае dfsProcessor завешит скрипт и создаст Temporal-снимок, во втором -- объединит свежевыгруженные посты с ранее выгруженными
@@ -457,13 +458,14 @@ f'-- можете подать их в скобки функции wallGet пе�
                                      goS, # единственная из функций, принимающая этот аргумент
                                      method,
                                      momentCurrent,
-                                     offset)
+                                     offset,
+                                     params_extra)
 
                 offset += len(itemS_additional)
                 time.sleep(pause)
 
             if goS and len(itemS_additional) == 0: # сигнала остановиться нет, но и выгруженных постов нет
-                print(
+                if not silentMode: print(
 f'''{'Дополнительных' if iteration > 2 else 'Искомых'} постов на странице из Вашего запроса, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта{'' if iteration > 2 else '. Что можно сделать для выгрузки постов? Поменяйте настройки запроса и запустите скрипт с начала'}''')
                 if iteration >= 2:
 # 2.1.2 Экспорт выгрузки метода get и финальное завершение скрипта
@@ -474,17 +476,18 @@ f'''{'Дополнительных' if iteration > 2 else 'Искомых'} по
                                          method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
                                          momentCurrent=momentCurrent)
 
-                    print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
-                    if folderWithTemporal:
-                        if os.path.exists(folderWithTemporal):
-                            # print('folderWithTemporal:', folderWithTemporal) # для отладки
-                            print(
+                    if not silentMode: 
+                        print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+                        if folderWithTemporal:
+                            if os.path.exists(folderWithTemporal):
+                                # print('folderWithTemporal:', folderWithTemporal) # для отладки
+                                print(
 '''Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, можно удалить её во избежание путаницы при следующих запусках скрипта
 --- Если хотите их удалить, введите 'R' и нажмите Enter''')
 
-                        decision = input()
-                        if decision.lower() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True)
-                if fields: print(
+                            decision = input()
+                            if decision.lower() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True)
+                    if fields: print(
 f'''
 Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
 import pandas
@@ -495,15 +498,15 @@ for cellContent in Исходный_датафрейм[column].dropna():
 Новый_датафрейм = pandas.json_normalize(JSONS).drop_duplicates('id').reset_index(drop=True)
 ''')
 
-                if returnDfs: return itemS
-                else:
-                    with warnings.catch_warnings():
-                        warnings.simplefilter('ignore')
-                        print(
+                    if returnDfs: return itemS
+                    else:
+                        with warnings.catch_warnings():
+                            warnings.simplefilter('ignore')
+                            if not silentMode: print(
 '''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
 Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
 
-                        sys.exit()
+                            sys.exit()
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         # # display(itemS)
@@ -519,6 +522,7 @@ for cellContent in Исходный_датафрейм[column].dropna():
                      False, # единственная из функций, принимающая аргумент goS
                      method,
                      momentCurrent,
-                     offset)
+                     offset,
+                     params_extra)
 
         # if returnDfs: return itemS
