@@ -312,6 +312,7 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
                         countTarget = countTargetTemporal
                         fields = fieldsTemporal
                         method = methodTemporal
+                        params_extra = params_extraTemporal
                         q = qTemporal
                         stageTarget = stageTargetTemporal
                         year = yearTemporal
@@ -350,9 +351,6 @@ f'''
             # display('itemS:', itemS)
 # Теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
 
-
-
-    params_extra = {}
     if not params and not access_token and not count and not end_time and not fields and not latitude and not longitude and not q and not start_time and not returnDfs:
         # print('Пользователь не подал аргументы') # для отладки
         experiencedMode = False
@@ -360,7 +358,6 @@ f'''
     else:
         experiencedMode = True
         KEYS_BASIC = {'access_token', 'count', 'end_time', 'fields', 'latitude', 'longitude', 'q', 'start_time', 'v'}
-        params_extra = {}        
         if params:
             access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
             # print('access_token:', access_token) # для отладки
@@ -388,10 +385,11 @@ f'''
                 if not isinstance(start_time, int): start_time = int(start_time)
             # print('start_time:', start_time) # для отладки
 
-            params_extra = {key: value for key, value in params.items() if key not in KEYS_BASIC}
-                # всё, что осталось -- пользовательские аргументы метода
-
-            params_extra = {key: value for key, value in params_extra.items() if value is not None}
+            if not params_extra: # если params_extra НЕ извлечены из Temporal, то попробовать извлечь их из params
+                params_extra = {key: value for key, value in params.items() if key not in KEYS_BASIC}
+                    # всё, что осталось -- пользовательские аргументы метода
+    
+                params_extra = {key: value for key, value in params_extra.items() if value is not None}
 
         if count:
             if not isinstance(count, int): count = int(count)
@@ -420,6 +418,8 @@ f'''
             if not isinstance(start_time, int): start_time = int(start_time)
         # print('start_time:', start_time) # для отладки
 
+# На выходе аргументы + params_extra . Приоритет определён при первой подаче аргументов и словаря params, этот приоритет транслируется через в Temporal, следовательно, при извлечении из Temporal перепроверять приоритет не требуется
+
     method = 'newsfeed.search'
     if not experiencedMode:
         print(
@@ -433,9 +433,8 @@ f'''    Скрипт нацелен на выгрузку характерист
           )
     if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
 
-
 # 2.0.2 Пользовательские настройки запроса к API ВК
-    # if not silentMode продолжается
+    if not silentMode: # если основная функция этого модуля явлется частью другой функции, поиск данных не требуется -- они будут переданы
         if not q: # если пользователь не подал этот аргумент в рамках experiencedMode
             print(
 '''Скрипт умеет искать контент в постах открытых аккаунтов по ТЕКСТОВОМУ ЗАПРОСУ-ФИЛЬТРУ
