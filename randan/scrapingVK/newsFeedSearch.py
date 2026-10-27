@@ -63,6 +63,7 @@ def dfsProcessor(complicatedNamePart,
                  goS, # единственная из функций, принимающая этот аргумент
                  method,
                  momentCurrent,
+                 params_extra,
                  q,
                  slash,
                  stage,
@@ -537,7 +538,7 @@ f'''В скрипте используются следующие аргумен
                                                                                             version_api=version_api)
 
             # print('goS 645:', goS) # для отладки
-            if goS: # проверка, что функция newsfeedSearchCore завершилась успехом; обработка вилки с countTarget == 0
+            if goS: # проверка, что функция  завершилась успехом; обработка вилки с countTarget == 0
                 countTarget = response['total_count']
                 if countTarget == 0:
                     print(
@@ -561,6 +562,7 @@ f'''В скрипте используются следующие аргумен
                                  goS=goS,
                                  method=method,
                                  momentCurrent=momentCurrent,
+                                 params_extra=params_extra,
                                  q=q,
                                  slash=slash,
                                  stage=stage,
@@ -601,6 +603,7 @@ f'''В скрипте используются следующие аргумен
                                      goS=goS,
                                      method=method,
                                      momentCurrent=momentCurrent,
+                                     params_extra=params_extra,
                                      q=q,
                                      slash=slash,
                                      stage=stage,
@@ -660,6 +663,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                                                  goS=goS,
                                                                  method=method,
                                                                  momentCurrent=momentCurrent,
+                                                                 params_extra=params_extra,
                                                                  q=q,
                                                                  slash=slash,
                                                                  stage=stage,
@@ -684,6 +688,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                                                                                                        keyOrder=keyOrder,
                                                                                                                        latitude=latitude,
                                                                                                                        longitude=longitude,
+                                                                                                                       params_extra=params_extra,
                                                                                                                        pause=pause,
                                                                                                                        q=q,
                                                                                                                        start_from=start_from,
@@ -703,6 +708,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                                                      goS=goS,
                                                                      method=method,
                                                                      momentCurrent=momentCurrent,
+                                                                     params_extra=params_extra,
                                                                      q=q,
                                                                      slash=slash,
                                                                      stage=stage,
@@ -725,6 +731,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                              goS=goS,
                                              method=method,
                                              momentCurrent=momentCurrent,
+                                             params_extra=params_extra,
                                              q=q,
                                              slash=slash,
                                              stage=stage,
@@ -830,6 +837,7 @@ for cellContent in Исходный_датафрейм[column].dropna():
                          goS=False,
                          method=method,
                          momentCurrent=momentCurrent,
+                         params_extra=params_extra,
                          q=q,
                          slash=slash,
                          stage=stage,
