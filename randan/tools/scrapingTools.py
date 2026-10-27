@@ -44,17 +44,17 @@ f'Пакет {module} НЕ прединсталлирован, но он тре�
 
         attempt += 1
 
-def argument_key_comparison(argument, key, params):
-    if key in params.keys():
-        if argument is not None and argument != params[key]:
-            print(f'!! Вы подали {key} и как аргумент, и через словарь params , причём Вы подали разные значения туда и туда; будет использовано значение, поданное в params !!')
-        return params[key]
-    return argument
-    #         argument = params[key]
-    # elif (key in params.keys()) & (argument == None): argument = params[key]
-    # elif (key not in params.keys()) & (argument != None): pass # отдельный аргумент определён, поэтому запрос к пользователю не поступит
-    # else: pass # НИ ключ params , НИ отдельный аргумент НЕ определены, поэтому запрос к пользователю поступит
-    # return argument
+def argument_key_comparison(argument, key, params): # приоритет аргумента над ключом словаря params
+    if key in params.keys(): # key подан через словарь params (в т.ч. со значением None)
+        if argument is not None and argument != params[key]: # key подан И как аргумент (т.е. НЕ со значением None), при этом поданы разные значения туда и туда
+            print(f'!! Вы подали {key} и как аргумент, и через словарь params , причём Вы подали разные значения туда и туда; будет использовано значение, поданное как аргумент !!')
+            return argument
+
+        else: # key НЕ подан как аргумент или его значение такое же, как через словарь params
+            return params[key]
+
+    else: # key НЕ подан через словарь params (в т.ч. со значением None)
+        return argument # используется key как аргумент (в т.ч. со значением None)
 
 def containerExport(folder_file, container):
     with open(folder_file, 'w', encoding='utf-8') as file: file.write(container)
