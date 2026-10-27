@@ -95,6 +95,10 @@ def dfsProcessor(complicatedNamePart,
         scrapingTools.containerExport(temporal_exportPath + slash + 'method.txt', method)
         scrapingTools.containerExport(temporal_exportPath + slash + 'offset.txt', offset)
         scrapingTools.containerExport(temporal_exportPath + slash + 'owner_id.txt', owner_id if owner_id else '')
+
+        with open(temporal_exportPath + slash + 'params_extra.json', 'w', encoding='utf-8') as file:
+            json.dump(params_extra, file, ensure_ascii=False, indent=4)
+
         scrapingTools.containerExport(temporal_exportPath + slash + 'post_id.txt', post_id if post_id else '')
 
         df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
