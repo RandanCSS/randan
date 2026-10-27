@@ -80,7 +80,7 @@ def dfsProcessor(complicatedNamePart,
     if columnsForCheck: df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
         # при дублировании объектов из itemS из Temporal и от пользователя и новых объектов, оставить новые
 
-    if not goS and complicatedNamePart:
+    if not goS and complicatedNamePart: # при silentMode complicatedNamePart is None
         temporal_exportPath = folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"
         print(f"Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию '{temporal_exportPath}'")
         # print('temporal_exportPath:', temporal_exportPath) # для отладки
@@ -216,89 +216,9 @@ def newsFeedSearch(access_token=None,
      version_api : str
     '''
 
-    complicatedNamePart = None # для silentMode
-    if not params and not access_token and not count and not end_time and not fields and not latitude and not longitude and not q and not start_time and not returnDfs:
-        # print('Пользователь не подал аргументы') # для отладки
-        experiencedMode = False
-
-    else:
-        experiencedMode = True
-        KEYS_BASIC = {'access_token', 'count', 'end_time', 'fields', 'latitude', 'longitude', 'q', 'start_time', 'v'}
-        params_extra = {}        
-        if params:
-            access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
-            # print('access_token:', access_token) # для отладки
-
-            count = scrapingTools.argument_key_comparison(count, 'count', params)
-            # print('count:', count) # для отладки
-
-            end_time = scrapingTools.argument_key_comparison(end_time, 'end_time', params)
-            # print('end_time:', end_time) # для отладки
-
-            fields = scrapingTools.argument_key_comparison(fields, 'fields', params)
-            # print('fields:', fields) # для отладки
-
-            latitude = scrapingTools.argument_key_comparison(latitude, 'latitude', params)
-            # print('latitude:', latitude) # для отладки
-
-            longitude = scrapingTools.argument_key_comparison(longitude, 'longitude', params)
-            # print('longitude:', longitude) # для отладки
-
-            q = scrapingTools.argument_key_comparison(q, 'q', params)
-            # print('q:', q) # для отладки
-
-            start_time = scrapingTools.argument_key_comparison(start_time, 'start_time', params)
-            if start_time is not None:
-                if not isinstance(start_time, int): start_time = int(start_time)
-            # print('start_time:', start_time) # для отладки
-
-            params_extra = {key: value for key, value in params.items() if key not in KEYS_BASIC}
-                # всё, что осталось -- пользовательские аргументы метода
-
-            params_extra = {key: value for key, value in params_extra.items() if value is not None}
-
-        if count:
-            if not isinstance(count, int): count = int(count)
-            count = min(abs(count), 200)
-        
-        else: count = 200
-        # print('count:', count) # для отладки
-
-        if end_time is not None:
-            if not isinstance(end_time, int): end_time = int(end_time)
-        # print('end_time:', end_time) # для отладки
-
-        if latitude is not None:
-            if not isinstance(latitude, float): latitude = float(latitude)
-        # print('latitude:', latitude) # для отладки
-
-        if longitude is not None:
-            if not isinstance(longitude, float): longitude = float(longitude)
-        # print('longitude:', longitude) # для отладки
-        
-        if q:
-            if not isinstance(q, str): q = str(q)
-        # print('q:', q) # для отладки
-
-        if start_time is not None:
-            if not isinstance(start_time, int): start_time = int(start_time)
-        # print('start_time:', start_time) # для отладки
-
-    method = 'newsfeed.search'
-    if not experiencedMode:
-        print(
-'''    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию: https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ). Для получения API key следует создать приложение и из него скопировать сервисный ключ. Приложение -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому ВК. Авторизация сервисным ключом позволяет использовать некоторые методы API -- в документации API ВК ( https://dev.vk.com/ru/method ) они помечены серым кружком (одним или в сочетании с кружками другого цвета). Его достаточно, если выполнять действия, которые были бы доступны Вам как обычному пользователю ВК: посмотреть открытые персональные и групповые страницы, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления поста из чужого аккаунта, то Вам потребуется дополнительная авторизация.
-    ВК может ограничить действие Вашего ключа или вовсе заблокировать его, если сочтёт, что Вы злоупотребляете автоматизированным доступом.'''
-              )
-    print(
-f'''    Скрипт нацелен на выгрузку характеристик контента ВК методом его API {method} . Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам. При этом следует учесть, что текущая версия API ВК, на которой и основан скрипт, 'не умеет' обращаться к контенту, опубликованному ранее 2020 года.
-    Для корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.
-    Преимущества скрипта перед выгрузкой контента из ВК вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API ВК: гораздо быстрее, гораздо большее количество контента, не требуется тщательно изучать обширную и при этом неполную документацию методов API ВК'''
-          )
-    if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
-
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API ВК
+    complicatedNamePart = None # для silentMode
     fileFormatChoice = 'xlsx' # базовый формат сохраняемых файлов; формат json добавляется опционально через наличие columnsToJSON
     folder_file = None
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
@@ -420,6 +340,90 @@ f'''
                 else: break
             # display('itemS:', itemS)
 # Теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
+
+
+
+    params_extra = {}
+    if not params and not access_token and not count and not end_time and not fields and not latitude and not longitude and not q and not start_time and not returnDfs:
+        # print('Пользователь не подал аргументы') # для отладки
+        experiencedMode = False
+
+    else:
+        experiencedMode = True
+        KEYS_BASIC = {'access_token', 'count', 'end_time', 'fields', 'latitude', 'longitude', 'q', 'start_time', 'v'}
+        params_extra = {}        
+        if params:
+            access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
+            # print('access_token:', access_token) # для отладки
+
+            count = scrapingTools.argument_key_comparison(count, 'count', params)
+            # print('count:', count) # для отладки
+
+            end_time = scrapingTools.argument_key_comparison(end_time, 'end_time', params)
+            # print('end_time:', end_time) # для отладки
+
+            fields = scrapingTools.argument_key_comparison(fields, 'fields', params)
+            # print('fields:', fields) # для отладки
+
+            latitude = scrapingTools.argument_key_comparison(latitude, 'latitude', params)
+            # print('latitude:', latitude) # для отладки
+
+            longitude = scrapingTools.argument_key_comparison(longitude, 'longitude', params)
+            # print('longitude:', longitude) # для отладки
+
+            q = scrapingTools.argument_key_comparison(q, 'q', params)
+            # print('q:', q) # для отладки
+
+            start_time = scrapingTools.argument_key_comparison(start_time, 'start_time', params)
+            if start_time is not None:
+                if not isinstance(start_time, int): start_time = int(start_time)
+            # print('start_time:', start_time) # для отладки
+
+            params_extra = {key: value for key, value in params.items() if key not in KEYS_BASIC}
+                # всё, что осталось -- пользовательские аргументы метода
+
+            params_extra = {key: value for key, value in params_extra.items() if value is not None}
+
+        if count:
+            if not isinstance(count, int): count = int(count)
+            count = min(abs(count), 200)
+        
+        else: count = 200
+        # print('count:', count) # для отладки
+
+        if end_time is not None:
+            if not isinstance(end_time, int): end_time = int(end_time)
+        # print('end_time:', end_time) # для отладки
+
+        if latitude is not None:
+            if not isinstance(latitude, float): latitude = float(latitude)
+        # print('latitude:', latitude) # для отладки
+
+        if longitude is not None:
+            if not isinstance(longitude, float): longitude = float(longitude)
+        # print('longitude:', longitude) # для отладки
+        
+        if q:
+            if not isinstance(q, str): q = str(q)
+        # print('q:', q) # для отладки
+
+        if start_time is not None:
+            if not isinstance(start_time, int): start_time = int(start_time)
+        # print('start_time:', start_time) # для отладки
+
+    method = 'newsfeed.search'
+    if not experiencedMode:
+        print(
+'''    Для исполнения скрипта не обязательны пререквизиты (предшествующие скрипты и файлы с данными). Но от пользователя требуется предварительно получить API key для авторизации в API ВК (см. примерную инструкцию: https://docs.google.com/document/d/1IiIWweiLP1GDl_f4yyhJO2F4K_RceTc3OSqMYotCXVg ). Для получения API key следует создать приложение и из него скопировать сервисный ключ. Приложение -- это как бы аккаунт для предоставления ему разных уровней авторизации (учётных данных, или Credentials) для доступа к содержимому ВК. Авторизация сервисным ключом позволяет использовать некоторые методы API -- в документации API ВК ( https://dev.vk.com/ru/method ) они помечены серым кружком (одним или в сочетании с кружками другого цвета). Его достаточно, если выполнять действия, которые были бы доступны Вам как обычному пользователю ВК: посмотреть открытые персональные и групповые страницы, почитать комментарии и т.п. Если же Вы хотите выполнить действия вроде удаления поста из чужого аккаунта, то Вам потребуется дополнительная авторизация.
+    ВК может ограничить действие Вашего ключа или вовсе заблокировать его, если сочтёт, что Вы злоупотребляете автоматизированным доступом.'''
+              )
+    print(
+f'''    Скрипт нацелен на выгрузку характеристик контента ВК методом его API {method} . Причём количество объектов выгрузки максимизируется путём её сегментирования по годам и месяцам. При этом следует учесть, что текущая версия API ВК, на которой и основан скрипт, 'не умеет' обращаться к контенту, опубликованному ранее 2020 года.
+    Для корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.
+    Преимущества скрипта перед выгрузкой контента из ВК вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API ВК: гораздо быстрее, гораздо большее количество контента, не требуется тщательно изучать обширную и при этом неполную документацию методов API ВК'''
+          )
+    if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
+
 
 # 2.0.2 Пользовательские настройки запроса к API ВК
     # if not silentMode продолжается
