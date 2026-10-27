@@ -264,6 +264,9 @@ f"В директории '{folder_in_folderCurrent}' есть директор�
 
                     methodTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'method.txt', str)
 
+                    with open(f'{folder_in_folderCurrent}{slash}params_extra.json', 'r', encoding='utf-8') as file:
+                        params_extraTemporal = json.load(file)
+
                     try: qTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'q.txt', str)
                     except Exception as excptn:
                         print('Exception в searchByText') # для отладки
