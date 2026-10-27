@@ -234,7 +234,7 @@ def newsFeedSearch(access_token=None,
     itemsMonthlyAdditional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
     itemsYearlyAdditional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных   
     keyOrder = 0
-    # name_in_folderCurrent = None
+    params_extra = {}
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     stageTarget = 0 # stageTarget принимает значения [0; 3] и относится к стадиям скрипта
     yearMinByUser = None # в случае отсутствия пользовательского временнОго диапазона
@@ -772,14 +772,17 @@ f'''
                              folder=folder,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method) # чтобы избавиться от лишней точки в имени файла
 
-        print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
-        if os.path.exists(name_in_folderCurrent):
-            print('name_in_folderCurrent:', name_in_folderCurrent)
-            print(
-    '''Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, УДАЛЯЮ её во избежание путаницы при следующих запусках скрипта'''
-                  )
-            shutil.rmtree(name_in_folderCurrent, ignore_errors=True)
-        if fields: print(
+                    print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+                    if folderWithTemporal:
+                        if os.path.exists(folderWithTemporal):
+                            # print('folderWithTemporal:', folderWithTemporal) # для отладки
+                            print(
+'''Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, можно удалить её во избежание путаницы при следующих запусках скрипта
+--- Если хотите их удалить, введите 'R' и нажмите Enter''')
+
+                        decision = input()
+                        if decision.lower() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True)
+                if fields: print(
 f'''
 Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
 import pandas
@@ -788,9 +791,17 @@ JSONS = []
 for cellContent in Исходный_датафрейм[column].dropna():
     JSONS.extend(cellContent)
 Новый_датафрейм = pandas.json_normalize(JSONS).drop_duplicates('id').reset_index(drop=True)
-'''
-                                 )
-        if returnDfs: return itemS
+''')
+
+                if returnDfs: return itemS
+                else:
+                    with warnings.catch_warnings():
+                        warnings.simplefilter('ignore')
+                        print(
+'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
+Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
+
+                        sys.exit()
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         # display(itemS)
