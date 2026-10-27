@@ -235,8 +235,8 @@ def wallGetComments(access_token=None,
         for name_in_folderCurrent in nameS_in_folderCurrent:
             if name_in_folderCurrent.endswith('Temporal') and 'VK' in name_in_folderCurrent:
                 folder_in_folderCurrent = folder + name_in_folderCurrent # имя файла достраивается до абсолютного пути
-                if len(os.listdir(folder_in_folderCurrent)) < 5: print(
-f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 5-6 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
+                if len(os.listdir(folder_in_folderCurrent)) < 6: print(
+f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 6-7 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
 
                 else:
                     with open(f'{folder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file:
@@ -244,6 +244,10 @@ f"В директории '{folder_in_folderCurrent}' есть директор�
 
                     offsetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'offset.txt', int)
                     owner_idTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'owner_id.txt', str)
+
+                    with open(f'{folder_in_folderCurrent}{slash}params_extra.json', 'r', encoding='utf-8') as file:
+                        params_extraTemporal = json.load(file)
+
                     post_idTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'post_id.txt', str)
                     
                     print(
