@@ -64,9 +64,10 @@ f'''
 Затем при необходимости сможете добавить к нему другие располагаемые файлы''')
 
     while True:
+        folder = None # для унификации
         folder_file = input()
-        if len(folder_file) == 0:
-            folder = None # для унификации
+        itemS = pandas.DataFrame() # для унификации
+        if not folder_file:
             folder_file = None # для унификации
             break
 
