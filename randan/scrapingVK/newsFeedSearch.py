@@ -138,7 +138,7 @@ def newsfeedSearchCore(api_keyS,
                        start_time,
                        version_api):
 
-    # print('    start_from', start_from) # для отладки
+    # print('    start_from:', start_from) # для отладки
     df_additional = pandas.DataFrame()
     goS = True
 
@@ -229,8 +229,8 @@ def newsFeedSearch(access_token=None,
     goS = True
     itemS = pandas.DataFrame()
     itemS_additional = pandas.DataFrame() # на случай, если сигнал прерывания поступит до dfsProcessor
-    itemsMonthly_additional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
-    itemsYearly_additional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
+    itemS_additional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
+    itemS_additional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
     keyOrder = 0
     method = 'newsfeed.search'
     params_extra = {}
@@ -493,7 +493,7 @@ f'''Если требуется конкретный временнОй диап
 
         else:
             if not silentMode: print('Первое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных постов')
-            # print('    start_from', start_from) # для отладки
+            # print('    start_from:', start_from) # для отладки
 
             itemsAdditional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
                                                                                             count,
@@ -513,7 +513,7 @@ f'''Если требуется конкретный временнОй диап
         <ОБработка результата первого обращения к API>
             # print('goS 1:', goS) # для отладки
             countTarget = response['total_count']
-            if len(itemS_additional) == 0 or countTarget == 0: # выгруженных постов нет практически или даже теоретически
+            if len(itemS_additional) == 0 or countTarget == 0: # ожидаемое или реальное количество постов равно нулю
                 if not silentMode:
                     print(
 '  Искомых постов по Вашему запросу, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта. Что можно сделать для выгрузки постов? Поменяйте настройки запроса и запустите скрипт с начала')
@@ -561,7 +561,7 @@ f'''Если требуется конкретный временнОй диап
             if not silentMode: print('  Проход по всем следующим страницам с выдачей          ')
             while 'next_from' in response.keys() and goS:
                 start_from = response['next_from']
-                # print('    start_from', start_from) # для отладки
+                # print('    start_from:', start_from) # для отладки
                 # print('goS 2:', goS) # для отладки
 
                 itemsAdditional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
@@ -610,235 +610,144 @@ f'''Если требуется конкретный временнОй диап
             if not silentMode: print('  Все искомые посты выгружены')
             
         elif len(itemS) < countTarget:
-                if not silentMode: print(
+            if not silentMode: print(
 f'''Метод {method} выдаёт ограниченное количество постов, причём наиболее приближенных к текущему моменту. Скрипт умеет внутри каждого года сегментировать временнЫе периоды для максимизации количества выгружаемых постов; двигается вглубь веков, пока не достигнет заданной пользователем временнОй глубины или года с пустой выдачей
 --- Если хотите для поиска дополнительных постов попробовать сегментирование по годам, просто нажмите Enter. Поиск может занять минуты и даже часы, но Вы СМОЖЕТЕ ПРЕРВАТЬ ИСПОЛНЕНИЕ СКРИПТА КНОПКОЙ и ВЫГРУЖЕННЫЕ ДАННЫЕ СОХРАНЯТСЯ
 --- Если НЕ хотите, нажмите пробел и затем Enter''')
 
-                    decision = input()
+                decision = input()
 
-                if silentMode or not decision: # если silentMode , то максимизация количества выгружаемых постов выполняется принудительно
-                    itemsYearly = pandas.DataFrame()
-                    while goS:
-                        # print('Ищу текст запроса-фильтра в контенте за', year, 'год')
-                        calendar = calendarWithinYear.calendarWithinYear(year)
-                        itemsYearly_additional = pandas.DataFrame() # сюда будут записываться результаты newsfeedSearchCore с ГОДОВЫМ диапазоном start_time-end_time
-                        calendarColumnS = calendar.columns
+            if silentMode or not decision: # если silentMode , то максимизация количества выгружаемых постов выполняется принудительно
+                while goS:
+                    # print('Ищу текст запроса-фильтра в контенте за', year, 'год')
+                    calendar = calendarWithinYear.calendarWithinYear(year)
+                    calendarColumnS = calendar.columns
 
-                        if year == int(momentCurrent.strftime('%Y')): calendarColumnS = calendarColumnS[:int(momentCurrent.strftime('%m'))]
-                                # чтобы исключить проход по будущим месяцам текущего года
+                    if year == int(momentCurrent.strftime('%Y')): calendarColumnS = calendarColumnS[:int(momentCurrent.strftime('%m'))]
+                            # чтобы исключить проход по будущим месяцам текущего года
 
-                    # <Выгрузка постов за год year>
-                        itemsYearly_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
-                                                                                                               count,
-                                                                                                               end_time=int(datetime(year, int(calendarColumnS[-1]), int(calendar[calendarColumnS[-1]].dropna().index[-1])).timestamp()),
-                                                                                                                   # чтобы исключить проход по будущим месяцам текущего года
+            # <Выгрузка постов за год year>
+                    itemS_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
+                                                                                                     count,
+                                                                                                     end_time=int(datetime(year, int(calendarColumnS[-1]), int(calendar[calendarColumnS[-1]].dropna().index[-1])).timestamp()),
+                                                                                                        # чтобы исключить проход по будущим месяцам текущего года
+                                                                                                    
+                                                                                                     fields=fields,
+                                                                                                     iteration=iteration,
+                                                                                                     keyOrder=keyOrder,
+                                                                                                     latitude=latitude,
+                                                                                                     longitude=longitude,
+                                                                                                     params_extra=params_extra,
+                                                                                                     pause=pause,
+                                                                                                     q=q,
+                                                                                                     start_from=None,
+                                                                                                     start_time=int(datetime(year, 1, 1).timestamp()),
+                                                                                                     version_api=version_api)
 
-                                                                                                               fields=fields,
-                                                                                                               iteration=iteration,
-                                                                                                               keyOrder=keyOrder,
-                                                                                                               latitude=latitude,
-                                                                                                               longitude=longitude,
-                                                                                                               params_extra=params_extra,
-                                                                                                               pause=pause,
-                                                                                                               q=q,
-                                                                                                               start_from=None,
-                                                                                                               start_time=int(datetime(year, 1, 1).timestamp()),
-                                                                                                               version_api=version_api)
+                    # print('itemS_additional:') # для отладки
+                    # display(itemS_additional.sort_values('date')['date'].drop_duplicates()) # для отладки
 
-                        # print('itemsYearly_additional:') # для отладки
-                        # display(itemsYearly_additional.sort_values('date')['date'].drop_duplicates()) # для отладки
+                    itemS = dfsProcessor(complicatedNamePart,
+                                         df_additional=itemS_additional,
+                                         df_final=itemS,
+                                         df_in=itemS,
+                                         fields=fields,
+                                         fileFormatChoice=fileFormatChoice,
+                                         folder=folder,
+                                         goS=goS,
+                                         method=method,
+                                         momentCurrent=momentCurrent,
+                                         params_extra=params_extra,
+                                         q=q,
+                                         slash=slash,
+                                         stage=stage,
+                                         countTarget=countTarget,
+                                         year=year,
+                                         yearsRange=yearsRange)
 
-                        itemsYearly = dfsProcessor(complicatedNamePart,
-                                                   df_additional=itemsYearly_additional,
-                                                   df_final=pandas.concat([itemS, itemsYearly]),
-                                                   df_in=itemsYearly,
-                                                   fields=fields,
-                                                   fileFormatChoice=fileFormatChoice,
-                                                   folder=folder,
-                                                   goS=goS,
-                                                   method=method,
-                                                   momentCurrent=momentCurrent,
-                                                   params_extra=params_extra,
-                                                   q=q,
-                                                   slash=slash,
-                                                   stage=stage,
-                                                   countTarget=countTarget,
-                                                   year=year,
-                                                   yearsRange=yearsRange)
+                    # print('len(itemS):', len(itemS)) # для отладки
 
-                        # print('len(itemsYearly):', len(itemsYearly)) # для отладки
+                    # print('goS 2:', goS) # для отладки
+                    countTarget_withinYear = response['total_count']
 
-                        # print('goS 2:', goS) # для отладки
-                        countTarget_withinYear = response['total_count']
+                # <Выгрузка постов за год year без более глубокого сегментирования>
+                    if len(itemS_additional) > 0 and countTarget_withinYear > 0 and countTarget_withinYear <= 1000: # ожидаемое (и реальное) количество постов больше нуля, но позволяет не прибегать к углублению сегментирования
+                        if not silentMode: print('  Проход по всем следующим страницам с выдачей', '               ', end='\r')
+                        while 'next_from' in response.keys() and goS:
+                            start_from = response['next_from']
+                            # print('    start_from:', start_from) # для отладки
 
-                    # <Выгрузка постов за год year без более глубокого сегментирования>
-                        if countTarget_withinYear > 0 and countTarget_withinYear <= 1000: # ожидаемое количество постов больше нуля, но позволяет не прибегать к углублению сегментирования
-                            if not silentMode: print('  Проход по всем следующим страницам с выдачей', '               ', end='\r')
-                            while 'next_from' in response.keys() and goS:
-                                start_from = response['next_from']
-                                # print('    start_from', start_from) # для отладки
+                            itemS_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
+                                                                                                             count,
+                                                                                                             end_time=int(datetime(year, int(calendarColumnS[-1]), int(calendar[calendarColumnS[-1]].dropna().index[-1])).timestamp()),
+                                                                                                                # чтобы исключить проход по будущим месяцам текущего года
+                                                                                                            
+                                                                                                             params_extra=params_extra,
+                                                                                                             fields=fields,
+                                                                                                             iteration=iteration,
+                                                                                                             keyOrder=keyOrder,
+                                                                                                             latitude=latitude,
+                                                                                                             longitude=longitude,
+                                                                                                             params_extra=params_extra,
+                                                                                                             pause=pause,
+                                                                                                             q=q,
+                                                                                                             start_from=start_from,
+                                                                                                             start_time=int(datetime(year, 1, 1).timestamp()),
+                                                                                                             version_api=version_api)
 
-                                itemsYearly_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
-                                                                                                                       count,
-                                                                                                                       end_time=int(datetime(year, int(calendarColumnS[-1]), int(calendar[calendarColumnS[-1]].dropna().index[-1])).timestamp()),
-                                                                                                                           # чтобы исключить проход по будущим месяцам текущего года
-    
-                                                                                                                       params_extra=params_extra,
-                                                                                                                       fields=fields,
-                                                                                                                       iteration=iteration,
-                                                                                                                       keyOrder=keyOrder,
-                                                                                                                       latitude=latitude,
-                                                                                                                       longitude=longitude,
-                                                                                                                       params_extra=params_extra,
-                                                                                                                       pause=pause,
-                                                                                                                       q=q,
-                                                                                                                       start_from=start_from,
-                                                                                                                       start_time=int(datetime(year, 1, 1).timestamp()),
-                                                                                                                       version_api=version_api)
-
-                                # print('itemsYearly_additional:') # для отладки
-                                # display(itemsYearly_additional.sort_values('date')['date'].drop_duplicates()) # для отладки
-
-                                itemsYearly = dfsProcessor(complicatedNamePart,
-                                                           df_additional=itemsYearly_additional,
-                                                           df_final=pandas.concat([itemS, itemsYearly]),
-                                                           df_in=itemsYearly,
-                                                           fields=fields,
-                                                           fileFormatChoice=fileFormatChoice,
-                                                           folder=folder,
-                                                           goS=goS,
-                                                           method=method,
-                                                           momentCurrent=momentCurrent,
-                                                           params_extra=params_extra,
-                                                           q=q,
-                                                           slash=slash,
-                                                           stage=stage,
-                                                           countTarget=countTarget,
-                                                           year=year,
-                                                           yearsRange=yearsRange)
-
-                                # print('len(itemsYearly):', len(itemsYearly)) # для отладки
-                                time.sleep(pause)
-                    # </Выгрузка постов за год year без более глубокого сегментирования>
-
-                    # <Выгрузка постов за год year с сегментированием по месяцам>
-                        elif countTarget_withinYear > 1000: # ожидаемое количество постов позволяет не прибегать к углублению сегментирования
-                            itemsMonthly = pandas.DataFrame()
-                            for month in calendarColumnS:
-                                if not silentMode:
-                                    print('Ищу текст запроса-фильтра в контенте за',  month, 'месяц', year, 'года', '               ') # , end='\r'
-                                    print('  Заход на первую страницу выдачи', '               ', end='\r')
-
-                                itemsMonthly_additional = pandas.DataFrame() # сюда булут записываться результаты newsfeedSearchCore с ГОДОВЫМ диапазоном start_time-end_time
-                                itemsMonthly_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
-                                                                                                                        count,
-                                                                                                                        end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
-                                                                                                                        fields=fields,
-                                                                                                                        iteration=iteration,
-                                                                                                                        keyOrder=keyOrder,
-                                                                                                                        latitude=latitude,
-                                                                                                                        longitude=longitude,
-                                                                                                                        params_extra=params_extra,
-                                                                                                                        pause=pause,
-                                                                                                                        q=q,
-                                                                                                                        start_from=None,
-                                                                                                                        start_time=int(datetime(year, int(month), 1).timestamp()),
-                                                                                                                        version_api=version_api)
-
-                                # print('itemsMonthly_additional:') # для отладки
-                                # display(itemsMonthly_additional.sort_values('date')['date'].drop_duplicates()) # для отладки
-    
-                                itemsMonthly = dfsProcessor(complicatedNamePart=complicatedNamePart,
-                                                            df_additional=itemsMonthly_additional,
-                                                            df_final=pandas.concat([itemS, itemsYearly, itemsMonthly]),
-                                                            df_in=itemsMonthly,
-                                                            fields=fields,
-                                                            fileFormatChoice=fileFormatChoice,
-                                                            folder=folder,
-                                                            goS=goS,
-                                                            method=method,
-                                                            momentCurrent=momentCurrent,
-                                                            params_extra=params_extra,
-                                                            q=q,
-                                                            slash=slash,
-                                                            stage=stage,
-                                                            countTarget=countTarget,
-                                                            year=year,
-                                                            yearsRange=yearsRange)
-    
-                                # print('len(itemsMonthly):', len(itemsMonthly)) # для отладки
-
-                                if not silentMode: print('  Проход по всем следующим страницам с выдачей', '               ', end='\r')
-                                while 'next_from' in response.keys() and goS:
-                                    start_from = response['next_from']
-                                    # print('    start_from', start_from) # для отладки
-
-                                    itemsMonthly_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
-                                                                                                                            count,
-                                                                                                                            end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
-                                                                                                                            params_extra=params_extra,
-                                                                                                                            fields=fields,
-                                                                                                                            iteration=iteration,
-                                                                                                                            keyOrder=keyOrder,
-                                                                                                                            latitude=latitude,
-                                                                                                                            longitude=longitude,
-                                                                                                                            params_extra=params_extra,
-                                                                                                                            pause=pause,
-                                                                                                                            q=q,
-                                                                                                                            start_from=start_from,
-                                                                                                                            start_time=int(datetime(year, int(month), 1).timestamp()),
-                                                                                                                            version_api=version_api)
-
-                                    # print('itemsMonthly_additional:') # для отладки
-                                    # display(itemsMonthly_additional.sort_values('date')['date'].drop_duplicates()) # для отладки
-
-                                    itemsMonthly = dfsProcessor(complicatedNamePart,
-                                                                df_additional=itemsMonthly_additional,
-                                                                df_final=pandas.concat([itemS, itemsYearly, itemsMonthly]),
-                                                                df_in=itemsMonthly,
-                                                                fields=fields,
-                                                                fileFormatChoice=fileFormatChoice,
-                                                                folder=folder,
-                                                                goS=goS,
-                                                                method=method,
-                                                                momentCurrent=momentCurrent,
-                                                                params_extra=params_extra,
-                                                                q=q,
-                                                                slash=slash,
-                                                                stage=stage,
-                                                                countTarget=countTarget,
-                                                                year=year,
-                                                                yearsRange=yearsRange)
-
-                                    # print('len(itemsYearly_additional):', len(itemsYearly_additional)) # для отладки
-                                    time.sleep(pause)
-
-                            itemsYearly = dfsProcessor(complicatedNamePart,
-                                                       df_additional=itemsMonthly,
-                                                       df_final=pandas.concat([itemS, itemsYearly]),
-                                                       df_in=itemsYearly,
-                                                       fields=fields,
-                                                       fileFormatChoice=fileFormatChoice,
-                                                       folder=folder,
-                                                       goS=goS,
-                                                       method=method,
-                                                       momentCurrent=momentCurrent,
-                                                       params_extra=params_extra,
-                                                       q=q,
-                                                       slash=slash,
-                                                       stage=stage,
-                                                       countTarget=countTarget,
-                                                       year=year,
-                                                       yearsRange=yearsRange)
-
-                            # print('len(itemsYearly):', len(itemsYearly)) # для отладки
-
-                    # </Выгрузка постов за год year с сегментированием по месяцам>
-
+                            # print('itemS_additional:') # для отладки
+                            # display(itemS_additional.sort_values('date')['date'].drop_duplicates()) # для отладки
 
                             itemS = dfsProcessor(complicatedNamePart,
-                                                 df_additional=itemsYearly,
+                                                 df_additional=itemS_additional,
+                                                 df_final=itemS,
+                                                 df_in=itemS,
+                                                 fields=fields,
+                                                 fileFormatChoice=fileFormatChoice,
+                                                 folder=folder,
+                                                 goS=goS,
+                                                 method=method,
+                                                 momentCurrent=momentCurrent,
+                                                 params_extra=params_extra,
+                                                 q=q,
+                                                 slash=slash,
+                                                 stage=stage,
+                                                 countTarget=countTarget,
+                                                 year=year,
+                                                 yearsRange=yearsRange)
+
+                            # print('len(itemS):', len(itemS)) # для отладки
+                            time.sleep(pause)
+                    if not silentMode: print('  Искомых постов', countTarget, ', а выгруженных после добавления контента за', year, 'год:', len(itemS), '                    ')
+                # </Выгрузка постов за год year без более глубокого сегментирования>
+
+                # <Выгрузка постов за год year с сегментированием по месяцам>
+                    elif countTarget_withinYear > 1000: # ожидаемое количество постов позволяет не прибегать к углублению сегментирования
+                        for month in calendarColumnS:
+                            if not silentMode:
+                                print('Ищу текст запроса-фильтра в контенте за',  month, 'месяц', year, 'года', '               ') # , end='\r'
+                                print('  Заход на первую страницу выдачи', '               ', end='\r')
+
+                            itemS_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
+                                                                                                             count,
+                                                                                                             end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
+                                                                                                             fields=fields,
+                                                                                                             iteration=iteration,
+                                                                                                             keyOrder=keyOrder,
+                                                                                                             latitude=latitude,
+                                                                                                             longitude=longitude,
+                                                                                                             params_extra=params_extra,
+                                                                                                             pause=pause,
+                                                                                                             q=q,
+                                                                                                             start_from=None,
+                                                                                                             start_time=int(datetime(year, int(month), 1).timestamp()),
+                                                                                                             version_api=version_api)
+
+                            # print('itemS_additional:') # для отладки
+                            # display(itemS_additional.sort_values('date')['date'].drop_duplicates()) # для отладки
+
+                            itemS = dfsProcessor(complicatedNamePart,
+                                                 df_additional=itemS_additional,
                                                  df_final=itemS,
                                                  df_in=itemS,
                                                  fields=fields,
@@ -857,255 +766,132 @@ f'''Метод {method} выдаёт ограниченное количеств
 
                             # print('len(itemS):', len(itemS)) # для отладки
 
-
-
-
-                        if len(itemsYearly_additional) == 0 or countTarget_withinYear == 0: # выгруженных постов нет практически или даже теоретически
-                            if not silentMode:
-                                print(
-            '  Искомых постов по Вашему запросу, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта. Что можно сделать для выгрузки постов? Поменяйте настройки запроса и запустите скрипт с начала')
-
-
-
-                        if not silentMode: print('  Проход по всем следующим страницам с выдачей', '               ', end='\r')
-
-                        while ('next_from' in response.keys()) & goS:
-                            start_from = response['next_from']
-                            # print('    start_from', start_from) # для отладки
-
-                            itemsMonthly_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
-                                                                                                                   count,
-                                                                                                                   end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
-                                                                                                                   params_extra=params_extra,
-                                                                                                                   fields=fields,
-                                                                                                                   iteration=iteration,
-                                                                                                                   keyOrder=keyOrder,
-                                                                                                                   latitude=latitude,
-                                                                                                                   longitude=longitude,
-                                                                                                                   params_extra=params_extra,
-                                                                                                                   pause=pause,
-                                                                                                                   q=q,
-                                                                                                                   start_from=start_from,
-                                                                                                                   start_time=int(datetime(year, int(month), 1).timestamp()),
-                                                                                                                   version_api=version_api)
-
-                            # print('itemsMonthly_additional:') # для отладки
-                            # display(itemsMonthly_additional.sort_values('date')['date'].drop_duplicates()) # для отладки
-
-                            itemsYearly_additional = dfsProcessor(complicatedNamePart=complicatedNamePart,
-                                                                 df_additional=itemsMonthly_additional,
-                                                                 df_final=itemS,
-                                                                 df_in=itemsYearly_additional,
-                                                                 fields=fields,
-                                                                 fileFormatChoice=fileFormatChoice,
-                                                                 folder=folder,
-                                                                 goS=goS,
-                                                                 method=method,
-                                                                 momentCurrent=momentCurrent,
-                                                                 params_extra=params_extra,
-                                                                 q=q,
-                                                                 slash=slash,
-                                                                 stage=stage,
-                                                                 countTarget=countTarget,
-                                                                 year=year,
-                                                                 yearsRange=yearsRange)
-
-                            # print('len(itemsYearly_additional):', len(itemsYearly_additional)) # для отладки
-                            time.sleep(pause)
-                    # </Выгрузка постов за год year без более глубокого сегментирования>
-
-
-
-
-                        
-                        for month in calendarColumnS:
-                            if not silentMode:
-                                print('Ищу текст запроса-фильтра в контенте за',  month, 'месяц', year, 'года', '               ') # , end='\r'
-                                print('  Заход на первую страницу выдачи', '               ', end='\r')
-
-                            itemsMonthly_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
-                                                                                                                   count,
-                                                                                                                   end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
-                                                                                                                   fields=fields,
-                                                                                                                   iteration=iteration,
-                                                                                                                   keyOrder=keyOrder,
-                                                                                                                   latitude=latitude,
-                                                                                                                   longitude=longitude,
-                                                                                                                   params_extra=params_extra,
-                                                                                                                   pause=pause,
-                                                                                                                   q=q,
-                                                                                                                   start_from=None,
-                                                                                                                   start_time=int(datetime(year, int(month), 1).timestamp()),
-                                                                                                                   version_api=version_api)
-
-                            # print('itemsMonthly_additional:') # для отладки
-                            # display(itemsMonthly_additional.sort_values('date')['date'].drop_duplicates()) # для отладки
-
-                            itemsYearly_additional = dfsProcessor(complicatedNamePart=complicatedNamePart,
-                                                                 df_additional=itemsMonthly_additional,
-                                                                 df_final=itemS,
-                                                                 df_in=itemsYearly_additional,
-                                                                 fields=fields,
-                                                                 fileFormatChoice=fileFormatChoice,
-                                                                 folder=folder,
-                                                                 goS=goS,
-                                                                 method=method,
-                                                                 momentCurrent=momentCurrent,
-                                                                 params_extra=params_extra,
-                                                                 q=q,
-                                                                 slash=slash,
-                                                                 stage=stage,
-                                                                 countTarget=countTarget,
-                                                                 year=year,
-                                                                 yearsRange=yearsRange)
-
-                            # print('len(itemsYearly_additional):', len(itemsYearly_additional)) # для отладки
-
                             if not silentMode: print('  Проход по всем следующим страницам с выдачей', '               ', end='\r')
-
-                            while ('next_from' in response.keys()) & goS:
+                            while 'next_from' in response.keys() and goS:
                                 start_from = response['next_from']
-                                # print('    start_from', start_from) # для отладки
+                                # print('    start_from:', start_from) # для отладки
 
-                                itemsMonthly_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
-                                                                                                                       count,
-                                                                                                                       end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
-                                                                                                                       params_extra=params_extra,
-                                                                                                                       fields=fields,
-                                                                                                                       iteration=iteration,
-                                                                                                                       keyOrder=keyOrder,
-                                                                                                                       latitude=latitude,
-                                                                                                                       longitude=longitude,
-                                                                                                                       params_extra=params_extra,
-                                                                                                                       pause=pause,
-                                                                                                                       q=q,
-                                                                                                                       start_from=start_from,
-                                                                                                                       start_time=int(datetime(year, int(month), 1).timestamp()),
-                                                                                                                       version_api=version_api)
+                                itemS_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
+                                                                                                                 count,
+                                                                                                                 end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
+                                                                                                                 params_extra=params_extra,
+                                                                                                                 fields=fields,
+                                                                                                                 iteration=iteration,
+                                                                                                                 keyOrder=keyOrder,
+                                                                                                                 latitude=latitude,
+                                                                                                                 longitude=longitude,
+                                                                                                                 params_extra=params_extra,
+                                                                                                                 pause=pause,
+                                                                                                                 q=q,
+                                                                                                                 start_from=start_from,
+                                                                                                                 start_time=int(datetime(year, int(month), 1).timestamp()),
+                                                                                                                 version_api=version_api)
 
-                                # print('itemsMonthly_additional:') # для отладки
-                                # display(itemsMonthly_additional.sort_values('date')['date'].drop_duplicates()) # для отладки
+                                # print('itemS_additional:') # для отладки
+                                # display(itemS_additional.sort_values('date')['date'].drop_duplicates()) # для отладки
 
-                                itemsYearly_additional = dfsProcessor(complicatedNamePart=complicatedNamePart,
-                                                                     df_additional=itemsMonthly_additional,
-                                                                     df_final=itemS,
-                                                                     df_in=itemsYearly_additional,
-                                                                     fields=fields,
-                                                                     fileFormatChoice=fileFormatChoice,
-                                                                     folder=folder,
-                                                                     goS=goS,
-                                                                     method=method,
-                                                                     momentCurrent=momentCurrent,
-                                                                     params_extra=params_extra,
-                                                                     q=q,
-                                                                     slash=slash,
-                                                                     stage=stage,
-                                                                     countTarget=countTarget,
-                                                                     year=year,
-                                                                     yearsRange=yearsRange)
+                                itemS = dfsProcessor(complicatedNamePart,
+                                                     df_additional=itemS_additional,
+                                                     df_final=itemS,
+                                                     df_in=itemS,
+                                                     fields=fields,
+                                                     fileFormatChoice=fileFormatChoice,
+                                                     folder=folder,
+                                                     goS=goS,
+                                                     method=method,
+                                                     momentCurrent=momentCurrent,
+                                                     params_extra=params_extra,
+                                                     q=q,
+                                                     slash=slash,
+                                                     stage=stage,
+                                                     countTarget=countTarget,
+                                                     year=year,
+                                                     yearsRange=yearsRange)
 
-                                # print('len(itemsYearly_additional):', len(itemsYearly_additional)) # для отладки
+                                # print('len(itemS_additional):', len(itemS_additional)) # для отладки
                                 time.sleep(pause)
-                        # print('itemsYearly_additional:') # для отладки
-                        # display(itemsYearly_additional.sort_values('date')['date'].drop_duplicates()) # для отладки
+                    if not silentMode: print('  Искомых постов', countTarget, ', а выгруженных после добавления контента за', year, 'год:', len(itemS), '                    ')
+                # </Выгрузка постов за год year с сегментированием по месяцам>
 
-                        itemS = dfsProcessor(complicatedNamePart,
-                                             df_additional=itemsYearly_additional,
-                                             df_final=itemS,
-                                             df_in=itemS,
-                                             fields=fields,
-                                             fileFormatChoice=fileFormatChoice,
-                                             folder=folder,
-                                             goS=goS,
-                                             method=method,
-                                             momentCurrent=momentCurrent,
-                                             params_extra=params_extra,
-                                             q=q,
-                                             slash=slash,
-                                             stage=stage,
-                                             countTarget=countTarget,
-                                             year=year,
-                                             yearsRange=yearsRange)
+                # <Выгрузка постов за год year пуста>
+                    elif len(itemS_additional) == 0 or countTarget_withinYear == 0: # ожидаемое или реальное количество постов равно нулю
+                        if not silentMode:
+                            print(
+f'''  Дополнительных постов по Вашему запросу для года {year}, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта
+--- Если НЕ хотите для поиска дополнительных постов попробовать двигаться к следующему месяцу вглубь веков, просто нажмите Enter
+--- Если хотите, нажмите пробел и затем Enter''')
 
-                        # print('len(itemS):', len(itemS)) # для отладки
-                        # display(itemS.head()) # для отладки
-                        # print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0]) # для отладки
+                            decision = input()
 
-                        if len(itemsYearly_additional) == 0:
-                            if not silentMode: 
-                                print(f'\nВыдача для года {year} -- пуста'
-                                      , '\n--- Если НЕ хотите для поиска дополнительных постов попробовать двигаться к следующему месяцу вглубь веков, просто нажмите Enter'
-                                      , '\n--- Если хотите, нажмите пробел и затем Enter')
+                        if silentMode or not decision: # если silentMode , то завершение сегментирования по годам выполняется принудительно
+                            # print('Завершил сегментирования по годам')
+                            break # выход из while goS
+                # </Выгрузка постов за год year пуста>
 
-                            if len(input()) == 0:
-                                # print(f'\nЗавершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser}')
-                                break
-
-                        elif yearMinByUser: # если пользователь ограничил временнОй диапазон
-                            if year <= yearMinByUser:
-                                if not silentMode: print(f'Завершил проход по заданному пользователем временнОму диапазону: {yearMinByUser}-{yearMaxByUser}')
-                                break
-
-                        if not silentMode: print('  Искомых постов', countTarget, ', а выгруженных после добавления контента', year, 'года:', len(itemS), '                    ')
-                        year -= 1
-                    if not silentMode: print('Искомых постов', countTarget, ', а выгруженных:', len(itemS), '          ')
-
+                    elif yearMinByUser: # если пользователь ограничил временнОй диапазон
+                        if year <= yearMinByUser:
+                            if not silentMode: print('Достигнут заданный пользователем временнОй горизонт:', yearMinByUser)
+                            break # выход из while goS
+            # </Выгрузка постов за год year>
+                    year -= 1
+                if not silentMode: print('Искомых постов', countTarget, ', а выгруженных:', len(itemS), '          ')
         # pandas.set_option('display.max_columns', None)
         if not silentMode:
             display(itemS.head())
             print('Число столбцов:', itemS.shape[1], ', число строк', itemS.shape[0])
 
-# 2.1.2 Экспорт выгрузки метода search и финальное завершение скрипта
-        df2file.df2fileShell(complicatedNamePart=complicatedNamePart,
-                             currentMoment=momentCurrent.strftime('%Y%m%d_%H%M'), # .strftime -- чтобы варьировать для итоговой директории и директории Temporal
+# 2.1.2 Экспорт выгрузки метода newsFeed.search и финальное завершение скрипта
+        df2file.df2fileShell(complicatedNamePart,
                              df_in=itemS,
                              fileFormatChoice=fileFormatChoice,
                              folder=folder,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method) # чтобы избавиться от лишней точки в имени файла
+                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                             momentCurrent=momentCurrent)
 
-                    print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
-                    if folderWithTemporal:
-                        if os.path.exists(folderWithTemporal):
-                            # print('folderWithTemporal:', folderWithTemporal) # для отладки
-                            print(
+        if not silentMode: 
+            print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+            if folderWithTemporal:
+                if os.path.exists(folderWithTemporal):
+                    # print('folderWithTemporal:', folderWithTemporal) # для отладки
+                    print(
 '''Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, можно удалить её во избежание путаницы при следующих запусках скрипта
 --- Если хотите их удалить, введите 'R' и нажмите Enter''')
 
-                        decision = input()
-                        if decision.lower() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True)
-                if fields: print(
+                decision = input()
+                if decision.lower() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True)
+        if fields: print(
 f'''
 Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
 import pandas
 column = 'Имя_столбца'
 JSONS = []
 for cellContent in Исходный_датафрейм[column].dropna():
-    JSONS.extend(cellContent)
+JSONS.extend(cellContent)
 Новый_датафрейм = pandas.json_normalize(JSONS).drop_duplicates('id').reset_index(drop=True)
 ''')
 
-                if returnDfs: return itemS
-                else:
-                    with warnings.catch_warnings():
-                        warnings.simplefilter('ignore')
-                        print(
+        if returnDfs: return itemS
+        else:
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                if not silentMode: print(
 '''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
 Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
 
-                        sys.exit()
+                sys.exit()
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         # display(itemS)
         if len(itemS) > 0:
-            if itemsYearly_additional is not None:
-                df_additional = itemsYearly_additional
+            if itemS_additional is not None:
+                df_additional = itemS_additional
                 df_final = itemS
                 df_in = itemS
 
-            elif itemsMonthly_additional is not None:
-                df_additional = itemsMonthly_additional
+            elif itemS_additional is not None:
+                df_additional = itemS_additional
                 df_final = itemS
-                df_in = itemsYearly_additional
+                df_in = itemS_additional
 
             elif itemsAdditional is not None:
                 df_additional = itemsAdditional
