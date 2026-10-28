@@ -317,10 +317,7 @@ def dfsProcessor(channelIdForSearch,
         scrapingTools.containerExport(temporal_exportPath + slash + 'contentType.txt', contentType if contentType else '')
         scrapingTools.containerExport(temporal_exportPath + slash + 'method.txt', method)
         scrapingTools.containerExport(temporal_exportPath + slash + 'q.txt', q if q else '')
-
-        if stage > 1: stage -= 1 # чтобы не пропускать неполностью пройденный stage
         scrapingTools.containerExport(temporal_exportPath + slash + 'stageTarget.txt', str(stage)) # stage и stageTarget принимает значения [0; 3]
-
         scrapingTools.containerExport(temporal_exportPath + slash + 'countTarget.txt', str(countTarget) if countTarget else '0')
         scrapingTools.containerExport(temporal_exportPath + slash + 'year.txt', str(year)) # год, на котором остановилось исполнение скрипта
         scrapingTools.containerExport(temporal_exportPath + slash + 'yearsRange.txt', yearsRange if yearsRange else '')
@@ -1074,10 +1071,10 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
     # print('complicatedNamePart', complicatedNamePart)
 
 # 2.1 Первичный сбор контента методом search
-# 2.1.0 Первый заход БЕЗ аргумента order (этап stage = 0)
-    stage = 0
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
-        if not channelIdForSearch or yearsRange or (channelIdForSearch and q): # в противном случае используется не search , а channels + playlists
+# 2.1.0 Первый заход БЕЗ аргумента order (этап stage = 0)
+        stage = 0
+        if not channelIdForSearch or yearsRange or channelIdForSearch and q: # в противном случае используется не search , а channels + playlists
                 # Если поданы вместе channelIdForSearch и q , то search, но если внутри channelIdForSearch подан id плейлиста, то search выдаст ошибку 'Request contains an invalid argument' и следует перейти к playListProcessor в else, причём q будет проигнорирован
                 # yearsRange предполагает search , поскольку прочие методы не предполагают сегментирование по временнЫм периодам 
             iteration = 0 # номер итерации применения текущего метода
@@ -1091,7 +1088,10 @@ f'''В скрипте используются следующие аргумен
             if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
             print('') # для отступа
 
-            if stage >= stageTarget: # eсли в Temporal НЕТ файла stage.txt с указанием пропустить этап
+            if stage < stageTarget: # eсли в Temporal ЕСТЬ файл stage.txt с указанием пропустить этап
+                print(f"Этап {stage} пропускаю согласно настройкам из файла stage.txt из директории '{folderWithTemporal}'\n")
+
+            else:
                 print('Заход на первую страницу выдачи')
                 # print('publishedAfter', publishedAfter) # для отладки
                 itemS_additional, goS, goToPlayList, iteration, keyOrder, response = bigSearch(api_keyS,
@@ -1212,7 +1212,6 @@ f'''В скрипте используются следующие аргумен
                                              yearsRange=yearsRange)
 
                     print('  Искомых объектов', countTarget, ', а найденных БЕЗ включения каких-либо значений аргумента order:', len(itemS))
-            elif stage < stageTarget: print(f"Этап {stage} пропускаю согласно настройкам из файла stage.txt в директории '{folderWithTemporal}'\n")
 
 # 2.1.1 Цикл для прохода по значениям аргумента order, внутри которых проход по всем страницам выдачи (этап stage = 1)
             stage = 1
@@ -1330,7 +1329,7 @@ f'''В скрипте используются следующие аргумен
 
                     print('  Искомых объектов', countTarget, ', а найденных С включением аргумента order:', len(itemS))
                 else: print('Все искомые объекты найдены БЕЗ включения некоторых значений аргумента order (в т.ч. вообще БЕЗ них)')
-            elif stage < stageTarget: print(f"Этап {stage} пропускаю согласно настройкам из файла stage.txt в директории '{folderWithTemporal}'\n")
+            elif stage < stageTarget: print(f"Этап {stage} пропускаю согласно настройкам из файла stage.txt из директории '{folderWithTemporal}'\n")
 
 # 2.1.2 Этап сегментирования по годам (stage = 2)
             stage = 2
