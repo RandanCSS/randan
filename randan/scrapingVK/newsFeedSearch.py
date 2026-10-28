@@ -259,6 +259,8 @@ def newsFeedSearch(access_token=None,
                 folder_in_folderCurrent = folder + name_in_folderCurrent # имя файла достраивается до абсолютного пути
                 if len(os.listdir(folder_in_folderCurrent)) < 9: print(
 f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 9-10 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
+
+                else:
                     countTargetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'countTarget.txt', int)
 
                     with open(f'{folder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file:
