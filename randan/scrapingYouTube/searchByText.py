@@ -921,7 +921,8 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
                         yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
 
                     temporalNameS = os.listdir(folder_in_folderCurrent)
-                    folderWithTemporal, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
+                    folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
+                    if not goC: break # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
 
     if not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
         print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
