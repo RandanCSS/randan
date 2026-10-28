@@ -483,20 +483,27 @@ for cellContent in Исходный_датафрейм[column].dropna():
                             sys.exit()
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
-        # # display(itemS)
-        # if itemS is None or itemS.empty: itemS = pandas.DataFrame()
-        dfsProcessor(complicatedNamePart,
-                     itemS_additional,
-                     itemS,
-                     domain,
-                     fields,
-                     fileFormatChoice,
-                     filter,
-                     folder,
-                     False, # единственная из функций, принимающая аргумент goS
-                     method,
-                     momentCurrent,
-                     offset,
-                     params_extra)
 
-        # if returnDfs: return itemS
+        dfsProcessor(complicatedNamePart,
+                     df_additional=itemS_additional,
+                     df_in=itemS,
+                     domain=domain,
+                     fields=fields,
+                     fileFormatChoice=fileFormatChoice,
+                     filter=filter,
+                     folder=folder,
+                     goS=False, # единственная из функций, принимающая этот аргумент
+                     method=method,
+                     momentCurrent=momentCurrent,
+                     offset=offset,
+                     params_extra=params_extra)
+
+        if returnDfs: return itemS
+        else:
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                if not silentMode: print(
+'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
+Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
+
+                sys.exit()
