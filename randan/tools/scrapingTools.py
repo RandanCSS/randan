@@ -141,16 +141,16 @@ def get_itemsTemporal(temporalNameS):
     if itemS_json is not None and itemS_xlsx is not None:
         itemS = itemS_json.merge(itemS_xlsx, how='outer', on='id')
         folderWithTemporal = folder_in_folderCurrent
-        break # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
+        goC = False # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
 
     elif itemS_json is None and itemS_xlsx is not None:
         itemS = itemS_xlsx.copy() # for temporalName in temporalNameS завершился, но файл itemS_json не импортировался
         folderWithTemporal = folder_in_folderCurrent
-        break # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
+        goC = False # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
 
     # -- данные, сохранённые при прошлом запуске скрипта, загружены и цикл for name_in_folderCurrent in nameS_in_folderCurrent завершён
 
     elif itemS_xlsx is None and itemS_json is None:
         print(
 f"СТРАННО: хотя директория '{folder_in_folderCurrent}' похожа на искомую Temporal , но в ней ни одного файла с данными, сохранёнными при прошлом запуске скрипта, не найдено; рекомендую Вам удалить её вручную, а я продолжаю поиск")
-    return folderWithTemporal, itemS
+    return folderWithTemporal, goC, itemS
