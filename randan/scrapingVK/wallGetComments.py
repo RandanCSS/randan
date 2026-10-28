@@ -55,7 +55,6 @@ f'Пакет {module} НЕ прединсталлирован, но он тре�
 def dfsProcessor(complicatedNamePart,
                  coLabFolder,
                  df_additional,
-                 dfFinal, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода getComments
                  dfIn,
                  fields,
                  fileFormatChoice,
@@ -413,7 +412,7 @@ f'''    Скрипт нацелен на выгрузку комментарие
     if offset is None: offset = 0 # если offset ни подан пользователем, ни сохранён при прошлом запуске
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         while True:
-            itemsAdditional, goS, iteration, keyOrder, pause, response = wallGetCommentsCore(api_keyS,
+            itemS_additional, goS, iteration, keyOrder, pause, response = wallGetCommentsCore(api_keyS,
                                                                                              count,
                                                                                              fields,
                                                                                              iteration,
@@ -433,8 +432,7 @@ f'''    Скрипт нацелен на выгрузку комментарие
 
                 itemS = dfsProcessor(complicatedNamePart,
                                      coLabFolder,
-                                     itemsAdditional,
-                                     itemS, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода getComments
+                                     itemS_additional,
                                      itemS,
                                      fields,
                                      fileFormatChoice,
@@ -494,22 +492,28 @@ for cellContent in Исходный_датафрейм[column].dropna():
                             sys.exit()
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
-        # display(itemS)
-        if not itemS: itemS = pandas.DataFrame()
+
         dfsProcessor(complicatedNamePart,
-                     coLabFolder,
-                     df_additional,
-                     itemS, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода getComments
-                     itemS,
-                     fields,
-                     fileFormatChoice,
-                     goS, # единственная из функций, принимающая этот аргумент
-                     method,
-                     momentCurrent,
-                     offset,
-                     owner_id,
-                     params_extra,
-                     post_id,
-                     slash)
+                     df_additional=itemS_additional,
+                     df_in=itemS, # даже если itemS пуст, есть смысл сделать Temporal-снимок ради сохранения пользовательских аргументов
+                     fields=fields,
+                     fileFormatChoice=fileFormatChoice,
+                     folder=folder,
+                     goS=False, # единственная из функций, принимающая этот аргумент
+                     method=method,
+                     momentCurrent=momentCurrent,
+                     offset=offset,
+                     owner_id=owner_id,
+                     params_extra=params_extra,
+                     post_id=post_id,
+                     slash=slash)
 
         if returnDfs: return itemS
+        else:
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                if not silentMode: print(
+'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
+Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
+
+                sys.exit()
