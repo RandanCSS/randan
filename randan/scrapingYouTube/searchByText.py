@@ -1091,7 +1091,7 @@ f'''В скрипте используются следующие аргумен
             if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
             print('') # для отступа
 
-            if stage >= stageTarget: # eсли нет временного файла stage.txt с указанием пропустить этап
+            if stage >= stageTarget: # eсли в Temporal НЕТ файла stage.txt с указанием пропустить этап
                 print('Заход на первую страницу выдачи')
                 # print('publishedAfter', publishedAfter) # для отладки
                 itemS_additional, goS, goToPlayList, iteration, keyOrder, response = bigSearch(api_keyS,
@@ -1217,7 +1217,7 @@ f'''В скрипте используются следующие аргумен
 # 2.1.1 Цикл для прохода по значениям аргумента order, внутри которых проход по всем страницам выдачи (этап stage = 1)
             stage = 1
             orderS = ['date', 'rating', 'title', 'videoCount', 'viewCount']
-            if stage >= stageTarget and not goToPlayList: # eсли НЕТ временного файла stage.txt с указанием пропустить этап и нет указания перейти к методам playlistitems и playlists
+            if stage >= stageTarget and not goToPlayList: # eсли в Temporal НЕТ файла stage.txt с указанием пропустить этап и нет указания перейти к методам playlistitems и playlists
                 if len(itemS) < countTarget:
                 # -- для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
                     print('Проход по значениям аргумента order, внутри которых проход по всем страницам выдачи')
@@ -1334,7 +1334,7 @@ f'''В скрипте используются следующие аргумен
 
 # 2.1.2 Этап сегментирования по годам (stage = 2)
             stage = 2
-            if stage >= stageTarget and not goToPlayList: # eсли НЕТ временного файла stage.txt с указанием пропустить этап и нет указания перейти к методам playlistitems и playlists
+            if stage >= stageTarget and not goToPlayList: # eсли в Temporal НЕТ файла stage.txt с указанием пропустить этап и нет указания перейти к методам playlistitems и playlists
                 if len(itemS) < countTarget:
                 # для остановки алгоритма, если все искомые объекты найдены БЕЗ включения каких-либо значений аргумента order (в т.ч. вообще БЕЗ них)
                     print(
