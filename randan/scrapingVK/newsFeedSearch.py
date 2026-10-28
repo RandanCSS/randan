@@ -55,7 +55,6 @@ f'Пакет {module} НЕ прединсталлирован, но он тре�
 # .. обработки выдачи любого из методов, помогающая работе с ключами
 def dfsProcessor(complicatedNamePart,
                  df_additional,
-                 df_final, # на обработке какой бы ни было выгрузки не возникла бы непреодолимая ошибка, сохранить следует выгрузку метода search
                  df_in,
                  fields,
                  fileFormatChoice,
@@ -545,7 +544,6 @@ f'''Если требуется конкретный временнОй диап
 
             itemS = dfsProcessor(complicatedNamePart=complicatedNamePart,
                                  df_additional=itemsAdditional,
-                                 df_final=itemS,
                                  df_in=itemS,
                                  fields=fields,
                                  fileFormatChoice=fileFormatChoice,
@@ -587,7 +585,6 @@ f'''Если требуется конкретный временнОй диап
 
                 itemS = dfsProcessor(complicatedNamePart=complicatedNamePart,
                                      df_additional=itemsAdditional,
-                                     df_final=itemS,
                                      df_in=itemS,
                                      fields=fields,
                                      fileFormatChoice=fileFormatChoice,
@@ -654,7 +651,6 @@ f'''Метод {method} выдаёт ограниченное количеств
 
                     itemS = dfsProcessor(complicatedNamePart,
                                          df_additional=itemS_additional,
-                                         df_final=itemS,
                                          df_in=itemS,
                                          fields=fields,
                                          fileFormatChoice=fileFormatChoice,
@@ -704,7 +700,6 @@ f'''Метод {method} выдаёт ограниченное количеств
 
                             itemS = dfsProcessor(complicatedNamePart,
                                                  df_additional=itemS_additional,
-                                                 df_final=itemS,
                                                  df_in=itemS,
                                                  fields=fields,
                                                  fileFormatChoice=fileFormatChoice,
@@ -752,7 +747,6 @@ f'''Метод {method} выдаёт ограниченное количеств
 
                             itemS = dfsProcessor(complicatedNamePart,
                                                  df_additional=itemS_additional,
-                                                 df_final=itemS,
                                                  df_in=itemS,
                                                  fields=fields,
                                                  fileFormatChoice=fileFormatChoice,
@@ -795,7 +789,6 @@ f'''Метод {method} выдаёт ограниченное количеств
 
                                 itemS = dfsProcessor(complicatedNamePart,
                                                      df_additional=itemS_additional,
-                                                     df_final=itemS,
                                                      df_in=itemS,
                                                      fields=fields,
                                                      fileFormatChoice=fileFormatChoice,
@@ -884,42 +877,30 @@ JSONS.extend(cellContent)
                 sys.exit()
 
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
-        # display(itemS)
-        if len(itemS) > 0:
-            if itemS_additional is not None:
-                df_additional = itemS_additional
-                df_final = itemS
-                df_in = itemS
 
-            elif itemS_additional is not None:
-                df_additional = itemS_additional
-                df_final = itemS
-                df_in = itemS_additional
+        dfsProcessor(complicatedNamePart,
+                     df_additional=itemS_additional,
+                     df_in=itemS, # даже если itemS пуст, есть смысл сделать Temporal-снимок ради сохранения пользовательских аргументов
+                     fields=fields,
+                     fileFormatChoice=fileFormatChoice,
+                     folder=folder,
+                     goS=False,
+                     method=method,
+                     momentCurrent=momentCurrent,
+                     params_extra=params_extra,
+                     q=q,
+                     slash=slash,
+                     stage=stage,
+                     countTarget=countTarget,
+                     year=year,
+                     yearsRange=yearsRange)
 
-            elif itemsAdditional is not None:
-                df_additional = itemsAdditional
-                df_final = itemS
-                df_in = itemS
+        if returnDfs: return itemS
+        else:
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                if not silentMode: print(
+'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
+Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
 
-            dfsProcessor(complicatedNamePart=complicatedNamePart,
-                         df_additional=df_additional,
-                         df_final=itemS,
-                         df_in=itemS,
-                         fields=fields,
-                         fileFormatChoice=fileFormatChoice,
-                         folder=folder,
-                         goS=False,
-                         method=method,
-                         momentCurrent=momentCurrent,
-                         params_extra=params_extra,
-                         q=q,
-                         slash=slash,
-                         stage=stage,
-                         countTarget=countTarget,
-                         year=year,
-                         yearsRange=yearsRange)
-
-            if returnDfs: return itemS
-
-# Введённый аргумент end_time приравнять к текущему моменту, чтобы не было прохода по лишним месяцам
-# Сделать выбор временнОго диапазона динамическим
+                sys.exit()
