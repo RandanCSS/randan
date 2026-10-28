@@ -18,24 +18,23 @@ attempt = 1
 
 while True:
     try:
-        from randan.tools import coLabAdaptor, textPreprocessor # модуи для
+        from randan.tools import coLabAdaptor, files2df, textPreprocessor # модуи для
             # (а) адаптации текущего скрипта к файловой системе CoLab
-            # (б) предобработки неформализованного текста
+            # (б) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
+            # (в) предобработки неформализованного текста
 
         break # выход из цикла while True
 
-    except ModuleNotFoundError as excptn_1:
+    except (ImportError, ModuleNotFoundError) as excptn_1:
         module = excptn_1.name.split('.')[0]
         if attempt > MAX_ATTEMPTS:
             print(
-f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт'
-            )
+f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт')
 
             raise
 
         print(
-f'Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас. Попытка № {attempt} из {MAX_ATTEMPTS}'
-        )
+f'Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас. Попытка № {attempt} из {MAX_ATTEMPTS}')
 
         try: check_call([sys.executable, '-m', 'pip', 'install', module, '--quiet', '--disable-pip-version-check'])
         except CalledProcessError as excptn_2:
@@ -55,6 +54,32 @@ def argument_key_comparison(argument, key, params): # приоритет арг�
 
     else: # key НЕ подан через словарь params (в т.ч. со значением None)
         return argument # используется key как аргумент (в т.ч. со значением None)
+
+def call_for_user_items(message_adjustable):
+    print(
+f'''
+Возможно, Вы располагаете файлом, {message_adjustable}, и который хотели бы дополнить? Или планируете первичный сбор контента?
+--- Если планируете первичный сбор, нажмите Enter
+--- Если располагаете файлом формата XLSX, укажите полный путь, включая название файла, и нажмите Enter.
+Затем при необходимости сможете добавить к нему другие располагаемые файлы''')
+
+    while True:
+        folder_file = input()
+        if len(folder_file) == 0:
+            folder = None # для унификации
+            folder_file = None # для унификации
+            break
+
+        else:
+            itemS, error, folder = files2df.files2df(folder_file)
+            if error:
+                if 'No such file or directory' in error: print('Путь:', folder_file, '-- не существует; попробуйте, пожалуйста, ещё раз..')
+                else:
+                    print('error из files2df:', error)
+                    break
+            else: break
+        # display('itemS:', itemS)
+    return folder, folder_file, itemS
 
 def containerExport(folder_file, container):
     with open(folder_file, 'w', encoding='utf-8') as file: file.write(container)
