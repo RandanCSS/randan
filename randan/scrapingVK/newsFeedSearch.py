@@ -319,7 +319,8 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
                         yearsRange = yearsRangeTemporal
 
                         temporalNameS = os.listdir(folder_in_folderCurrent)
-                        folderWithTemporal, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
+                        folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
+                        if not goC: break # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
 
         if not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
             print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
@@ -482,7 +483,8 @@ f'''Если требуется конкретный временнОй диап
 # 2.1 Первичный сбор контента методом newsFeed.search
     iteration = 1 # номер итерации применения текущего метода
     pause = 0.25
-    if not silentMode: print(f'В этой части функции используются следующие аргументы метода {method} API ВК: q, start_from, start_time, end_time, expand и другие аргументы, которые пользователь может подать через params')
+    if not silentMode:
+        print(f'В этой части функции используются следующие аргументы метода {method} API ВК: q, start_from, start_time, end_time, expand и другие аргументы, которые пользователь может подать через params')
         # print('experiencedMode:', experiencedMode) # для отладки
         if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
         print('') # для отступа
@@ -512,7 +514,7 @@ f'''Если требуется конкретный временнОй диап
                                                                                             start_time=start_time,
                                                                                             version_api=version_api)
 
-        <ОБработка результата первого обращения к API>
+        # <Обработка результата первого обращения к API>
             # print('goS 1:', goS) # для отладки
             countTarget = response['total_count']
             if len(itemS_additional) == 0 or countTarget == 0: # ожидаемое или реальное количество постов равно нулю
@@ -558,7 +560,7 @@ f'''Если требуется конкретный временнОй диап
                                  countTarget=countTarget,
                                  year=year,
                                  yearsRange=yearsRange)
-        </ОБработка результата первого обращения к API>
+        # </Обработка результата первого обращения к API>
 
             if not silentMode: print('  Проход по всем следующим страницам с выдачей          ')
             while 'next_from' in response.keys() and goS:
@@ -612,7 +614,8 @@ f'''Если требуется конкретный временнОй диап
             if not silentMode: print('  Все искомые посты выгружены')
             
         elif len(itemS) < countTarget:
-            if not silentMode: print(
+            if not silentMode:
+                print(
 f'''Метод {method} выдаёт ограниченное количество постов, причём наиболее приближенных к текущему моменту. Скрипт умеет внутри каждого года сегментировать временнЫе периоды для максимизации количества выгружаемых постов; двигается вглубь веков, пока не достигнет заданной пользователем временнОй глубины или года с пустой выдачей
 --- Если хотите для поиска дополнительных постов попробовать сегментирование по годам, просто нажмите Enter. Поиск может занять минуты и даже часы, но Вы СМОЖЕТЕ ПРЕРВАТЬ ИСПОЛНЕНИЕ СКРИПТА КНОПКОЙ и ВЫГРУЖЕННЫЕ ДАННЫЕ СОХРАНЯТСЯ
 --- Если НЕ хотите, нажмите пробел и затем Enter''')
@@ -684,7 +687,6 @@ f'''Метод {method} выдаёт ограниченное количеств
                                                                                                              end_time=int(datetime(year, int(calendarColumnS[-1]), int(calendar[calendarColumnS[-1]].dropna().index[-1])).timestamp()),
                                                                                                                 # чтобы исключить проход по будущим месяцам текущего года
                                                                                                             
-                                                                                                             params_extra=params_extra,
                                                                                                              fields=fields,
                                                                                                              iteration=iteration,
                                                                                                              keyOrder=keyOrder,
@@ -776,7 +778,6 @@ f'''Метод {method} выдаёт ограниченное количеств
                                 itemS_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
                                                                                                                  count,
                                                                                                                  end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
-                                                                                                                 params_extra=params_extra,
                                                                                                                  fields=fields,
                                                                                                                  iteration=iteration,
                                                                                                                  keyOrder=keyOrder,
