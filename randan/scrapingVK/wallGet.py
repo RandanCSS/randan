@@ -284,7 +284,8 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
                         params_extra = params_extraTemporal
 
                         temporalNameS = os.listdir(folder_in_folderCurrent)
-                        folderWithTemporal, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
+                        folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
+                        if not goC: break # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
 
     if not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
         print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
@@ -393,7 +394,8 @@ f'''    Скрипт нацелен на выгрузку постов и их �
 # 2.1.0 Первое обращение к API
     iteration = 1 # номер итерации применения текущего метода
     pause = 0.25
-    if not silentMode: print(f'В этой части функции используются следующие аргументы метода {method} API ВК: count, domain, fields, filter, offset и другие аргументы, которые пользователь может подать через params')
+    if not silentMode:
+        print(f'В этой части функции используются следующие аргументы метода {method} API ВК: count, domain, fields, filter, offset и другие аргументы, которые пользователь может подать через params')
         # print('experiencedMode:', experiencedMode) # для отладки
         if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
         print('') # для отступа
