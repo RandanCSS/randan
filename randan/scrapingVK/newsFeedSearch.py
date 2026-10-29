@@ -71,10 +71,10 @@ def dfsProcessor(complicatedNamePart,
                  yearsRange):
 
     df = pandas.concat([df_in, df_additional])
+
     columnsForCheck = []
-    if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
-        for column in df.columns:
-            if 'id' in column: columnsForCheck.append(column)
+    for column in df.columns: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
+        if column == 'id' or column.endswith('_id') or column.startswith('id_'): columnsForCheck.append(column)
     # print('Столбцы, по которым проверяю дублирующиеся записи:', columnsForCheck) # для отладки
 
     if columnsForCheck: df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
@@ -165,6 +165,7 @@ def newsfeedSearchCore(api_keyS,
         if isinstance(value, (list, tuple)): # requests сериализует list как повторяющийся ключ, например: fields=a&fields=b , а wall.get ожидает fields=a,b
             params[key] = ','.join(map(str, value)) # склеить список в строку только для запроса; исходный fields остаётся нетронутым для dfColumnsProcessor
 
+    goC = True
     tryer = 0
     while goC:
         response = requests.get('https://api.vk.ru/method/wall.get', params=params).json()
@@ -189,11 +190,13 @@ def newsFeedSearch(access_token=None,
                    count=None,
                    end_time=None, # !!! можно сделать 2 варианта подачи: год или Unix
                    fields=None,
+                   folder=None,
                    latitude=None,
                    longitude=None,
                    params=None,
                    q=None,
                    returnDfs=False,
+                   silentMode=False,
                    start_time=None,
                    version_api='5.199'):
     '''
@@ -201,12 +204,13 @@ def newsFeedSearch(access_token=None,
 
     Parameters
     ----------
-    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/newsfeed.search , за исключением аргументов params , returnDfs и silentMode
+    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/newsfeed.search , за исключением аргументов folder , params , returnDfs и silentMode
     Причём они могут быть поданы и в качестве самостоятельных аргументов функции, и в качестве словаря params , который обычно подаётся в метод get пакета requests
     access_token : str
            count : int
         end_time : int -- формат Unix
           fields : list
+          folder : str -- директория, в которой пользователь желает расположить выгружаемые данные и настройки выгрузки; по умолчанию, они расположатся в той же директории, в которой исполняется этот скрипт
         latitude : int
        longitude : int
           params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/newsfeed.search , чтобы не подавать эти аргументы по отдельности
@@ -220,6 +224,7 @@ def newsFeedSearch(access_token=None,
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API ВК
     complicatedNamePart = None # для silentMode
+    countTarget = 0 # на случай, если сигнал прерывания поступит до newsfeedSearchCore
     fileFormatChoice = 'xlsx' # базовый формат сохраняемых файлов; формат json добавляется опционально через наличие columnsToJSON
     folder_file = None
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
@@ -228,8 +233,6 @@ def newsFeedSearch(access_token=None,
     goS = True
     itemS = pandas.DataFrame()
     itemS_additional = pandas.DataFrame() # на случай, если сигнал прерывания поступит до dfsProcessor
-    itemS_additional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
-    itemS_additional = None # чтобы обработать сигнал прерывания, поданный на любом этапе сбора данных
     keyOrder = 0
     method = 'newsfeed.search'
     params_extra = {}
@@ -257,7 +260,7 @@ def newsFeedSearch(access_token=None,
             if name_in_folderCurrent.endswith('Temporal') and 'VK' in name_in_folderCurrent:
                 folder_in_folderCurrent = folder + name_in_folderCurrent # имя файла достраивается до абсолютного пути
                 if len(os.listdir(folder_in_folderCurrent)) < 9: print(
-f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 9-10 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
+f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 9-10 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 9 или 10 файлов
 
                 else:
                     countTargetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'countTarget.txt', int)
@@ -482,6 +485,7 @@ f'''Если требуется конкретный временнОй диап
 # 2.1 Первичный сбор контента методом newsFeed.search
     iteration = 1 # номер итерации применения текущего метода
     pause = 0.25
+    stage = 0
     if not silentMode:
         print(f'В этой части функции используются следующие аргументы метода {method} API ВК: q, start_from, start_time, end_time, expand и другие аргументы, которые пользователь может подать через params')
         # print('experiencedMode:', experiencedMode) # для отладки
@@ -490,7 +494,6 @@ f'''Если требуется конкретный временнОй диап
 
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
 # 2.1.0 Первое обращение к API БЕЗ аргументов start_time, end_time (этап stage = 0)
-        stage = 0
         if stage < stageTarget: # eсли в Temporal ЕСТЬ файл stage.txt с указанием пропустить этап
             if not silentMode: print(f"Этап {stage} пропускаю согласно настройкам из файла stage.txt из директории '{folderWithTemporal}'\n")
 
@@ -498,52 +501,53 @@ f'''Если требуется конкретный временнОй диап
             if not silentMode: print('Первое обращение к API -- прежде всего, чтобы узнать примерное число доступных релевантных постов')
             # print('    start_from:', start_from) # для отладки
 
-            itemsAdditional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
-                                                                                            count,
-                                                                                            end_time,
-                                                                                            fields,
-                                                                                            iteration,
-                                                                                            keyOrder,
-                                                                                            latitude,
-                                                                                            longitude,
-                                                                                            params_extra,
-                                                                                            pause,
-                                                                                            q,
-                                                                                            start_from=None,
-                                                                                            start_time=start_time,
-                                                                                            version_api=version_api)
+            itemS_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
+                                                                                             count,
+                                                                                             end_time,
+                                                                                             fields,
+                                                                                             iteration,
+                                                                                             keyOrder,
+                                                                                             latitude,
+                                                                                             longitude,
+                                                                                             params_extra,
+                                                                                             pause,
+                                                                                             q,
+                                                                                             start_from=None,
+                                                                                             start_time=start_time,
+                                                                                             version_api=version_api)
 
         # <Обработка результата первого обращения к API>
             # print('goS 1:', goS) # для отладки
-            countTarget = response['total_count']
-            if len(itemS_additional) == 0 or countTarget == 0: # ожидаемое или реальное количество постов равно нулю
-                if not silentMode:
-                    print(
+            if 'total_count' in response.keys(): при ошибке в newsfeedSearchCore response является словарём ошибки; тогда эта ветка пропускается и исполяется dfsProcessor ниже, который сохраняет Temporal-снимок и завершает исполнение скрипта
+                countTarget = response['total_count']
+                if len(itemS_additional) == 0 or countTarget == 0: # ожидаемое или реальное количество постов равно нулю
+                    if not silentMode:
+                        print(
 '  Искомых постов по Вашему запросу, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта. Что можно сделать для выгрузки постов? Поменяйте настройки запроса и запустите скрипт с начала')
 
-                    print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
-                    if folderWithTemporal:
-                        if os.path.exists(folderWithTemporal):
-                            # print('folderWithTemporal:', folderWithTemporal) # для отладки
-                            print(
+                        print('Скрипт исполнен. Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473')
+                        if folderWithTemporal:
+                            if os.path.exists(folderWithTemporal):
+                                # print('folderWithTemporal:', folderWithTemporal) # для отладки
+                                print(
 '''Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, можно удалить её во избежание путаницы при следующих запусках скрипта
 --- Если хотите их удалить, введите 'R' и нажмите Enter''')
 
-                        decision = input()
-                        if decision.lower() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True)
-
-                if returnDfs: return itemS
-                else:
-                    with warnings.catch_warnings():
-                        warnings.simplefilter('ignore')
-                        if not silentMode: print(
+                            decision = input()
+                            if decision.lower() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True)
+    
+                    if returnDfs: return itemS
+                    else:
+                        with warnings.catch_warnings():
+                            warnings.simplefilter('ignore')
+                            if not silentMode: print(
 '''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
 Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
 
-                        sys.exit()
+                            sys.exit()
 
             itemS = dfsProcessor(complicatedNamePart=complicatedNamePart,
-                                 df_additional=itemsAdditional,
+                                 df_additional=itemS_additional,
                                  df_in=itemS,
                                  fields=fields,
                                  fileFormatChoice=fileFormatChoice,
@@ -566,25 +570,25 @@ f'''Если требуется конкретный временнОй диап
                 # print('    start_from:', start_from) # для отладки
                 # print('goS 2:', goS) # для отладки
 
-                itemsAdditional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
-                                                                                                count,
-                                                                                                end_time,
-                                                                                                fields,
-                                                                                                iteration,
-                                                                                                keyOrder,
-                                                                                                latitude,
-                                                                                                longitude,
-                                                                                                params_extra,
-                                                                                                pause,
-                                                                                                q,
-                                                                                                start_from,
-                                                                                                start_time,
-                                                                                                version_api)
+                itemS_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
+                                                                                                 count,
+                                                                                                 end_time,
+                                                                                                 fields,
+                                                                                                 iteration,
+                                                                                                 keyOrder,
+                                                                                                 latitude,
+                                                                                                 longitude,
+                                                                                                 params_extra,
+                                                                                                 pause,
+                                                                                                 q,
+                                                                                                 start_from,
+                                                                                                 start_time,
+                                                                                                 version_api)
 
                 # print("    response['next_from'] после newsfeedSearchCore :", response['next_from']) # для отладки
 
                 itemS = dfsProcessor(complicatedNamePart=complicatedNamePart,
-                                     df_additional=itemsAdditional,
+                                     df_additional=itemS_additional,
                                      df_in=itemS,
                                      fields=fields,
                                      fileFormatChoice=fileFormatChoice,
@@ -629,22 +633,27 @@ f'''Метод {method} выдаёт ограниченное количеств
                             # чтобы исключить проход по будущим месяцам текущего года
 
             # <Выгрузка постов за год year>
+                    if yearMinByUser: # если пользователь ограничил временнОй диапазон
+                        if year <= yearMinByUser:
+                            if not silentMode: print('Достигнут заданный пользователем временнОй горизонт:', yearMinByUser)
+                            break # выход из while goS
+
                     itemS_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
-                                                                                                     count,
-                                                                                                     end_time=int(datetime(year, int(calendarColumnS[-1]), int(calendar[calendarColumnS[-1]].dropna().index[-1])).timestamp()),
-                                                                                                        # чтобы исключить проход по будущим месяцам текущего года
+                                                                                                      count,
+                                                                                                      end_time=int(datetime(year, int(calendarColumnS[-1]), int(calendar[calendarColumnS[-1]].dropna().index[-1])).timestamp()),
+                                                                                                         # чтобы исключить проход по будущим месяцам текущего года
                                                                                                     
-                                                                                                     fields=fields,
-                                                                                                     iteration=iteration,
-                                                                                                     keyOrder=keyOrder,
-                                                                                                     latitude=latitude,
-                                                                                                     longitude=longitude,
-                                                                                                     params_extra=params_extra,
-                                                                                                     pause=pause,
-                                                                                                     q=q,
-                                                                                                     start_from=None,
-                                                                                                     start_time=int(datetime(year, 1, 1).timestamp()),
-                                                                                                     version_api=version_api)
+                                                                                                      fields=fields,
+                                                                                                      iteration=iteration,
+                                                                                                      keyOrder=keyOrder,
+                                                                                                      latitude=latitude,
+                                                                                                      longitude=longitude,
+                                                                                                      params_extra=params_extra,
+                                                                                                      pause=pause,
+                                                                                                      q=q,
+                                                                                                      start_from=None,
+                                                                                                      start_time=int(datetime(year, 1, 1).timestamp()),
+                                                                                                      version_api=version_api)
 
                     # print('itemS_additional:') # для отладки
                     # display(itemS_additional.sort_values('date')['date'].drop_duplicates()) # для отладки
@@ -723,6 +732,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                 # <Выгрузка постов за год year с сегментированием по месяцам>
                     elif countTarget_withinYear > 1000: # ожидаемое количество постов позволяет не прибегать к углублению сегментирования
                         for month in calendarColumnS:
+                            if not goS: break
                             if not silentMode:
                                 print('Ищу текст запроса-фильтра в контенте за',  month, 'месяц', year, 'года', '               ') # , end='\r'
                                 print('  Заход на первую страницу выдачи', '               ', end='\r')
@@ -821,16 +831,11 @@ f'''  Дополнительных постов по Вашему запросу
 
                         if silentMode or not decision: # если silentMode , то завершение сегментирования по годам выполняется принудительно
                             # print('Завершил сегментирования по годам')
+                            if not silentMode: print('Искомых постов', countTarget, ', а выгруженных:', len(itemS), '          ')
                             break # выход из while goS
                 # </Выгрузка постов за год year пуста>
-
-                    elif yearMinByUser: # если пользователь ограничил временнОй диапазон
-                        if year <= yearMinByUser:
-                            if not silentMode: print('Достигнут заданный пользователем временнОй горизонт:', yearMinByUser)
-                            break # выход из while goS
             # </Выгрузка постов за год year>
                     year -= 1
-                if not silentMode: print('Искомых постов', countTarget, ', а выгруженных:', len(itemS), '          ')
         # pandas.set_option('display.max_columns', None)
         if not silentMode:
             display(itemS.head())
