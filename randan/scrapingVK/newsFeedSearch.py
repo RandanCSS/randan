@@ -168,7 +168,7 @@ def newsfeedSearchCore(api_keyS,
     goC = True
     tryer = 0
     while goC:
-        response = requests.get('https://api.vk.ru/method/wall.get', params=params).json()
+        response = requests.get('https://api.vk.ru/method/newsfeed.search', params=params).json()
         # print('response', response) # для отладки
         if 'response' in response.keys():
             response = response['response']
@@ -474,11 +474,11 @@ f'''Если требуется конкретный временнОй диап
 
         if yearsRange: print('') # чтобы был отступ, если пользователь подал этот аргумент
 
-# Сложная часть имени будущих директорий и файлов
-    complicatedNamePart = '_VK'
-    if q: complicatedNamePart += '_' + q if len(q) < 50 else '_' + q[:50]
-    complicatedNamePart += '_' + str(yearMinByUser) + '-' + str(yearMaxByUser) if yearMinByUser or yearMaxByUser else ''
-    # print('complicatedNamePart', complicatedNamePart)
+    # Сложная часть имени будущих директорий и файлов
+        complicatedNamePart = '_VK'
+        if q: complicatedNamePart += '_' + q if len(q) < 50 else '_' + q[:50]
+        complicatedNamePart += '_' + str(yearMinByUser) + '-' + str(yearMaxByUser) if yearMinByUser or yearMaxByUser else ''
+        # print('complicatedNamePart', complicatedNamePart)
 
     # Завершение if not silentMode
 
@@ -518,7 +518,7 @@ f'''Если требуется конкретный временнОй диап
 
         # <Обработка результата первого обращения к API>
             # print('goS 1:', goS) # для отладки
-            if 'total_count' in response.keys(): при ошибке в newsfeedSearchCore response является словарём ошибки; тогда эта ветка пропускается и исполяется dfsProcessor ниже, который сохраняет Temporal-снимок и завершает исполнение скрипта
+            if 'total_count' in response.keys(): при ошибке в newsfeedSearchCore response является словарём ошибки; тогда эта ветка пропускается и исполняется dfsProcessor ниже, который сохраняет Temporal-снимок и завершает исполнение скрипта
                 countTarget = response['total_count']
                 if len(itemS_additional) == 0 or countTarget == 0: # ожидаемое или реальное количество постов равно нулю
                     if not silentMode:
@@ -634,7 +634,7 @@ f'''Метод {method} выдаёт ограниченное количеств
 
             # <Выгрузка постов за год year>
                     if yearMinByUser: # если пользователь ограничил временнОй диапазон
-                        if year <= yearMinByUser:
+                        if year < yearMinByUser:
                             if not silentMode: print('Достигнут заданный пользователем временнОй горизонт:', yearMinByUser)
                             break # выход из while goS
 
