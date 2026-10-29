@@ -68,11 +68,10 @@ def dfsProcessor(complicatedNamePart,
                  slash):
 
     df = pandas.concat([dfIn, df_additional])
-    columnsForCheck = []
-    if columnsForCheck == []: # для выдач, НЕ содержащих столбец id, проверка дублирующихся строк возможна по столбцам, содержащим в имени id
-        for column in df.columns:
-            if 'id' in column: columnsForCheck.append(column)
 
+    columnsForCheck = []
+    for column in df.columns: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
+        if column == 'id' or column.endswith('_id') or column.startswith('id_'): columnsForCheck.append(column)
     # print('Столбцы, по которым проверяю дублирующиеся записи:', columnsForCheck) # для отладки
 
     df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
@@ -179,6 +178,7 @@ def wallGetCommentsCore(api_keyS,
 def wallGetComments(access_token=None,
                     count=None,
                     fields=None,
+                    folder=None,
                     offset=None,
                     owner_id=None,
                     params=None,
@@ -191,11 +191,12 @@ def wallGetComments(access_token=None,
 
     Parameters
     ----------
-    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/wall.getComments , за исключением аргументов params , returnDfs и silentMode
+    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/wall.getComments , за исключением аргументов folder , params , returnDfs и silentMode
     Причём они могут быть поданы и в качестве самостоятельных аргументов функции, и в качестве словаря params , который обычно подаётся в метод get пакета requests
     access_token : str
            count : int
           fields : list
+          folder : str -- директория, в которой пользователь желает расположить выгружаемые данные и настройки выгрузки; по умолчанию, они расположатся в той же директории, в которой исполняется этот скрипт
           offset : int
         owner_id : str
           params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.getComments , чтобы не подавать эти аргументы по отдельности
