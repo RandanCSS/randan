@@ -157,7 +157,7 @@ def wallGetCommentsCore(api_keyS,
     goC = True
     tryer = 0
     while goC:
-        response = requests.get('https://api.vk.ru/method/wall.get', params=params).json()
+        response = requests.get('https://api.vk.ru/method/wall.getComments', params=params).json()
         # print('response', response) # для отладки
         if 'response' in response.keys():
             response = response['response']
@@ -397,6 +397,7 @@ f'''    Скрипт нацелен на выгрузку комментарие
         complicatedNamePart = '_VK'
         if owner_id: complicatedNamePart += '_' + owner_id if len(owner_id) < 50 else '_' + owner_id[:50]
         if post_id: complicatedNamePart += '_' + post_id if len(post_id) < 50 else '_' + post_id[:50]
+        # print('complicatedNamePart', complicatedNamePart)
     
     # Завершение if not silentMode
 
