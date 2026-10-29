@@ -68,13 +68,14 @@ def dfsProcessor(complicatedNamePart,
     if df_additional is None: df_additional = pandas.DataFrame()
     # if df_in is None: df_in = pandas.DataFrame()
     df = pandas.concat([df_in, df_additional])
+
     columnsForCheck = []
-    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
-    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     for column in df.columns: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
         if column == 'id' or column.endswith('_id') or column.startswith('id_'): columnsForCheck.append(column)
-
     # print('Столбцы, по которым проверяю дублирующиеся записи:', columnsForCheck) # для отладки
+                 
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
+    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
 
     if columnsForCheck: df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
         # при дублировании записей из itemS из Temporal и от пользователя и новых записей, оставить новые
@@ -190,14 +191,14 @@ def wallGet(access_token=None,
 
     Parameters
     ----------
-    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/wall.get , за исключением аргументов params , returnDfs и silentMode
+    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/wall.get , за исключением аргументов folder , params , returnDfs и silentMode
     Причём они могут быть поданы и в качестве самостоятельных аргументов функции, и в качестве словаря params , который обычно подаётся в метод get пакета requests
     access_token : str
            count : int
           domain : str
           fields : list
           filter : str
-          folder : str
+          folder : str -- директория, в которой пользователь желает расположить выгружаемые данные и настройки выгрузки; по умолчанию, они расположатся в той же директории, в которой исполняется этот скрипт
           offset : int
           params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.get , чтобы не подавать эти аргументы по отдельности
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными, если исполнение скрипта не прервано пользователем или из-за ошибки
