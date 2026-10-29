@@ -386,8 +386,9 @@ f'''    Скрипт нацелен на выгрузку постов и их �
         else: print('')
 
 # Сложная часть имени будущих директорий и файлов
-    complicatedNamePart = '_VK'
-    if domain: complicatedNamePart += '_' + domain if len(domain) < 50 else '_' + domain[:50]
+        complicatedNamePart = '_VK'
+        if domain: complicatedNamePart += '_' + domain if len(domain) < 50 else '_' + domain[:50]
+        # print('complicatedNamePart', complicatedNamePart)
 
     # Завершение if not silentMode
 
