@@ -22,13 +22,11 @@ while True:
         from IPython.display import display
         from randan.scrapingVK import scrapingVK_tools # модуль для упрощения скрапинга VK
 
-        from randan.tools import calendarWithinYear, coLabAdaptor, df2file, files2df, scrapingTools, varPreprocessor # авторские модули для
+        from randan.tools import calendarWithinYear, coLabAdaptor, df2file, scrapingTools # модули для
             # (а) работы с календарём конкретного года
             # (б) адаптации текущего скрипта к файловой системе CoLab
             # (в) сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
-            # (г) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
-            # (д) упрощения скрапинга
-            # (е) предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
+            # (г) упрощения скрапинга
 
         import json, numpy, os, pandas, re, shutil, time, traceback, requests, warnings
         break # выход из цикла while True
@@ -465,7 +463,7 @@ f'''Если требуется конкретный временнОй диап
             year = yearMaxByUser
 
         if yearMinByUser and not yearMaxByUser: yearMaxByUser = int(momentCurrent.strftime('%Y')) # в случае отсутствия пользовательской верхней временнОй границы при наличии нижней
-        elif not yearMinByUser and yearMaxByUser: yearMinByUser = 1970 # в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
+        elif not yearMinByUser and yearMaxByUser: yearMinByUser = 1970 # нижняя граница Unix-эпохи в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
 
         # print('yearMinByUser', yearMinByUser) # для отладки
         # print('yearMaxByUser', yearMaxByUser) # для отладки
@@ -498,7 +496,7 @@ f'''Если требуется конкретный временнОй диап
 
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
 # 2.1.0 Первое обращение к API БЕЗ аргументов start_time, end_time (этап stage = 0)
-        if stage < stageTarget: # eсли в Temporal ЕСТЬ файл stage.txt с указанием пропустить этап
+        if stage < stageTarget: # если в Temporal ЕСТЬ файл stage.txt с указанием пропустить этап
             if not silentMode: print(f"Этап {stage} пропускаю согласно настройкам из файла stage.txt из директории '{folderWithTemporal}'\n")
 
         else:
@@ -615,7 +613,7 @@ f'''Если требуется конкретный временнОй диап
 
 # 2.1.1 Этап сегментирования по годам (stage = 1) # !!! можно сделать динамическое определение периода, который наиболее приближает размер допустимой выдачи (1000) к бенчмарку
         stage = 1
-        if stage < stageTarget: # eсли в Temporal ЕСТЬ файл stage.txt с указанием пропустить этап
+        if stage < stageTarget: # если в Temporal ЕСТЬ файл stage.txt с указанием пропустить этап
             if not silentMode: print(f"Этап {stage} пропускаю согласно настройкам из файла stage.txt из директории '{folderWithTemporal}'\n")
 
         elif len(itemS) == countTarget: # остановка алгоритма, если все искомые объекты найдены БЕЗ сегментирования по годам
@@ -883,6 +881,7 @@ JSONS.extend(cellContent)
 ''')
 
         if returnDfs: return itemS
+        elif silentMode: return itemS
         else:
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore')
