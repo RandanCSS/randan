@@ -68,7 +68,7 @@ def dfsProcessor(complicatedNamePart,
                  year,
                  yearsRange):
 
-    df = pandas.concat([df_in, df_additional])
+    df = pandas.concat([df_in, df_additional]) # порядок аргументов гарантирует, что в дальнейшем при keep='last' выживают именно новые записи
 
     columnsForCheck = []
     for column in df.columns: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
