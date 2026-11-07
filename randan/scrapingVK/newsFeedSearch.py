@@ -78,7 +78,7 @@ def dfsProcessor(complicatedNamePart,
     if columnsForCheck: df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
         # при дублировании записей из itemS из Temporal и от пользователя и новых записей, оставить новые
 
-    if not goS and complicatedNamePart: # при silentMode complicatedNamePart is None
+    if not goS: # and complicatedNamePart: # при silentMode complicatedNamePart is None
         temporal_exportPath = folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"
         print(f"Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию '{temporal_exportPath}'")
         # print('temporal_exportPath:', temporal_exportPath) # для отладки
@@ -222,7 +222,7 @@ def newsFeedSearch(access_token=None,
 
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API ВК
-    complicatedNamePart = None # для silentMode
+    # complicatedNamePart = None # для silentMode
     countTarget = 999999 # на случай, если сигнал прерывания поступит до newsfeedSearchCore
     fileFormatChoice = 'xlsx' # базовый формат сохраняемых файлов; формат json добавляется опционально через наличие columnsToJSON
     folder_file = None
@@ -253,82 +253,83 @@ def newsFeedSearch(access_token=None,
 
 # Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, прерванном пользователем или ошибкой
     # Поиск данных
-    if not silentMode: # если основная функция этого модуля явлется частью другой функции, поиск данных не требуется -- они будут переданы
-        print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
-        for name_in_folderCurrent in nameS_in_folderCurrent:
-            if name_in_folderCurrent.endswith('Temporal') and 'VK' in name_in_folderCurrent:
-                folder_in_folderCurrent = folder + name_in_folderCurrent # имя файла достраивается до абсолютного пути
-                if len(os.listdir(folder_in_folderCurrent)) < 9: print(
+    # if not silentMode: # если основная функция этого модуля явлется частью другой функции, поиск данных не требуется -- они будут переданы
+    print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
+    for name_in_folderCurrent in nameS_in_folderCurrent:
+        if name_in_folderCurrent.endswith('Temporal') and 'VK' in name_in_folderCurrent:
+
+            folder_in_folderCurrent = folder + name_in_folderCurrent # имя файла достраивается до абсолютного пути
+            if len(os.listdir(folder_in_folderCurrent)) < 9: print(
 f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 9-10 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 9 или 10 файлов
 
-                else:
-                    countTargetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'countTarget.txt', int)
+            else:
+                countTargetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'countTarget.txt', int)
 
-                    with open(f'{folder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file:
-                        fieldsTemporal = json.load(file)
+                with open(f'{folder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file:
+                    fieldsTemporal = json.load(file)
 
-                    methodTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'method.txt', str)
+                methodTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'method.txt', str)
 
-                    with open(f'{folder_in_folderCurrent}{slash}params_extra.json', 'r', encoding='utf-8') as file:
-                        params_extraTemporal = json.load(file)
+                with open(f'{folder_in_folderCurrent}{slash}params_extra.json', 'r', encoding='utf-8') as file:
+                    params_extraTemporal = json.load(file)
 
-                    try: qTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'q.txt', str)
-                    except Exception as excptn:
-                        print('Exception в searchByText') # для отладки
-                        print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
-                        print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
-                        qTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'q.txt', str)
+                try: qTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'q.txt', str)
+                except Exception as excptn:
+                    print('Exception в searchByText') # для отладки
+                    print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
+                    print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
+                    qTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'q.txt', str)
 
-                    stageTargetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'stageTarget.txt', int)
-                    yearTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'year.txt', int)
+                stageTargetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'stageTarget.txt', int)
+                yearTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'year.txt', int)
 
-                    yearsRangeTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'yearsRange.txt', str)
-                    if yearsRangeTemporal == '': yearsRangeTemporal = None # для единообразия
+                yearsRangeTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'yearsRange.txt', str)
+                if yearsRangeTemporal == '': yearsRangeTemporal = None # для единообразия
 
-                    print(f"Нашёл директорию '{folder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
-                          , '\n- скрипт остановился на методе', methodTemporal)
+                print(f"Нашёл директорию '{folder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
+                      , '\n- скрипт остановился на методе', methodTemporal)
 
-                    if yearTemporal < int(momentCurrent.strftime('%Y')): print('- и на годе (при сегментировани по годам)', yearTemporal)
-                    print(f"- пользователь сформулировал запрос-фильтр как '{qTemporal}'" if qTemporal else '- пользователь НЕ сформулировал запрос-фильтр')
-                    print(f'- пользователь ограничил временнОй диапазон границами {yearsRangeTemporal}' if yearsRangeTemporal else '- пользователь НЕ ограничил временнОй диапазон')
-                    print(f"- пользователь подал дополнительные настройки посредством словаря params: '{params_extraTemporal}'" if params_extraTemporal else '')
+                if yearTemporal < int(momentCurrent.strftime('%Y')): print('- и на годе (при сегментировани по годам)', yearTemporal)
+                print(f"- пользователь сформулировал запрос-фильтр как '{qTemporal}'" if qTemporal else '- пользователь НЕ сформулировал запрос-фильтр')
+                print(f'- пользователь ограничил временнОй диапазон границами {yearsRangeTemporal}' if yearsRangeTemporal else '- пользователь НЕ ограничил временнОй диапазон')
+                print(f"- пользователь подал дополнительные настройки посредством словаря params: '{params_extraTemporal}'" if params_extraTemporal else '')
 
-                    print(
+                print(
 f'''В дальнейшей работе могу опираться на эти промежуточные результаты. При этом случае ПРОТИВОРЕЧИЯ между найденными в директории '{folder_in_folderCurrent}'и поданными Вами при текущем запуске аргументами будут применены ПЕРВЫЕ.
 --- Если следует опираться на промежуточные результаты, нажмите Enter;  
 --- Если эти промежуточные результаты уже не актуальны и хотите, чтобы я удалил их, введите 'R' и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter''')
 
-                    decision = input()
-                    if decision.lower() == 'r':
-                        shutil.rmtree(folder_in_folderCurrent, ignore_errors=True)
+                decision = input()
+                if decision.lower() == 'r':
+                    shutil.rmtree(folder_in_folderCurrent, ignore_errors=True)
 
-                        print(
+                    print(
 f"Директорию '{folder_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-                    elif decision: print(
+                elif decision: print(
 f"Директорию '{folder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-                    elif not decision: # Temporal-значения обретают статус постоянных и будут использоваться при исполнении скрипта
-                        countTarget = countTargetTemporal
-                        fields = fieldsTemporal
-                        method = methodTemporal
-                        params_extra = params_extraTemporal
-                        q = qTemporal
-                        stageTarget = stageTargetTemporal
-                        year = yearTemporal
-                        yearsRange = yearsRangeTemporal
+                elif not decision: # Temporal-значения обретают статус постоянных и будут использоваться при исполнении скрипта
+                    countTarget = countTargetTemporal
+                    fields = fieldsTemporal
+                    method = methodTemporal
+                    params_extra = params_extraTemporal
+                    q = qTemporal
+                    stageTarget = stageTargetTemporal
+                    year = yearTemporal
+                    yearsRange = yearsRangeTemporal
 
-                        temporalNameS = os.listdir(folder_in_folderCurrent)
-                        folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
-                        if not goC: break # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
+                    temporalNameS = os.listdir(folder_in_folderCurrent)
+                    folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
+                    if not goC: break # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
 
-        if not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
-            print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
+    if not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
+        print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
 
 # Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
     # if not silentMode продолжается
-            folder, folder_file, itemS = scrapingTools.call_for_user_items(f'в котором есть ранее выгруженные из ВК методом {method} данные')
+        if not silentMode: folder, folder_file, itemS = scrapingTools.call_for_user_items(f'в котором есть ранее выгруженные из ВК методом {method} данные')
                 # теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
 
     if not params and not access_token and not count and not end_time and not fields and not latitude and not longitude and not q and not start_time and not returnDfs:
@@ -415,6 +416,7 @@ f'''    Скрипт нацелен на выгрузку постов и их �
 
 # 2.0.2 Пользовательские настройки запроса к API ВК
     if not silentMode: # если основная функция этого модуля явлется частью другой функции, поиск данных не требуется -- они будут переданы
+    # <Диалог с пользователем>
         if not q: # если пользователь не подал этот аргумент в рамках experiencedMode
             print(
 '''Скрипт умеет искать посты открытых аккаунтов по ТЕКСТОВОМУ ЗАПРОСУ-ФИЛЬТРУ
@@ -472,17 +474,16 @@ f'''Если требуется конкретный временнОй диап
         if not end_time and yearMaxByUser: end_time = int(datetime(yearMaxByUser, 12, 31).timestamp())
 
         if yearsRange: print('') # чтобы был отступ, если пользователь подал этот аргумент
+    # </Диалог с пользователем>
 
     # Сложная часть имени будущих директорий и файлов
-        complicatedNamePart = '_VK'
-        if q:
-            q_safe = re.sub(r'[\\/:*?"<>|]', '_', q)
-            complicatedNamePart += '_' + q_safe if len(q_safe) < 50 else '_' + q_safe[:50]
+    complicatedNamePart = '_VK'
+    if q:
+        q_safe = re.sub(r'[\\/:*?"<>|]', '_', q)
+        complicatedNamePart += '_' + q_safe if len(q_safe) < 50 else '_' + q_safe[:50]
 
-        complicatedNamePart += '_' + str(yearMinByUser) + '-' + str(yearMaxByUser) if yearMinByUser or yearMaxByUser else ''
-        # print('complicatedNamePart', complicatedNamePart)
-
-    # Завершение if not silentMode
+    complicatedNamePart += '_' + str(yearMinByUser) + '-' + str(yearMaxByUser) if yearMinByUser or yearMaxByUser else ''
+    # print('complicatedNamePart', complicatedNamePart)
 
 # 2.1 Первичный сбор контента методом newsFeed.search
     iteration = 1 # номер итерации применения текущего метода
