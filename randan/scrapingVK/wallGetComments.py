@@ -54,7 +54,7 @@ f'Пакет {module} НЕ прединсталлирован, но он тре�
 def dfsProcessor(complicatedNamePart,
                  coLabFolder,
                  df_additional,
-                 dfIn,
+                 df_in,
                  fields,
                  fileFormatChoice,
                  goS, # единственная из функций, принимающая этот аргумент
@@ -66,7 +66,7 @@ def dfsProcessor(complicatedNamePart,
                  post_id,
                  slash):
 
-    df = pandas.concat([dfIn, df_additional])
+    df = pandas.concat([df_in, df_additional]) # порядок аргументов гарантирует, что в дальнейшем при keep='last' выживают именно новые записи
 
     columnsForCheck = []
     for column in df.columns: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
