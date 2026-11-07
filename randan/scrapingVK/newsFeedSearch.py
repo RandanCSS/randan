@@ -249,7 +249,7 @@ def newsFeedSearch(access_token=None,
         # с этого года возможно сегментирование по годам вглубь веков (пока выдача не пустая)
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
-    nameS_in_folderCurrent = os.listdir()
+    nameS_in_folderCurrent = os.listdir(folder)
     # print('nameS_in_folderCurrent:', nameS_in_folderCurrent) # для отладки
     api_keyS = scrapingTools.credentialsProcessor(access_token, 'VK', folder, 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', nameS_in_folderCurrent, silentMode)
 
@@ -330,8 +330,8 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
 
 # Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
     # if not silentMode продолжается
-        folder, folder_file, itemS = scrapingTools.call_for_user_items(f'в котором есть ранее выгруженные из ВК методом {method} данные')
-            # теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
+            folder, folder_file, itemS = scrapingTools.call_for_user_items(f'в котором есть ранее выгруженные из ВК методом {method} данные')
+                # теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
 
     if not params and not access_token and not count and not end_time and not fields and not latitude and not longitude and not q and not start_time and not returnDfs:
         # print('Пользователь не подал аргументы') # для отладки
