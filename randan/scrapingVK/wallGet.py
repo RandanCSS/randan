@@ -22,11 +22,10 @@ while True:
         from IPython.display import display
         from randan.scrapingVK import scrapingVK_tools # модуль для упрощения скрапинга VK
 
-        from randan.tools import coLabAdaptor, df2file, files2df, scrapingTools # модули для
+        from randan.tools import coLabAdaptor, df2file, scrapingTools # модули для
             # (а) адаптации текущего скрипта к файловой системе CoLab
             # (б) сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
-            # (в) оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
-            # (г) упрощения скрапинга
+            # (в) упрощения скрапинга
 
         import json, os, pandas, requests, shutil, time, warnings
         break # выход из цикла while True
