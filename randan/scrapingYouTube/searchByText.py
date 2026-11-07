@@ -1053,7 +1053,7 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
             year = yearMaxByUser
 
         if yearMinByUser and not yearMaxByUser: yearMaxByUser = int(momentCurrent.strftime('%Y')) # в случае отсутствия пользовательской верхней временнОй границы при наличии нижней
-        elif not yearMinByUser and yearMaxByUser: yearMinByUser = 1970 # в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
+        elif not yearMinByUser and yearMaxByUser: yearMinByUser = 1970 # нижняя граница Unix-эпохи в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
 
         # print('yearMinByUser', yearMinByUser) # для отладки
         # print('yearMaxByUser', yearMaxByUser) # для отладки
@@ -1092,7 +1092,7 @@ f'''В скрипте используются следующие аргумен
             if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
             print('') # для отступа
 
-            if stage < stageTarget: # eсли в Temporal ЕСТЬ файл stage.txt с указанием пропустить этап
+            if stage < stageTarget: # если в Temporal ЕСТЬ файл stage.txt с указанием пропустить этап
                 print(f"Этап {stage} пропускаю согласно настройкам из файла stage.txt из директории '{folderWithTemporal}'\n")
 
             else:
