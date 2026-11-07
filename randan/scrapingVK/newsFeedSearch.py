@@ -112,13 +112,14 @@ def dfsProcessor(complicatedNamePart,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла  
                              momentCurrent=momentCurrent)
 
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            print(
+        if not silentMode:
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                print(
 '''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
 Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
 
-            sys.exit()
+                sys.exit()
     return df
 
 # .. метода search из API ВК, помогающая работе с ключами
@@ -224,7 +225,7 @@ def newsFeedSearch(access_token=None,
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API ВК
     complicatedNamePart = None # для silentMode
-    countTarget = 0 # на случай, если сигнал прерывания поступит до newsfeedSearchCore
+    countTarget = 999999 # на случай, если сигнал прерывания поступит до newsfeedSearchCore
     fileFormatChoice = 'xlsx' # базовый формат сохраняемых файлов; формат json добавляется опционально через наличие columnsToJSON
     folder_file = None
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
@@ -562,6 +563,8 @@ f'''Если требуется конкретный временнОй диап
                                  countTarget=countTarget,
                                  year=year,
                                  yearsRange=yearsRange)
+
+            if not goS and silentMode: return itemS # завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
         # </Обработка результата первого обращения к API>
 
             if not silentMode: print('  Проход по всем следующим страницам с выдачей          ')
@@ -604,6 +607,7 @@ f'''Если требуется конкретный временнОй диап
                                      year=year,
                                      yearsRange=yearsRange)
 
+                if not goS and silentMode: return itemS # завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
             print('  Искомых постов', countTarget, ', а выгруженных БЕЗ сегментирования по годам:', len(itemS))
 
 # 2.1.1 Этап сегментирования по годам (stage = 1) # !!! можно сделать динамическое определение периода, который наиболее приближает размер допустимой выдачи (1000) к бенчмарку
@@ -675,6 +679,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                          year=year,
                                          yearsRange=yearsRange)
 
+                    if not goS and silentMode: return itemS # завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
                     # print('len(itemS):', len(itemS)) # для отладки
 
                     # print('goS 2:', goS) # для отладки
@@ -724,6 +729,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                                  year=year,
                                                  yearsRange=yearsRange)
 
+                            if not goS and silentMode: return itemS # завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
                             # print('len(itemS):', len(itemS)) # для отладки
                             time.sleep(pause)
                     if not silentMode: print('  Искомых постов', countTarget, ', а выгруженных после добавления контента за', year, 'год:', len(itemS), '                    ')
@@ -772,6 +778,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                                  year=year,
                                                  yearsRange=yearsRange)
 
+                            if not goS and silentMode: return itemS # завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
                             # print('len(itemS):', len(itemS)) # для отладки
 
                             if not silentMode: print('  Проход по всем следующим страницам с выдачей', '               ', end='\r')
@@ -814,6 +821,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                                      year=year,
                                                      yearsRange=yearsRange)
 
+                                if not goS and silentMode: return itemS # завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
                                 # print('len(itemS_additional):', len(itemS_additional)) # для отладки
                                 time.sleep(pause)
                     if not silentMode: print('  Искомых постов', countTarget, ', а выгруженных после добавления контента за', year, 'год:', len(itemS), '                    ')
@@ -901,6 +909,7 @@ JSONS.extend(cellContent)
                      yearsRange=yearsRange)
 
         if returnDfs: return itemS
+        elif silentMode: return itemS
         else:
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore')
