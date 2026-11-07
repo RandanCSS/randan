@@ -288,13 +288,13 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
                         folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
                         if not goC: break # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
 
-    if not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
-        print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
+        if not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
+            print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
 
 # Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
     # if not silentMode продолжается
-        folder, folder_file, itemS = scrapingTools.call_for_user_items(f'в котором есть ранее выгруженные из ВК методом {method} данные')
-            # теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
+            folder, folder_file, itemS = scrapingTools.call_for_user_items(f'в котором есть ранее выгруженные из ВК методом {method} данные')
+                # теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
 
     if not params and not access_token and not count and not domain and not fields and not filter and not offset and not returnDfs:
         # print('Пользователь не подал аргументы') # для отладки
