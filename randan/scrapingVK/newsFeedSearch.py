@@ -30,7 +30,7 @@ while True:
             # (д) упрощения скрапинга
             # (е) предобработки переменных номинального, порядкового, интервального и более высокого типа шкалы
 
-        import json, numpy, os, pandas, re, shutil, time, requests, warnings
+        import json, numpy, os, pandas, re, shutil, time, traceback, requests, warnings
         break # выход из цикла while True
 
     except (ImportError, ModuleNotFoundError) as excptn_1:
@@ -477,7 +477,10 @@ f'''Если требуется конкретный временнОй диап
 
     # Сложная часть имени будущих директорий и файлов
         complicatedNamePart = '_VK'
-        if q: complicatedNamePart += '_' + q if len(q) < 50 else '_' + q[:50]
+        if q:
+            q_safe = re.sub(r'[\\/:*?"<>|]', '_', q)
+            complicatedNamePart += '_' + q_safe if len(q_safe) < 50 else '_' + q_safe[:50]
+
         complicatedNamePart += '_' + str(yearMinByUser) + '-' + str(yearMaxByUser) if yearMinByUser or yearMaxByUser else ''
         # print('complicatedNamePart', complicatedNamePart)
 
@@ -644,7 +647,7 @@ f'''Метод {method} выдаёт ограниченное количеств
 
                     itemS_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
                                                                                                       count,
-                                                                                                      end_time=int(datetime(year, int(calendarColumnS[-1]), int(calendar[calendarColumnS[-1]].dropna().index[-1])).timestamp()),
+                                                                                                      end_time=int(datetime(year, int(calendarColumnS[-1]), int(calendar[calendarColumnS[-1]].dropna().index[-1]), 23, 59, 59).timestamp()),
                                                                                                          # чтобы исключить проход по будущим месяцам текущего года
                                                                                                     
                                                                                                       fields=fields,
@@ -694,7 +697,7 @@ f'''Метод {method} выдаёт ограниченное количеств
 
                             itemS_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
                                                                                                              count,
-                                                                                                             end_time=int(datetime(year, int(calendarColumnS[-1]), int(calendar[calendarColumnS[-1]].dropna().index[-1])).timestamp()),
+                                                                                                             end_time=int(datetime(year, int(calendarColumnS[-1]), int(calendar[calendarColumnS[-1]].dropna().index[-1]), 23, 59, 59).timestamp()),
                                                                                                                 # чтобы исключить проход по будущим месяцам текущего года
                                                                                                             
                                                                                                              fields=fields,
@@ -745,7 +748,7 @@ f'''Метод {method} выдаёт ограниченное количеств
 
                             itemS_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
                                                                                                              count,
-                                                                                                             end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
+                                                                                                             end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1]), 23, 59, 59).timestamp()),
                                                                                                              fields=fields,
                                                                                                              iteration=iteration,
                                                                                                              keyOrder=keyOrder,
@@ -788,7 +791,7 @@ f'''Метод {method} выдаёт ограниченное количеств
 
                                 itemS_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
                                                                                                                  count,
-                                                                                                                 end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1])).timestamp()),
+                                                                                                                 end_time=int(datetime(year, int(month), int(calendar[month].dropna().index[-1]), 23, 59, 59).timestamp()),
                                                                                                                  fields=fields,
                                                                                                                  iteration=iteration,
                                                                                                                  keyOrder=keyOrder,
