@@ -66,7 +66,7 @@ def dfsProcessor(complicatedNamePart,
 
     if df_additional is None: df_additional = pandas.DataFrame()
     # if df_in is None: df_in = pandas.DataFrame()
-    df = pandas.concat([df_in, df_additional])
+    df = pandas.concat([df_in, df_additional]) # порядок аргументов гарантирует, что в дальнейшем при keep='last' выживают именно новые записи
 
     columnsForCheck = []
     for column in df.columns: # для выдач, НЕ содержащих столбец id, проверка дублирующихся  строк возможна по столбцам, содержащим в имени id
