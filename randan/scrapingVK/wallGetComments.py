@@ -293,8 +293,8 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
 
 # Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
     # if not silentMode продолжается
-        folder, folder_file, itemS = scrapingTools.call_for_user_items(f'в котором есть ранее выгруженные из ВК методом {method} данные')
-            # теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
+            folder, folder_file, itemS = scrapingTools.call_for_user_items(f'в котором есть ранее выгруженные из ВК методом {method} данные')
+                # теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
 
     if not params and not access_token and not count and not fields and not offset and not owner_id and not post_id and not returnDfs:
         # print('Пользователь не подал аргументы') # для отладки
