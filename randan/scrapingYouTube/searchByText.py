@@ -1067,7 +1067,10 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
     complicatedNamePart = '_YouTube'
     complicatedNamePart += '' if not contentType else '_' + contentType
     complicatedNamePart += '' if not channelIdForSearch else '_channelId_' + channelIdForSearch
-    if q: complicatedNamePart += '_' + q if len(q) < 50 else '_' + q[:50]
+    if q:
+        q_safe = re.sub(r'[\\/:*?"<>|]', '_', q)
+        complicatedNamePart += '_' + q_safe if len(q_safe) < 50 else '_' + q_safe[:50]
+
     complicatedNamePart += '' if not yearMinByUser and not yearMaxByUser else '_' + str(yearMinByUser) + '-' + str(yearMaxByUser)
     # print('complicatedNamePart', complicatedNamePart)
 
