@@ -289,7 +289,7 @@ def dfsProcessor(channelIdForSearch,
 
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     if len(df_additional) > 0 or len(df_in) > 0: # оба df пусты -- в случае применения функции dfsProcessor при завершении исполнения скрипта пользователем
-        df = pandas.concat([df_in, df_additional])
+        df = pandas.concat([df_in, df_additional]) # порядок аргументов гарантирует, что в дальнейшем при keep='last' выживают именно новые записи
         columnsForCheck = []
         for column in df.columns: # выдача многих методов содержит столбец id, он оптимален для проверки дублирующихся строк
             if 'id' == column: columnsForCheck.append(column)
