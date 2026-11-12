@@ -41,7 +41,6 @@ def calendarWithinYear(year):
 
     Parameters
     ----------
-    Аргументы этой функции аналогичны аргументам метода https://dev.vk.com/ru/method/newsfeed.search
     year : int
     """
     calendar = DataFrame()
