@@ -22,11 +22,12 @@ while True:
         from IPython.display import display
         from randan.scrapingVK import scrapingVK_tools # модуль для упрощения скрапинга VK
 
-        from randan.tools import calendarWithinYear, coLabAdaptor, df2file, scrapingTools # модули для
+        from randan.tools import calendarWithinYear, coLabAdaptor, df2file, os_wrapper, scrapingTools # модули для
             # (а) работы с календарём конкретного года
             # (б) адаптации текущего скрипта к файловой системе CoLab
             # (в) сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
-            # (г) упрощения скрапинга
+            # (г) упрощения работы с OS
+            # (д) упрощения скрапинга
 
         import json, numpy, os, pandas, re, shutil, time, traceback, requests, warnings
         break # выход из цикла while True
@@ -223,7 +224,6 @@ def newsFeedSearch(access_token=None,
 
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API ВК
-    # complicatedNamePart = None # для silentMode
     countTarget = 999999 # на случай, если сигнал прерывания поступит до newsfeedSearchCore
     fileFormatChoice = 'xlsx' # базовый формат сохраняемых файлов; формат json добавляется опционально через наличие columnsToJSON
     folder_file = None
@@ -246,6 +246,8 @@ def newsFeedSearch(access_token=None,
     print('\nТекущий момент:', momentCurrent.strftime('%Y%m%d_%H%M'), '-- он будет использован для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
     year = int(momentCurrent.strftime('%Y')) # в случае отсутствия пользовательского временнОго диапазона
         # с этого года возможно сегментирование по годам вглубь веков (пока выдача не пустая)
+
+    if silentMode: decision = '' # для веток, в которых silentMode b пользователя " не спрашивают"
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     api_keyS = scrapingTools.credentialsProcessor(access_token, 'VK', folder, 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', os.listdir(folder), silentMode)
@@ -305,7 +307,12 @@ f'''В дальнейшей работе могу опираться на эти
 --- Если эти промежуточные результаты уже не актуальны и хотите, чтобы я удалил их, введите 'R' и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter''')
 
-                decision = input()
+                try: decision = input()
+                except EOFError:
+                    print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                    decision = ''
+                    silentMode = True
+
             if not silentMode and decision.lower() == 'r':
                 shutil.rmtree(folder_subfolder_in_folderCurrent, ignore_errors=True)
 
@@ -547,7 +554,7 @@ f'''Если требуется конкретный временнОй диап
 
                         if silentMode or decision.lower() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True) # при silentMode использованная Temporal-директория удаляется
 
-                    if returnDfs: return itemS
+                    if returnDfs or silentMode: return itemS
                     else:
                         with warnings.catch_warnings():
                             warnings.simplefilter('ignore')
