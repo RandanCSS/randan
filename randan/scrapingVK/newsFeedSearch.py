@@ -262,7 +262,7 @@ def newsFeedSearch(access_token=None,
             e.is_dir(follow_symlinks=False)                           # тип проверяем последним: это уже сискол (кешируется в DirEntry)
         ))
 
-    for folder_subfolder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent:
+    for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent:
         if len(os.listdir(folder_subfolder_in_folderCurrent)) < 9:
             if not silentMode: print(
 f"Директория '{folder_subfolder_in_folderCurrent}' похожая на искомую Temporal , но в ней не 9-10 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 9 или 10 файлов
@@ -539,7 +539,7 @@ f'''Если требуется конкретный временнОй диап
 
         # <Обработка результата первого обращения к API>
             # print('goS 1:', goS) # для отладки
-            if 'total_count' in response.keys(): при ошибке в newsfeedSearchCore response является словарём ошибки; тогда эта ветка пропускается и исполняется dfsProcessor ниже, который сохраняет Temporal-снимок и завершает исполнение скрипта
+            if 'total_count' in response.keys(): # при ошибке в newsfeedSearchCore response является словарём ошибки; тогда эта ветка пропускается и исполняется dfsProcessor ниже, который сохраняет Temporal-снимок и завершает исполнение скрипта
                 countTarget = response['total_count']
                 if len(itemS_additional) == 0 or countTarget == 0: # ожидаемое или реальное количество постов равно нулю
                     if not silentMode:
@@ -918,8 +918,7 @@ JSONS.extend(cellContent)
 
                 sys.exit()
 
-    except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
-
+    except Exception: # обработать прерывания по воле пользователя или ошибок 
         dfsProcessor(complicatedNamePart,
                      countTarget=countTarget,
                      df_additional=itemS_additional,
