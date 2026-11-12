@@ -254,7 +254,6 @@ def newsFeedSearch(access_token=None,
 
 # Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, прерванном пользователем или ошибкой
     # Поиск данных
-    # if not silentMode: # если основная функция этого модуля явлется частью другой функции, поиск данных не требуется -- они будут переданы
     print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
     folderS_subfolderS_in_folderCurrent = os_wrapper.list_by_freshness( # список директорий и субдиректорий внутри folder , удовлетворяющих условиям и упорядоченных по "свежести"
         folder,
@@ -319,7 +318,7 @@ f'''В дальнейшей работе могу опираться на эти
                 print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-            elif not silentMode and decision.lower() != 'r': print(
+            elif not silentMode and decision and decision.lower() != 'r': print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
             elif silentMode and not decision: # при silentMode Temporal-значения результаты принудительно берутся из свежей Temporal-директории и обретают статус постоянных и будут использоваться при исполнении скрипта
@@ -333,6 +332,7 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
                 stageTarget = stageTargetTemporal
                 year = yearTemporal
                 yearsRange = yearsRangeTemporal
+                yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
 
                 temporalNameS = os.listdir(folder_subfolder_in_folderCurrent)
                 folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
