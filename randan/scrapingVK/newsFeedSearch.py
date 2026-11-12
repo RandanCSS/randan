@@ -29,7 +29,7 @@ while True:
             # (г) упрощения работы с OS
             # (д) упрощения скрапинга
 
-        import json, numpy, os, pandas, re, shutil, time, traceback, requests, warnings
+        import json, os, pandas, re, shutil, time, traceback, requests, warnings
         break # выход из цикла while True
 
     except (ImportError, ModuleNotFoundError) as excptn_1:
@@ -217,7 +217,7 @@ def newsFeedSearch(access_token=None,
           params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/newsfeed.search , чтобы не подавать эти аргументы по отдельности
                q : str
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
-      silentMode : bool -- в случае True в функции отключаются CLI-диалоги и экспорт результата исполнения функции для долговременного хранения 
+      silentMode : bool -- в случае True в функции отключаются CLI-диалоги и экспорт результата исполнения функции для долговременного хранения; при returnDfs=False и silentMode=False функция завершает процесс через sys.exit()
       start_time : int -- формат Unix
      version_api : str
     '''
@@ -321,7 +321,7 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' удалил, пр�
             elif not silentMode and decision and decision.lower() != 'r': print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-            elif silentMode and not decision: # при silentMode Temporal-значения результаты принудительно берутся из свежей Temporal-директории и обретают статус постоянных и будут использоваться при исполнении скрипта
+            elif silentMode or not decision: # при silentMode Temporal-значения результаты принудительно берутся из свежей Temporal-директории и обретают статус постоянных и будут использоваться при исполнении скрипта
                 # ^ они обретают статус постоянных и при пустом decision
 
                 countTarget = countTargetTemporal
@@ -339,7 +339,7 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
                 if not goC: break # выход из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent
 
     if not silentMode and not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
-        print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
+        print('Не найдены (потому что их нет или они сознательно пропущены пользователем) подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
 
 # Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
     if not silentMode: folder, folder_file, itemS = scrapingTools.call_for_user_items(f'в котором есть ранее выгруженные из ВК методом {method} данные')
@@ -375,8 +375,8 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
             # print('q:', q) # для отладки
 
             start_time = scrapingTools.argument_key_comparison(start_time, 'start_time', params)
-            if start_time is not None:
-                if not isinstance(start_time, int): start_time = int(start_time)
+            # if start_time is not None: # эта обработка вынесена наружу ветки if params
+            #     if not isinstance(start_time, int): start_time = int(start_time)
             # print('start_time:', start_time) # для отладки
 
             if not params_extra: # если params_extra НЕ извлечены из Temporal, то попробовать извлечь их из params
@@ -425,7 +425,12 @@ f'''    Скрипт нацелен на выгрузку постов и их �
 Для корректного исполнения скрипта просто следуйте инструкциям в возникающих по ходу его исполнения сообщениях. Скрипт исполняется и под MC OS, и под Windows.
 Преимущества скрипта перед выгрузкой контента из ВК вручную: гораздо быстрее, гораздо большее количество контента, его организация в формате таблицы Excel. Преимущества скрипта перед выгрузкой контента через непосредственно API ВК: гораздо быстрее, гораздо большее количество контента, не требуется тщательно изучать обширную и при этом неполную документацию методов API ВК''')
 
-        if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
+        if not experiencedMode:
+            try: input('--- После прочтения этой инструкции нажмите Enter')
+            except EOFError:
+                print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                decision = ''
+                silentMode = True
 
 # 2.0.2 Пользовательские настройки запроса к API ВК
     if not silentMode: # если основная функция этого модуля явлется частью другой функции, запрос данных не требуется -- они будут переданы
