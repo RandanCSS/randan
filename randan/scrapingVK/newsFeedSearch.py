@@ -52,6 +52,7 @@ f'Пакет {module} НЕ прединсталлирован, но он тре�
 # 1. Вспомогательные функции..
 # .. обработки выдачи любого из методов, помогающая работе с ключами
 def dfsProcessor(complicatedNamePart,
+                 countTarget,
                  df_additional,
                  df_in,
                  fields,
@@ -62,9 +63,9 @@ def dfsProcessor(complicatedNamePart,
                  momentCurrent,
                  params_extra,
                  q,
+                 silentMode,
                  slash,
                  stage,
-                 countTarget,
                  year,
                  yearsRange):
 
@@ -557,6 +558,7 @@ f'''Если требуется конкретный временнОй диап
                             sys.exit()
 
             itemS = dfsProcessor(complicatedNamePart=complicatedNamePart,
+                                 countTarget=countTarget,
                                  df_additional=itemS_additional,
                                  df_in=itemS,
                                  fields=fields,
@@ -567,9 +569,9 @@ f'''Если требуется конкретный временнОй диап
                                  momentCurrent=momentCurrent,
                                  params_extra=params_extra,
                                  q=q,
+                                 silentMode=silentMode,
                                  slash=slash,
                                  stage=stage,
-                                 countTarget=countTarget,
                                  year=year,
                                  yearsRange=yearsRange)
 
@@ -600,6 +602,7 @@ f'''Если требуется конкретный временнОй диап
                 # print("    response['next_from'] после newsfeedSearchCore :", response['next_from']) # для отладки
 
                 itemS = dfsProcessor(complicatedNamePart=complicatedNamePart,
+                                     countTarget=countTarget,
                                      df_additional=itemS_additional,
                                      df_in=itemS,
                                      fields=fields,
@@ -610,9 +613,9 @@ f'''Если требуется конкретный временнОй диап
                                      momentCurrent=momentCurrent,
                                      params_extra=params_extra,
                                      q=q,
+                                     silentMode=silentMode,
                                      slash=slash,
                                      stage=stage,
-                                     countTarget=countTarget,
                                      year=year,
                                      yearsRange=yearsRange)
 
@@ -672,6 +675,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                     # display(itemS_additional.sort_values('date')['date'].drop_duplicates()) # для отладки
 
                     itemS = dfsProcessor(complicatedNamePart,
+                                         countTarget=countTarget,
                                          df_additional=itemS_additional,
                                          df_in=itemS,
                                          fields=fields,
@@ -682,9 +686,9 @@ f'''Метод {method} выдаёт ограниченное количеств
                                          momentCurrent=momentCurrent,
                                          params_extra=params_extra,
                                          q=q,
+                                         silentMode=silentMode,
                                          slash=slash,
                                          stage=stage,
-                                         countTarget=countTarget,
                                          year=year,
                                          yearsRange=yearsRange)
 
@@ -722,6 +726,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                             # display(itemS_additional.sort_values('date')['date'].drop_duplicates()) # для отладки
 
                             itemS = dfsProcessor(complicatedNamePart,
+                                                 countTarget=countTarget,
                                                  df_additional=itemS_additional,
                                                  df_in=itemS,
                                                  fields=fields,
@@ -732,9 +737,9 @@ f'''Метод {method} выдаёт ограниченное количеств
                                                  momentCurrent=momentCurrent,
                                                  params_extra=params_extra,
                                                  q=q,
+                                                 silentMode=silentMode,
                                                  slash=slash,
                                                  stage=stage,
-                                                 countTarget=countTarget,
                                                  year=year,
                                                  yearsRange=yearsRange)
 
@@ -771,6 +776,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                             # display(itemS_additional.sort_values('date')['date'].drop_duplicates()) # для отладки
 
                             itemS = dfsProcessor(complicatedNamePart,
+                                                 countTarget=countTarget,
                                                  df_additional=itemS_additional,
                                                  df_in=itemS,
                                                  fields=fields,
@@ -781,9 +787,9 @@ f'''Метод {method} выдаёт ограниченное количеств
                                                  momentCurrent=momentCurrent,
                                                  params_extra=params_extra,
                                                  q=q,
+                                                 silentMode=silentMode,
                                                  slash=slash,
                                                  stage=stage,
-                                                 countTarget=countTarget,
                                                  year=year,
                                                  yearsRange=yearsRange)
 
@@ -814,6 +820,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                 # display(itemS_additional.sort_values('date')['date'].drop_duplicates()) # для отладки
 
                                 itemS = dfsProcessor(complicatedNamePart,
+                                                     countTarget=countTarget,
                                                      df_additional=itemS_additional,
                                                      df_in=itemS,
                                                      fields=fields,
@@ -824,9 +831,9 @@ f'''Метод {method} выдаёт ограниченное количеств
                                                      momentCurrent=momentCurrent,
                                                      params_extra=params_extra,
                                                      q=q,
+                                                     silentMode=silentMode,
                                                      slash=slash,
                                                      stage=stage,
-                                                     countTarget=countTarget,
                                                      year=year,
                                                      yearsRange=yearsRange)
 
@@ -902,6 +909,7 @@ JSONS.extend(cellContent)
     except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
 
         dfsProcessor(complicatedNamePart,
+                     countTarget=countTarget,
                      df_additional=itemS_additional,
                      df_in=itemS, # даже если itemS пуст, есть смысл сделать Temporal-снимок ради сохранения пользовательских аргументов
                      fields=fields,
@@ -912,9 +920,9 @@ JSONS.extend(cellContent)
                      momentCurrent=momentCurrent,
                      params_extra=params_extra,
                      q=q,
+                     silentMode=silentMode,
                      slash=slash,
                      stage=stage,
-                     countTarget=countTarget,
                      year=year,
                      yearsRange=yearsRange)
 
