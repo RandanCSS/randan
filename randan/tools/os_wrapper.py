@@ -2,8 +2,8 @@
 # coding: utf-8
 
 '''
-(EN) A module that simplifies and maximizes VK content extraction using the platform's official API method wall.get
-(RU) Модуль для упрощения выгрузки контента ВК методом его API wall.get и максимизации размера этой выгрузки
+(EN) A module for simplifying work with the OS
+(RU) Модуль для упрощения работы с OS
 '''
 
 # Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
