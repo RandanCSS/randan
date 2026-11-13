@@ -336,30 +336,30 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
     
                 params_extra = {key: value for key, value in params_extra.items() if value is not None}
 
-        if count:
-            if type(count) != int: count = int(count)
+    if count:
+        if type(count) != int: count = int(count)
 
-        else: count = 100
+    else: count = 100
 
-        # print('count:', count) # для отладки
+    # print('count:', count) # для отладки
 
-        if offset:
-            if type(offset) != int: offset = int(offset)
-        # print('offset:', offset) # для отладки
-            
-        if owner_id:
-            if type(owner_id) != str: owner_id = str(owner_id)
+    if offset:
+        if type(offset) != int: offset = int(offset)
+    # print('offset:', offset) # для отладки
+        
+    if owner_id:
+        if type(owner_id) != str: owner_id = str(owner_id)
 
-        else: owner_id = '80054288' # моя страница
+    else: owner_id = '80054288' # моя страница
 
-        # print('owner_id:', owner_id) # для отладки
+    # print('owner_id:', owner_id) # для отладки
 
-        if post_id:
-            if type(post_id) != str: post_id = str(post_id)
+    if post_id:
+        if type(post_id) != str: post_id = str(post_id)
 
-        else: post_id = '1' # первый пост на моей странице
+    else: post_id = '1' # первый пост на моей странице
 
-        # print('post_id:', post_id) # для отладки
+    # print('post_id:', post_id) # для отладки
 
 # На выходе аргументы + params_extra . Приоритет определён при первой подаче аргументов и словаря params, этот приоритет транслируется через в Temporal, следовательно, при извлечении из Temporal перепроверять приоритет не требуется
 
