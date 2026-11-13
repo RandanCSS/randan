@@ -172,7 +172,11 @@ def wallGetCore(api_keyS,
             iteration += 1
             if len(df_additional) > 0: df_additional = scrapingVK_tools.dfColumnsProcessor(df_additional, fields, response)            
             break # нет смысла в новых итерациях цикла while goC
-        else: goC, goS, keyOrder, pause, response, tryer = scrapingVK_tools.errorProcessor(api_keyS, keyOrder, pause, response, tryer)
+
+        else:
+            goC, goS, keyOrder, pause, response, tryer = scrapingVK_tools.errorProcessor(api_keyS, keyOrder, pause, response, tryer)
+            params['access_token'] = api_keyS[keyOrder]
+
     return df_additional, goS, iteration, keyOrder, pause
 
 # 2. Основная функция
