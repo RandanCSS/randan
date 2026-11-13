@@ -335,7 +335,6 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
                 params_extra = params_extraTemporal
                 q = qTemporal
                 stageTarget = stageTargetTemporal
-                year = yearTemporal
                 yearsRange = yearsRangeTemporal
                 if yearsRange: yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
 
@@ -496,9 +495,11 @@ f'''Если требуется конкретный временнОй диап
     if not start_time and yearMinByUser: start_time = int(datetime(yearMinByUser, 1, 1).timestamp()) # int(time.mktime(datetime(yearMinByUser, 1, 1).timetuple()))
     if not end_time and yearMaxByUser: end_time = int(datetime(yearMaxByUser, 12, 31).timestamp())
 
-    if yearMaxByUser: year = yearMaxByUser
+    if yearTemporal: year = yearTemporal
+    elif yearMaxByUser: year = yearMaxByUser
     else: year = int(momentCurrent.strftime('%Y')) # в случае отсутствия пользовательского временнОго диапазона
         # ^ с этого года возможно сегментирование по годам вглубь веков (пока выдача не пустая)
+
 
     if yearsRange: print('') # чтобы был отступ, если пользователь подал этот аргумент
 
