@@ -90,7 +90,7 @@ def dfsProcessor(complicatedNamePart,
         # print('temporal_exportPath:', temporal_exportPath) # для отладки
         if not os.path.exists(temporal_exportPath):
             os.makedirs(temporal_exportPath)
-            print(f"Директория '{temporal_exportPath}' создана")
+            if not silentMode: print(f"Директория '{temporal_exportPath}' создана")
         # else: print(f"Директория '{temporal_exportPath}' существует")
 
 # Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
@@ -651,7 +651,7 @@ f'''Если требуется конкретный временнОй диап
                                      yearsRange=yearsRange)
 
                 if not goS and silentMode: return itemS # завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
-            print('  Искомых постов', countTarget, ', а выгруженных БЕЗ сегментирования по годам:', len(itemS))
+            if not silentMode: print('  Искомых постов', countTarget, ', а выгруженных БЕЗ сегментирования по годам:', len(itemS))
 
 # 2.1.1 Этап сегментирования по годам (stage = 1) # !!! можно сделать динамическое определение периода, который наиболее приближает размер допустимой выдачи (1000) к бенчмарку
         stage = 1
@@ -954,8 +954,9 @@ for cellContent in Исходный_датафрейм[column].dropna():
                 sys.exit()
 
     except (Exception, KeyboardInterrupt) as excptn: # обработать прерывания по воле пользователя или ошибок 
-        print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
-        print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
+        if not silentMode:
+            print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
+            print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
         itemS = dfsProcessor(complicatedNamePart,
                              countTarget=countTarget,
