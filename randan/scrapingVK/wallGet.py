@@ -65,8 +65,6 @@ def dfsProcessor(complicatedNamePart,
                  params_extra,
                  silentMode):
 
-    if df_additional is None: df_additional = pandas.DataFrame()
-    # if df_in is None: df_in = pandas.DataFrame()
     df = pandas.concat([df_in, df_additional]) # порядок аргументов гарантирует, что в дальнейшем при keep='last' выживают именно новые записи
 
     columnsForCheck = []
@@ -74,14 +72,14 @@ def dfsProcessor(complicatedNamePart,
         if column == 'id' or column.endswith('_id') or column.startswith('id_'): columnsForCheck.append(column)
     # print('Столбцы, по которым проверяю дублирующиеся записи:', columnsForCheck) # для отладки
                  
-    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
-    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-
     if columnsForCheck: df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
         # при дублировании записей из itemS из Temporal и от пользователя и новых записей, оставить новые
 
-# Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
-    if not goS and complicatedNamePart: # при silentMode complicatedNamePart is None
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
+    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+
+# Сохранение следа исполнения скрипта, прерванного пользователем или натолкнувшегося на ошибку
+    if not goS:
         temporal_exportPath = folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"
         print(f"Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию '{temporal_exportPath}'")
         # print('temporal_exportPath:', temporal_exportPath) # для отладки
