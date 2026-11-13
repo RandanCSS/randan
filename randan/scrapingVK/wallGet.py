@@ -340,20 +340,20 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
     
                 params_extra = {key: value for key, value in params_extra.items() if value is not None}
 
-        if count:
-            if not isinstance(count, int): count = int(count)
-            count = min(abs(count), 100)
-        
-        else: count = 100
-        # print('count:', count) # для отладки
+    if count:
+        if not isinstance(count, int): count = int(count)
+        count = min(abs(count), 100)
+    
+    else: count = 100
+    # print('count:', count) # для отладки
 
-        if domain:
-            if not isinstance(domain, str): domain = str(domain)
-        # print('domain:', domain) # для отладки
+    if domain:
+        if not isinstance(domain, str): domain = str(domain)
+    # print('domain:', domain) # для отладки
 
-        if offset is not None:
-            if not isinstance(offset, int): offset = int(offset)
-        # print('offset:', offset) # для отладки
+    if offset is not None:
+        if not isinstance(offset, int): offset = int(offset)
+    # print('offset:', offset) # для отладки
 
 # На выходе аргументы + params_extra . Приоритет определён при первой подаче аргументов и словаря params, этот приоритет транслируется через в Temporal, следовательно, при извлечении из Temporal перепроверять приоритет не требуется
 
