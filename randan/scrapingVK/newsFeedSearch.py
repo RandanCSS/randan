@@ -80,7 +80,11 @@ def dfsProcessor(complicatedNamePart,
     if columnsForCheck: df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
         # при дублировании записей из itemS из Temporal и от пользователя и новых записей, оставить новые
 
-    if not goS: # and complicatedNamePart: # при silentMode complicatedNamePart is None
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
+    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
+
+# Сохранение следа исполнения скрипта, прерванного пользователем или натолкнувшегося на ошибку
+    if not goS:
         temporal_exportPath = folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"
         if not silentMode: print(f"Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию '{temporal_exportPath}'")
         # print('temporal_exportPath:', temporal_exportPath) # для отладки
