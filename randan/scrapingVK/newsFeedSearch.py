@@ -218,7 +218,7 @@ def newsFeedSearch(access_token=None,
           params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/newsfeed.search , чтобы не подавать эти аргументы по отдельности
                q : str
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
-      silentMode : bool -- в случае True в функции отключаются CLI-диалоги и экспорт результата исполнения функции для долговременного хранения; при returnDfs=False и silentMode=False функция завершает процесс через sys.exit()
+      silentMode : bool -- в случае True в функции отключаются CLI-диалоги; при returnDfs=False и silentMode=False функция завершает процесс через sys.exit()
       start_time : int -- формат Unix
      version_api : str
     '''
@@ -245,9 +245,6 @@ def newsFeedSearch(access_token=None,
 
     momentCurrent = datetime.now() # запрос текущего момента
     print('\nТекущий момент:', momentCurrent.strftime('%Y%m%d_%H%M'), '-- он будет использован для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
-    if yearMaxByUser: year = yearMaxByUser
-    else: year = int(momentCurrent.strftime('%Y')) # в случае отсутствия пользовательского временнОго диапазона
-        # ^ с этого года возможно сегментирование по годам вглубь веков (пока выдача не пустая)
 
     if silentMode: decision = '' # для веток, в которых silentMode b пользователя " не спрашивают"
 
@@ -445,7 +442,12 @@ f'''    Скрипт нацелен на выгрузку постов и их �
 '(возможно появление новых записей и новых столбцов, а также актуализация содержимого столбцов),',
 'поэтому, вероятно, следует ввести тот же запрос-фильтр, что и при формировании указанного Вами файла')
 
-            q = input()
+            try: q = input()
+            except EOFError:
+                print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                q = ''
+                silentMode = True
+
             if q == '': q = None # для единообразия
             else: print('')
 
@@ -457,7 +459,12 @@ f'''Если требуется конкретный временнОй диап
 --- Если НЕ требуется назначить временнОй диапазон на этапе выгрузки данных, нажмите Enter''')
 
             while True:
-                yearsRange = input()
+                try: yearsRange = input()
+                except EOFError:
+                    print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                    yearsRange = ''
+                    silentMode = True
+
                 if yearsRange:
                     yearsRange = re.sub(r'\s*', '', yearsRange)
                     yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
@@ -481,6 +488,10 @@ f'''Если требуется конкретный временнОй диап
     if not start_time and yearMinByUser: start_time = int(datetime(yearMinByUser, 1, 1).timestamp()) # int(time.mktime(datetime(yearMinByUser, 1, 1).timetuple()))
     if not end_time and yearMaxByUser: end_time = int(datetime(yearMaxByUser, 12, 31).timestamp())
 
+    if yearMaxByUser: year = yearMaxByUser
+    else: year = int(momentCurrent.strftime('%Y')) # в случае отсутствия пользовательского временнОго диапазона
+        # ^ с этого года возможно сегментирование по годам вглубь веков (пока выдача не пустая)
+
     if yearsRange: print('') # чтобы был отступ, если пользователь подал этот аргумент
 
     # Сложная часть имени будущих директорий и файлов
@@ -499,7 +510,7 @@ f'''Если требуется конкретный временнОй диап
     if not silentMode:
         print(f'В этой части функции используются следующие аргументы метода {method} API ВК: q, start_from, start_time, end_time, expand и другие аргументы, которые пользователь может подать через params')
         # print('experiencedMode:', experiencedMode) # для отладки
-        if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
+        if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter') # обработка случая неинтерактивныой среды уже есть выше
         print('') # для отступа
 
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
@@ -545,7 +556,11 @@ f'''Если требуется конкретный временнОй диап
 '''Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, можно удалить её во избежание путаницы при следующих запусках скрипта
 --- Если хотите их удалить, введите 'R' и нажмите Enter''')
 
-                            decision = input()
+                            try: decision = input()
+                            except EOFError:
+                                print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                                decision = ''
+                                silentMode = True
 
                         if silentMode or decision.lower() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True) # при silentMode использованная Temporal-директория удаляется
 
@@ -640,7 +655,11 @@ f'''Метод {method} выдаёт ограниченное количеств
 --- Если хотите для поиска дополнительных постов попробовать сегментирование по годам, просто нажмите Enter. Поиск может занять минуты и даже часы, но Вы СМОЖЕТЕ ПРЕРВАТЬ ИСПОЛНЕНИЕ СКРИПТА КНОПКОЙ и ВЫГРУЖЕННЫЕ ДАННЫЕ СОХРАНЯТСЯ
 --- Если НЕ хотите, нажмите пробел и затем Enter''')
 
-                decision = input()
+                try: decision = input()
+                except EOFError:
+                    print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                    decision = ''
+                    silentMode = True
 
             if silentMode or not decision: # если silentMode , то максимизация количества выгружаемых постов выполняется принудительно
                 while goS:
@@ -858,7 +877,11 @@ f'''  Дополнительных постов по Вашему запросу
 --- Если НЕ хотите для поиска дополнительных постов попробовать двигаться к следующему месяцу вглубь веков, просто нажмите Enter
 --- Если хотите, нажмите пробел и затем Enter''')
 
-                            decision = input()
+                            try: decision = input()
+                            except EOFError:
+                                print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                                decision = ''
+                                silentMode = True
 
                         if silentMode or not decision: # если silentMode , то завершение сегментирования по годам выполняется принудительно
                             # print('Завершил сегментирования по годам')
@@ -889,7 +912,12 @@ f'''  Дополнительных постов по Вашему запросу
 '''Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, можно удалить её во избежание путаницы при следующих запусках скрипта
 --- Если хотите их удалить, введите 'R' и нажмите Enter''')
 
-                decision = input()
+                try: decision = input()
+                except EOFError:
+                    print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                    decision = ''
+                    silentMode = True
+
                 if decision.lower() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True)
         if fields: print(
 f'''
@@ -912,7 +940,10 @@ for cellContent in Исходный_датафрейм[column].dropna():
 
                 sys.exit()
 
-    except (Exception, KeyboardInterrupt): # обработать прерывания по воле пользователя или ошибок 
+    except (Exception, KeyboardInterrupt) as excptn: # обработать прерывания по воле пользователя или ошибок 
+        print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
+        print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
+
         itemS = dfsProcessor(complicatedNamePart,
                              countTarget=countTarget,
                              df_additional=itemS_additional,
