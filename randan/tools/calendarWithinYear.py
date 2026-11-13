@@ -62,8 +62,9 @@ def calendarWithinYear(year):
     return calendar
 
 def yearsRangeParser(yearsRange):
+    yearsRange = yearsRange.split('-') # мутация
     yearsRange.sort()
     yearMinByUser = int(yearsRange[0])
     yearMaxByUser = int(yearsRange[-1])
-    yearsRange = f'{yearMinByUser}-{yearMaxByUser}'
+    yearsRange = f'{yearMinByUser}-{yearMaxByUser}' # обратная мутация
     return yearMaxByUser, yearMinByUser, yearsRange
