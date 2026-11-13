@@ -82,7 +82,7 @@ def dfsProcessor(complicatedNamePart,
 
     if not goS: # and complicatedNamePart: # при silentMode complicatedNamePart is None
         temporal_exportPath = folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"
-        print(f"Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию '{temporal_exportPath}'")
+        if not silentMode: print(f"Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию '{temporal_exportPath}'")
         # print('temporal_exportPath:', temporal_exportPath) # для отладки
         if not os.path.exists(temporal_exportPath):
             os.makedirs(temporal_exportPath)
@@ -103,7 +103,7 @@ def dfsProcessor(complicatedNamePart,
         scrapingTools.containerExport(temporal_exportPath + slash + 'stageTarget.txt', str(stage)) # stage и stageTarget принимает значения [0; 1]
         scrapingTools.containerExport(temporal_exportPath + slash + 'countTarget.txt', str(countTarget) if countTarget else '0')
         scrapingTools.containerExport(temporal_exportPath + slash + 'year.txt', str(year)) # год, на котором остановилось исполнение скрипта
-        scrapingTools.containerExport(temporal_exportPath + slash + 'yearsRange.txt')
+        scrapingTools.containerExport(temporal_exportPath + slash + 'yearsRange.txt', str(yearsRange))
 
         df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
                              df_in=df,
@@ -177,8 +177,8 @@ def newsfeedSearchCore(api_keyS,
 
             df_additional = pandas.json_normalize(response['items'])
 
-            print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
-                # для визуализации процесса
+            if not silentMode: print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
+                # ^ для визуализации процесса
 
             iteration += 1
             if len(df_additional) > 0: df_additional = scrapingVK_tools.dfColumnsProcessor(df_additional, fields, response)            
@@ -300,7 +300,7 @@ f"Директория '{folder_subfolder_in_folderCurrent}' похожая на
                 print(f"- пользователь подал дополнительные настройки посредством словаря params: '{params_extraTemporal}'" if params_extraTemporal else '')
 
                 print(
-f'''В дальнейшей работе могу опираться на эти промежуточные результаты. При этом случае ПРОТИВОРЕЧИЯ между найденными в директории '{folder_subfolder_in_folderCurrent}'и поданными Вами при текущем запуске аргументами будут применены ПЕРВЫЕ.
+f'''В дальнейшей работе могу опираться на эти промежуточные результаты. При этом случае ПРОТИВОРЕЧИЯ между найденными в директории '{folder_subfolder_in_folderCurrent}' и поданными Вами при текущем запуске аргументами будут применены ПЕРВЫЕ.
 --- Если следует опираться на промежуточные результаты, нажмите Enter;  
 --- Если эти промежуточные результаты уже не актуальны и хотите, чтобы я удалил их, введите 'R' и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter''')
@@ -341,8 +341,8 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
         print('Не найдены (потому что их нет или они сознательно пропущены пользователем) подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
 
         # Если такие данные, сохранённые при прошлом запуске скрипта, не найдены, возможно, пользователь хочет подать свои данные для их дополнения
-        if not silentMode: folder, folder_file, itemS = scrapingTools.call_for_user_items(f'в котором есть ранее выгруженные из ВК методом {method} данные')
-            # теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
+        folder, folder_file, itemS = scrapingTools.call_for_user_items(f'в котором есть ранее выгруженные из ВК методом {method} данные')
+            # ^ теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
 
     if not params and not access_token and not count and not end_time and not fields and not latitude and not longitude and not q and not start_time and not returnDfs:
         # print('Пользователь не подал аргументы') # для отладки
@@ -396,11 +396,11 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
         # print('end_time:', end_time) # для отладки
 
         if latitude is not None:
-            if not isinstance(latitude, float): latitude = float(latitude)
+            if not isinstance(latitude, int): latitude = int(latitude)
         # print('latitude:', latitude) # для отладки
 
         if longitude is not None:
-            if not isinstance(longitude, float): longitude = float(longitude)
+            if not isinstance(longitude, int): longitude = int(longitude)
         # print('longitude:', longitude) # для отладки
         
         if q:
@@ -461,26 +461,26 @@ f'''Если требуется конкретный временнОй диап
                     yearsRange = re.sub(r'\s*', '', yearsRange)
                     yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
                     break
-
-        if start_time is not None:
-            yearMinByUser = int(datetime.fromtimestamp(start_time).strftime('%Y')) # из experiencedMode
-            # print('elif start_time is not None', yearMinByUser) # для отладки
-
-        if end_time is not None:
-            yearMaxByUser = int(datetime.fromtimestamp(end_time).strftime('%Y')) # из experiencedMode
-            # print('elif end_time is not None:', yearMaxByUser) # для отладки
-
-        if yearMinByUser and not yearMaxByUser: yearMaxByUser = int(momentCurrent.strftime('%Y')) # в случае отсутствия пользовательской верхней временнОй границы при наличии нижней
-        elif not yearMinByUser and yearMaxByUser: yearMinByUser = 1970 # нижняя граница Unix-эпохи в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
-
-        # print('yearMinByUser', yearMinByUser) # для отладки
-        # print('yearMaxByUser', yearMaxByUser) # для отладки
-
-        if not start_time and yearMinByUser: start_time = int(datetime(yearMinByUser, 1, 1).timestamp()) # int(time.mktime(datetime(yearMinByUser, 1, 1).timetuple()))
-        if not end_time and yearMaxByUser: end_time = int(datetime(yearMaxByUser, 12, 31).timestamp())
-
-        if yearsRange: print('') # чтобы был отступ, если пользователь подал этот аргумент
     # </Диалог с пользователем>
+
+    if start_time is not None:
+        yearMinByUser = int(datetime.fromtimestamp(start_time).strftime('%Y')) # из experiencedMode
+        # print('elif start_time is not None', yearMinByUser) # для отладки
+
+    if end_time is not None:
+        yearMaxByUser = int(datetime.fromtimestamp(end_time).strftime('%Y')) # из experiencedMode
+        # print('elif end_time is not None:', yearMaxByUser) # для отладки
+
+    if yearMinByUser and not yearMaxByUser: yearMaxByUser = int(momentCurrent.strftime('%Y')) # в случае отсутствия пользовательской верхней временнОй границы при наличии нижней
+    elif not yearMinByUser and yearMaxByUser: yearMinByUser = 1970 # нижняя граница Unix-эпохи в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
+
+    # print('yearMinByUser', yearMinByUser) # для отладки
+    # print('yearMaxByUser', yearMaxByUser) # для отладки
+
+    if not start_time and yearMinByUser: start_time = int(datetime(yearMinByUser, 1, 1).timestamp()) # int(time.mktime(datetime(yearMinByUser, 1, 1).timetuple()))
+    if not end_time and yearMaxByUser: end_time = int(datetime(yearMaxByUser, 12, 31).timestamp())
+
+    if yearsRange: print('') # чтобы был отступ, если пользователь подал этот аргумент
 
     # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_VK'
@@ -891,12 +891,11 @@ import pandas
 column = 'Имя_столбца'
 JSONS = []
 for cellContent in Исходный_датафрейм[column].dropna():
-JSONS.extend(cellContent)
-Новый_датафрейм = pandas.json_normalize(JSONS).drop_duplicates('id').reset_index(drop=True)
+    JSONS.extend(cellContent)
+    Новый_датафрейм = pandas.json_normalize(JSONS).drop_duplicates('id').reset_index(drop=True)
 ''')
 
-        if returnDfs: return itemS
-        elif silentMode: return itemS
+        if returnDfs or silentMode: return itemS
         else:
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore')
@@ -906,27 +905,26 @@ JSONS.extend(cellContent)
 
                 sys.exit()
 
-    except Exception: # обработать прерывания по воле пользователя или ошибок 
-        dfsProcessor(complicatedNamePart,
-                     countTarget=countTarget,
-                     df_additional=itemS_additional,
-                     df_in=itemS, # даже если itemS пуст, есть смысл сделать Temporal-снимок ради сохранения пользовательских аргументов
-                     fields=fields,
-                     fileFormatChoice=fileFormatChoice,
-                     folder=folder,
-                     goS=False,
-                     method=method,
-                     momentCurrent=momentCurrent,
-                     params_extra=params_extra,
-                     q=q,
-                     silentMode=silentMode,
-                     slash=slash,
-                     stage=stage,
-                     year=year,
-                     yearsRange=yearsRange)
+    except (Exception, KeyboardInterrupt): # обработать прерывания по воле пользователя или ошибок 
+        itemS = dfsProcessor(complicatedNamePart,
+                             countTarget=countTarget,
+                             df_additional=itemS_additional,
+                             df_in=itemS, # даже если itemS пуст, есть смысл сделать Temporal-снимок ради сохранения пользовательских аргументов
+                             fields=fields,
+                             fileFormatChoice=fileFormatChoice,
+                             folder=folder,
+                             goS=False,
+                             method=method,
+                             momentCurrent=momentCurrent,
+                             params_extra=params_extra,
+                             q=q,
+                             silentMode=silentMode,
+                             slash=slash,
+                             stage=stage,
+                             year=year,
+                             yearsRange=yearsRange)
 
-        if returnDfs: return itemS
-        elif silentMode: return itemS
+        if returnDfs or silentMode: return itemS
         else:
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore')
