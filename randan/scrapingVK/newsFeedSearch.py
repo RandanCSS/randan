@@ -184,7 +184,11 @@ def newsfeedSearchCore(api_keyS,
             iteration += 1
             if len(df_additional) > 0: df_additional = scrapingVK_tools.dfColumnsProcessor(df_additional, fields, response)            
             break # нет смысла в новых итерациях цикла while goC
-        else: goC, goS, keyOrder, pause, response, tryer = scrapingVK_tools.errorProcessor(api_keyS, keyOrder, pause, response, tryer)
+
+        else:
+            goC, goS, keyOrder, pause, response, tryer = scrapingVK_tools.errorProcessor(api_keyS, keyOrder, pause, response, tryer)
+            params['access_token'] = api_keyS[keyOrder]
+
     return df_additional, goS, iteration, keyOrder, pause, response
 
 # 2. Основная функция
@@ -963,11 +967,11 @@ for cellContent in Исходный_датафрейм[column].dropna():
                              yearsRange=yearsRange)
 
         if returnDfs or silentMode: return itemS
-        else:
-            with warnings.catch_warnings():
-                warnings.simplefilter('ignore')
-                if not silentMode: print(
-'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
-Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
+#         else:
+#             with warnings.catch_warnings():
+#                 warnings.simplefilter('ignore')
+#                 if not silentMode: print(
+# '''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
+# Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
 
-                sys.exit()
+#                 sys.exit()
