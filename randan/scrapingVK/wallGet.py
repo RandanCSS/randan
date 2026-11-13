@@ -62,7 +62,8 @@ def dfsProcessor(complicatedNamePart,
                  method,
                  momentCurrent,
                  offset,
-                 params_extra):
+                 params_extra,
+                 silentMode):
 
     if df_additional is None: df_additional = pandas.DataFrame()
     # if df_in is None: df_in = pandas.DataFrame()
@@ -434,7 +435,8 @@ f'''    Скрипт нацелен на выгрузку постов и их �
                                      method,
                                      momentCurrent,
                                      offset,
-                                     params_extra)
+                                     params_extra,
+                                     silentMode)
 
                 offset += len(itemS_additional)
                 time.sleep(pause)
@@ -497,7 +499,8 @@ for cellContent in Исходный_датафрейм[column].dropna():
                      method=method,
                      momentCurrent=momentCurrent,
                      offset=offset,
-                     params_extra=params_extra)
+                     params_extra=params_extra,
+                     silentMode=silentMode)
 
         if returnDfs: return itemS
         else:
