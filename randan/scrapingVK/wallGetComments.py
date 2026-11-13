@@ -64,6 +64,7 @@ def dfsProcessor(complicatedNamePart,
                  owner_id,
                  params_extra,
                  post_id,
+                 silentMode,
                  slash):
 
     df = pandas.concat([df_in, df_additional]) # порядок аргументов гарантирует, что в дальнейшем при keep='last' выживают именно новые записи
@@ -444,6 +445,7 @@ f'''    Скрипт нацелен на выгрузку комментарие
                                      owner_id,
                                      params_extra,
                                      post_id,
+                                     silentMode,
                                      slash)
                 offset += count
                 time.sleep(pause)
@@ -507,6 +509,7 @@ for cellContent in Исходный_датафрейм[column].dropna():
                      owner_id=owner_id,
                      params_extra=params_extra,
                      post_id=post_id,
+                     silentMode,
                      slash=slash)
 
         if returnDfs: return itemS
