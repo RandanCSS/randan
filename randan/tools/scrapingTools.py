@@ -80,6 +80,7 @@ f'''
                     break
             else: break
         # display('itemS:', itemS)
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
     return folder, folder_file, itemS
 
 def containerExport(folder_file, container):
