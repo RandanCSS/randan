@@ -103,7 +103,7 @@ def dfsProcessor(complicatedNamePart,
         scrapingTools.containerExport(temporal_exportPath + slash + 'stageTarget.txt', str(stage)) # stage и stageTarget принимает значения [0; 1]
         scrapingTools.containerExport(temporal_exportPath + slash + 'countTarget.txt', str(countTarget) if countTarget else '0')
         scrapingTools.containerExport(temporal_exportPath + slash + 'year.txt', str(year)) # год, на котором остановилось исполнение скрипта
-        scrapingTools.containerExport(temporal_exportPath + slash + 'yearsRange.txt', yearsRange if yearsRange else '')
+        scrapingTools.containerExport(temporal_exportPath + slash + 'yearsRange.txt')
 
         df2file.df2fileShell(complicatedNamePart=f'{complicatedNamePart}_Temporal',
                              df_in=df,
@@ -240,12 +240,13 @@ def newsFeedSearch(access_token=None,
     stageTarget = 0 # stageTarget принимает значения [0; 1] и относится к стадиям скрипта
     yearMinByUser = None # в случае отсутствия пользовательского временнОго диапазона
     yearMaxByUser = None # в случае отсутствия пользовательского временнОго диапазона
-    yearsRange = None
+    yearsRange = ''
 
     momentCurrent = datetime.now() # запрос текущего момента
     print('\nТекущий момент:', momentCurrent.strftime('%Y%m%d_%H%M'), '-- он будет использован для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
-    year = int(momentCurrent.strftime('%Y')) # в случае отсутствия пользовательского временнОго диапазона
-        # с этого года возможно сегментирование по годам вглубь веков (пока выдача не пустая)
+    if yearMaxByUser: year = yearMaxByUser
+    else: year = int(momentCurrent.strftime('%Y')) # в случае отсутствия пользовательского временнОго диапазона
+        # ^ с этого года возможно сегментирование по годам вглубь веков (пока выдача не пустая)
 
     if silentMode: decision = '' # для веток, в которых silentMode b пользователя " не спрашивают"
 
@@ -287,9 +288,7 @@ f"Директория '{folder_subfolder_in_folderCurrent}' похожая на
 
             stageTargetTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'stageTarget.txt', int)
             yearTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'year.txt', int)
-
             yearsRangeTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'yearsRange.txt', str)
-            if yearsRangeTemporal == '': yearsRangeTemporal = None # для единообразия
 
             if not silentMode:
                 print(f"Нашёл директорию '{folder_subfolder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
@@ -332,7 +331,7 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
                 stageTarget = stageTargetTemporal
                 year = yearTemporal
                 yearsRange = yearsRangeTemporal
-                yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
+                if yearsRange: yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
 
                 temporalNameS = os.listdir(folder_subfolder_in_folderCurrent)
                 folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
@@ -453,26 +452,16 @@ f'''    Скрипт нацелен на выгрузку постов и их �
         if not start_time and not end_time and not yearsRange: # если пользователь не подал эти аргументы в рамках experiencedMode
             print(
 f'''Если требуется конкретный временнОй диапазон, то можно использовать его не на этапе выгрузки данных, а на этапе предобработки датафрейма с выгруженными данными. Проблема в том, что без назначения временнОго диапазона метод {method} выдаёт ограниченное количество постов, причём наиболее приближенных к текущему моменту
---- Поэтому если всё же требуется назначить временнОй диапазон на этапе выгрузки данных, назначьте его годами (а не более мелкими единицами времени). Для назначения диапазона введите без кавычек минимальный год диапазона, тире, максимальный год диапазона (минимум и максимум могут совпадать в такой записи: 'год-тот же год') и нажмите Enter !!! Cледует учесть, что текущая версия API ВК 'не умеет' обращаться к контенту, опубликованному ранее 2020 года
+--- Поэтому если всё же требуется назначить временнОй диапазон на этапе выгрузки данных, назначьте его годами (а не более мелкими единицами времени). Введите без кавычек либо один год (если требуется один год), либо диапазон: минимальный год диапазона, тире, максимальный год диапазона -- и нажмите Enter !!! Cледует учесть, что текущая версия API ВК 'не умеет' обращаться к контенту, опубликованному ранее 2020 года
 --- Если НЕ требуется назначить временнОй диапазон на этапе выгрузки данных, нажмите Enter''')
 
             while True:
                 yearsRange = input()
-                if len(yearsRange) != 0:
+                if yearsRange:
                     yearsRange = re.sub(r'\s*', '', yearsRange)
-                    if '-' in yearsRange:
-                        yearsRange = yearsRange.split('-')
-                        if len(yearsRange) == 2:
-                            if (len(yearsRange[0]) == 4) & (len(yearsRange[1]) == 4):
-                                yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
-                                year = yearMaxByUser
-                                break
-                            else: print('--- Вы ввели год[ы] НЕ из четырёх цифр. Попробуйте ещё раз..')
-                        else: print('--- Вы ввели тире, но при этом ввели НЕ два года. Попробуйте ещё раз..')
-                    else: print('--- Вы НЕ ввели тире. Попробуйте ещё раз..')
-                else:
-                    yearsRange = None # для унификации
+                    yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
                     break
+
         if start_time is not None:
             yearMinByUser = int(datetime.fromtimestamp(start_time).strftime('%Y')) # из experiencedMode
             # print('elif start_time is not None', yearMinByUser) # для отладки
@@ -480,7 +469,6 @@ f'''Если требуется конкретный временнОй диап
         if end_time is not None:
             yearMaxByUser = int(datetime.fromtimestamp(end_time).strftime('%Y')) # из experiencedMode
             # print('elif end_time is not None:', yearMaxByUser) # для отладки
-            year = yearMaxByUser
 
         if yearMinByUser and not yearMaxByUser: yearMaxByUser = int(momentCurrent.strftime('%Y')) # в случае отсутствия пользовательской верхней временнОй границы при наличии нижней
         elif not yearMinByUser and yearMaxByUser: yearMinByUser = 1970 # нижняя граница Unix-эпохи в случае отсутствия пользовательской нижней временнОй границы при наличии верхней
