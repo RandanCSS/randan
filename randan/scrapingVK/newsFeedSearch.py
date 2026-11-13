@@ -389,32 +389,32 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
     
                 params_extra = {key: value for key, value in params_extra.items() if value is not None}
 
-        if count:
-            if not isinstance(count, int): count = int(count)
-            count = min(abs(count), 200)
-        
-        else: count = 200
-        # print('count:', count) # для отладки
+    if count:
+        if not isinstance(count, int): count = int(count)
+        count = min(abs(count), 200)
+    
+    else: count = 200
+    # print('count:', count) # для отладки
 
-        if end_time is not None:
-            if not isinstance(end_time, int): end_time = int(end_time)
-        # print('end_time:', end_time) # для отладки
+    if end_time is not None:
+        if not isinstance(end_time, int): end_time = int(end_time)
+    # print('end_time:', end_time) # для отладки
 
-        if latitude is not None:
-            if not isinstance(latitude, int): latitude = int(latitude)
-        # print('latitude:', latitude) # для отладки
+    if latitude is not None:
+        if not isinstance(latitude, int): latitude = int(latitude)
+    # print('latitude:', latitude) # для отладки
 
-        if longitude is not None:
-            if not isinstance(longitude, int): longitude = int(longitude)
-        # print('longitude:', longitude) # для отладки
-        
-        if q:
-            if not isinstance(q, str): q = str(q)
-        # print('q:', q) # для отладки
+    if longitude is not None:
+        if not isinstance(longitude, int): longitude = int(longitude)
+    # print('longitude:', longitude) # для отладки
+    
+    if q:
+        if not isinstance(q, str): q = str(q)
+    # print('q:', q) # для отладки
 
-        if start_time is not None:
-            if not isinstance(start_time, int): start_time = int(start_time)
-        # print('start_time:', start_time) # для отладки
+    if start_time is not None:
+        if not isinstance(start_time, int): start_time = int(start_time)
+    # print('start_time:', start_time) # для отладки
 
 # На выходе аргументы + params_extra . Приоритет определён при первой подаче аргументов и словаря params, этот приоритет транслируется через в Temporal, следовательно, при извлечении из Temporal перепроверять приоритет не требуется
 
