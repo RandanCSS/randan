@@ -383,6 +383,10 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
             #     if not isinstance(start_time, int): start_time = int(start_time)
             # print('start_time:', start_time) # для отладки
 
+            if version_api is not None: version_api = scrapingTools.argument_key_comparison(version_api, 'v', params)
+            elif 'v' in params.keys(): version_api = params['v']
+            # print('v:', v) # для отладки
+
             if not params_extra: # если params_extra НЕ извлечены из Temporal, то попробовать извлечь их из params
                 params_extra = {key: value for key, value in params.items() if key not in KEYS_BASIC}
                     # всё, что осталось -- пользовательские аргументы метода
