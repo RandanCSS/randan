@@ -134,6 +134,7 @@ def newsfeedSearchCore(api_keyS,
                        params_extra,
                        pause,
                        q,
+                       silentMode,
                        start_from,
                        start_time,
                        version_api):
@@ -521,6 +522,7 @@ f'''Если требуется конкретный временнОй диап
                                                                                              params_extra,
                                                                                              pause,
                                                                                              q,
+                                                                                             silentMode,
                                                                                              start_from=None,
                                                                                              start_time=start_time,
                                                                                              version_api=version_api)
@@ -595,6 +597,7 @@ f'''Если требуется конкретный временнОй диап
                                                                                                  params_extra,
                                                                                                  pause,
                                                                                                  q,
+                                                                                                 silentMode,
                                                                                                  start_from,
                                                                                                  start_time,
                                                                                                  version_api)
@@ -655,21 +658,22 @@ f'''Метод {method} выдаёт ограниченное количеств
                             break # выход из while goS
 
                     itemS_additional, goS, iteration, keyOrder, pause, response = newsfeedSearchCore(api_keyS,
-                                                                                                      count,
-                                                                                                      end_time=int(datetime(year, int(calendarColumnS[-1]), int(calendar[calendarColumnS[-1]].dropna().index[-1]), 23, 59, 59).timestamp()),
-                                                                                                         # чтобы исключить проход по будущим месяцам текущего года
-                                                                                                    
-                                                                                                      fields=fields,
-                                                                                                      iteration=iteration,
-                                                                                                      keyOrder=keyOrder,
-                                                                                                      latitude=latitude,
-                                                                                                      longitude=longitude,
-                                                                                                      params_extra=params_extra,
-                                                                                                      pause=pause,
-                                                                                                      q=q,
-                                                                                                      start_from=None,
-                                                                                                      start_time=int(datetime(year, 1, 1).timestamp()),
-                                                                                                      version_api=version_api)
+                                                                                                     count,
+                                                                                                     end_time=int(datetime(year, int(calendarColumnS[-1]), int(calendar[calendarColumnS[-1]].dropna().index[-1]), 23, 59, 59).timestamp()),
+                                                                                                      # чтобы исключить проход по будущим месяцам текущего года
+                                                                                                     
+                                                                                                     fields=fields,
+                                                                                                     iteration=iteration,
+                                                                                                     keyOrder=keyOrder,
+                                                                                                     latitude=latitude,
+                                                                                                     longitude=longitude,
+                                                                                                     params_extra=params_extra,
+                                                                                                     pause=pause,
+                                                                                                     q=q,
+                                                                                                     silentMode=silentMode,
+                                                                                                     start_from=None,
+                                                                                                     start_time=int(datetime(year, 1, 1).timestamp()),
+                                                                                                     version_api=version_api)
 
                     # print('itemS_additional:') # для отладки
                     # display(itemS_additional.sort_values('date')['date'].drop_duplicates()) # для отладки
@@ -718,6 +722,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                                                                                              params_extra=params_extra,
                                                                                                              pause=pause,
                                                                                                              q=q,
+                                                                                                             silentMode=silentMode,
                                                                                                              start_from=start_from,
                                                                                                              start_time=int(datetime(year, 1, 1).timestamp()),
                                                                                                              version_api=version_api)
@@ -768,6 +773,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                                                                                              params_extra=params_extra,
                                                                                                              pause=pause,
                                                                                                              q=q,
+                                                                                                             silentMode=silentMode,
                                                                                                              start_from=None,
                                                                                                              start_time=int(datetime(year, int(month), 1).timestamp()),
                                                                                                              version_api=version_api)
@@ -812,6 +818,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                                                                                                  params_extra=params_extra,
                                                                                                                  pause=pause,
                                                                                                                  q=q,
+                                                                                                                 silentMode=silentMode,
                                                                                                                  start_from=start_from,
                                                                                                                  start_time=int(datetime(year, int(month), 1).timestamp()),
                                                                                                                  version_api=version_api)
