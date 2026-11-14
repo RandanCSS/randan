@@ -81,13 +81,14 @@ def dfsProcessor(complicatedNamePart,
 # Сохранение следа исполнения скрипта, прерванного пользователем или натолкнувшегося на ошибку
     if not goS:
         temporal_exportPath = folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"
-        print(f"Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию '{temporal_exportPath}'")
+        if not silentMode: print(f"Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию '{temporal_exportPath}'")
         # print('temporal_exportPath:', temporal_exportPath) # для отладки
         if not os.path.exists(temporal_exportPath):
             os.makedirs(temporal_exportPath)
-            print(f"Директория '{temporal_exportPath}' создана")
-        # else: print(ff"Директория '{temporal_exportPath}' существует")
+            if not silentMode: print(f"Директория '{temporal_exportPath}' создана")
+        # else: print(f"Директория '{temporal_exportPath}' существует")
 
+    # Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
         scrapingTools.containerExport(temporal_exportPath + slash + 'domain.txt', domain if domain else '')
 
         if not fields: fields = []
@@ -108,13 +109,14 @@ def dfsProcessor(complicatedNamePart,
                              method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла  
                              momentCurrent=momentCurrent)
 
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            print(
+        if not silentMode:
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                print(
 '''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
 Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
 
-            sys.exit()
+                sys.exit()
     return df
 
 def wallGetCore(api_keyS,
