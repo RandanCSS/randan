@@ -605,7 +605,7 @@ f'''Если требуется конкретный временнОй диап
                                  year=year,
                                  yearsRange=yearsRange)
 
-            if not goS and silentMode: return itemS # завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
+            if not goS and silentMode: return itemS # поскольку при silentMode внутри dfsProcessor не происходит sys.exit() ; завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
         # </Обработка результата первого обращения к API>
 
             if not silentMode: print('  Проход по всем следующим страницам с выдачей          ')
@@ -650,7 +650,7 @@ f'''Если требуется конкретный временнОй диап
                                      year=year,
                                      yearsRange=yearsRange)
 
-                if not goS and silentMode: return itemS # завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
+                if not goS and silentMode: return itemS # поскольку при silentMode внутри dfsProcessor не происходит sys.exit() ; завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
             if not silentMode: print('  Искомых постов', countTarget, ', а выгруженных БЕЗ сегментирования по годам:', len(itemS))
 
 # 2.1.1 Этап сегментирования по годам (stage = 1) # !!! можно сделать динамическое определение периода, который наиболее приближает размер допустимой выдачи (1000) к бенчмарку
@@ -728,7 +728,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                          year=year,
                                          yearsRange=yearsRange)
 
-                    if not goS and silentMode: return itemS # завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
+                    if not goS and silentMode: return itemS # поскольку при silentMode внутри dfsProcessor не происходит sys.exit() ; завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
                     # print('len(itemS):', len(itemS)) # для отладки
 
                     # print('goS 2:', goS) # для отладки
@@ -780,7 +780,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                                  year=year,
                                                  yearsRange=yearsRange)
 
-                            if not goS and silentMode: return itemS # завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
+                            if not goS and silentMode: return itemS # поскольку при silentMode внутри dfsProcessor не происходит sys.exit() ; завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
                             # print('len(itemS):', len(itemS)) # для отладки
                             time.sleep(pause)
                     if not silentMode: print('  Искомых постов', countTarget, ', а выгруженных после добавления контента за', year, 'год:', len(itemS), '                    ')
@@ -831,7 +831,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                                  year=year,
                                                  yearsRange=yearsRange)
 
-                            if not goS and silentMode: return itemS # завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
+                            if not goS and silentMode: return itemS # поскольку при silentMode внутри dfsProcessor не происходит sys.exit() ; завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
                             # print('len(itemS):', len(itemS)) # для отладки
 
                             if not silentMode: print('  Проход по всем следующим страницам с выдачей', '               ', end='\r')
@@ -876,7 +876,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                                      year=year,
                                                      yearsRange=yearsRange)
 
-                                if not goS and silentMode: return itemS # завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
+                                if not goS and silentMode: return itemS # поскольку при silentMode внутри dfsProcessor не происходит sys.exit() ; завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
                                 # print('len(itemS_additional):', len(itemS_additional)) # для отладки
                                 time.sleep(pause)
                     if not silentMode: print('  Искомых постов', countTarget, ', а выгруженных после добавления контента за', year, 'год:', len(itemS), '                    ')
