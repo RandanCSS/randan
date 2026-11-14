@@ -551,21 +551,21 @@ for cellContent in Исходный_датафрейм[column].dropna():
             print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
             print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
-        dfsProcessor(complicatedNamePart,
-                     df_additional=itemS_additional,
-                     df_in=itemS, # даже если itemS пуст, есть смысл сделать Temporal-снимок ради сохранения пользовательских аргументов
-                     fields=fields,
-                     fileFormatChoice=fileFormatChoice,
-                     folder=folder,
-                     goS=False, # единственная из функций, принимающая этот аргумент
-                     method=method,
-                     momentCurrent=momentCurrent,
-                     offset=offset,
-                     owner_id=owner_id,
-                     params_extra=params_extra,
-                     post_id=post_id,
-                     silentMode,
-                     slash=slash)
+        itemS = dfsProcessor(complicatedNamePart,
+                             df_additional=itemS_additional,
+                             df_in=itemS, # даже если itemS пуст, есть смысл сделать Temporal-снимок ради сохранения пользовательских аргументов
+                             fields=fields,
+                             fileFormatChoice=fileFormatChoice,
+                             folder=folder,
+                             goS=False, # единственная из функций, принимающая этот аргумент
+                             method=method,
+                             momentCurrent=momentCurrent,
+                             offset=offset,
+                             owner_id=owner_id,
+                             params_extra=params_extra,
+                             post_id=post_id,
+                             silentMode,
+                             slash=slash)
 
         if returnDfs or silentMode: return itemS
 #         else:
