@@ -254,7 +254,7 @@ def newsFeedSearch(access_token=None,
     momentCurrent = datetime.now() # запрос текущего момента
     print('\nТекущий момент:', momentCurrent.strftime('%Y%m%d_%H%M'), '-- он будет использован для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
 
-    if silentMode: decision = '' # для веток, в которых silentMode b пользователя " не спрашивают"
+    if silentMode: decision = '' # для веток, в которых silentMode у пользователя "не спрашивают"
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     api_keyS = scrapingTools.credentialsProcessor(access_token, 'VK', folder, 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', os.listdir(folder), silentMode)
@@ -317,13 +317,13 @@ f'''В дальнейшей работе могу опираться на эти
                     decision = ''
                     silentMode = True
 
-            if not silentMode and decision.lower() == 'r':
+            if not silentMode and decision.lower().strip() == 'r':
                 shutil.rmtree(folder_subfolder_in_folderCurrent, ignore_errors=True)
 
                 print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-            elif not silentMode and decision and decision.lower() != 'r': print(
+            elif not silentMode and decision and decision.lower().strip() != 'r': print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
             elif silentMode or not decision: # при silentMode Temporal-значения результаты принудительно берутся из свежей Temporal-директории и обретают статус постоянных и будут использоваться при исполнении скрипта
@@ -575,7 +575,7 @@ f'''Если требуется конкретный временнОй диап
                                 decision = ''
                                 silentMode = True
 
-                        if silentMode or decision.lower() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True) # при silentMode использованная Temporal-директория удаляется
+                        if silentMode or decision.lower().strip() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True) # при silentMode использованная Temporal-директория удаляется
 
                     if returnDfs or silentMode: return itemS
                     else:
@@ -931,7 +931,7 @@ f'''  Дополнительных постов по Вашему запросу
                     decision = ''
                     silentMode = True
 
-                if decision.lower() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True)
+                if decision.lower().strip() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True)
         if fields: print(
 f'''
 Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
