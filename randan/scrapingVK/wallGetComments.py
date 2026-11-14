@@ -22,13 +22,14 @@ while True:
         from IPython.display import display
         from randan.scrapingVK import scrapingVK_tools # модуль для упрощения скрапинга VK
 
-        from randan.tools import calendarWithinYear, coLabAdaptor, df2file, scrapingTools # модули для
+        from randan.tools import calendarWithinYear, coLabAdaptor, df2file, os_wrapper, scrapingTools # модули для
             # (а) работы с календарём конкретного года
             # (б) адаптации текущего скрипта к файловой системе CoLab
             # (в) сохранения датафрейма в файл одного из форматов: CSV, Excel и JSON в рамках работы с данными из социальных медиа
-            # (г) упрощения скрапинга
+            # (г) упрощения работы с OS
+            # (д) упрощения скрапинга
 
-        import json, os, pandas, shutil, requests, time, warnings
+        import json, os, pandas, shutil, requests, time, traceback, warnings
         break # выход из цикла while True
 
     except (ImportError, ModuleNotFoundError) as excptn_1:
@@ -237,7 +238,7 @@ def wallGetComments(access_token=None,
     if not silentMode:
         print('\nТекущий момент:', momentCurrent.strftime('%Y%m%d_%H%M'), '-- он будет использован для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
 
-    if silentMode: decision = '' # для веток, в которых silentMode b пользователя " не спрашивают"
+    if silentMode: decision = '' # для веток, в которых silentMode у пользователя "не спрашивают"
 
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
     api_keyS = scrapingTools.credentialsProcessor(access_token, 'VK', folder, 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', os.listdir(folder), silentMode)
@@ -290,13 +291,13 @@ f'''В дальнейшей работе могу опираться на эти
                     decision = ''
                     silentMode = True
 
-            if not silentMode and decision.lower() == 'r':
+            if not silentMode and decision.lower().strip() == 'r':
                 shutil.rmtree(folder_subfolder_in_folderCurrent, ignore_errors=True)
 
                 print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-            elif not silentMode and decision and decision.lower() != 'r': print(
+            elif not silentMode and decision and decision.lower().strip() != 'r': print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
             elif silentMode or not decision: # при silentMode Temporal-значения результаты принудительно берутся из свежей Temporal-директории и обретают статус постоянных и будут использоваться при исполнении скрипта
@@ -515,7 +516,7 @@ f'''{'Дополнительных' if iteration > 2 else 'Искомых'} ко
 --- Если хотите их удалить, введите 'R' и нажмите Enter''')
 
                             decision = input()
-                            if decision.lower() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True)
+                            if decision.lower().strip() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True)
                         if fields: print(
 f'''
 Чтобы распаковать JSON из любого столбца, содержащего этот формат, в отдельный датафрейм, используйте такой код:
