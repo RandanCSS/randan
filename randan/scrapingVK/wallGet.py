@@ -305,7 +305,7 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
 
                 temporalNameS = os.listdir(folder_subfolder_in_folderCurrent)
                 folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
-                if not goC: break # выход из for folder_subfolder_in_folderCurrent in nameS_in_folderCurrent
+                if not goC: break # выход из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent при успешном импорте itemS
 
     if not silentMode and not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
         print('Не найдены (потому что их нет или они сознательно пропущены пользователем) подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
@@ -466,13 +466,15 @@ f'''    Скрипт нацелен на выгрузку постов и их �
                                      params_extra,
                                      silentMode)
 
+                if silentMode and not goS: itemS # поскольку при silentMode внутри dfsProcessor не происходит sys.exit() ; завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
+
                 offset += len(itemS_additional)
                 time.sleep(pause)
 
             if goS and len(itemS_additional) == 0: # сигнала остановиться нет, но и выгруженных постов нет
                 if not silentMode: print(
 f'''{'Дополнительных' if iteration > 2 else 'Искомых'} постов на странице из Вашего запроса, увы, ноль, поэтому нет смысла в продолжении исполнения скрипта{'' if iteration > 2 else '. Что можно сделать для выгрузки постов? Поменяйте настройки запроса и запустите скрипт с начала'}''')
-                if iteration >= 2:
+                if iteration > 2:
 # 2.1.2 Экспорт выгрузки метода wall.get и финальное завершение скрипта
                     df2file.df2fileShell(complicatedNamePart,
                                          df_in=itemS,
