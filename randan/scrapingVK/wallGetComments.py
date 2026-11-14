@@ -284,26 +284,33 @@ f'''В дальнейшей работе могу опираться на эти
 --- Если эти промежуточные результаты уже не актуальны и хотите, чтобы я удалил их, введите 'R' и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter''')
 
-                    decision = input()
-                    if decision.lower() == 'r':
-                        shutil.rmtree(folder_subfolder_in_folderCurrent, ignore_errors=True)
+                try: decision = input()
+                except EOFError:
+                    print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                    decision = ''
+                    silentMode = True
 
-                        print(
+            if not silentMode and decision.lower() == 'r':
+                shutil.rmtree(folder_subfolder_in_folderCurrent, ignore_errors=True)
+
+                print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-                    elif decision: print(
+            elif not silentMode and decision and decision.lower() != 'r': print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-                    elif not decision: # Temporal-значения обретают статус постоянных и будут использоваться при исполнении скрипта
-                        fields = fieldsTemporal
-                        offset = offsetTemporal
-                        owner_id = owner_idTemporal
-                        params_extra = params_extraTemporal
-                        post_id = post_idTemporal
+            elif silentMode or not decision: # при silentMode Temporal-значения результаты принудительно берутся из свежей Temporal-директории и обретают статус постоянных и будут использоваться при исполнении скрипта
+                # ^ они обретают статус постоянных и при пустом decision
 
-                        temporalNameS = os.listdir(folder_subfolder_in_folderCurrent)
-                        folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
-                        if not goC: break # выход из for folder_subfolder_in_folderCurrent in nameS_in_folderCurrent
+                fields = fieldsTemporal
+                offset = offsetTemporal
+                owner_id = owner_idTemporal
+                params_extra = params_extraTemporal
+                post_id = post_idTemporal
+
+                temporalNameS = os.listdir(folder_subfolder_in_folderCurrent)
+                folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
+                if not goC: break # выход из for folder_subfolder_in_folderCurrent in nameS_in_folderCurrent
 
         if not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
             print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
