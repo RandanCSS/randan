@@ -305,7 +305,7 @@ def dfsProcessor(channelIdForSearch,
 
 # Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
     if not goS:
-        temporal_exportPath = folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"
+        temporal_exportPath = folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" # folderCoLab_folderIn_comparison гарантирует завершающий слэш
         print(f"Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию '{temporal_exportPath}'")
         # print('temporal_exportPath:', temporal_exportPath) # для отладки
         if not os.path.exists(temporal_exportPath):
