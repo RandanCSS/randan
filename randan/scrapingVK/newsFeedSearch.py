@@ -93,7 +93,7 @@ def dfsProcessor(complicatedNamePart,
             if not silentMode: print(f"Директория '{temporal_exportPath}' создана")
         # else: print(f"Директория '{temporal_exportPath}' существует")
 
-# Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
+    # Сохранение следа исполнения скрипта, натолкнувшегося на ошибку, непосредственно в директорию Temporal в текущей директории
         if not fields: fields = []
         with open(temporal_exportPath + slash + 'fields.json', 'w', encoding='utf-8') as file:
             json.dump(fields, file, ensure_ascii=False, indent=4)
