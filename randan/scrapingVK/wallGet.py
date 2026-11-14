@@ -190,6 +190,7 @@ def wallGet(access_token=None,
             offset=None,
             params=None,
             returnDfs=False,
+            silentMode=False,
             version_api='5.199'):
     '''
     Функция для выгрузки постов и их характеристик с определённой страницы ВК методом его API wall.get . Причём количество выгружаемых постов максимизируется посредством offset
@@ -207,17 +208,16 @@ def wallGet(access_token=None,
           offset : int
           params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.get , чтобы не подавать эти аргументы по отдельности
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными, если исполнение скрипта не прервано пользователем или из-за ошибки
-      silentMode : bool -- в случае True в функции отключаются CLI-диалоги и экспорт результата исполнения функции для долговременного хранения 
+      silentMode : bool -- в случае True в функции отключаются CLI-диалоги; при returnDfs=False и silentMode=False функция завершает процесс через sys.exit()
      version_api : str
     '''
 
 # 2.0 Настройки и авторизация
 # 2.0.0 Некоторые базовые настройки запроса к API ВК
-    complicatedNamePart = None # для silentMode
     fileFormatChoice = 'xlsx' # базовый формат сохраняемых файлов; формат json добавляется опционально через наличие columnsToJSON
     folder_file = None
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
-    folder_in_folderCurrent = None
+    folder_subfolder_in_folderCurrent = None
     folderWithTemporal = None
     goS = True
     itemS = pandas.DataFrame()
@@ -231,56 +231,62 @@ def wallGet(access_token=None,
     if not silentMode: 
         print('\nТекущий момент:', momentCurrent.strftime('%Y%m%d_%H%M'), '-- он будет использован для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
 
+    if silentMode: decision = '' # для веток, в которых silentMode b пользователя " не спрашивают"
+
 # 2.0.1 Поиск следов прошлых запусков: ключей и данных; в случае их отсутствия -- получение настроек и (опционально) данных от пользователя
-    nameS_in_folderCurrent = os.listdir(folder)
-    # print('nameS_in_folderCurrent:', nameS_in_folderCurrent) # для отладки
-    api_keyS = scrapingTools.credentialsProcessor(access_token, 'VK', folder, 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', nameS_in_folderCurrent, silentMode)
+    api_keyS = scrapingTools.credentialsProcessor(access_token, 'VK', folder, 'https://docs.google.com/document/d/15RpdkHe8C91AqD4IBE7PLr-naMfA56a_vFeMQQx8NY8', os.listdir(folder), silentMode)
 
 # Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, прерванном пользователем или ошибкой
     # Поиск данных
-    if not silentMode: # если основная функция этого модуля явлется частью другой функции, поиск данных не требуется -- они будут переданы
-        print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
-        for name_in_folderCurrent in nameS_in_folderCurrent:
-            if name_in_folderCurrent.endswith('Temporal') and 'VK' in name_in_folderCurrent:
-                folder_in_folderCurrent = folder + name_in_folderCurrent # имя файла достраивается до абсолютного пути
-                if len(os.listdir(folder_in_folderCurrent)) < 6: print(
-f"В директории '{folder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 6-7 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
+    print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
+    folderS_subfolderS_in_folderCurrent = os_wrapper.list_by_freshness( # список директорий и субдиректорий внутри folder , удовлетворяющих условиям и упорядоченных по "свежести"
+        folder,
+        filter_dirEntry=lambda e: (                                   # предикат по DirEntry
+            e.name.endswith('Temporal') and 'VK' in e.name and        # дешёвые строковые проверки
+            e.is_dir(follow_symlinks=False)                           # тип проверяем последним: это уже сискол (кешируется в DirEntry)
+        ))
 
-                else:
-                    domainTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'domain.txt', str)
+    for folder_subfolder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent:
+        if len(os.listdir(folder_subfolder_subfolder_in_folderCurrent)) < 6:
+            if not silentMode: print(
+f"В директории '{folder_subfolder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 6-7 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
 
-                    with open(f'{folder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file:
-                        fieldsTemporal = json.load(file)
+        else:
+            domainTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'domain.txt', str)
 
-                    filterTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'filter.txt', str)
-                    offsetTemporal = scrapingTools.containerImport(folder_in_folderCurrent + slash + 'offset.txt', int)
+            with open(f'{folder_subfolder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file:
+                fieldsTemporal = json.load(file)
 
-                    with open(f'{folder_in_folderCurrent}{slash}params_extra.json', 'r', encoding='utf-8') as file:
-                        params_extraTemporal = json.load(file)
+            filterTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'filter.txt', str)
+            offsetTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'offset.txt', int)
 
-                    print(f"Нашёл директорию '{folder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
-                          , '\n- скрипт остановился на offset', offsetTemporal)
+            with open(f'{folder_subfolder_in_folderCurrent}{slash}params_extra.json', 'r', encoding='utf-8') as file:
+                params_extraTemporal = json.load(file)
 
-                    print(f"- пользователь определил страницу: '{domainTemporal}'" if domainTemporal else '- пользователь НЕ определил страницу')
-                    print(f"- пользователь определил поля: '{fieldsTemporal}'" if fieldsTemporal else '- пользователь НЕ определил поля')
-                    print(f"- пользователь определил фильтр: '{filterTemporal}'" if filterTemporal else '- пользователь НЕ определил фильтр')
-                    print(f"- пользователь подал дополнительные настройки посредством словаря params: '{params_extraTemporal}'" if params_extraTemporal else '')
+            print(f"Нашёл директорию '{folder_subfolder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
+                  , '\n- скрипт остановился на offset', offsetTemporal)
 
-                    print(
-f'''В дальнейшей работе могу опираться на эти промежуточные результаты. При этом случае ПРОТИВОРЕЧИЯ между найденными в директории '{folder_in_folderCurrent}'и поданными Вами при текущем запуске аргументами будут применены ПЕРВЫЕ.
+            if not silentMode:
+                print(f"- пользователь определил страницу: '{domainTemporal}'" if domainTemporal else '- пользователь НЕ определил страницу')
+                print(f"- пользователь определил поля: '{fieldsTemporal}'" if fieldsTemporal else '- пользователь НЕ определил поля')
+                print(f"- пользователь определил фильтр: '{filterTemporal}'" if filterTemporal else '- пользователь НЕ определил фильтр')
+                print(f"- пользователь подал дополнительные настройки посредством словаря params: '{params_extraTemporal}'" if params_extraTemporal else '')
+
+                print(
+f'''В дальнейшей работе могу опираться на эти промежуточные результаты. При этом случае ПРОТИВОРЕЧИЯ между найденными в директории '{folder_subfolder_in_folderCurrent}'и поданными Вами при текущем запуске аргументами будут применены ПЕРВЫЕ.
 --- Если следует опираться на промежуточные результаты, нажмите Enter;  
 --- Если эти промежуточные результаты уже не актуальны и хотите, чтобы я удалил их, введите 'R' и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter''')
 
                     decision = input()
                     if decision.lower() == 'r':
-                        shutil.rmtree(folder_in_folderCurrent, ignore_errors=True)
+                        shutil.rmtree(folder_subfolder_in_folderCurrent, ignore_errors=True)
 
                         print(
-f"Директорию '{folder_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
+f"Директорию '{folder_subfolder_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
                     elif decision: print(
-f"Директорию '{folder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
+f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
                     elif not decision: # Temporal-значения обретают статус постоянных и будут использоваться при исполнении скрипта
                         domain = domainTemporal
@@ -289,9 +295,9 @@ f"Директорию '{folder_in_folderCurrent}' пропустил, прод�
                         offset = offsetTemporal
                         params_extra = params_extraTemporal
 
-                        temporalNameS = os.listdir(folder_in_folderCurrent)
+                        temporalNameS = os.listdir(folder_subfolder_in_folderCurrent)
                         folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
-                        if not goC: break # выход из for folder_in_folderCurrent in nameS_in_folderCurrent
+                        if not goC: break # выход из for folder_subfolder_in_folderCurrent in nameS_in_folderCurrent
 
         if not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
             print('Не найдены подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
