@@ -129,19 +129,20 @@ def wallGetCore(api_keyS,
                 offset,
                 params_extra,
                 pause,
+                silentMode,
                 version_api):
 
     df_additional = pandas.DataFrame()
     goS = True
 
     params_basic = {'access_token': api_keyS[keyOrder], # обязательный параметр
-                      'count': count, # опциональный параметр
-                      'domain': domain, # обязательный параметр, но без него не будет результата
-                      'extended': 1, # опциональный параметр
-                      'fields': fields, # опциональный параметр
-                      'filter': filter, # опциональный параметр
-                      'offset': offset, # опциональный параметр
-                      'v': version_api} # обязательный параметр
+                    'count': count, # опциональный параметр
+                    'domain': domain, # обязательный параметр, но без него не будет результата
+                    'extended': 1, # опциональный параметр
+                    'fields': fields, # опциональный параметр
+                    'filter': filter, # опциональный параметр
+                    'offset': offset, # опциональный параметр
+                    'v': version_api} # обязательный параметр
 
     PARAMS_PROTECTED = {'access_token', 'v'}
     if params_extra:
@@ -166,8 +167,8 @@ def wallGetCore(api_keyS,
 
             df_additional = pandas.json_normalize(response['items'])
 
-            print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
-                # для визуализации процесса
+            if not silentMode: print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
+                # ^ для визуализации процесса
 
             iteration += 1
             if len(df_additional) > 0: df_additional = scrapingVK_tools.dfColumnsProcessor(df_additional, fields, response)            
@@ -419,6 +420,7 @@ f'''    Скрипт нацелен на выгрузку постов и их �
                                                                             offset,
                                                                             params_extra,
                                                                             pause,
+                                                                            silentMode,
                                                                             version_api)
 
             # После самого первого исполнения wallGetCore iteration == 2
