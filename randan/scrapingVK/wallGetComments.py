@@ -491,6 +491,9 @@ f'''    Скрипт нацелен на выгрузку комментарие
                                      post_id,
                                      silentMode,
                                      slash)
+
+                if silentMode and not goS: itemS # поскольку при silentMode внутри dfsProcessor не происходит sys.exit() ; завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
+
                 offset += count
                 time.sleep(pause)
 
