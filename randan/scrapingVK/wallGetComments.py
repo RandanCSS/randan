@@ -83,7 +83,7 @@ def dfsProcessor(complicatedNamePart,
 
 # Сохранение следа исполнения скрипта, прерванного пользователем или натолкнувшегося на ошибку
     if not goS:
-        temporal_exportPath = folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal"
+        temporal_exportPath = folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" # folderCoLab_folderIn_comparison гарантирует завершающий слэш
         if not silentMode: print(f"Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию '{temporal_exportPath}'")
         # print('temporal_exportPath:', temporal_exportPath) # для отладки
         if not os.path.exists(temporal_exportPath):
@@ -515,7 +515,12 @@ f'''{'Дополнительных' if iteration > 2 else 'Искомых'} ко
 '''Поскольку данные, сохранённые при одном из прошлых запусков скрипта в директорию Temporal, успешно использованы, можно удалить её во избежание путаницы при следующих запусках скрипта
 --- Если хотите их удалить, введите 'R' и нажмите Enter''')
 
-                            decision = input()
+                            try: decision = input()
+                            except EOFError:
+                                print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                                decision = ''
+                                silentMode = True
+
                             if decision.lower().strip() == 'r': shutil.rmtree(folderWithTemporal, ignore_errors=True)
                         if fields: print(
 f'''
