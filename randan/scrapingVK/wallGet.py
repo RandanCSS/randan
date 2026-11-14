@@ -466,7 +466,7 @@ f'''    Скрипт нацелен на выгрузку постов и их �
                                      params_extra,
                                      silentMode)
 
-                if silentMode and not goS: itemS # поскольку при silentMode внутри dfsProcessor не происходит sys.exit() ; завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
+                if silentMode and not goS: return itemS # поскольку при silentMode внутри dfsProcessor не происходит sys.exit() ; завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
 
                 offset += len(itemS_additional)
                 time.sleep(pause)
@@ -525,20 +525,20 @@ for cellContent in Исходный_датафрейм[column].dropna():
             print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
             print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
-        dfsProcessor(complicatedNamePart,
-                     df_additional=itemS_additional,
-                     df_in=itemS,
-                     domain=domain,
-                     fields=fields,
-                     fileFormatChoice=fileFormatChoice,
-                     filter=filter,
-                     folder=folder,
-                     goS=False, # единственная из функций, принимающая этот аргумент
-                     method=method,
-                     momentCurrent=momentCurrent,
-                     offset=offset,
-                     params_extra=params_extra,
-                     silentMode=silentMode)
+        itemS = dfsProcessor(complicatedNamePart,
+                             df_additional=itemS_additional,
+                             df_in=itemS,
+                             domain=domain,
+                             fields=fields,
+                             fileFormatChoice=fileFormatChoice,
+                             filter=filter,
+                             folder=folder,
+                             goS=False, # единственная из функций, принимающая этот аргумент
+                             method=method,
+                             momentCurrent=momentCurrent,
+                             offset=offset,
+                             params_extra=params_extra,
+                             silentMode=silentMode)
 
         if returnDfs or silentMode: return itemS
 #         else:
