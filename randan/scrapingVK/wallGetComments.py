@@ -134,6 +134,7 @@ def wallGetCommentsCore(api_keyS,
                         params_extra,
                         pause,
                         post_id,
+                        silentMode,
                         version_api):
 
     df_additional = pandas.DataFrame()
@@ -172,8 +173,8 @@ def wallGetCommentsCore(api_keyS,
 
             df_additional = pandas.json_normalize(response['items'])
 
-            print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
-                # для визуализации процесса
+            if not silentMode: print('    Итерация №', iteration, ', number of items', len(response['items']), '                                        ', end='\r')
+                # ^ для визуализации процесса
 
             iteration += 1
             if len(df_additional) > 0: df_additional = scrapingVK_tools.dfColumnsProcessor(df_additional, fields, response)            
@@ -430,16 +431,17 @@ f'''    Скрипт нацелен на выгрузку комментарие
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
         while True:
             itemS_additional, goS, iteration, keyOrder, pause, response = wallGetCommentsCore(api_keyS,
-                                                                                             count,
-                                                                                             fields,
-                                                                                             iteration,
-                                                                                             keyOrder,
-                                                                                             offset,
-                                                                                             owner_id,
-                                                                                             params_extra,
-                                                                                             pause,
-                                                                                             post_id,
-                                                                                             version_api)
+                                                                                              count,
+                                                                                              fields,
+                                                                                              iteration,
+                                                                                              keyOrder,
+                                                                                              offset,
+                                                                                              owner_id,
+                                                                                              params_extra,
+                                                                                              pause,
+                                                                                              post_id,
+                                                                                              silentMode,
+                                                                                              version_api)
 
             # После самого первого исполнения wallGetCore iteration == 2
             # print('goS:', goS) # для отладки
