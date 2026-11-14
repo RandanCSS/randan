@@ -419,7 +419,6 @@ f'''    Скрипт нацелен на выгрузку постов и их �
     # print('complicatedNamePart', complicatedNamePart)
 
 # 2.1 Первичный сбор контента методом wall.get
-# 2.1.0 Первое обращение к API
     iteration = 1 # номер итерации применения текущего метода
     pause = 0.25
     if not silentMode:
@@ -430,6 +429,7 @@ f'''    Скрипт нацелен на выгрузку постов и их �
 
     if offset is None: offset = 0 # если offset ни подан пользователем, ни сохранён при прошлом запуске
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
+# 2.1.0 Первое обращение к API
         while True:
             itemS_additional, goS, iteration, keyOrder, pause = wallGetCore(api_keyS,
                                                                             count,
@@ -499,10 +499,10 @@ column = 'Имя_столбца'
 JSONS = []
 for cellContent in Исходный_датафрейм[column].dropna():
     JSONS.extend(cellContent)
-Новый_датафрейм = pandas.json_normalize(JSONS).drop_duplicates('id').reset_index(drop=True)
+    Новый_датафрейм = pandas.json_normalize(JSONS).drop_duplicates('id').reset_index(drop=True)
 ''')
 
-                    if returnDfs: return itemS
+                    if returnDfs or silentMode: return itemS
                     else:
                         with warnings.catch_warnings():
                             warnings.simplefilter('ignore')
@@ -510,9 +510,12 @@ for cellContent in Исходный_датафрейм[column].dropna():
 '''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
 Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
 
-                            sys.exit()
+                sys.exit()
 
-    except KeyboardInterrupt: # обработать сигнал прерывания, поданный на любом этапе сбора данных
+    except (Exception, KeyboardInterrupt) as excptn: # обработать прерывания по воле пользователя или ошибок 
+        if not silentMode:
+            print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
+            print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
 
         dfsProcessor(complicatedNamePart,
                      df_additional=itemS_additional,
@@ -529,12 +532,12 @@ for cellContent in Исходный_датафрейм[column].dropna():
                      params_extra=params_extra,
                      silentMode=silentMode)
 
-        if returnDfs: return itemS
-        else:
-            with warnings.catch_warnings():
-                warnings.simplefilter('ignore')
-                if not silentMode: print(
-'''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
-Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
+        if returnDfs or silentMode: return itemS
+#         else:
+#             with warnings.catch_warnings():
+#                 warnings.simplefilter('ignore')
+#                 if not silentMode: print(
+# '''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
+# Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
 
-                sys.exit()
+#                 sys.exit()
