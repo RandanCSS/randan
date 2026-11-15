@@ -536,15 +536,15 @@ for cellContent in Исходный_датафрейм[column].dropna():
     Новый_датафрейм = pandas.json_normalize(JSONS).drop_duplicates('id').reset_index(drop=True)
 ''')
 
-                    if returnDfs or silentMode: return itemS
-                    else:
-                        with warnings.catch_warnings():
-                            warnings.simplefilter('ignore')
-                            if not silentMode: print(
+                if returnDfs or silentMode: return itemS
+                else:
+                    with warnings.catch_warnings():
+                        warnings.simplefilter('ignore')
+                        if not silentMode: print(
 '''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
 Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
 
-                sys.exit()
+                        sys.exit()
 
     except (Exception, KeyboardInterrupt) as excptn: # обработать прерывания по воле пользователя или ошибок 
         if not silentMode:
