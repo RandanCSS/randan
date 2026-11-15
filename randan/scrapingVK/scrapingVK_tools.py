@@ -248,3 +248,5 @@ def fieldsProcessor(df_in, fieldS_column, response): # fieldS_column -- group и
 
     return df
 
+def version_api_vk():
+    return '5.199'
