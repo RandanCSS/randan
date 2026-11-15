@@ -78,11 +78,10 @@ def dfsProcessor(complicatedNamePart,
     if columnsForCheck: df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
         # при дублировании записей из itemS из Temporal и от пользователя и новых записей, оставить новые
 
-    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
-    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-
 # Сохранение следа исполнения скрипта, прерванного пользователем или натолкнувшегося на ошибку
     if not goS:
+        folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
+        slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
         temporal_exportPath = folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" # folderCoLab_folderIn_comparison гарантирует завершающий слэш
         if not silentMode: print(f"Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию '{temporal_exportPath}'")
         # print('temporal_exportPath:', temporal_exportPath) # для отладки
@@ -287,7 +286,7 @@ f'''В дальнейшей работе могу опираться на эти
 
                 try: decision = input()
                 except EOFError:
-                    print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                    print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
                     decision = ''
                     silentMode = True
 
@@ -348,7 +347,6 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
 
             if version_api is not None: version_api = scrapingTools.argument_key_comparison(version_api, 'v', params)
             elif 'v' in params.keys(): version_api = params['v']
-            if version_api is None: version_api = scrapingVK_tools.version_api_vk() # если version_api никак не передан пользователем, используется запасной вариант
             # print('v:', v) # для отладки
 
             if not params_extra: # если params_extra НЕ извлечены из Temporal, то попробовать извлечь их из params
@@ -357,11 +355,14 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
     
                 params_extra = {key: value for key, value in params_extra.items() if value is not None}
 
+    if api_keyS and access_token: # если и сохранённые ранее ключи нашлись, и пользователем подан ещё один,..
+        api_keyS.append(access_token) # .. они соединяются
+        api_keyS = list(dict.fromkeys(api_keyS))
+
     if count:
-        if type(count) != int: count = int(count)
-
+        if not isinstance(count, int): count = int(count)
+        count = max(1, min(abs(count), 100))
     else: count = 100
-
     # print('count:', count) # для отладки
 
     if offset:
@@ -370,17 +371,16 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
         
     if owner_id:
         if type(owner_id) != str: owner_id = str(owner_id)
-
     else: owner_id = '80054288' # моя страница
-
     # print('owner_id:', owner_id) # для отладки
 
     if post_id:
         if type(post_id) != str: post_id = str(post_id)
-
     else: post_id = '1' # первый пост на моей странице
-
     # print('post_id:', post_id) # для отладки
+
+    if version_api is None: version_api = scrapingVK_tools.version_api_vk() # если version_api никак не передан пользователем, используется запасной вариант
+    # print('v:', v) # для отладки
 
 # На выходе аргументы + params_extra . Приоритет определён при первой подаче аргументов и словаря params, этот приоритет транслируется через в Temporal, следовательно, при извлечении из Temporal перепроверять приоритет не требуется
 
@@ -397,7 +397,7 @@ f'''    Скрипт нацелен на выгрузку комментарие
         if not experiencedMode:
             try: input('--- После прочтения этой инструкции нажмите Enter')
             except EOFError:
-                print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
                 decision = ''
                 silentMode = True
 
@@ -412,7 +412,7 @@ f'''    Скрипт нацелен на выгрузку комментарие
 
                 try: owner_id = input()
                 except EOFError:
-                    print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                    print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
                     owner_id = ''
                     silentMode = True
 
@@ -426,7 +426,7 @@ f'''    Скрипт нацелен на выгрузку комментарие
 
                 try: post_id = input()
                 except EOFError:
-                    print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                    print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
                     post_id = ''
                     silentMode = True
 
@@ -521,7 +521,7 @@ f'''{'Дополнительных' if iteration > 2 else 'Искомых'} ко
 
                             try: decision = input()
                             except EOFError:
-                                print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                                print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
                                 decision = ''
                                 silentMode = True
 
