@@ -198,7 +198,7 @@ def newsfeedSearchCore(api_keyS,
 # 2. Основная функция
 def newsFeedSearch(access_token=None,
                    count=None,
-                   end_time=None, # !!! можно сделать 2 варианта подачи: год или Unix
+                   end_time=None, # !!! в будущем можно сделать 2 варианта подачи: год или Unix
                    fields=None,
                    folder=None,
                    latitude=None,
@@ -207,8 +207,8 @@ def newsFeedSearch(access_token=None,
                    q=None,
                    returnDfs=False,
                    silentMode=False,
-                   start_time=None,
-                   version_api='5.199'):
+                   start_time=None, # !!! в будущем можно сделать 2 варианта подачи: год или Unix
+                   version_api=None):
     '''
     Функция для выгрузки постов и их характеристик из ВК методом его API newsfeed.search . Причём количество постов максимизируется путём сегментирования выгрузки по годам
 
@@ -223,7 +223,7 @@ def newsFeedSearch(access_token=None,
           folder : str -- директория, в которой пользователь желает расположить выгружаемые данные и настройки выгрузки; по умолчанию, они расположатся в той же директории, в которой исполняется этот скрипт
         latitude : int
        longitude : int
-          params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/newsfeed.search , чтобы не подавать эти аргументы по отдельности
+          params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.get , чтобы не подавать эти аргументы по отдельности; при этом приоритетен аргумент функции над ключом словаря params
                q : str
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
       silentMode : bool -- в случае True в функции отключаются CLI-диалоги; при returnDfs=False и silentMode=False функция завершает процесс через sys.exit()
@@ -385,6 +385,7 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
 
             if version_api is not None: version_api = scrapingTools.argument_key_comparison(version_api, 'v', params)
             elif 'v' in params.keys(): version_api = params['v']
+            if version_api is None: version_api = scrapingVK_tools.version_api_vk() # если version_api никак не передан пользователем, используется запасной вариант
             # print('v:', v) # для отладки
 
             if not params_extra: # если params_extra НЕ извлечены из Temporal, то попробовать извлечь их из params
