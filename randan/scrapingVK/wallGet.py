@@ -238,7 +238,7 @@ def wallGet(access_token=None,
 
 # Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, прерванном пользователем или ошибкой
     # Поиск данных
-    print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
+    if not silentMode: print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
     folderS_subfolderS_in_folderCurrent = os_wrapper.list_by_freshness( # список директорий и субдиректорий внутри folder , удовлетворяющих условиям и упорядоченных по "свежести"
         folder,
         filter_dirEntry=lambda e: (                                   # предикат по DirEntry
@@ -263,10 +263,10 @@ f"В директории '{folder_subfolder_in_folderCurrent}' есть дир�
             with open(f'{folder_subfolder_in_folderCurrent}{slash}params_extra.json', 'r', encoding='utf-8') as file:
                 params_extraTemporal = json.load(file)
 
-            print(f"Нашёл директорию '{folder_subfolder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
-                  , '\n- скрипт остановился на offset', offsetTemporal)
-
             if not silentMode:
+                print(f"Нашёл директорию '{folder_subfolder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
+                    , '\n- скрипт остановился на offset', offsetTemporal)
+
                 print(f"- пользователь определил страницу: '{domainTemporal}'" if domainTemporal else '- пользователь НЕ определил страницу')
                 print(f"- пользователь определил поля: '{fieldsTemporal}'" if fieldsTemporal else '- пользователь НЕ определил поля')
                 print(f"- пользователь определил фильтр: '{filterTemporal}'" if filterTemporal else '- пользователь НЕ определил фильтр')
