@@ -80,11 +80,10 @@ def dfsProcessor(complicatedNamePart,
     if columnsForCheck: df = df.drop_duplicates(columnsForCheck, keep='last').reset_index(drop=True)
         # при дублировании записей из itemS из Temporal и от пользователя и новых записей, оставить новые
 
-    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
-    slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
-
 # Сохранение следа исполнения скрипта, прерванного пользователем или натолкнувшегося на ошибку
     if not goS:
+        folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
+        slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
         temporal_exportPath = folder + f"{momentCurrent.strftime('%Y%m%d')}{complicatedNamePart}_Temporal" # folderCoLab_folderIn_comparison гарантирует завершающий слэш
         if not silentMode: print(f"Поскольку исполнение скрипта натолкнулось на ошибку или принудительно прервано, сохраняю выгруженный контент и текущий этап поиска в директорию '{temporal_exportPath}'")
         # print('temporal_exportPath:', temporal_exportPath) # для отладки
@@ -313,7 +312,7 @@ f'''В дальнейшей работе могу опираться на эти
 
                 try: decision = input()
                 except EOFError:
-                    print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                    print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
                     decision = ''
                     silentMode = True
 
@@ -385,7 +384,6 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
 
             if version_api is not None: version_api = scrapingTools.argument_key_comparison(version_api, 'v', params)
             elif 'v' in params.keys(): version_api = params['v']
-            if version_api is None: version_api = scrapingVK_tools.version_api_vk() # если version_api никак не передан пользователем, используется запасной вариант
             # print('v:', v) # для отладки
 
             if not params_extra: # если params_extra НЕ извлечены из Temporal, то попробовать извлечь их из params
@@ -394,10 +392,13 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
     
                 params_extra = {key: value for key, value in params_extra.items() if value is not None}
 
+    if api_keyS and access_token: # если и сохранённые ранее ключи нашлись, и пользователем подан ещё один,..
+        api_keyS.append(access_token) # .. они соединяются
+        api_keyS = list(dict.fromkeys(api_keyS))
+
     if count:
         if not isinstance(count, int): count = int(count)
-        count = min(abs(count), 200)
-    
+        count = max(1, min(abs(count), 200))
     else: count = 200
     # print('count:', count) # для отладки
 
@@ -421,6 +422,9 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
         if not isinstance(start_time, int): start_time = int(start_time)
     # print('start_time:', start_time) # для отладки
 
+    if version_api is None: version_api = scrapingVK_tools.version_api_vk() # если version_api никак не передан пользователем, используется запасной вариант
+    # print('v:', v) # для отладки
+
 # На выходе аргументы + params_extra . Приоритет определён при первой подаче аргументов и словаря params, этот приоритет транслируется через в Temporal, следовательно, при извлечении из Temporal перепроверять приоритет не требуется
 
     if not silentMode:
@@ -437,7 +441,7 @@ f'''    Скрипт нацелен на выгрузку постов и их �
         if not experiencedMode:
             try: input('--- После прочтения этой инструкции нажмите Enter')
             except EOFError:
-                print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
                 decision = ''
                 silentMode = True
 
@@ -456,7 +460,7 @@ f'''    Скрипт нацелен на выгрузку постов и их �
 
             try: q = input()
             except EOFError:
-                print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
                 q = ''
                 silentMode = True
 
@@ -473,7 +477,7 @@ f'''Если требуется конкретный временнОй диап
             while True:
                 try: yearsRange = input()
                 except EOFError:
-                    print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                    print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
                     yearsRange = ''
                     silentMode = True
 
@@ -524,7 +528,7 @@ f'''Если требуется конкретный временнОй диап
     if not silentMode:
         print(f'В этой части функции используются следующие аргументы метода {method} API ВК: q, start_from, start_time, end_time, expand и другие аргументы, которые пользователь может подать через params')
         # print('experiencedMode:', experiencedMode) # для отладки
-        if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter') # обработка случая неинтерактивныой среды уже есть выше
+        if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter') # обработка случая неинтерактивной среды уже есть выше
         print('') # для отступа
 
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
@@ -572,7 +576,7 @@ f'''Если требуется конкретный временнОй диап
 
                             try: decision = input()
                             except EOFError:
-                                print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                                print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
                                 decision = ''
                                 silentMode = True
 
@@ -671,7 +675,7 @@ f'''Метод {method} выдаёт ограниченное количеств
 
                 try: decision = input()
                 except EOFError:
-                    print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                    print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
                     decision = ''
                     silentMode = True
 
@@ -893,7 +897,7 @@ f'''  Дополнительных постов по Вашему запросу
 
                             try: decision = input()
                             except EOFError:
-                                print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                                print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
                                 decision = ''
                                 silentMode = True
 
@@ -928,7 +932,7 @@ f'''  Дополнительных постов по Вашему запросу
 
                 try: decision = input()
                 except EOFError:
-                    print('Похоже, исполняюсь неинтерактивныой среде (например, CI или cron), поэтому включаю silentMode')
+                    print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
                     decision = ''
                     silentMode = True
 
