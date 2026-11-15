@@ -565,7 +565,7 @@ for cellContent in Исходный_датафрейм[column].dropna():
                              owner_id=owner_id,
                              params_extra=params_extra,
                              post_id=post_id,
-                             silentMode,
+                             silentMode=silentMode,
                              slash=slash)
 
         if returnDfs or silentMode: return itemS
