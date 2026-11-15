@@ -198,7 +198,7 @@ def wallGetComments(access_token=None,
                     post_id=None,
                     returnDfs=False,
                     silentMode=False,
-                    version_api='5.199'):
+                    version_api=None):
     '''
     Функция для выгрузки комментариев к постам ВК методом его API wall.getComments . Причём количество выгружаемых постов максимизируется посредством offset
 
@@ -212,7 +212,7 @@ def wallGetComments(access_token=None,
           folder : str -- директория, в которой пользователь желает расположить выгружаемые данные и настройки выгрузки; по умолчанию, они расположатся в той же директории, в которой исполняется этот скрипт
           offset : int
         owner_id : str
-          params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.getComments , чтобы не подавать эти аргументы по отдельности
+          params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.get , чтобы не подавать эти аргументы по отдельности; при этом приоритетен аргумент функции над ключом словаря params
          post_id : str
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
       silentMode : bool -- в случае True в функции отключаются CLI-диалоги; при returnDfs=False и silentMode=False функция завершает процесс через sys.exit()
@@ -348,6 +348,7 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
 
             if version_api is not None: version_api = scrapingTools.argument_key_comparison(version_api, 'v', params)
             elif 'v' in params.keys(): version_api = params['v']
+            if version_api is None: version_api = scrapingVK_tools.version_api_vk() # если version_api никак не передан пользователем, используется запасной вариант
             # print('v:', v) # для отладки
 
             if not params_extra: # если params_extra НЕ извлечены из Temporal, то попробовать извлечь их из params
