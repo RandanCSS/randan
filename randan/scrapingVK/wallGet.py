@@ -357,6 +357,10 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
     
                 params_extra = {key: value for key, value in params_extra.items() if value is not None}
 
+    if api_keyS and access_token: # если и сохранённые ранее ключи нашлись, и пользователем подан ещё один,..
+        api_keyS.append(access_token) # .. они соединяются
+        list(set(api_keyS))
+
     if count:
         if not isinstance(count, int): count = int(count)
         count = min(abs(count), 100)
