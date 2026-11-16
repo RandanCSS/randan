@@ -251,65 +251,61 @@ def wallGetComments(access_token=None,
             e.is_dir(follow_symlinks=False)                           # тип проверяем последним: это уже сискол (кешируется в DirEntry)
         ))
 
-    for folder_subfolder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent:
-        if len(os.listdir(folder_subfolder_subfolder_in_folderCurrent)) < 7:
+    for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent:
+        if len(os.listdir(folder_subfolder_in_folderCurrent)) < 7:
             if not silentMode: print(
 f"В директории '{folder_subfolder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 7-8 файлов (включая method.txt) => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
 
         else:
-            with open(f'{folder_subfolder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file:
-                fieldsTemporal = json.load(file)
-
+            with open(f'{folder_subfolder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file: fieldsTemporal = json.load(file)
             offsetTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'offset.txt', int)
             owner_idTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'owner_id.txt', str)
-
-            with open(f'{folder_subfolder_in_folderCurrent}{slash}params_extra.json', 'r', encoding='utf-8') as file:
-                params_extraTemporal = json.load(file)
-
+            with open(f'{folder_subfolder_in_folderCurrent}{slash}params_extra.json', 'r', encoding='utf-8') as file: params_extraTemporal = json.load(file)
             post_idTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'post_id.txt', str)
+            temporalNameS = os.listdir(folder_subfolder_in_folderCurrent)
+            folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
 
-            if not silentMode:
-                print(f"Нашёл директорию '{folder_subfolder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
-                      , '\n- скрипт остановился на offset', offsetTemporal)
+            if not goC:
+                if not silentMode:
+                    print(f"Нашёл директорию '{folder_subfolder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
+                          , '\n- скрипт остановился на offset', offsetTemporal)
 
-                print(f"- пользователь определил поля: '{fieldsTemporal}'" if fieldsTemporal else '- пользователь НЕ определил поля')
-                print(f"- пользователь определил ID страницы: '{owner_id}'" if owner_idTemporal else '- пользователь НЕ определил ID страницы')
-                print(f"- пользователь определил ID поста: '{post_id}'" if post_idTemporal else '- пользователь НЕ определил ID поста')
-                print(f"- пользователь подал дополнительные настройки посредством словаря params: '{params_extraTemporal}'" if params_extraTemporal else '')
+                    print(f"- пользователь определил поля: '{fieldsTemporal}'" if fieldsTemporal else '- пользователь НЕ определил поля')
+                    print(f"- пользователь определил ID страницы: '{owner_id}'" if owner_idTemporal else '- пользователь НЕ определил ID страницы')
+                    print(f"- пользователь определил ID поста: '{post_id}'" if post_idTemporal else '- пользователь НЕ определил ID поста')
+                    print(f"- пользователь подал дополнительные настройки посредством словаря params: '{params_extraTemporal}'" if params_extraTemporal else '')
 
-                print(
+                    print(
 f'''В дальнейшей работе могу опираться на эти промежуточные результаты. При этом случае ПРОТИВОРЕЧИЯ между найденными в директории '{folder_subfolder_in_folderCurrent}'и поданными Вами при текущем запуске аргументами будут применены ПЕРВЫЕ.
 --- Если следует опираться на промежуточные результаты, нажмите Enter;  
 --- Если эти промежуточные результаты уже не актуальны и хотите, чтобы я удалил их, введите 'R' и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter''')
 
-                try: decision = input()
-                except EOFError:
-                    print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
-                    decision = ''
-                    silentMode = True
+                    try: decision = input()
+                    except EOFError:
+                        print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
+                        decision = ''
+                        silentMode = True
 
-            if not silentMode and decision.lower().strip() == 'r':
-                shutil.rmtree(folder_subfolder_in_folderCurrent, ignore_errors=True)
+                if not silentMode and decision.lower().strip() == 'r':
+                    shutil.rmtree(folder_subfolder_in_folderCurrent, ignore_errors=True)
+                    goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent 
 
-                print(
+                    print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-            elif not silentMode and decision and decision.lower().strip() != 'r': print(
+                elif not silentMode and decision and decision.lower().strip() != 'r': print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-            elif silentMode or not decision: # при silentMode Temporal-значения результаты принудительно берутся из свежей Temporal-директории и обретают статус постоянных и будут использоваться при исполнении скрипта
-                # ^ они обретают статус постоянных и при пустом decision
+                elif silentMode or not decision: # при silentMode Temporal-значения результаты принудительно берутся из свежей Temporal-директории и обретают статус постоянных и будут использоваться при исполнении скрипта
+                    # ^ они обретают статус постоянных и при пустом decision
 
-                fields = fieldsTemporal
-                offset = offsetTemporal
-                owner_id = owner_idTemporal
-                params_extra = params_extraTemporal
-                post_id = post_idTemporal
-
-                temporalNameS = os.listdir(folder_subfolder_in_folderCurrent)
-                folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
-                if not goC: break # выход из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent при успешном импорте itemS
+                    fields = fieldsTemporal
+                    offset = offsetTemporal
+                    owner_id = owner_idTemporal
+                    params_extra = params_extraTemporal
+                    post_id = post_idTemporal
+                    break # выход из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent при успешном импорте itemS
 
     if not silentMode and not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
         print('Не найдены (потому что их нет или они сознательно пропущены пользователем) подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
@@ -365,8 +361,9 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
     else: count = 100
     # print('count:', count) # для отладки
 
-    if offset:
-        if type(offset) != int: offset = int(offset)
+    if not offset: offset = 0
+    elif offset is not None:
+        if not isinstance(offset, int): offset = int(offset)
     # print('offset:', offset) # для отладки
         
     if owner_id:
@@ -454,7 +451,6 @@ f'''    Скрипт нацелен на выгрузку комментарие
         if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
         print('') # для отступа
 
-    if offset is None: offset = 0 # если offset ни подан пользователем, ни сохранён при прошлом запуске
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
 # 2.1.0 Первое обращение к API
         while True:
