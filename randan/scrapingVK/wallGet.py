@@ -247,9 +247,9 @@ def wallGet(access_token=None,
         ))
 
     for folder_subfolder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent:
-        if len(os.listdir(folder_subfolder_subfolder_in_folderCurrent)) < 6:
+        if len(os.listdir(folder_subfolder_subfolder_in_folderCurrent)) < 7:
             if not silentMode: print(
-f"В директории '{folder_subfolder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 6-7 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
+f"В директории '{folder_subfolder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 7-8 файлов (включая method.txt) => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
 
         else:
             domainTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'domain.txt', str)
