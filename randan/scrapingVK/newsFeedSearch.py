@@ -220,8 +220,8 @@ def newsFeedSearch(access_token=None,
         end_time : int -- формат Unix
           fields : list
           folder : str -- директория, в которой пользователь желает расположить выгружаемые данные и настройки выгрузки; по умолчанию, они расположатся в той же директории, в которой исполняется этот скрипт
-        latitude : int
-       longitude : int
+        latitude : float
+       longitude : float
           params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.get , чтобы не подавать эти аргументы по отдельности; при этом приоритетен аргумент функции над ключом словаря params
                q : str
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
@@ -246,9 +246,10 @@ def newsFeedSearch(access_token=None,
     params_extra = {}
     slash = '\\' if os.name == 'nt' else '/' # выбор слэша в зависимости от ОС
     stageTarget = 0 # stageTarget принимает значения [0; 1] и относится к стадиям скрипта
-    yearMinByUser = None # в случае отсутствия пользовательского временнОго диапазона
-    yearMaxByUser = None # в случае отсутствия пользовательского временнОго диапазона
+    yearMinByUser = None # на случай отсутствия пользовательского временнОго диапазона
+    yearMaxByUser = None # на случай отсутствия пользовательского временнОго диапазона
     yearsRange = ''
+    yearTemporal = None # на случай отсутствия Temporal-снимка
 
     momentCurrent = datetime.now() # запрос текущего момента
     print('\nТекущий момент:', momentCurrent.strftime('%Y%m%d_%H%M'), '-- он будет использован для формирования имён создаваемых директорий и файлов (во избежание путаницы в директориях и файлах при повторных запусках)\n')
@@ -316,7 +317,9 @@ f'''В дальнейшей работе могу опираться на эти
 
                 if not silentMode and decision.lower().strip() == 'r':
                     shutil.rmtree(folder_subfolder_in_folderCurrent, ignore_errors=True)
-                    goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent 
+                    goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent
+                    itemS = None # отмена
+                    yearTemporal = None # отмена
 
                     print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
@@ -325,7 +328,9 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' удалил, пр�
                     print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-                    goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent 
+                    goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent
+                    itemS = None # отмена
+                    yearTemporal = None # отмена
 
                 elif silentMode or not decision: # при silentMode Temporal-значения результаты принудительно берутся из свежей Temporal-директории и обретают статус постоянных и будут использоваться при исполнении скрипта
                     # ^ они обретают статус постоянных и при пустом decision
@@ -405,11 +410,11 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
     # print('end_time:', end_time) # для отладки
 
     if latitude is not None:
-        if not isinstance(latitude, int): latitude = int(latitude)
+        if not isinstance(latitude, float): latitude = float(latitude)
     # print('latitude:', latitude) # для отладки
 
     if longitude is not None:
-        if not isinstance(longitude, int): longitude = int(longitude)
+        if not isinstance(longitude, float): longitude = float(longitude)
     # print('longitude:', longitude) # для отладки
     
     if q:
