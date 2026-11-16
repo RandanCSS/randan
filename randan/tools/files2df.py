@@ -2,8 +2,8 @@
 # coding: utf-8
 
 '''
-A module for formatting to a dataframe files of the formats: CSV, Excel and JSON. It facilitates working with data from social media
-Модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
+(EN) A module for formatting to a dataframe files of the formats: CSV, Excel and JSON. It facilitates working with data from social media
+(RU) Модуль для оформления в датафрейм таблиц из файлов формата CSV, Excel и JSON в рамках работы с данными из социальных медиа
 '''
 
 # Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
@@ -23,7 +23,7 @@ while True:
         break # выход из цикла while True
 
     except (ImportError, ModuleNotFoundError) as excptn_1:
-        module = excptn_1.name.split('.')[0]
+        module = (excptn_1.name or '').split('.')[0]
         if attempt > MAX_ATTEMPTS:
             print(
 f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт')
