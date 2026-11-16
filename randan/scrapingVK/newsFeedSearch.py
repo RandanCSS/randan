@@ -149,7 +149,7 @@ def newsfeedSearchCore(api_keyS,
     params_basic = {'access_token': api_keyS[keyOrder], # обязательный параметр
                     'count': count, # опциональный параметр
                     'end_time': end_time, # опциональный параметр
-                    'extended': 1, # опциональный параметр
+                    'extended': 1, # опциональный параметр, принудительно подаётся как 1 , потому что от этого никакой дополнительной не происходит
                     'fields': fields, # опциональный параметр
                     'latitude': latitude, # опциональный параметр
                     'longitude': longitude, # опциональный параметр
