@@ -260,7 +260,7 @@ f"В директории '{folder_subfolder_in_folderCurrent}' есть дир�
             temporalNameS = os.listdir(folder_subfolder_in_folderCurrent)
             folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS) # goC -- сигнал выйти из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent при успешном импорте itemS
 
-            if not goC:
+            if not goC: # при успешном get_itemsTemporal goC = False
                 if not silentMode:
                     print(f"Нашёл директорию '{folder_subfolder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
                         , '\n- скрипт остановился на offset', offsetTemporal)
