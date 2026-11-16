@@ -53,7 +53,7 @@ f'Пакет {module} НЕ прединсталлирован, но он тре�
 # 1. Вспомогательные функции..
 # .. обработки выдачи, помогающая работе с ключами
 def dfsProcessor(complicatedNamePart,
-                 coLabFolder,
+                 folder,
                  df_additional,
                  df_in,
                  fields,
@@ -96,7 +96,6 @@ def dfsProcessor(complicatedNamePart,
         with open(temporal_exportPath + slash + 'fields.json', 'w', encoding='utf-8') as file:
             json.dump(fields, file, ensure_ascii=False, indent=4)
 
-        scrapingTools.containerExport(temporal_exportPath + slash + 'filter.txt', filter if filter else '')
         scrapingTools.containerExport(temporal_exportPath + slash + 'method.txt', method)
         scrapingTools.containerExport(temporal_exportPath + slash + 'offset.txt', offset)
         scrapingTools.containerExport(temporal_exportPath + slash + 'owner_id.txt', owner_id if owner_id else '')
@@ -253,9 +252,9 @@ def wallGetComments(access_token=None,
         ))
 
     for folder_subfolder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent:
-        if len(os.listdir(folder_subfolder_subfolder_in_folderCurrent)) < 6:
+        if len(os.listdir(folder_subfolder_subfolder_in_folderCurrent)) < 7:
             if not silentMode: print(
-f"В директории '{folder_subfolder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 6-7 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
+f"В директории '{folder_subfolder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 7-8 файлов (включая method.txt) => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
 
         else:
             with open(f'{folder_subfolder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file:
@@ -479,7 +478,7 @@ f'''    Скрипт нацелен на выгрузку комментарие
                 # Вариантов сигнала в этом и аналогичном скриптах три: len(itemS_additional) > 0 , not goS , 'next_from' is not in response.keys()
 
                 itemS = dfsProcessor(complicatedNamePart,
-                                     coLabFolder,
+                                     folder,
                                      itemS_additional,
                                      itemS,
                                      fields,
