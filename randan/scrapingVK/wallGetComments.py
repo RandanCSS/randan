@@ -324,7 +324,7 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
 
     else:
         # print('Пользователь подал аргументы') # для отладки
-        KEYS_BASIC = {'access_token', 'count', 'extended', 'fields', 'offset', 'owner_id', 'post_id', 'v'}
+        KEYS_BASIC = {'access_token', 'count', 'extended', 'fields', 'need_likes', 'offset', 'owner_id', 'post_id', 'v'}
         experiencedMode = True
         if params:
             access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
