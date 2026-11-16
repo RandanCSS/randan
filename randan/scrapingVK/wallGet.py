@@ -367,7 +367,8 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
         if not isinstance(domain, str): domain = str(domain)
     # print('domain:', domain) # для отладки
 
-    if offset is not None:
+    if not offset: offset = 0
+    elif offset is not None:
         if not isinstance(offset, int): offset = int(offset)
     # print('offset:', offset) # для отладки
 
@@ -431,7 +432,6 @@ f'''    Скрипт нацелен на выгрузку постов и их �
         if not experiencedMode: input('--- После прочтения этой инструкции нажмите Enter')
         print('') # для отступа
 
-    if offset is None: offset = 0 # если offset ни подан пользователем, ни сохранён при прошлом запуске
     try: # обработать сигнал прерывания, поданный на любом этапе сбора данных
 # 2.1.0 Первое обращение к API
         while True:
