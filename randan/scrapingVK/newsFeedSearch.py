@@ -342,7 +342,8 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
                     stageTarget = stageTargetTemporal
                     yearsRange = yearsRangeTemporal
                     if yearsRange: yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
-                    break # выход из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent при успешном импорте itemS
+
+                if not goC: break # выход из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent при успешном импорте itemS
 
     if not silentMode and not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
         print('Не найдены (потому что их нет или они сознательно пропущены пользователем) подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
