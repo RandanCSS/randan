@@ -3,17 +3,18 @@
 
 '''
 (EN) A module for topic modelling
-(RU) Модуль для тематического моделирования
 '''
 
-# 0 Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
-
-# sys & subprocess -- эти пакеты должны быть предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+# Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
+# В общем случае требуются следующие модули и пакеты (запасной код, т.к. они прописаны в setup)
+# subprocess & sys -- эти пакеты обычно предустановлены. Если с ними какая-то проблема, то из этого скрипта решить их сложно
+from subprocess import check_call, CalledProcessError
 import sys
-from subprocess import check_call
 
 # --- остальные модули и пакеты
-attempt = 0
+MAX_ATTEMPTS = 3
+attempt = 1
+
 while True:
     try:
         from io import BytesIO
@@ -23,28 +24,29 @@ while True:
         from randan import descriptive_statistics, dimension_reduction
         from tqdm import tqdm
         import matplotlib.pyplot as plt, os, pandas, time, warnings
-        break
-    except ModuleNotFoundError:
-        errorDescription = sys.exc_info()
-        module = str(errorDescription[1]).replace("No module named '", '').replace("'", '') #.replace('_', '')
-        if '.' in module: module = module.split('.')[1]
-        print(
-f'''Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас
-Попытка № {attempt} из 10
-'''
-              )
-        check_call([sys.executable, "-m", "pip", "install", module])
-        attempt += 1
-        if  attempt == 10:
+        break # выход из цикла while True
+
+    except (ImportError, ModuleNotFoundError) as excptn_1:
+        module = (excptn_1.name or '').split('.')[0]
+        if attempt > MAX_ATTEMPTS:
             print(
-f'''Пакет {module} НЕ прединсталлирован; он требуется для работы скрипта, но инсталлировать его не удаётся,
-поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт
-'''
-                  )
-            break
+f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт')
+
+            raise
+
+        print(
+f'Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас. Попытка № {attempt} из {MAX_ATTEMPTS}')
+
+        try: check_call([sys.executable, '-m', 'pip', 'install', module, '--quiet', '--disable-pip-version-check'])
+        except CalledProcessError as excptn_2:
+            print(f"Не удалось установить {module}. {type(excptn_2).__name__}: {str(excptn_2).split('Stacktrace:')[0].strip()}")
+            raise
+
+        attempt += 1
+
 tqdm.pandas() # для визуализации прогресса функций, применяемых к датафреймам
 
-# 1 Авторские функции для..
+# 1. Функции..
 # 1.0 ..проверки наличия в поданном пользователем датафрейме ключевого тестового столбца
 def columnTargetChecker(columnTarget, columnTargetMessage, df):
     if columnTarget not in df.columns:
