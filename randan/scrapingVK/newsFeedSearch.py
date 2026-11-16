@@ -321,8 +321,11 @@ f'''В дальнейшей работе могу опираться на эти
                     print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-                elif not silentMode and decision and decision.lower().strip() != 'r': print(
+                elif not silentMode and decision and decision.lower().strip() != 'r':
+                    print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
+
+                    goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent 
 
                 elif silentMode or not decision: # при silentMode Temporal-значения результаты принудительно берутся из свежей Temporal-директории и обретают статус постоянных и будут использоваться при исполнении скрипта
                     # ^ они обретают статус постоянных и при пустом decision
