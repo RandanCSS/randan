@@ -354,7 +354,7 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
 
     else:
         experiencedMode = True
-        KEYS_BASIC = {'access_token', 'count', 'end_time', 'fields', 'latitude', 'longitude', 'q', 'start_time', 'v'}
+        KEYS_BASIC = {'access_token', 'count', 'end_time', 'extended', 'fields', 'latitude', 'longitude', 'q', 'start_time', 'v'}
         if params:
             access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params)
             # print('access_token:', access_token) # для отладки
