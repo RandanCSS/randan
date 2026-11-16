@@ -246,65 +246,63 @@ def wallGet(access_token=None,
             e.is_dir(follow_symlinks=False)                           # тип проверяем последним: это уже сискол (кешируется в DirEntry)
         ))
 
-    for folder_subfolder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent:
-        if len(os.listdir(folder_subfolder_subfolder_in_folderCurrent)) < 7:
+    for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent:
+        if len(os.listdir(folder_subfolder_in_folderCurrent)) < 7:
             if not silentMode: print(
 f"В директории '{folder_subfolder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 7-8 файлов (включая method.txt) => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
 
         else:
             domainTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'domain.txt', str)
-
-            with open(f'{folder_subfolder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file:
-                fieldsTemporal = json.load(file)
-
+            with open(f'{folder_subfolder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file: fieldsTemporal = json.load(file)
             filterTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'filter.txt', str)
             offsetTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'offset.txt', int)
+            with open(f'{folder_subfolder_in_folderCurrent}{slash}params_extra.json', 'r', encoding='utf-8') as file: params_extraTemporal = json.load(file)
+            temporalNameS = os.listdir(folder_subfolder_in_folderCurrent)
+            folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS) # goC -- сигнал выйти из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent при успешном импорте itemS
 
-            with open(f'{folder_subfolder_in_folderCurrent}{slash}params_extra.json', 'r', encoding='utf-8') as file:
-                params_extraTemporal = json.load(file)
+            if not goC:
+                if not silentMode:
+                    print(f"Нашёл директорию '{folder_subfolder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
+                        , '\n- скрипт остановился на offset', offsetTemporal)
 
-            if not silentMode:
-                print(f"Нашёл директорию '{folder_subfolder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
-                    , '\n- скрипт остановился на offset', offsetTemporal)
+                    print(f"- пользователь определил страницу: '{domainTemporal}'" if domainTemporal else '- пользователь НЕ определил страницу')
+                    print(f"- пользователь определил поля: '{fieldsTemporal}'" if fieldsTemporal else '- пользователь НЕ определил поля')
+                    print(f"- пользователь определил фильтр: '{filterTemporal}'" if filterTemporal else '- пользователь НЕ определил фильтр')
+                    print(f"- пользователь подал дополнительные настройки посредством словаря params: '{params_extraTemporal}'" if params_extraTemporal else '')
 
-                print(f"- пользователь определил страницу: '{domainTemporal}'" if domainTemporal else '- пользователь НЕ определил страницу')
-                print(f"- пользователь определил поля: '{fieldsTemporal}'" if fieldsTemporal else '- пользователь НЕ определил поля')
-                print(f"- пользователь определил фильтр: '{filterTemporal}'" if filterTemporal else '- пользователь НЕ определил фильтр')
-                print(f"- пользователь подал дополнительные настройки посредством словаря params: '{params_extraTemporal}'" if params_extraTemporal else '')
-
-                print(
+                    print(
 f'''В дальнейшей работе могу опираться на эти промежуточные результаты. При этом случае ПРОТИВОРЕЧИЯ между найденными в директории '{folder_subfolder_in_folderCurrent}'и поданными Вами при текущем запуске аргументами будут применены ПЕРВЫЕ.
 --- Если следует опираться на промежуточные результаты, нажмите Enter;  
 --- Если эти промежуточные результаты уже не актуальны и хотите, чтобы я удалил их, введите 'R' и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter''')
 
-                try: decision = input()
-                except EOFError:
-                    print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
-                    decision = ''
-                    silentMode = True
+                    try: decision = input()
+                    except EOFError:
+                        print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
+                        decision = ''
+                        silentMode = True
 
-            if not silentMode and decision.lower().strip() == 'r':
-                shutil.rmtree(folder_subfolder_in_folderCurrent, ignore_errors=True)
+                if not silentMode and decision.lower().strip() == 'r':
+                    shutil.rmtree(folder_subfolder_in_folderCurrent, ignore_errors=True)
+                    goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent 
 
-                print(
+                    print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-            elif not silentMode and decision and decision.lower().strip() != 'r': print(
+                elif not silentMode and decision and decision.lower().strip() != 'r':
+                    print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-            elif silentMode or not decision: # при silentMode Temporal-значения результаты принудительно берутся из свежей Temporal-директории и обретают статус постоянных и будут использоваться при исполнении скрипта
-                # ^ они обретают статус постоянных и при пустом decision
+                    goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent 
 
-                domain = domainTemporal
-                fields = fieldsTemporal
-                filter = filterTemporal
-                offset = offsetTemporal
-                params_extra = params_extraTemporal
-
-                temporalNameS = os.listdir(folder_subfolder_in_folderCurrent)
-                folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
-                if not goC: break # выход из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent при успешном импорте itemS
+                elif silentMode or not decision: # при silentMode Temporal-значения результаты принудительно берутся из свежей Temporal-директории и обретают статус постоянных и будут использоваться при исполнении скрипта
+                    # ^ они обретают статус постоянных и при пустом decision
+                    domain = domainTemporal
+                    fields = fieldsTemporal
+                    filter = filterTemporal
+                    offset = offsetTemporal
+                    params_extra = params_extraTemporal
+                    break # выход из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent при успешном импорте itemS
 
     if not silentMode and not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
         print('Не найдены (потому что их нет или они сознательно пропущены пользователем) подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
