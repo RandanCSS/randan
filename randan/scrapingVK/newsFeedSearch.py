@@ -330,7 +330,6 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
 
                 countTarget = countTargetTemporal
                 fields = fieldsTemporal
-                method = methodTemporal
                 params_extra = params_extraTemporal
                 q = qTemporal
                 stageTarget = stageTargetTemporal
