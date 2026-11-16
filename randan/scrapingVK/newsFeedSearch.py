@@ -112,7 +112,7 @@ def dfsProcessor(complicatedNamePart,
                              df_in=df,
                              fileFormatChoice=fileFormatChoice,
                              folder=temporal_exportPath,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла  
+                             method=method.split('.')[0] + method.split('.')[1][:1].upper() + method.split('.')[1][1:] if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
                              momentCurrent=momentCurrent)
 
         if not silentMode:
@@ -917,7 +917,7 @@ f'''  Дополнительных постов по Вашему запросу
                              df_in=itemS,
                              fileFormatChoice=fileFormatChoice,
                              folder=folder,
-                             method=method.split('.')[0] + method.split('.')[1].capitalize() if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
+                             method=method.split('.')[0] + method.split('.')[1][:1].upper() + method.split('.')[1][1:] if '.' in method else method, # чтобы избавиться от лишней точки в имени файла
                              momentCurrent=momentCurrent)
 
         if not silentMode: 
