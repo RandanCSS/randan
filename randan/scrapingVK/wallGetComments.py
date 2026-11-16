@@ -141,9 +141,9 @@ def wallGetCommentsCore(api_keyS,
 
     params_basic = {'access_token': api_keyS[keyOrder], # обязательный параметр
                     'count': count, # опциональный параметр
-                    'extended': 1, # опциональный параметр
+                    'extended': 1, # опциональный параметр, принудительно подаётся как 1 , потому что от этого никакой дополнительной не происходит
                     'fields': fields, # опциональный параметр
-                    'need_likes': 1, # опциональный параметр
+                    'need_likes': 1, # опциональный параметр, принудительно подаётся как 1 , потому что от этого никакой дополнительной не происходит
                     'offset': offset, # опциональный параметр
                     'owner_id': owner_id, # опциональный параметр, но без него не будет результата
                     'post_id': post_id, # опциональный параметр, но без него не будет результата
@@ -209,9 +209,9 @@ def wallGetComments(access_token=None,
           fields : list
           folder : str -- директория, в которой пользователь желает расположить выгружаемые данные и настройки выгрузки; по умолчанию, они расположатся в той же директории, в которой исполняется этот скрипт
           offset : int
-        owner_id : str
+        owner_id : str -- если пользователь не передат никакой owner_id , то в итоге подставляется owner_id разработчика: 80054288
           params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.get , чтобы не подавать эти аргументы по отдельности; при этом приоритетен аргумент функции над ключом словаря params
-         post_id : str
+         post_id : str -- если пользователь не передат никакой owner_id , то в итоге подставляется post_id : 1
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
       silentMode : bool -- в случае True в функции отключаются CLI-диалоги; при returnDfs=False и silentMode=False функция завершает процесс через sys.exit()
      version_api : str
@@ -314,7 +314,7 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
         folder, folder_file, itemS = scrapingTools.call_for_user_items(f'в котором есть ранее выгруженные из ВК методом {method} данные')
             # ^ теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
 
-    if not params and not access_token and not count and not fields and not offset and not owner_id and not post_id and not returnDfs:
+    if not params and not access_token and not count and not fields and offset is None and not owner_id and not post_id and not returnDfs:
         # print('Пользователь не подал аргументы') # для отладки
         experiencedMode = False
 
