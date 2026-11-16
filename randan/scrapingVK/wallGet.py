@@ -420,7 +420,7 @@ f'''    Скрипт нацелен на выгрузку постов и их �
 
     # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_VK'
-    if domain: complicatedNamePart += '_' + domain if len(domain) < 50 else '_' + domain[:50]
+    complicatedNamePart += '_' + domain if len(domain) < 50 else '_' + domain[:50]
     # print('complicatedNamePart', complicatedNamePart)
 
 # 2.1 Первичный сбор контента методом wall.get
