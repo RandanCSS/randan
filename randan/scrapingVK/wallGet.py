@@ -19,7 +19,6 @@ attempt = 1
 while True:
     try:
         from datetime import datetime
-        from IPython.display import display
         from randan.scrapingVK import scrapingVK_tools # модуль для упрощения скрапинга VK
 
         from randan.tools import coLabAdaptor, df2file, os_wrapper, scrapingTools # модули для
