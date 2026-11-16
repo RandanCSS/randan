@@ -138,7 +138,7 @@ def wallGetCore(api_keyS,
     params_basic = {'access_token': api_keyS[keyOrder], # обязательный параметр
                     'count': count, # опциональный параметр
                     'domain': domain, # обязательный параметр, но без него не будет результата
-                    'extended': 1, # опциональный параметр
+                    'extended': 1, # опциональный параметр, принудительно подаётся как 1 , потому что от этого никакой дополнительной не происходит
                     'fields': fields, # опциональный параметр
                     'filter': filter, # опциональный параметр
                     'offset': offset, # опциональный параметр
@@ -201,7 +201,7 @@ def wallGet(access_token=None,
     Причём они могут быть поданы и в качестве самостоятельных аргументов функции, и в качестве словаря params , который обычно подаётся в метод get пакета requests
     access_token : str
            count : int
-          domain : str
+          domain : str -- если пользователь не передат никакой domain , то в итоге подставляется domain разработчика: 80054288
           fields : list
           filter : str
           folder : str -- директория, в которой пользователь желает расположить выгружаемые данные и настройки выгрузки; по умолчанию, они расположатся в той же директории, в которой исполняется этот скрипт
@@ -311,7 +311,7 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
         folder, folder_file, itemS = scrapingTools.call_for_user_items(f'в котором есть ранее выгруженные из ВК методом {method} данные')
             # ^ теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
 
-    if not params and not access_token and not count and not domain and not fields and not filter and not offset and not returnDfs:
+    if not params and not access_token and not count and not domain and not fields and not filter and offset is None and not returnDfs:
         # print('Пользователь не подал аргументы') # для отладки
         experiencedMode = False
 
@@ -544,11 +544,3 @@ for cellContent in Исходный_датафрейм[column].dropna():
                              silentMode=silentMode)
 
         if returnDfs or silentMode: return itemS
-#         else:
-#             with warnings.catch_warnings():
-#                 warnings.simplefilter('ignore')
-#                 if not silentMode: print(
-# '''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
-# Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
-
-#                 sys.exit()
