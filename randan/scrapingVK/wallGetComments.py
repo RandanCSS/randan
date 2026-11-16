@@ -211,7 +211,7 @@ def wallGetComments(access_token=None,
           offset : int
         owner_id : str -- если пользователь не передат никакой owner_id , то в итоге подставляется owner_id разработчика: 80054288
           params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.get , чтобы не подавать эти аргументы по отдельности; при этом приоритетен аргумент функции над ключом словаря params
-         post_id : str -- если пользователь не передат никакой owner_id , то в итоге подставляется post_id : 1
+         post_id : str -- если пользователь не передат никакой post_id , то в итоге подставляется post_id : 1
        returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
       silentMode : bool -- в случае True в функции отключаются CLI-диалоги; при returnDfs=False и silentMode=False функция завершает процесс через sys.exit()
      version_api : str
@@ -368,12 +368,10 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
         
     if owner_id:
         if type(owner_id) != str: owner_id = str(owner_id)
-    else: owner_id = '80054288' # моя страница
     # print('owner_id:', owner_id) # для отладки
 
     if post_id:
         if type(post_id) != str: post_id = str(post_id)
-    else: post_id = '1' # первый пост на моей странице
     # print('post_id:', post_id) # для отладки
 
     if version_api is None: version_api = scrapingVK_tools.version_api_vk() # если version_api никак не передан пользователем, используется запасной вариант
@@ -436,10 +434,13 @@ f'''    Скрипт нацелен на выгрузку комментарие
 'поэтому, вероятно, следует ввести те же ID, что и при формировании указанного Вами файла')
     # </Диалог с пользователем>
 
+    if not owner_id: owner_id = '80054288' # моя страница
+    if not post_id: post_id = '1' # первый пост на странице
+
     # Сложная часть имени будущих директорий и файлов
     complicatedNamePart = '_VK'
-    if owner_id: complicatedNamePart += '_' + owner_id if len(owner_id) < 50 else '_' + owner_id[:50]
-    if post_id: complicatedNamePart += '_' + post_id if len(post_id) < 50 else '_' + post_id[:50]
+    complicatedNamePart += '_' + owner_id if len(owner_id) < 50 else '_' + owner_id[:50]
+    complicatedNamePart += '_' + post_id if len(post_id) < 50 else '_' + post_id[:50]
     # print('complicatedNamePart', complicatedNamePart)
 
 # 2.1 Первичный сбор контента методом wall.getComments
