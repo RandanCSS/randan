@@ -20,10 +20,10 @@ while True:
     try:
       from typing import Callable, Optional                     # только для аннотаций типов (можно убрать)
       import os
-      break # выход из цикла while True
+        break # выход из цикла while True
 
     except (ImportError, ModuleNotFoundError) as excptn_1:
-        module = excptn_1.name.split('.')[0]
+        module = (excptn_1.name or '').split('.')[0]
         if attempt > MAX_ATTEMPTS:
             print(
 f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт')
