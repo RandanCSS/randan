@@ -275,14 +275,9 @@ f"Директория '{folder_subfolder_in_folderCurrent}' похожая на
 
         else:
             countTargetTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'countTarget.txt', int)
-
-            with open(f'{folder_subfolder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file:
-                fieldsTemporal = json.load(file)
-
-            methodTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'method.txt', str)
-
-            with open(f'{folder_subfolder_in_folderCurrent}{slash}params_extra.json', 'r', encoding='utf-8') as file:
-                params_extraTemporal = json.load(file)
+            with open(f'{folder_subfolder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file: fieldsTemporal = json.load(file)
+            methodTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'method.txt', str) # только для информирования пользователя
+            with open(f'{folder_subfolder_in_folderCurrent}{slash}params_extra.json', 'r', encoding='utf-8') as file: params_extraTemporal = json.load(file)
 
             try: qTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'q.txt', str)
             except Exception as excptn:
@@ -294,51 +289,52 @@ f"Директория '{folder_subfolder_in_folderCurrent}' похожая на
             stageTargetTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'stageTarget.txt', int)
             yearTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'year.txt', int)
             yearsRangeTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'yearsRange.txt', str)
+            temporalNameS = os.listdir(folder_subfolder_in_folderCurrent)
+            folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
 
-            if not silentMode:
-                print(f"Нашёл директорию '{folder_subfolder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
-                      , '\n- скрипт остановился на методе', methodTemporal)
+            if not goC:
+                if not silentMode:
+                    print(f"Нашёл директорию '{folder_subfolder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
+                          , '\n- скрипт остановился на методе', methodTemporal)
 
-                if yearTemporal < int(momentCurrent.strftime('%Y')): print('- и на годе (при сегментировани по годам)', yearTemporal)
-                print(f"- пользователь сформулировал запрос-фильтр как '{qTemporal}'" if qTemporal else '- пользователь НЕ сформулировал запрос-фильтр')
-                print(f'- пользователь ограничил временнОй диапазон границами {yearsRangeTemporal}' if yearsRangeTemporal else '- пользователь НЕ ограничил временнОй диапазон')
-                print(f"- пользователь подал дополнительные настройки посредством словаря params: '{params_extraTemporal}'" if params_extraTemporal else '')
+                    if yearTemporal < int(momentCurrent.strftime('%Y')): print('- и на годе (при сегментировани по годам)', yearTemporal)
+                    print(f"- пользователь сформулировал запрос-фильтр как '{qTemporal}'" if qTemporal else '- пользователь НЕ сформулировал запрос-фильтр')
+                    print(f'- пользователь ограничил временнОй диапазон границами {yearsRangeTemporal}' if yearsRangeTemporal else '- пользователь НЕ ограничил временнОй диапазон')
+                    print(f"- пользователь подал дополнительные настройки посредством словаря params: '{params_extraTemporal}'" if params_extraTemporal else '')
 
-                print(
+                    print(
 f'''В дальнейшей работе могу опираться на эти промежуточные результаты. При этом случае ПРОТИВОРЕЧИЯ между найденными в директории '{folder_subfolder_in_folderCurrent}' и поданными Вами при текущем запуске аргументами будут применены ПЕРВЫЕ.
 --- Если следует опираться на промежуточные результаты, нажмите Enter;  
 --- Если эти промежуточные результаты уже не актуальны и хотите, чтобы я удалил их, введите 'R' и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter''')
 
-                try: decision = input()
-                except EOFError:
-                    print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
-                    decision = ''
-                    silentMode = True
+                    try: decision = input()
+                    except EOFError:
+                        print('Похоже, исполняюсь неинтерактивной среде (например, CI или cron), поэтому включаю silentMode')
+                        decision = ''
+                        silentMode = True
 
-            if not silentMode and decision.lower().strip() == 'r':
-                shutil.rmtree(folder_subfolder_in_folderCurrent, ignore_errors=True)
+                if not silentMode and decision.lower().strip() == 'r':
+                    shutil.rmtree(folder_subfolder_in_folderCurrent, ignore_errors=True)
+                    goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent 
 
-                print(
+                    print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-            elif not silentMode and decision and decision.lower().strip() != 'r': print(
+                elif not silentMode and decision and decision.lower().strip() != 'r': print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-            elif silentMode or not decision: # при silentMode Temporal-значения результаты принудительно берутся из свежей Temporal-директории и обретают статус постоянных и будут использоваться при исполнении скрипта
-                # ^ они обретают статус постоянных и при пустом decision
+                elif silentMode or not decision: # при silentMode Temporal-значения результаты принудительно берутся из свежей Temporal-директории и обретают статус постоянных и будут использоваться при исполнении скрипта
+                    # ^ они обретают статус постоянных и при пустом decision
 
-                countTarget = countTargetTemporal
-                fields = fieldsTemporal
-                params_extra = params_extraTemporal
-                q = qTemporal
-                stageTarget = stageTargetTemporal
-                yearsRange = yearsRangeTemporal
-                if yearsRange: yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
-
-                temporalNameS = os.listdir(folder_subfolder_in_folderCurrent)
-                folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
-                if not goC: break # выход из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent при успешном импорте itemS
+                    countTarget = countTargetTemporal
+                    fields = fieldsTemporal
+                    params_extra = params_extraTemporal
+                    q = qTemporal
+                    stageTarget = stageTargetTemporal
+                    yearsRange = yearsRangeTemporal
+                    if yearsRange: yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
+                    break # выход из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent при успешном импорте itemS
 
     if not silentMode and not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
         print('Не найдены (потому что их нет или они сознательно пропущены пользователем) подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
