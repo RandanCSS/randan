@@ -319,7 +319,7 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
 
     else:
         experiencedMode = True
-        KEYS_BASIC = {'access_token', 'count', 'domain', 'fields', 'filter', 'offset', 'v'}
+        KEYS_BASIC = {'access_token', 'count', 'domain', 'extended', 'fields', 'filter', 'offset', 'v'}
         if params:
             if access_token: access_token = scrapingTools.argument_key_comparison(access_token, 'access_token', params) # здесь и ниже приоритет аргумента над ключом словаря params
             elif 'access_token' in params.keys(): access_token = params['access_token']
