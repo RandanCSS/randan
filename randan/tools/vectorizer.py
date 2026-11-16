@@ -2,8 +2,8 @@
 # coding: utf-8
 
 '''
-A module for creating a matrix `documents-tokens` from a corpus of documents using the methods of the CountVectorizer and TfidfVectorizer classes
-Модуль для создания матрицы "документы-токенц" из корпуса документов посредством методов классов CountVectorizer и TfidfVectorizer
+(EN) A module for creating a matrix `documents-tokens` from a corpus of documents using the methods of the CountVectorizer and TfidfVectorizer classes
+(RU) Модуль для создания матрицы "документы-токенц" из корпуса документов посредством методов классов CountVectorizer и TfidfVectorizer
 '''
 
 # Активировать требуемые для работы скрипта модули и пакеты + пререквизиты
@@ -23,7 +23,7 @@ while True:
         break # выход из цикла while True
 
     except (ImportError, ModuleNotFoundError) as excptn_1:
-        module = excptn_1.name.split('.')[0]
+        module = (excptn_1.name or '').split('.')[0]
         if attempt > MAX_ATTEMPTS:
             print(
 f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт')
