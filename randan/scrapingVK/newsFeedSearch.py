@@ -292,7 +292,7 @@ f"Директория '{folder_subfolder_in_folderCurrent}' похожая на
             temporalNameS = os.listdir(folder_subfolder_in_folderCurrent)
             folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
 
-            if not goC:
+            if not goC: # при успешном get_itemsTemporal goC = False
                 if not silentMode:
                     print(f"Нашёл директорию '{folder_subfolder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
                           , '\n- скрипт остановился на методе', methodTemporal)
