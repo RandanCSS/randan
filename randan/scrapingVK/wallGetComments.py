@@ -64,8 +64,7 @@ def dfsProcessor(complicatedNamePart,
                  owner_id,
                  params_extra,
                  post_id,
-                 silentMode,
-                 slash):
+                 silentMode):
 
     df = pandas.concat([df_in, df_additional]) # порядок аргументов гарантирует, что в дальнейшем при keep='last' выживают именно новые записи
 
@@ -489,8 +488,7 @@ f'''    Скрипт нацелен на выгрузку комментарие
                                      owner_id,
                                      params_extra,
                                      post_id,
-                                     silentMode,
-                                     slash)
+                                     silentMode)
 
                 if silentMode and not goS: return itemS # поскольку при silentMode внутри dfsProcessor не происходит sys.exit() ; завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
 
@@ -564,15 +562,6 @@ for cellContent in Исходный_датафрейм[column].dropna():
                              owner_id=owner_id,
                              params_extra=params_extra,
                              post_id=post_id,
-                             silentMode=silentMode,
-                             slash=slash)
+                             silentMode=silentMode)
 
         if returnDfs or silentMode: return itemS
-#         else:
-#             with warnings.catch_warnings():
-#                 warnings.simplefilter('ignore')
-#                 if not silentMode: print(
-# '''Сейчас появится надпись: 'An exception has occurred, use %tb to see the full traceback.\nSystemExit' -- так и должно быть.
-# Модуль создан при финансовой поддержке Российского научного фонда по гранту 22-28-20473''')
-
-#                 sys.exit()
