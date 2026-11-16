@@ -284,6 +284,7 @@ f'''В дальнейшей работе могу опираться на эти
                 if not silentMode and decision.lower().strip() == 'r':
                     shutil.rmtree(folder_subfolder_in_folderCurrent, ignore_errors=True)
                     goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent 
+                    itemS = None # отмена
 
                     print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
@@ -293,6 +294,7 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' удалил, пр�
 f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
                     goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent 
+                    itemS = None # отмена
 
                 elif silentMode or not decision: # при silentMode Temporal-значения результаты принудительно берутся из свежей Temporal-директории и обретают статус постоянных и будут использоваться при исполнении скрипта
                     # ^ они обретают статус постоянных и при пустом decision
@@ -301,7 +303,8 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
                     filter = filterTemporal
                     offset = offsetTemporal
                     params_extra = params_extraTemporal
-                    break # выход из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent при успешном импорте itemS
+
+                if not goC: break # выход из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent при успешном импорте itemS
 
     if not silentMode and not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
         print('Не найдены (потому что их нет или они сознательно пропущены пользователем) подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
