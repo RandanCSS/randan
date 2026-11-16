@@ -22,18 +22,16 @@ while True:
         import itertools, numpy, os, pandas, pymystem3, re, stop_words, time, warnings
         break # выход из цикла while True
 
-    except ModuleNotFoundError as excptn_1:
-        module = excptn_1.name.split('.')[0]
+    except (ImportError, ModuleNotFoundError) as excptn_1:
+        module = (excptn_1.name or '').split('.')[0]
         if attempt > MAX_ATTEMPTS:
             print(
-f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт'
-            )
+f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт')
 
             raise
 
         print(
-f'Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас. Попытка № {attempt} из {MAX_ATTEMPTS}'
-        )
+f'Пакет {module} НЕ прединсталлирован, но он требуется для работы скрипта, поэтому будет инсталлирован сейчас. Попытка № {attempt} из {MAX_ATTEMPTS}')
 
         try: check_call([sys.executable, '-m', 'pip', 'install', module, '--quiet', '--disable-pip-version-check'])
         except CalledProcessError as excptn_2:
@@ -42,6 +40,7 @@ f'Пакет {module} НЕ прединсталлирован, но он тре�
 
         attempt += 1
 
+# 1. Функции..
 def autoCorrectorText(fast, language, text, tokensCorrectedQuantityMax, userWordS):
     """
     Функция для автокоррекции грамматики текста
