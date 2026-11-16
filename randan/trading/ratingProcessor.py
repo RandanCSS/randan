@@ -33,7 +33,7 @@ while True:
         break # выход из цикла while True
 
     except (ImportError, ModuleNotFoundError) as excptn_1:
-        module = excptn_1.name.split('.')[0]
+        module = (excptn_1.name or '').split('.')[0]
         if attempt > MAX_ATTEMPTS:
             print(
 f'Пакет {module} НЕ удалось импортировать за {MAX_ATTEMPTS} попытки; он требуется для работы скрипта, поэтому попробуйте инсталлировать его вручную, после чего снова запустите скрипт')
@@ -50,7 +50,7 @@ f'Пакет {module} НЕ прединсталлирован, но он тре�
 
         attempt += 1
 
-# Вспомогательные функции..
+# 1. Вспомогательные функции..
 # .. поиска эмитентов, у облигаций которых в столбце Bond D Rating (а) ни у одной нет рейтинга,
     # (б) у некоторых есть рейтинг и у некоторых его нет и (в) у всех есть рейтинг
 def bondS_ofIssuer_ratingChecker(bondS_in):
