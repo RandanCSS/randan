@@ -141,7 +141,13 @@ def newsfeedSearchCore(api_keyS,
                        start_from,
                        start_time,
                        version_api):
+    '''
+    Parameters
+    ----------
+    params_extra : dict -- только заполняет пустые аргументы, а не переопределяет
+    '''
 
+ 
     # print('    start_from:', start_from) # для отладки
     df_additional = pandas.DataFrame()
     goS = True
