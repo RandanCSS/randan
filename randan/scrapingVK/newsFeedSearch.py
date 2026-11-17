@@ -224,8 +224,8 @@ def newsFeedSearch(access_token=None,
        longitude : float
           params : dict -- в случае наличия готового словаря с аргументами метода https://dev.vk.com/ru/method/wall.get , чтобы не подавать эти аргументы по отдельности; при этом приоритетен аргумент функции над ключом словаря params
                q : str
-       returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными
-      silentMode : bool -- в случае True в функции отключаются CLI-диалоги; при returnDfs=False и silentMode=False функция завершает процесс через sys.exit()
+       returnDfs : bool -- в случае True функция возвращает итоговый датафрейм с постами и их метаданными; если исполнение функции прерывается пользователем или ошибкой, промежуточный датафрейм не возвращается и, независимо от значения returnDfs, сохраняется в директорию Temporal
+      silentMode : bool -- в случае True в функции отключаются CLI-диалоги; при silentMode=False функция завершается через sys.exit()
       start_time : int -- формат Unix
      version_api : str
     '''
