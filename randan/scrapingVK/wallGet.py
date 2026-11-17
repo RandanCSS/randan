@@ -530,7 +530,9 @@ for cellContent in Исходный_датафрейм[column].dropna():
 
                         sys.exit()
 
-    except (Exception, KeyboardInterrupt) as excptn: # обработать прерывания по воле пользователя или ошибок 
+    except (Exception, KeyboardInterrupt) as excptn: # обработать прерывания по воле пользователя или ошибок
+        # ^ SystemExit намеренно не ловится, чтобы работал sys.exit() из dfsProcessor
+
         if not silentMode:
             print(f"{type(excptn).__name__}: {str(excptn).split('Stacktrace:')[0].strip()}") # для отладки
             print(traceback.format_exc().split('Stacktrace:')[0].strip()) # показ точной строчки кода с ошибкой
