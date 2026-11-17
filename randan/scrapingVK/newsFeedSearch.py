@@ -797,7 +797,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                             if not goS and silentMode: return itemS # поскольку при silentMode внутри dfsProcessor не происходит sys.exit() ; завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
                             # print('len(itemS):', len(itemS)) # для отладки
                             time.sleep(pause)
-                    if not silentMode: print('  Искомых постов', countTarget, ', а выгруженных после добавления контента за', year, 'год:', len(itemS), '                    ')
+                        if not silentMode: print('  Искомых постов', countTarget, ', а выгруженных после добавления контента за', year, 'год:', len(itemS), '                    ')
                 # </Выгрузка постов за год year без более глубокого сегментирования>
 
                 # <Выгрузка постов за год year с сегментированием по месяцам>
