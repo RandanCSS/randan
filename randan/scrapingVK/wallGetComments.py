@@ -133,6 +133,11 @@ def wallGetCommentsCore(api_keyS,
                         post_id,
                         silentMode,
                         version_api):
+    '''
+    Parameters
+    ----------
+    params_extra : dict -- только заполняет пустые аргументы, а не переопределяет
+    '''
 
     df_additional = pandas.DataFrame()
     goS = True
