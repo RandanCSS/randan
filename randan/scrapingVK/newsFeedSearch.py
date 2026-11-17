@@ -807,7 +807,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                 # </Выгрузка постов за год year без более глубокого сегментирования>
 
                 # <Выгрузка постов за год year с сегментированием по месяцам>
-                    elif countTarget_withinYear > 1000: # ожидаемое количество постов позволяет не прибегать к углублению сегментирования
+                    elif countTarget_withinYear > 1000 and len(itemS_additional) > 0: # ожидаемое количество постов позволяет углубить сегментирование и число записей больше нуля
                         for month in calendarColumnS:
                             if not goS: break
                             if not silentMode:
@@ -899,7 +899,7 @@ f'''Метод {method} выдаёт ограниченное количеств
                                 if not goS and silentMode: return itemS # поскольку при silentMode внутри dfsProcessor не происходит sys.exit() ; завершение исполнения скрипта вне dfsProcessor после сохранения в нём Temporal-снимка
                                 # print('len(itemS_additional):', len(itemS_additional)) # для отладки
                                 time.sleep(pause)
-                    if not silentMode: print('  Искомых постов', countTarget, ', а выгруженных после добавления контента за', year, 'год:', len(itemS), '                    ')
+                        if not silentMode: print('  Искомых постов', countTarget, ', а выгруженных после добавления контента за', year, 'год:', len(itemS), '                    ')
                 # </Выгрузка постов за год year с сегментированием по месяцам>
 
                 # <Выгрузка постов за год year пуста>
