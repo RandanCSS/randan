@@ -324,6 +324,7 @@ f'''В дальнейшей работе могу опираться на эти
                 if not silentMode and decision.lower().strip() == 'r':
                     shutil.rmtree(folder_subfolder_in_folderCurrent, ignore_errors=True)
                     goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent
+                    folderWithTemporal = None # отмена
                     itemS = None # отмена
                     yearTemporal = None # отмена
 
@@ -335,6 +336,7 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' удалил, пр�
 f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
                     goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent
+                    folderWithTemporal = None # отмена
                     itemS = None # отмена
                     yearTemporal = None # отмена
 
