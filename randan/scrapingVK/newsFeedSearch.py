@@ -360,7 +360,7 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
         folder, folder_file, itemS = scrapingTools.call_for_user_items(f'в котором есть ранее выгруженные из ВК методом {method} данные')
             # ^ теперь определены объекты: folder и folder_file (оба None или пользовательские), itemS (пустой или с прошлого запуска, или пользовательский)
 
-    if not params and not access_token and not count and not end_time and not fields and not latitude and not longitude and not q and not start_time and not returnDfs:
+    if not params and not access_token and not count and end_time is None and not fields and not latitude and not longitude and not q and start_time is None and not returnDfs:
         # print('Пользователь не подал аргументы') # для отладки
         experiencedMode = False
 
@@ -1001,3 +1001,43 @@ for cellContent in Исходный_датафрейм[column].dropna():
                              yearsRange=yearsRange)
 
         if returnDfs or silentMode: return itemS
+
+# Что сделать|исправить:
+# start_time/end_time не сохраняются в Temporal
+# Финальный запрос на удаление несуществующей директории
+#     В финальном блоке:
+
+#     python
+#     if folderWithTemporal:
+#         if os.path.exists(folderWithTemporal):
+#             print('''Поскольку данные...''')
+    
+#         try: decision = input()     # ← вне if os.path.exists
+#         except EOFError: ...
+#         if decision.lower().strip() == 'r': shutil.rmtree(...)
+#     Если folderWithTemporal установлен, а директория уже удалена (например, пользователь выбрал 'R' ранее), print пропускается, но input() всё равно вызывается — пользователь видит пустой запрос и ждёт Enter. try/except и if decision... нужно вложить внутрь if os.path.exists(...).
+    
+#     B2. Несогласованное удаление Temporal в silentMode
+#     В ветке «0 постов»: if silentMode or decision.lower().strip() == 'r': shutil.rmtree(...) — в silentMode удаляет.
+    
+#     В финальной ветке: весь блок обёрнут в if not silentMode: — в silentMode не удаляет.
+    
+#     Поведение должно быть одинаковым (например, всегда оставлять Temporal в silentMode как «чекпоинт», либо всегда удалять при успешном завершении).
+
+# if not goS: break в цикле по месяцам — недостижим
+# python
+# for month in calendarColumnS:
+#     if not goS: break
+#     ...
+#     itemS = dfsProcessor(..., goS=goS, ...)
+#     if not goS and silentMode: return itemS
+# Если goS стало False, то либо dfsProcessor делает sys.exit() (не silentMode), либо срабатывает return itemS (silentMode) — до следующей итерации цикла управление не доходит. break — мёртвый код (защита «на всякий случай», но фактически не работает).
+
+# B6. Проверка len(itemS) == countTarget ненадёжна
+# countTarget — это response['total_count'] из stage 0, а len(itemS) — число уникальных записей после дедупликации. Совпадут они редко: VK может отдавать total_count приблизительно, плюс дедупликация по columnsForCheck может схлопывать записи. В результате stage 1 (сегментирование по годам) будет запускаться даже когда всё уже собрано. Не баг, но лишняя работа; стоит использовать >= или запас вроде len(itemS) >= countTarget * 0.95.
+
+# В dfsProcessor повторно вычисляется slash и вызывается coLabAdaptor.folderCoLab_folderIn_comparison(folder), хотя и то, и другое уже сделано в newsFeedSearch (пересчёт идемпотентен, но избыточен).
+
+# folder_subfolder_in_folderCurrent = None и yearTemporal = None в начале — инициализация «на всякий случай», реально всегда переприсваиваются (кроме сценария, где нужен None — но там он и так None).
+
+# https://chat.deepseek.com/share/qeoiyjt9o6y5ki3syy
