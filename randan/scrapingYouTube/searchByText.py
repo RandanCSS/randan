@@ -787,7 +787,7 @@ videoPaidProductPlacement : str
                 videoType : str
     '''
 
-    if not access_token and not channelIdForSearch and not contentType and not publishedAfter and not publishedBefore and not q and not channelType and not eventType\
+    if not access_token and not channelIdForSearch and not contentType and publishedAfter is None and publishedBefore is None and not q and not channelType and not eventType\
         and not location and not locationRadius and not regionCode and not relevanceLanguage and not safeSearch and not topicId and not videoCaption and not videoCategoryId\
         and not videoDefinition and not videoDimension and not videoDuration and not videoEmbeddable and not videoLicense and not videoPaidProductPlacement and not videoSyndicated and not videoType and not returnDfs:
         # print('Пользователь не подал аргументы')
