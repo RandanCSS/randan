@@ -225,7 +225,7 @@ def wallGetComments(access_token=None,
     fileFormatChoice = 'xlsx' # базовый формат сохраняемых файлов; формат json добавляется опционально через наличие columnsToJSON
     folder_file = None
     folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
-    folder_subfolder_in_folderCurrent = None
+    subfolder_in_folder = None
     folderWithTemporal = None
     goS = True
     itemS = pandas.DataFrame()
@@ -247,30 +247,30 @@ def wallGetComments(access_token=None,
 # Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, прерванном пользователем или ошибкой
     # Поиск данных
     if not silentMode: print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
-    fileS_subfolderS_in_folder = os_wrapper.list_by_freshness( # список директорий и субдиректорий внутри folder , удовлетворяющих условиям и упорядоченных по "свежести"
+    subfolderS_in_folder = os_wrapper.list_by_freshness( # список директорий и субдиректорий внутри folder , удовлетворяющих условиям и упорядоченных по "свежести"
         folder,
         filter_dirEntry=lambda e: (                                   # предикат по DirEntry
             e.name.endswith('Temporal') and 'VK' in e.name and        # дешёвые строковые проверки
             e.is_dir(follow_symlinks=False)                           # тип проверяем последним: это уже сискол (кешируется в DirEntry)
         ))
 
-    for folder_subfolder_in_folderCurrent in fileS_subfolderS_in_folder:
-        if len(os.listdir(folder_subfolder_in_folderCurrent)) < 7:
+    for subfolder_in_folder in subfolderS_in_folder:
+        if len(os.listdir(subfolder_in_folder)) < 7:
             if not silentMode: print(
-f"В директории '{folder_subfolder_in_folderCurrent}' есть директория, похожая на искомую Temporal , но в ней не 7-8 файлов (включая method.txt) => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
+f"В директории '{subfolder_in_folder}' есть директория, похожая на искомую Temporal , но в ней не 7-8 файлов (включая method.txt) => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 6 или 7 файлов
 
         else:
-            with open(f'{folder_subfolder_in_folderCurrent}{slash}fields.json', 'r', encoding='utf-8') as file: fieldsTemporal = json.load(file)
-            offsetTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'offset.txt', int)
-            owner_idTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'owner_id.txt', str)
-            with open(f'{folder_subfolder_in_folderCurrent}{slash}params_extra.json', 'r', encoding='utf-8') as file: params_extraTemporal = json.load(file)
-            post_idTemporal = scrapingTools.containerImport(folder_subfolder_in_folderCurrent + slash + 'post_id.txt', str)
-            temporalNameS = os.listdir(folder_subfolder_in_folderCurrent)
+            with open(f'{subfolder_in_folder}{slash}fields.json', 'r', encoding='utf-8') as file: fieldsTemporal = json.load(file)
+            offsetTemporal = scrapingTools.containerImport(subfolder_in_folder + slash + 'offset.txt', int)
+            owner_idTemporal = scrapingTools.containerImport(subfolder_in_folder + slash + 'owner_id.txt', str)
+            with open(f'{subfolder_in_folder}{slash}params_extra.json', 'r', encoding='utf-8') as file: params_extraTemporal = json.load(file)
+            post_idTemporal = scrapingTools.containerImport(subfolder_in_folder + slash + 'post_id.txt', str)
+            temporalNameS = os.listdir(subfolder_in_folder)
             folderWithTemporal, goC, itemS = scrapingTools.get_itemsTemporal(temporalNameS)
 
             if not goC: # при успешном get_itemsTemporal goC = False
                 if not silentMode:
-                    print(f"Нашёл директорию '{folder_subfolder_in_folderCurrent}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
+                    print(f"Нашёл директорию '{subfolder_in_folder}'. В этой директории следующие промежуточные результаты одного из прошлых запусков скрипта:"
                           , '\n- скрипт остановился на offset', offsetTemporal)
 
                     print(f"- пользователь определил поля: '{fieldsTemporal}'" if fieldsTemporal else '- пользователь НЕ определил поля')
@@ -279,7 +279,7 @@ f"В директории '{folder_subfolder_in_folderCurrent}' есть дир�
                     print(f"- пользователь подал дополнительные настройки посредством словаря params: '{params_extraTemporal}'" if params_extraTemporal else '')
 
                     print(
-f'''В дальнейшей работе могу опираться на эти промежуточные результаты. При этом случае ПРОТИВОРЕЧИЯ между найденными в директории '{folder_subfolder_in_folderCurrent}'и поданными Вами при текущем запуске аргументами будут применены ПЕРВЫЕ.
+f'''В дальнейшей работе могу опираться на эти промежуточные результаты. При этом случае ПРОТИВОРЕЧИЯ между найденными в директории '{subfolder_in_folder}'и поданными Вами при текущем запуске аргументами будут применены ПЕРВЫЕ.
 --- Если следует опираться на промежуточные результаты, нажмите Enter;  
 --- Если эти промежуточные результаты уже не актуальны и хотите, чтобы я удалил их, введите 'R' и нажмите Enter
 --- Если хотите найти другие промежуточные результаты, нажмите пробел и затем Enter''')
@@ -291,18 +291,18 @@ f'''В дальнейшей работе могу опираться на эти
                         silentMode = True
 
                 if not silentMode and decision.lower().strip() == 'r':
-                    shutil.rmtree(folder_subfolder_in_folderCurrent, ignore_errors=True)
-                    goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in fileS_subfolderS_in_folder 
+                    shutil.rmtree(subfolder_in_folder, ignore_errors=True)
+                    goC = True # отмена сигнала выйти из for subfolder_in_folder in subfolderS_in_folder 
                     itemS = None # отмена
 
                     print(
-f"Директорию '{folder_subfolder_in_folderCurrent}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
+f"Директорию '{subfolder_in_folder}' удалил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
                 elif not silentMode and decision and decision.lower().strip() != 'r':
                     print(
-f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
+f"Директорию '{subfolder_in_folder}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-                    goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in fileS_subfolderS_in_folder 
+                    goC = True # отмена сигнала выйти из for subfolder_in_folder in subfolderS_in_folder 
                     itemS = None # отмена
 
                 elif silentMode or not decision: # при silentMode Temporal-значения результаты принудительно берутся из свежей Temporal-директории и обретают статус постоянных и будут использоваться при исполнении скрипта
@@ -314,7 +314,7 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
                     params_extra = params_extraTemporal
                     post_id = post_idTemporal
 
-                if not goC: break # выход из for folder_subfolder_in_folderCurrent in fileS_subfolderS_in_folder при успешном импорте itemS
+                if not goC: break # выход из for subfolder_in_folder in subfolderS_in_folder при успешном импорте itemS
 
     if not silentMode and not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
         print('Не найдены (потому что их нет или они сознательно пропущены пользователем) подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
