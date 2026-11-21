@@ -196,7 +196,7 @@ def loginerRB(driver, pause, login_password=None):
                 login_password = json.load(file)
 
             print('Проверяю наличие файла credentialsRB.json с логином и паролем, гипотетически сохранёнными при первом запуске скрипта')
-            print(f'Нашёл файл credentialsRB.json; далее буду использовать логин {list(login_password.keys())[0]} и пароль {login_password[list(login_password.keys())[0]]} из него:')
+            print(f'Нашёл файл credentialsRB.json; далее буду использовать логин {list(login_password.keys())[0]} и пароль {login_password[list(login_password.keys())[0]]} из него')
 
         else:
             print('''--- НЕ нашёл файл credentialsRB.json . Введите в окно Ваши логин и пароль для сайта rusnonds.ru . После ввода нажмите Enter''')
