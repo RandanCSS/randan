@@ -18,10 +18,11 @@ attempt = 1
 
 while True:
     try:
-        from randan.tools import forSelenium # авторский модуль для
-            # (а) упрощения некоторых оперций в selenium
-
+        from randan.tools import forSelenium # авторский модуль для упрощения некоторых оперций в selenium
+        from selenium.common.exceptions import TimeoutException, NoSuchElementException
         from selenium.webdriver.common.by import By
+        from selenium.webdriver.support import expected_conditions
+        from selenium.webdriver.support.ui import WebDriverWait
         import json, os, pandas, re, selenium.common.exceptions, time, traceback
         break # выход из цикла while True
 
@@ -186,8 +187,13 @@ def issuerIdentifierNormalizer(issuerIdentidier):
 
 # .. для авторизации на сайте rusnonds.ru
 def loginerRB(driver, pause, login_password=None):
+    LOGIN_LINK_XPATH = "//span[contains(@class,'link') and normalize-space(.)='Войти']"
+
     driver.get('https://rusbonds.ru/login') # вызов страницы ввода логина и пароля
-    rootNameS = os.listdir()
+
+    # Зафиксировать ссылку-индикатор ДО её исчезновения
+    try: login_indicator = WebDriverWait(driver, 5).until(expected_conditions.presence_of_element_located((By.XPATH, LOGIN_LINK_XPATH)))
+    except TimeoutException: login_indicator = None
 
 # <Поиск логина и пароля>
     if not login_password:
@@ -239,7 +245,15 @@ def loginerRB(driver, pause, login_password=None):
     driver.find_element(By.XPATH, "//main//form//button//span[contains(@class, 'label') and text()='войти']").click()
         # нажать кнопку 'войти' с XPath /html/body/div/div/div/main/div/div/div[2]/form/div[5]/button[2]/span
 
-    time.sleep(pause) # если не подождать, вход в аккаунт не происходит
+    if login_indicator is not None: WebDriverWait(driver, 20).until(expected_conditions.staleness_of(login_indicator))
+        # ^ дождаться, пока зафиксированный элемент станет stale
+
+    WebDriverWait(driver, 10).until_not(expected_conditions.presence_of_element_located((By.XPATH, LOGIN_LINK_XPATH)))
+        # ^ дополнительно убедиться, что «Войти» нет в DOM вовсе (на случай, если Vue перерисовал элемент, а не удалил)
+
+    WebDriverWait(driver, 10).until(lambda d: d.execute_script("return document.readyState") == "complete")
+        # ^ дождаться полной загрузки документа — гарантия, что куки|localStorage записаны
+
     return driver
 
 # .. для обработки блоков resultS_container
