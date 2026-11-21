@@ -241,7 +241,10 @@ def loginerRB(driver, pause, login_password=None):
     driver.find_element(By.XPATH, "//main//form//button//span[contains(@class, 'label') and text()='войти']").click()
         # нажать кнопку 'войти' с XPath /html/body/div/div/div/main/div/div/div[2]/form/div[5]/button[2]/span
 
-    WebDriverWait(driver, pause * 100).until(lambda d: d.execute_script("return document.readyState") == "complete")
+    try: WebDriverWait(driver, pause * 100).until(lambda driver: '/login' not in driver.current_url)
+    except TimeoutException: raise RuntimeError(f'Авторизация не удалась: остались на {driver.current_url}')
+
+    WebDriverWait(driver, pause * 100).until(lambda driver: driver.execute_script("return document.readyState") == 'complete')
         # ^ дождаться полной загрузки документа — гарантия, что куки|localStorage записаны
 
     WebDriverWait(driver, pause * 100).until_not(expected_conditions.presence_of_element_located((By.XPATH, LOGIN_LINK_XPATH)))
