@@ -66,29 +66,30 @@ def getFileUptodateName(fileNameMask, fileS_toDrop, path):
         sys.exit()
 
 # .. импорта наиболее свежего файла (в т.ч. словаря эмитентов, в т.ч. с рейтингами)
-def getFreshestFleName(fileNameMask, fileS_toDrop, path):
-    # print("Работаю с fileNameMask:", fileNameMask) # для отладки
-    if os.path.exists(path):
-        # print(f"Путь '{path}' существует") # для отладки
-        fileNameS_inDirectory = os.listdir(path)
-        if fileS_toDrop:
-            fileNameS_inDirectory = [fileName for fileName in fileNameS_inDirectory if fileName not in fileS_toDrop]
-        fileNameS_inDirectory.sort(reverse=True)        
-        for fileName in fileNameS_inDirectory:
-            if fileNameMask in fileName:
-                print("Найден файл с названием:", fileName) # для отладки
-                return fileName
-                break
+def getFreshestFleName(fileNameMask, fileS_toDrop, folder):
+    # print('fileNameMask:', fileNameMask) # для отладки
 
-        # fileUptodate = pandas.read_excel('Замеры рейтингов' + slash + fileName)
-        # # display('fileUptodate:', fileUptodate) # для отладки
+    folder = coLabAdaptor.folderCoLab_folderIn_comparison(folder)
+    if os.path.exists(folder):
+        # print(folder, 'существует') # для отладки
+
+        fileS_in_folder = os_wrapper.list_by_freshness( # список директорий и субдиректорий внутри folder , удовлетворяющих условиям и упорядоченных по "свежести"
+            folder,
+            filter_dirEntry=lambda e: (fileNameMask in e.name and e.is_file(follow_symlinks=False)))
+
+        if fileS_in_folder:
+            if fileS_toDrop:
+                fileS_in_folder = [file for file in fileS_in_folder if file not in fileS_toDrop]
+            
+            if fileS_in_folder:
+                # print('Искомый файл найден') # для отладки
+                return fileS_in_folder[0]
+
+        print('Искомый файл не найден') # для отладки
+
     else:
-        print(f"Путь '{path}' НЕ существует, поэтому исполнение скрипта приостанавливается")
-        print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть')
-        input()
-        warnings.filterwarnings("ignore")
-        sys.exit()
-        
+        print(folder, 'не существует')
+
 def getFolder():
     folder = input('--- С какой директорией хотите работать? Укажите полный путь к ней, включая её саму:')
     folder = folder.replace('"', '') # поскольку в Windows путь из Проводника закавычен
