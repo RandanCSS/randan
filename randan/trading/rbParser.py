@@ -188,8 +188,8 @@ def issuerIdentifierNormalizer(issuerIdentidier):
 # .. для авторизации на сайте rusnonds.ru
 def loginerRB(driver, pause, login_password=None):
     LOGIN_LINK_XPATH = "//span[contains(@class,'link') and normalize-space(.)='Войти']"
-
     driver.get('https://rusbonds.ru/login') # вызов страницы ввода логина и пароля
+    rootNameS = os.listdir()
 
 # <Поиск логина и пароля>
     if not login_password:
