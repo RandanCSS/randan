@@ -191,10 +191,6 @@ def loginerRB(driver, pause, login_password=None):
 
     driver.get('https://rusbonds.ru/login') # вызов страницы ввода логина и пароля
 
-    # Зафиксировать ссылку-индикатор ДО её исчезновения
-    try: login_indicator = WebDriverWait(driver, 5).until(expected_conditions.presence_of_element_located((By.XPATH, LOGIN_LINK_XPATH)))
-    except TimeoutException: login_indicator = None
-
 # <Поиск логина и пароля>
     if not login_password:
         if 'credentialsRB.json' in rootNameS:
@@ -245,14 +241,11 @@ def loginerRB(driver, pause, login_password=None):
     driver.find_element(By.XPATH, "//main//form//button//span[contains(@class, 'label') and text()='войти']").click()
         # нажать кнопку 'войти' с XPath /html/body/div/div/div/main/div/div/div[2]/form/div[5]/button[2]/span
 
-    if login_indicator is not None: WebDriverWait(driver, 20).until(expected_conditions.staleness_of(login_indicator))
-        # ^ дождаться, пока зафиксированный элемент станет stale
-
-    WebDriverWait(driver, 10).until_not(expected_conditions.presence_of_element_located((By.XPATH, LOGIN_LINK_XPATH)))
-        # ^ дополнительно убедиться, что «Войти» нет в DOM вовсе (на случай, если Vue перерисовал элемент, а не удалил)
-
     WebDriverWait(driver, 10).until(lambda d: d.execute_script("return document.readyState") == "complete")
         # ^ дождаться полной загрузки документа — гарантия, что куки|localStorage записаны
+
+    WebDriverWait(driver, pause * 100).until_not(expected_conditions.presence_of_element_located((By.XPATH, LOGIN_LINK_XPATH)))
+        # ^ убедиться, что «Войти» нет в DOM вовсе
 
     return driver
 
