@@ -19,6 +19,7 @@ attempt = 1
 while True:
     try:
         # from google_drive_downloader import GoogleDriveDownloader
+        from randan.tools import os_wrapper # модуль для упрощения работы с OS
         import os, pandas, warnings
         break # выход из цикла while True
 
