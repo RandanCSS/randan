@@ -18,8 +18,8 @@ attempt = 1
 
 while True:
     try:
-      from typing import Callable, Optional                     # только для аннотаций типов (можно убрать)
-      import os
+        from typing import Callable, Optional                     # только для аннотаций типов (можно убрать)
+        import os
         break # выход из цикла while True
 
     except (ImportError, ModuleNotFoundError) as excptn_1:
@@ -43,9 +43,9 @@ f'Пакет {module} НЕ прединсталлирован, но он тре�
 # Функции..
 def list_by_freshness(
     folder,
-    *,                                                          # дальше — только keyword-only аргументы
+    *,                                                           # дальше — только keyword-only аргументы
     filter_dirEntry: Optional[Callable[[os.DirEntry], bool]] = None,  # предикат по DirEntry (до обхода поддерева)
-    follow_symlinks: bool = False,                              # прокидываем в newest_mtime_ns
+    follow_symlinks: bool = False,                               # прокидываем в newest_mtime_ns
 ):
     """Содержимое folder, отсортированное по «свежести»:
        max(st_mtime_ns) по каждым поддиректории и файлу и всем его потомкам, свежие сверху.
