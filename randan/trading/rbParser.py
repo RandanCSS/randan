@@ -199,10 +199,7 @@ def loginerRB(driver, pause, login_password=None):
             print(f'Нашёл файл credentialsRB.json; далее буду использовать логин {list(login_password.keys())[0]} и пароль {login_password[list(login_password.keys())[0]]} из него:')
 
         else:
-            print(
-'''--- НЕ нашёл файл credentialsRB.json . Введите в окно Ваши логин и пароль для сайта rusnonds.ru . После ввода нажмите Enter'''
-                  )
-
+            print('''--- НЕ нашёл файл credentialsRB.json . Введите в окно Ваши логин и пароль для сайта rusnonds.ru . После ввода нажмите Enter''')
             while True:
                 login = input('Введите в окно Ваш логин и нажмите Enter')
                 if len(login) > 0:
@@ -242,7 +239,7 @@ def loginerRB(driver, pause, login_password=None):
     driver.find_element(By.XPATH, "//main//form//button//span[contains(@class, 'label') and text()='войти']").click()
         # нажать кнопку 'войти' с XPath /html/body/div/div/div/main/div/div/div[2]/form/div[5]/button[2]/span
 
-    time.sleep(pause) # если не подождать, вход в аккаунт не происходит
+    time.sleep(pause * 2) # если не подождать, вход в аккаунт не происходит
 
 # .. для обработки блоков resultS_container
 def resultS_container_processor(bondS_FinAM_RB,
