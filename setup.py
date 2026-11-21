@@ -70,6 +70,8 @@ setup(
         'ipython>=7.0.0',
         'openpyxl>=3.1.5',
         'tqdm>=4.66.5',
+        'typing_extensions>=4.13.2',
+        'typing-inspection>=0.4.2',
         'xlsxwriter>=3.2.9'
     ],
     python_requires='>=3.9',
