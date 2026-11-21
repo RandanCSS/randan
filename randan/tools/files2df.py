@@ -65,6 +65,30 @@ def getFileUptodateName(fileNameMask, fileS_toDrop, path):
         warnings.filterwarnings("ignore")
         sys.exit()
 
+# .. импорта наиболее свежего файла (в т.ч. словаря эмитентов, в т.ч. с рейтингами)
+def getFreshestFleName(fileNameMask, fileS_toDrop, path):
+    # print("Работаю с fileNameMask:", fileNameMask) # для отладки
+    if os.path.exists(path):
+        # print(f"Путь '{path}' существует") # для отладки
+        fileNameS_inDirectory = os.listdir(path)
+        if fileS_toDrop:
+            fileNameS_inDirectory = [fileName for fileName in fileNameS_inDirectory if fileName not in fileS_toDrop]
+        fileNameS_inDirectory.sort(reverse=True)        
+        for fileName in fileNameS_inDirectory:
+            if fileNameMask in fileName:
+                print("Найден файл с названием:", fileName) # для отладки
+                return fileName
+                break
+
+        # fileUptodate = pandas.read_excel('Замеры рейтингов' + slash + fileName)
+        # # display('fileUptodate:', fileUptodate) # для отладки
+    else:
+        print(f"Путь '{path}' НЕ существует, поэтому исполнение скрипта приостанавливается")
+        print('Сейчас появится надпись: "An exception has occurred, use %tb to see the full traceback.\nSystemExit" -- так и должно быть')
+        input()
+        warnings.filterwarnings("ignore")
+        sys.exit()
+        
 def getFolder():
     folder = input('--- С какой директорией хотите работать? Укажите полный путь к ней, включая её саму:')
     folder = folder.replace('"', '') # поскольку в Windows путь из Проводника закавычен
