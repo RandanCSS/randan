@@ -268,14 +268,14 @@ def newsFeedSearch(access_token=None,
 # Скрипт может начаться с данных, сохранённых при прошлом исполнении скрипта, прерванном пользователем или ошибкой
     # Поиск данных
     if not silentMode: print('Проверяю наличие директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку')
-    folderS_subfolderS_in_folderCurrent = os_wrapper.list_by_freshness( # список директорий и субдиректорий внутри folder , удовлетворяющих условиям и упорядоченных по "свежести"
+    fileS_subfolderS_in_folder = os_wrapper.list_by_freshness( # список директорий и субдиректорий внутри folder , удовлетворяющих условиям и упорядоченных по "свежести"
         folder,
         filter_dirEntry=lambda e: (                                   # предикат по DirEntry
             e.name.endswith('Temporal') and 'VK' in e.name and        # дешёвые строковые проверки
             e.is_dir(follow_symlinks=False)                           # тип проверяем последним: это уже сискол (кешируется в DirEntry)
         ))
 
-    for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent:
+    for folder_subfolder_in_folderCurrent in fileS_subfolderS_in_folder:
         if len(os.listdir(folder_subfolder_in_folderCurrent)) < 9:
             if not silentMode: print(
 f"Директория '{folder_subfolder_in_folderCurrent}' похожая на искомую Temporal , но в ней не 9-10 файлов => если это она, то либо повреждена, либо создалась при безрезультатном запуске; тогда Вам следует удалить её вручную") # допустимо 9 или 10 файлов
@@ -323,7 +323,7 @@ f'''В дальнейшей работе могу опираться на эти
 
                 if not silentMode and decision.lower().strip() == 'r':
                     shutil.rmtree(folder_subfolder_in_folderCurrent, ignore_errors=True)
-                    goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent
+                    goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in fileS_subfolderS_in_folder
                     folderWithTemporal = None # отмена
                     itemS = None # отмена
                     yearTemporal = None # отмена
@@ -335,7 +335,7 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' удалил, пр�
                     print(
 f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил, продолжаю поиск ещё одной директории Temporal с данными и их мета-данными, гипотетически сохранёнными при прошлом запуске скрипта, натолкнувшемся на ошибку")
 
-                    goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent
+                    goC = True # отмена сигнала выйти из for folder_subfolder_in_folderCurrent in fileS_subfolderS_in_folder
                     folderWithTemporal = None # отмена
                     itemS = None # отмена
                     yearTemporal = None # отмена
@@ -351,7 +351,7 @@ f"Директорию '{folder_subfolder_in_folderCurrent}' пропустил,
                     yearsRange = yearsRangeTemporal
                     if yearsRange: yearMaxByUser, yearMinByUser, yearsRange = calendarWithinYear.yearsRangeParser(yearsRange)
 
-                if not goC: break # выход из for folder_subfolder_in_folderCurrent in folderS_subfolderS_in_folderCurrent при успешном импорте itemS
+                if not goC: break # выход из for folder_subfolder_in_folderCurrent in fileS_subfolderS_in_folder при успешном импорте itemS
 
     if not silentMode and not folderWithTemporal: # если itemsTemporal, в т.ч. пустой, не существует и, следовательно, не существуют данные, сохранённые при прошлом запуске скрипта, натолкнувшемся на ошибку
         print('Не найдены (потому что их нет или они сознательно пропущены пользователем) подходящие данные, гипотетически сохранённые при прошлом запуске скрипта')
